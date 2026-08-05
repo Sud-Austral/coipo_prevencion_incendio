@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document id="root_doc">
+<Schema name="2_dic_2025_120219pm" id="2_dic_2025_120219pm">
+	<SimpleField name="Leng" type="int"></SimpleField>
+</Schema>
+<Folder><name>2_dic_2025_120219pm</name>
+  <Placemark>
+	<name>2 dic 2025 12:02:19 p. m.</name>
+	<Style><LineStyle><color>ff0000ff</color></LineStyle><PolyStyle><fill>0</fill></PolyStyle></Style>
+	<ExtendedData><SchemaData schemaUrl="#2_dic_2025_120219pm">
+		<SimpleData name="Leng">160</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><LineString><coordinates>-73.07034833,-40.304915,82 -73.07029,-40.30483667,82.9 -73.07018333,-40.30479667,80.5 -73.07005833,-40.30476667,79.2 -73.06997167,-40.30469333,81.2 -73.069885,-40.30462667,82.3 -73.06981167,-40.30455167,80.3 -73.06973167,-40.30448167,81.6 -73.06973,-40.30438667,82.1 -73.06981333,-40.30430667,82.3 -73.06989833,-40.30423833,78.1 -73.06999667,-40.30418,81 -73.07010667,-40.304125,78.4 -73.07018833,-40.30404667,80.5 -73.07027667,-40.30398,83.3 -73.07036,-40.30391167,80.1</coordinates></LineString></MultiGeometry>
+  </Placemark>
+</Folder>
+</Document></kml>

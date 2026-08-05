@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document id="root_doc">
+	<name>OECV Centro Elige Vivir Sano.kml</name>
+	<atom:link rel="app" href="https://www.google.com/earth/about/versions/#earth-pro" title="Google Earth Pro 7.3.6.10441"></atom:link>
+	<Schema name="centro_elige_vivir_sano" id="centro_elige_vivir_sano">
+		<SimpleField type="float" name="fid"></SimpleField>
+		<SimpleField type="float" name="Leng"></SimpleField>
+	</Schema>
+	<Style id="style">
+		<LineStyle>
+			<color>ff00ff00</color>
+			<width>1.9</width>
+		</LineStyle>
+		<PolyStyle>
+			<fill>0</fill>
+		</PolyStyle>
+	</Style>
+	<Style id="style0">
+		<LineStyle>
+			<color>ff00ff00</color>
+			<width>1.9</width>
+		</LineStyle>
+		<PolyStyle>
+			<fill>0</fill>
+		</PolyStyle>
+	</Style>
+	<StyleMap id="stylemap_id9">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#style</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#style0</styleUrl>
+		</Pair>
+	</StyleMap>
+	<Folder>
+		<name>centro_elige_vivir_sano</name>
+		<open>1</open>
+		<Placemark>
+			<name>Centro Elige Vivir Sano</name>
+			<styleUrl>#stylemap_id9</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#centro_elige_vivir_sano">
+					<SimpleData name="fid">1</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<LineString>
+				<coordinates>
+					-72.9548327596161,-39.5405364130283,0 -72.9548952791983,-39.5406690586853,0 -72.9548945764913,-39.5407981997802,0 -72.95490962729779,-39.5408642372941,0 -72.9549139067262,-39.5409815074249,0 -72.95492038790439,-39.5410763938323,0 -72.9549542088417,-39.5411870087353,0 -72.9549699261734,-39.5412829546032,0 -72.9549851522369,-39.5413956339354,0 -72.9549989665601,-39.541451185849,0 -72.9549852476357,-39.5415502012025,0 -72.9548491522725,-39.5416087948471,0 -72.95472196873899,-39.5416268857894,0 -72.9545891366793,-39.5416269391753,0 -72.954349577486,-39.5415270524331,0 -72.9540283764529,-39.5414197482605,0 -72.9539065862735,-39.5410965137778,0 -72.953918501865,-39.5409011996495,0 -72.9538986113262,-39.5407896339073,0 
+				</coordinates>
+			</LineString>
+		</Placemark>
+	</Folder>
+</Document>
+</kml>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document id="root_doc">
+<Schema name="2_oecv_pampa_aichel" id="2_oecv_pampa_aichel">
+	<SimpleField name="fid" type="float"></SimpleField>
+	<SimpleField name="Leng" type="int"></SimpleField>
+</Schema>
+<Folder><name>2_oecv_pampa_aichel</name>
+  <Placemark>
+	<Style><LineStyle><color>ff0000ff</color></LineStyle><PolyStyle><fill>0</fill></PolyStyle></Style>
+	<ExtendedData><SchemaData schemaUrl="#2_oecv_pampa_aichel">
+		<SimpleData name="fid">1</SimpleData>
+		<SimpleData name="Leng">533</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><LineString><coordinates>-72.9363239719222,-40.3364114326399 -72.9366955996628,-40.3375907590117 -72.9371048509652,-40.3375356840901 -72.9372367026101,-40.3377563571531 -72.9374780171561,-40.3386651334639 -72.9377315288832,-40.3386384667794 -72.9377315288832,-40.3386384667794 -72.9389479381839,-40.338310843454 -72.9392891792522,-40.3391512227975 -72.9393043351671,-40.3391889193223</coordinates></LineString></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<Style><LineStyle><color>ff0000ff</color></LineStyle><PolyStyle><fill>0</fill></PolyStyle></Style>
+	<ExtendedData><SchemaData schemaUrl="#2_oecv_pampa_aichel">
+		<SimpleData name="fid">2</SimpleData>
+		<SimpleData name="Leng">355</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><LineString><coordinates>-72.9367184331237,-40.339248844047 -72.9370863884569,-40.3392117455341 -72.9368946764734,-40.3388153477089 -72.9365542744718,-40.3379484660741 -72.9362184171696,-40.3372001814483 -72.936006075657,-40.3366786591963 -72.9359073402582,-40.3364414221562</coordinates></LineString></MultiGeometry>
+  </Placemark>
+</Folder>
+</Document></kml>

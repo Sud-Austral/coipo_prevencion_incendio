@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document id="root_doc">
+<Schema name="posibles" id="posibles">
+	<SimpleField name="Sector" type="string"></SimpleField>
+	<SimpleField name="Comuna" type="string"></SimpleField>
+	<SimpleField name="Predios" type="string"></SimpleField>
+</Schema>
+<Folder><name>posibles</name>
+  <Placemark>
+	<Style><LineStyle><color>ff0000ff</color></LineStyle><PolyStyle><fill>0</fill></PolyStyle></Style>
+	<ExtendedData><SchemaData schemaUrl="#posibles">
+		<SimpleData name="Sector">Santa Elvira</SimpleData>
+		<SimpleData name="Comuna">Valdivia</SimpleData>
+		<SimpleData name="Predios">1076-4</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><LineString><coordinates>-73.2026872959713,-39.7922207055826 -73.2036137303754,-39.7929544687161 -73.2035220593236,-39.792993016627 -73.201897798255,-39.794186859489 -73.2017067069012,-39.7940639952181 -73.2014552391188,-39.7942699258748</coordinates></LineString></MultiGeometry>
+  </Placemark>
+</Folder>
+</Document></kml>
