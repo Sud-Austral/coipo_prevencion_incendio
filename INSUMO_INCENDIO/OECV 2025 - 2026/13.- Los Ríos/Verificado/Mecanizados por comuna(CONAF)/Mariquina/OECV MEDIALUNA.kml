@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document id="root_doc">
+<Schema name="oecv_medialuna" id="oecv_medialuna">
+	<SimpleField name="fid" type="float"></SimpleField>
+	<SimpleField name="leng" type="float"></SimpleField>
+</Schema>
+<Folder><name>oecv_medialuna</name>
+  <Placemark>
+	<Style><LineStyle><color>ff0000ff</color></LineStyle><PolyStyle><fill>0</fill></PolyStyle></Style>
+	<ExtendedData><SchemaData schemaUrl="#oecv_medialuna">
+		<SimpleData name="fid">1</SimpleData>
+		<SimpleData name="leng">230.816977284727</SimpleData>
+	</SchemaData></ExtendedData>
+      <LineString><coordinates>-72.9536118820055,-39.5377801432696 -72.9536222335688,-39.5376799446717 -72.9535164720971,-39.5376235894353 -72.9533868137484,-39.537624173702 -72.9533001490468,-39.5376742716057 -72.9532016236397,-39.5376237795994 -72.9530611958776,-39.537612701686 -72.9529707446125,-39.5376656006598 -72.9528554734823,-39.5376807779319 -72.952630318196,-39.5376538665389 -72.9524859356116,-39.5376513223199 -72.9523684789847,-39.5376148361326 -72.95225228092,-39.537661544752 -72.9521454251387,-39.5376424533223 -72.9521484473682,-39.5377916439185 -72.952156604313,-39.5378921685768 -72.952156604313,-39.5378921685768 -72.95213850925,-39.5380037026457 -72.95211940286,-39.5381496351891 -72.9521271384231,-39.5382644925438 -72.952149598353,-39.538382477439</coordinates></LineString>
+  </Placemark>
+</Folder>
+</Document></kml>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document>
+	<name>Estacion Mariquina.kml</name>
+	<Schema name="trip_20251125_1424__tracks" id="trip_20251125_1424__tracks">
+		<SimpleField type="string" name="cmt"></SimpleField>
+		<SimpleField type="string" name="desc"></SimpleField>
+		<SimpleField type="string" name="src"></SimpleField>
+		<SimpleField type="string" name="link1_href"></SimpleField>
+		<SimpleField type="string" name="link1_text"></SimpleField>
+		<SimpleField type="string" name="link1_type"></SimpleField>
+		<SimpleField type="string" name="link2_href"></SimpleField>
+		<SimpleField type="string" name="link2_text"></SimpleField>
+		<SimpleField type="string" name="link2_type"></SimpleField>
+		<SimpleField type="int" name="number"></SimpleField>
+		<SimpleField type="string" name="type"></SimpleField>
+		<SimpleField type="float" name="Leng"></SimpleField>
+	</Schema>
+	<Style id="style">
+		<LineStyle>
+			<color>ff00ff00</color>
+			<width>3.5</width>
+		</LineStyle>
+		<PolyStyle>
+			<fill>0</fill>
+		</PolyStyle>
+	</Style>
+	<Style id="style0">
+		<LineStyle>
+			<color>ff00ff00</color>
+			<width>3.5</width>
+		</LineStyle>
+		<PolyStyle>
+			<fill>0</fill>
+		</PolyStyle>
+	</Style>
+	<StyleMap id="stylemap_id0">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#style0</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#style</styleUrl>
+		</Pair>
+	</StyleMap>
+	<Placemark>
+		<name>Estacion Mariquina</name>
+		<styleUrl>#stylemap_id0</styleUrl>
+		<ExtendedData>
+			<SchemaData schemaUrl="#trip_20251125_1424__tracks">
+				<SimpleData name="Leng">475.949182340214</SimpleData>
+			</SchemaData>
+		</ExtendedData>
+		<MultiGeometry>
+			<LineString>
+				<coordinates>
+					-72.9298010541971,-39.5625336495098,42.0134496688843 -72.92994968776399,-39.5627316503216,36.9986794423312 -72.9299069451865,-39.5629696030891,36.4594009555876 -72.9299593927478,-39.5631929803821,37.3600037638098 -72.9301991729793,-39.5633211252895,36.0540742240846 -72.9299596513271,-39.5631719769592,40.1981501374394 -72.92965218771531,-39.5631315029439,38.7412079786882 -72.92936638220159,-39.5630668692573,38.2439446765929 -72.92906764810439,-39.5630114260259,37.9236387116835 -72.928775275726,-39.5630611435239,40.2830224512145 -72.9284687272738,-39.5630438055104,38.0161925535649 -72.9282218607152,-39.5629002839117,39.8768599517643 -72.9280933701976,-39.5626919187729,39.4867471763864 -72.9281807696035,-39.5624752599849,37.696373087354 -72.9284504651536,-39.5623759229918,39.7909391447902 -72.9287751888581,-39.5623969757028,38.798172056675 -72.9291029090527,-39.5624166700353,38.3655811753124 -72.9294261069718,-39.5624479318301,37.298680011183 -72.92976326529509,-39.5624410461983,33.7219790061936 
+				</coordinates>
+			</LineString>
+		</MultiGeometry>
+		<atom:link rel="app" href="https://www.google.com/earth/about/versions/#earth-pro" title="Google Earth Pro 7.3.6.10441"></atom:link>
+	</Placemark>
+</Document>
+</kml>

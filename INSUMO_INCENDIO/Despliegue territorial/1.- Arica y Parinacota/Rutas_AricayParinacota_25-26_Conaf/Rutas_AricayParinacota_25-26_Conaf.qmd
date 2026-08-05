@@ -1,0 +1,135 @@
+<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
+<qgis version="3.34.9-Prizren">
+  <identifier>Red-vial_MOP_2024</identifier>
+  <parentidentifier></parentidentifier>
+  <language>ENG</language>
+  <type>dataset</type>
+  <title>Red-vial_MOP_2024</title>
+  <abstract>
+Atributos (Nombre de columna):
+Descripción:
+ROL
+Corresponde a un código único que permite identificar y diferenciar cada camino de acuerdo con la normativa vigente.
+Tiene su respaldo oficial de enrolamiento bajo una resolución exenta o Decreto Supremo, cuando corresponda, los cuales es posible encontrar en www.mapas.mop.cl, sección Normativa.
+Los caminos en proceso de enrolamiento, en este campo llevan un Rol propuesto antecedido por S/R-.
+ROL_ID
+Dados ciertos geo-procesos que se requieren aplicar, es necesario tener una columna con un identificador único a nivel regional. Considerando que el ROL es un valor que se usa para identificar los caminos, y a pesar de que la idea es tener un solo registro por rol, hay más de uno por diferentes motivos; se ha definido crear un campo llamado ROL_ID, donde se diferenciarán los roles en cada región, agregándoles un correlativo, generando así el ID regional requerido.
+CALZADA
+Valor que permite identificar si la calzada es única o doble y si es doble si es la izquierda o la derecha.
+ORIENTACION
+La información contenida en este campo diferencia los caminos que tienen más de un kilómetro cero (0,000) en cuanto a su ubicación u orientación (Norte, Sur, Este, Oeste, Centro y Única para el caso de los caminos con un único Km 0,000).
+ROL_LABEL
+Corresponde al valor que tendrá la etiqueta del Rol de los caminos en un mapa, según tipo de camino; solo llevan valor los registros de caminos enrolados.
+CODIGO_CAMINO
+Corresponde a la codificación interna de la Dirección de Vialidad, corresponde al Código del Activo Camino.
+El código tiene la siguiente estructura 12$34567; donde 12 es el código de la Región; $ es la letra correspondiente a la clasificación de caminos (DS 301 de 2011 y DS 436 de 2014) para caminos enrolados o su equivalente para los caminos declarados Públicos en Zona Urbana por Decreto Supremo que se encuentren completos dentro de dicha área y para el caso de los caminos por enrolar les corresponde la letra S; 3 corresponde a la Provincia (similar al Código Único Territorial del INE) y 4567 al número del rol.
+Todos los registros deben tener valor, de no existir se pondrá guion (-).
+NOMBRE_CAMINO
+Nombre del camino o Ruta, según inventario de la Dirección de Vialidad.
+Todos los registros deben tener valor, de no existir se pondrá guion (-).
+CLASIFICACION
+Clasificación de caminos según DS 301 de 2011 y DS 436 de 2014 para el caso de caminos enrolados o su equivalente para el caso de caminos en proceso de enrolamiento y caminos declarados públicos en Zona Urbana.
+- Caminos Nacionales: Caminos que presentan como función principal la integración del territorio a nivel nacional. Entran en este grupo, los caminos Longitudinales de Arica a Punta Arenas, Ruta 5, Ruta 7 y Ruta 9. También quedan comprendidos aquellos caminos que unen los Longitudinales con las capitales provinciales y los caminos que sean declarados Nacionales por el(la) Presidente(a) de la República.
+Símbolo: escudo que lleva el número del Rol.
+Los Caminos Nacionales con carácter Internacional, pertenecen a esta clasificación y son aquellos que presentan como función principal la integración del territorio a nivel internacional. Son declarados Nacionales con carácter Internacional por el(la) Presidente(a) de la República.
+Símbolo: escudo que lleva el número del Rol, además de las letras CH.
+- Caminos Regionales Principales: Son aquellos que presentan como función principal la conectividad dentro del territorio regional con la red de Caminos Nacionales.
+Símbolo: caja que lleva el Rol.
+- Caminos Regionales Provinciales: Caminos que presentan como función principal la conectividad dentro del territorio provincial y con la red de Caminos Regionales Principales.
+- Caminos Regionales Comunales: Caminos que presentan como función principal la conectividad dentro del territorio comunal y con la red de Caminos Regionales Provinciales.
+- Caminos Regionales de Acceso: Caminos que presentan como función principal la accesibilidad a lugares específicos y no tengan otra conexión con el resto de la Red Vial. Quedan comprendidos en este grupo todos los demás caminos no incluidos en las categorías anteriores.
+Símbolo: El Rol colocado paralelo y debajo de la línea a etiquetar.
+Los Roles de los Caminos Regionales están compuestos por letras y números de acuerdo al DS 301 de 2011.
+Todos los registros deben tener valor, de no existir se pondrá “Sin Información” (camino privado o caminos en revisión).
+CARPETA
+Corresponde al tipo de capa de rodadura que se utilizó para el acabado en la construcción del camino.
+Este campo se utiliza para la simbología oficial de la Red Vial por tipos de carpeta:
+- Pavimento Doble Calzada: Corresponde a aquellos caminos pavimentados que poseen una mediana que separa las calzadas. La mayoría de estos caminos corresponden a autopistas.
+Se simboliza de color rojo con una franja blanca al medio. Ancho aprox. de 4.1px
+- Pavimento: Conjunto de capas de rodadura de un camino, formado de materiales seleccionados, asfálticos, estabilizados, cementados y/o tratados, que se colocan sobre la subrasante con el propósito de resistir las cargas impuestas por el tránsito de vehículos y protegerlas de la acción de las condiciones ambientales.
+Se simboliza de color rojo. Ancho aprox. 3px
+- Pavimento Básico: Corresponde a una capa delgada compuesta por algún ligante (principalmente asfáltico) y material árido, cuya función es proteger la capa granular, sin aportar estructura. Ejemplos: Tratamiento Superficial, Imprimación Reforzada, Lechada Asfáltica, Cape Seal, Otta Seal, entre otros.
+Se simboliza con la combinación de color en RGB de 245, 122, 122. Ancho aprox. 3px
+- Grava Tratada: Corresponden a una Solución Básica que se caracteriza por la aplicación de algún tipo de ligante o estabilizador del suelo que mantiene más cohesionada la matriz pétrea, tales como Bischofita, Cloruro de Sodio, Estabilizados con Productos Químicos, entre otros.
+Se simboliza de color gris. Ancho aprox. 3px
+- Ripio: Capa de rodadura de grava o material pétreo.
+Se simboliza de color blanco con borde negro. Ancho aprox. 3px
+- Suelo Natural: Camino sin ninguna capa de protección.
+Se simboliza de color café con borde negro. Ancho aprox. 2.5px
+Existen registros con la categoría “Sin Información”, los cuales están en proceso de actualización, los cuales no se encuentran simbolizados.
+Fuente: Manual de Carreteras Vol. 5 y 7; Red Vial Nacional, Dimensionamiento y Características, 2021 (www.vialidad.cl)
+KM_I
+Kilometraje de inicio del segmento de camino al que corresponda el registro, expresado en metros.
+Campo cuyo valor se obtiene automáticamente desde la polilínea y corresponde al valor de la coordenada M del primer vértice.
+Todos los registros deben tener valor, de no existir quedará un 0 (cero).
+KM_F
+Kilometraje de término del segmento de camino al que corresponda el registro, expresado en metros.
+Campo cuyo valor se obtiene automáticamente desde la polilínea y corresponde al valor de la coordenada M del último vértice.
+Todos los registros deben tener valor, de no existir quedará un 0 (cero).
+KM_TRAMO
+Longitud del segmento de camino al que corresponda el registro, expresado en metros.
+Campo cuyo valor se obtiene restando los valores de los campos KM_F y KM_I.
+Todos los registros deben tener valor, de no existir quedará un 0 (cero).
+ENROLADO
+Este campo indica si el registro corresponde a un camino o tramo de camino que ha pasado por el proceso de enrolamiento, el cual tiene su respaldo oficial bajo el acto administrativo de una Resolución D.V. (Exenta) o Decreto Supremo dependiendo de la clasificación de caminos respectiva que es posible encontrar en www.mapas.mop.cl sección Normativa.
+Se utilizan las siguientes alternativas:
+- Sí
+- No: aquellos caminos que no se encuentran formalmente enrolados, pero se encuentran registrados a solicitud de las Direcciones Regionales de Vialidad en la base de datos de caminos y corresponden a caminos abiertos al uso público, sin restricción, sin causas judiciales pendientes respecto de su calidad jurídica u otro similar, por lo tanto cumplen con todas las características para ser enrolados.
+- Sin Revisar: Todos los registros deben tener un valor, si no se ha hecho la revisión, el valor será: “Sin Revisar”.
+CONCESIONADO
+Este campo indica si el registro corresponde a un camino o tramo de camino concesionado o no. 
+Las concesiones corresponden a un sistema de asociación público-privada para la provisión de infraestructura y servicios que son función pública, coordinadas por la Dirección General de Concesiones del Ministerio de Obras Públicas.
+Se utilizan las siguientes alternativas:
+- Sí
+- No
+- Sin Revisar
+REGION
+Indica el nombre de la Región donde está el camino.
+
+
+
+Cobertura de líneas que representan la Red Vial Nacional, con su tipo de carpeta. Corresponde a información de la Dirección de Vialidad del Ministerio de Obras Públicas. La fuente corresponde a levantamiento georreferenciado con el Sistema Global de Navegación por Satélite GNSS (submétrico, métrico) de los caminos o trazado en Google Earth o similar, para los casos en que no haya levantamiento GNSS. Escala estimada de los ejes viales, entre 1:5.000 a 1:25.000. Sistema de Referencia SIRGAS CHILE. Coordenadas Geodésicas. Estos archivos son considerados documentos de trabajo y corresponden a Bases de Datos dinámicas que están en constante depuración, complementación y actualización. La Red Vial contenida en estos archivos es lo que se encuentra disponible en el servicio web de mapas de la Dirección de Vialidad (www.mapas.mop.cl), con fecha de actualización a Noviembre del año 2021 y no representa la naturaleza jurídica de los caminos graficados. </abstract>
+  <keywords vocabulary="Buscar claves">
+    <keyword>Red Vial</keyword>
+    <keyword>Carpeta</keyword>
+    <keyword>Vialidad</keyword>
+  </keywords>
+  <contact>
+    <name></name>
+    <organization></organization>
+    <position></position>
+    <voice></voice>
+    <fax></fax>
+    <email></email>
+    <role></role>
+  </contact>
+  <links/>
+  <dates/>
+  <fees></fees>
+  <rights>Unidad de Gestión de la Información Territorial (UGIT-DV)&#xd;
+Dirección de Vialidad&#xd;
+Ministerio de Obras Públicas</rights>
+  <encoding></encoding>
+  <crs>
+    <spatialrefsys nativeFormat="Wkt">
+      <wkt>PROJCRS["WGS 84 / UTM zone 19S",BASEGEOGCRS["WGS 84",ENSEMBLE["World Geodetic System 1984 ensemble",MEMBER["World Geodetic System 1984 (Transit)"],MEMBER["World Geodetic System 1984 (G730)"],MEMBER["World Geodetic System 1984 (G873)"],MEMBER["World Geodetic System 1984 (G1150)"],MEMBER["World Geodetic System 1984 (G1674)"],MEMBER["World Geodetic System 1984 (G1762)"],MEMBER["World Geodetic System 1984 (G2139)"],ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]],ENSEMBLEACCURACY[2.0]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],ID["EPSG",4326]],CONVERSION["UTM zone 19S",METHOD["Transverse Mercator",ID["EPSG",9807]],PARAMETER["Latitude of natural origin",0,ANGLEUNIT["degree",0.0174532925199433],ID["EPSG",8801]],PARAMETER["Longitude of natural origin",-69,ANGLEUNIT["degree",0.0174532925199433],ID["EPSG",8802]],PARAMETER["Scale factor at natural origin",0.9996,SCALEUNIT["unity",1],ID["EPSG",8805]],PARAMETER["False easting",500000,LENGTHUNIT["metre",1],ID["EPSG",8806]],PARAMETER["False northing",10000000,LENGTHUNIT["metre",1],ID["EPSG",8807]]],CS[Cartesian,2],AXIS["(E)",east,ORDER[1],LENGTHUNIT["metre",1]],AXIS["(N)",north,ORDER[2],LENGTHUNIT["metre",1]],USAGE[SCOPE["Navigation and medium accuracy spatial referencing."],AREA["Between 72°W and 66°W, southern hemisphere between 80°S and equator, onshore and offshore. Argentina. Bolivia. Brazil. Chile. Colombia. Peru."],BBOX[-80,-72,0,-66]],ID["EPSG",32719]]</wkt>
+      <proj4>+proj=utm +zone=19 +south +datum=WGS84 +units=m +no_defs</proj4>
+      <srsid>3169</srsid>
+      <srid>32719</srid>
+      <authid>EPSG:32719</authid>
+      <description>WGS 84 / UTM zone 19S</description>
+      <projectionacronym>utm</projectionacronym>
+      <ellipsoidacronym>EPSG:7030</ellipsoidacronym>
+      <geographicflag>false</geographicflag>
+    </spatialrefsys>
+  </crs>
+  <extent>
+    <spatial minz="0" crs="EPSG:32719" maxz="0" maxy="-17.49800000000000111" dimensions="2" minx="-109.44320000000000448" maxx="-67.0613000000000028" miny="-54.94809999999999661"/>
+    <temporal>
+      <period>
+        <start></start>
+        <end></end>
+      </period>
+    </temporal>
+  </extent>
+</qgis>

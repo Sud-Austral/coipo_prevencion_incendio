@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document id="root_doc">
+<Schema name="oecv_la_cantera" id="oecv_la_cantera">
+	<SimpleField name="fid" type="float"></SimpleField>
+	<SimpleField name="Leng" type="int"></SimpleField>
+</Schema>
+<Folder><name>oecv_la_cantera</name>
+  <Placemark>
+	<Style><LineStyle><color>ff0000ff</color></LineStyle><PolyStyle><fill>0</fill></PolyStyle></Style>
+	<ExtendedData><SchemaData schemaUrl="#oecv_la_cantera">
+		<SimpleData name="fid">1</SimpleData>
+		<SimpleData name="Leng">77</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><LineString><coordinates>-72.9427203417339,-40.3333113651139 -72.942490430341,-40.3332784232371 -72.9425383318369,-40.3330460638654 -72.942611078407,-40.3327714711976</coordinates></LineString></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<Style><LineStyle><color>ff0000ff</color></LineStyle><PolyStyle><fill>0</fill></PolyStyle></Style>
+	<ExtendedData><SchemaData schemaUrl="#oecv_la_cantera">
+		<SimpleData name="fid">2</SimpleData>
+		<SimpleData name="Leng">104</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><LineString><coordinates>-72.9438761588197,-40.3321835966153 -72.9441814602776,-40.3321649827603 -72.9444730349207,-40.3321845920031 -72.9444730349207,-40.3321845920031 -72.9447305851059,-40.3322901485745 -72.9447259944445,-40.3325449170113 -72.9447259944445,-40.3325449170113</coordinates></LineString></MultiGeometry>
+  </Placemark>
+</Folder>
+</Document></kml>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document id="root_doc">
+<Schema name="cortafuego_manual_el_salto" id="cortafuego_manual_el_salto">
+	<SimpleField name="descriptio" type="string"></SimpleField>
+	<SimpleField name="timestamp" type="string"></SimpleField>
+	<SimpleField name="begin" type="string"></SimpleField>
+	<SimpleField name="end" type="string"></SimpleField>
+	<SimpleField name="altitudeMo" type="string"></SimpleField>
+	<SimpleField name="tessellate" type="float"></SimpleField>
+	<SimpleField name="extrude" type="float"></SimpleField>
+	<SimpleField name="visibility" type="float"></SimpleField>
+	<SimpleField name="drawOrder" type="float"></SimpleField>
+	<SimpleField name="icon" type="string"></SimpleField>
+</Schema>
+<Folder><name>cortafuego_manual_el_salto</name>
+  <Placemark>
+	<Style><LineStyle><color>ff0000ff</color></LineStyle><PolyStyle><fill>0</fill></PolyStyle></Style>
+	<ExtendedData><SchemaData schemaUrl="#cortafuego_manual_el_salto">
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><LineString><coordinates>-72.7094308034784,-39.9746602163609,0 -72.7094379816397,-39.9744453077887,0 -72.7094544571214,-39.9742456742849,0 -72.7094623906758,-39.9740081437362,0 -72.7093978128997,-39.9738861368811,0 -72.7093650312216,-39.9736930751366,0 -72.7092281944812,-39.9736790511825,0 -72.7091310543682,-39.9737978605606,0 -72.709104284678,-39.9738652419197,0 -72.7088765929566,-39.9739286501244,0 -72.7085965066157,-39.9739457478486,0 -72.7082868909583,-39.9739660336069,0 -72.7081235352506,-39.9740118488267,0 -72.7080375799444,-39.9740893775506,0 -72.7080255107105,-39.9741570494612,0 -72.7080238726005,-39.9742060636518,0 -72.7080265049989,-39.9742740264003,0 -72.708057532713,-39.9743727334044,0 -72.7080751188649,-39.9744334463432,0 -72.7080841639645,-39.9744562621671,0</coordinates></LineString></MultiGeometry>
+  </Placemark>
+</Folder>
+</Document></kml>

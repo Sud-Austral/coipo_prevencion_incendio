@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document id="root_doc">
+<Schema name="oecv_rucahue_lt50a" id="oecv_rucahue_lt50a">
+	<SimpleField name="timestamp" type="string"></SimpleField>
+	<SimpleField name="begin" type="string"></SimpleField>
+	<SimpleField name="end" type="string"></SimpleField>
+	<SimpleField name="altitudeMode" type="string"></SimpleField>
+	<SimpleField name="tessellate" type="int"></SimpleField>
+	<SimpleField name="extrude" type="int"></SimpleField>
+	<SimpleField name="visibility" type="int"></SimpleField>
+	<SimpleField name="drawOrder" type="int"></SimpleField>
+	<SimpleField name="icon" type="string"></SimpleField>
+	<SimpleField name="Leng" type="float"></SimpleField>
+	<SimpleField name="Nombre" type="string"></SimpleField>
+</Schema>
+<Folder><name>oecv_rucahue_lt50a</name>
+  <Placemark>
+	<name>21 nov 2025 12:45:16 p. m.</name>
+	<Style><LineStyle><color>ff0000ff</color></LineStyle><PolyStyle><fill>0</fill></PolyStyle></Style>
+	<ExtendedData><SchemaData schemaUrl="#oecv_rucahue_lt50a">
+		<SimpleData name="begin">2025/11/21 15:45:16.901+00</SimpleData>
+		<SimpleData name="end">2025/11/21 15:54:35.282+00</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+		<SimpleData name="Leng">647.74417929125</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><LineString><coordinates>-72.94597833,-39.53825667,40.7 -72.94596833,-39.53816167,39.4 -72.94596,-39.53806333,43 -72.94594,-39.53796833,40.7 -72.945925,-39.53787667,40.3 -72.94595833,-39.53778333,42 -72.94599667,-39.53769167,39.7 -72.94596667,-39.53759833,41.7 -72.94589833,-39.537515,45.2 -72.94582667,-39.53743667,44.2 -72.94577833,-39.53735167,41.6 -72.94578667,-39.53725167,39.8 -72.94588167,-39.537195,40.3 -72.946,-39.537165,42.1 -72.94612833,-39.53717333,40.8 -72.946265,-39.53718167,40.6 -72.946385,-39.53717167,40.4 -72.94650667,-39.53716333,38.6 -72.946625,-39.53717333,39.8 -72.946745,-39.53718667,41.4 -72.94686667,-39.53719667,40.7 -72.94699667,-39.53719833,40.7 -72.94711333,-39.53721333,41.2 -72.94724333,-39.53722,41.1 -72.94736833,-39.53722667,40.3 -72.94748667,-39.53723,40.1 -72.94761833,-39.53722333,41.2 -72.94774833,-39.53722,41.7 -72.947875,-39.53720667,40.4 -72.94799167,-39.53720333,40.2 -72.94811,-39.537225,41.6 -72.948235,-39.537225,41.5 -72.948365,-39.53720667,39.6 -72.948495,-39.53721667,39 -72.94861833,-39.53723667,38.9 -72.94875333,-39.53724333,38.7 -72.94887167,-39.53726167,39.4 -72.94898833,-39.537255,38.7 -72.94910667,-39.53727333,38.8 -72.94922333,-39.53729167,41.1 -72.9493,-39.537365,42.9 -72.94930667,-39.537455,43.4 -72.94933167,-39.537555,42.1 -72.94934333,-39.53765333,42.4 -72.949355,-39.53774667,45.4 -72.94933667,-39.53784667,45 -72.94933333,-39.53794667,45.1 -72.94934667,-39.53804833,45.7 -72.94933833,-39.53814167,46.3 -72.94933333,-39.538245,47.6 -72.94934667,-39.53833667,48.6 -72.94936,-39.538435,47 -72.949355,-39.538535,47.9 -72.94936333,-39.53863667,45.2 -72.949355,-39.538745,46 -72.94935667,-39.53884667,46.7 -72.94935833,-39.53894833,47.3 -72.94936167,-39.53904333,48.4 -72.94938,-39.539135,50.6 -72.94939,-39.53923167,49.2 -72.94935833,-39.53933,46.9</coordinates></LineString></MultiGeometry>
+  </Placemark>
+</Folder>
+</Document></kml>

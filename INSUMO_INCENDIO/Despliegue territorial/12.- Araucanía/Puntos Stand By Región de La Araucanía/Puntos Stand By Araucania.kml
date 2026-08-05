@@ -1,0 +1,586 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document id="root_doc">
+<Schema name="puntos_stand_by_region_la_araucania" id="puntos_stand_by_region_la_araucania">
+	<SimpleField name="descriptio" type="string"></SimpleField>
+	<SimpleField name="timestamp" type="string"></SimpleField>
+	<SimpleField name="begin" type="string"></SimpleField>
+	<SimpleField name="end" type="string"></SimpleField>
+	<SimpleField name="altitudeMo" type="string"></SimpleField>
+	<SimpleField name="tessellate" type="float"></SimpleField>
+	<SimpleField name="extrude" type="float"></SimpleField>
+	<SimpleField name="visibility" type="float"></SimpleField>
+	<SimpleField name="drawOrder" type="float"></SimpleField>
+	<SimpleField name="icon" type="string"></SimpleField>
+	<SimpleField name="Name_2" type="string"></SimpleField>
+	<SimpleField name="descript_1" type="string"></SimpleField>
+	<SimpleField name="timestamp_" type="string"></SimpleField>
+	<SimpleField name="begin_2" type="string"></SimpleField>
+	<SimpleField name="end_2" type="string"></SimpleField>
+	<SimpleField name="altitude_1" type="string"></SimpleField>
+	<SimpleField name="tessella_1" type="float"></SimpleField>
+	<SimpleField name="extrude_2" type="float"></SimpleField>
+	<SimpleField name="visibili_1" type="float"></SimpleField>
+	<SimpleField name="drawOrder_" type="float"></SimpleField>
+	<SimpleField name="icon_2" type="string"></SimpleField>
+	<SimpleField name="Name_3" type="string"></SimpleField>
+	<SimpleField name="descript_2" type="string"></SimpleField>
+	<SimpleField name="timestam_1" type="string"></SimpleField>
+	<SimpleField name="begin_3" type="string"></SimpleField>
+	<SimpleField name="end_3" type="string"></SimpleField>
+	<SimpleField name="altitude_2" type="string"></SimpleField>
+	<SimpleField name="tessella_2" type="float"></SimpleField>
+	<SimpleField name="extrude_3" type="float"></SimpleField>
+	<SimpleField name="visibili_2" type="float"></SimpleField>
+	<SimpleField name="drawOrde_1" type="float"></SimpleField>
+	<SimpleField name="icon_3" type="string"></SimpleField>
+</Schema>
+<Folder><name>puntos_stand_by_region_la_araucania</name>
+  <Placemark>
+	<name>9.23</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">9.23 M. Vidal</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+		<SimpleData name="Name_2">BC-901-26</SimpleData>
+		<SimpleData name="tessella_1">-1</SimpleData>
+		<SimpleData name="extrude_2">0</SimpleData>
+		<SimpleData name="visibili_1">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.673889,-37.810556,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<name>9.26</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">9.26 M. Carrasco</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+		<SimpleData name="Name_2">BC-901-26</SimpleData>
+		<SimpleData name="tessella_1">-1</SimpleData>
+		<SimpleData name="extrude_2">0</SimpleData>
+		<SimpleData name="visibili_1">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.673889,-37.810556,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<name>9.27</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">9.27 R. Martinez</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+		<SimpleData name="Name_2">BC-901-26</SimpleData>
+		<SimpleData name="tessella_1">-1</SimpleData>
+		<SimpleData name="extrude_2">0</SimpleData>
+		<SimpleData name="visibili_1">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.673889,-37.810556,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<name>9.0</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">9.0 M.Huentequeo</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.620689,-38.749914,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<name>9.1</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">9.1  M. Alvarado</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.620631,-38.750014,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<name>9.2</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">9.20 L. Bascuñan</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.620631,-38.750014,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<name>9.21</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">9.21 L. Marilao</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.345556,-38.243889,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<name>9.22</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">9.22 C. Garcia</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.430569,-38.525606,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<name>9.23</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">9.23 M. Vidal</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<name>9.24</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">9.24 J. Canullan</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.620631,-38.750014,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<name>9.26</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">9.26 M. Carrasco</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<name>9.27</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">9.27 R. Martinez</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<name>9.3</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">9.30 O.Astorga</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.620689,-38.749914,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<name>9.5</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">9.50 W.Gonzalez</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.620631,-38.750378,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<name>AP.94</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">AP.94 C.Venegas</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.620689,-38.749914,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<name>AP.94</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">AP.94 F. Lehuey</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.620689,-38.749914,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<name>AP.95</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">AP.95 C. Abello</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.620689,-38.749914,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<name>AP.96</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">AP.96 J.Carrasco</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.620689,-38.749914,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<name>C1</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">C1 - J. Espinoza</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.620631,-38.750014,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<name>C2</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">C2 D. Figueroa</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.620631,-38.750014,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<name>C3</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">C3 S. Inostroza</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.620631,-38.750014,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<name>MM</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">M. Mora</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.620631,-38.750014,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<name>P.F</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">P.F Melani Rios</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.620556,-38.75,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<name>S10</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">S10 C. Ruiz</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.430569,-38.525606,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<name>S2</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">S2 J. Campos</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-73.066667,-38.034444,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<name>S5</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">S5 P. Vidal</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.345556,-38.243889,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<name>S7</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">S7 A. Sandoval</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.226944,-39.312778,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<name>SO.91</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">SO.91 R. Navarrete</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.620556,-38.750278,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<name>SO.9</name>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="descriptio">SO.9  D. Diaz</SimpleData>
+		<SimpleData name="tessellate">-1</SimpleData>
+		<SimpleData name="extrude">0</SimpleData>
+		<SimpleData name="visibility">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.620689,-38.749914,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="Name_2">BC-901-26</SimpleData>
+		<SimpleData name="tessella_1">-1</SimpleData>
+		<SimpleData name="extrude_2">0</SimpleData>
+		<SimpleData name="visibili_1">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="Name_2">BC-903-26</SimpleData>
+		<SimpleData name="tessella_1">-1</SimpleData>
+		<SimpleData name="extrude_2">0</SimpleData>
+		<SimpleData name="visibili_1">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.345839,-38.244069,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="Name_2">BC-906-26</SimpleData>
+		<SimpleData name="tessella_1">-1</SimpleData>
+		<SimpleData name="extrude_2">0</SimpleData>
+		<SimpleData name="visibili_1">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.923575,-38.759453,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="Name_3">C-EL-SOL</SimpleData>
+		<SimpleData name="descript_2">Cam. El Sol</SimpleData>
+		<SimpleData name="tessella_2">-1</SimpleData>
+		<SimpleData name="extrude_3">0</SimpleData>
+		<SimpleData name="visibili_2">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.735425,-39.079008,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="Name_3">C-Temuco</SimpleData>
+		<SimpleData name="descript_2">Cam. Temuco</SimpleData>
+		<SimpleData name="tessella_2">-1</SimpleData>
+		<SimpleData name="extrude_3">0</SimpleData>
+		<SimpleData name="visibili_2">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.620728,-38.750033,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="Name_3">C.Victoria</SimpleData>
+		<SimpleData name="tessella_2">-1</SimpleData>
+		<SimpleData name="extrude_3">0</SimpleData>
+		<SimpleData name="visibili_2">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.345956,-38.244047,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="Name_3">MOLCO-CMPC</SimpleData>
+		<SimpleData name="tessella_2">-1</SimpleData>
+		<SimpleData name="extrude_3">0</SimpleData>
+		<SimpleData name="visibili_2">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-73.112555,-38.889574,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="Name_3">Mortandad</SimpleData>
+		<SimpleData name="tessella_2">-1</SimpleData>
+		<SimpleData name="extrude_3">0</SimpleData>
+		<SimpleData name="visibili_2">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.437797,-37.959064,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="Name_3">P.O.Contulmo</SimpleData>
+		<SimpleData name="tessella_2">-1</SimpleData>
+		<SimpleData name="extrude_3">0</SimpleData>
+		<SimpleData name="visibili_2">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-73.167114,-38.013736,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="Name_3">P.O.PailePaile</SimpleData>
+		<SimpleData name="tessella_2">-1</SimpleData>
+		<SimpleData name="extrude_3">0</SimpleData>
+		<SimpleData name="visibili_2">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-71.661297,-38.868926,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="Name_3">T.Baltimore</SimpleData>
+		<SimpleData name="tessella_2">-1</SimpleData>
+		<SimpleData name="extrude_3">0</SimpleData>
+		<SimpleData name="visibili_2">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-71.973,-38.1299,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="Name_3">T.Deille</SimpleData>
+		<SimpleData name="tessella_2">-1</SimpleData>
+		<SimpleData name="extrude_3">0</SimpleData>
+		<SimpleData name="visibili_2">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.648689,-38.611117,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="Name_3">T.El.Almendro</SimpleData>
+		<SimpleData name="descript_2">T. El Almendro</SimpleData>
+		<SimpleData name="tessella_2">-1</SimpleData>
+		<SimpleData name="extrude_3">0</SimpleData>
+		<SimpleData name="visibili_2">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.678594,-37.716278,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="Name_3">T.esperanza</SimpleData>
+		<SimpleData name="tessella_2">-1</SimpleData>
+		<SimpleData name="extrude_3">0</SimpleData>
+		<SimpleData name="visibili_2">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.385497,-37.837731,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="Name_3">T.Huamaqui</SimpleData>
+		<SimpleData name="descript_2">T. Huamaqui</SimpleData>
+		<SimpleData name="tessella_2">-1</SimpleData>
+		<SimpleData name="extrude_3">0</SimpleData>
+		<SimpleData name="visibili_2">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-73.038333,-38.453056,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="Name_3">T.Jauja</SimpleData>
+		<SimpleData name="descript_2">T. Jauja</SimpleData>
+		<SimpleData name="tessella_2">-1</SimpleData>
+		<SimpleData name="extrude_3">0</SimpleData>
+		<SimpleData name="visibili_2">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-71.935208,-38.084592,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="Name_3">T.La.Serena</SimpleData>
+		<SimpleData name="descript_2">T. La Serena</SimpleData>
+		<SimpleData name="tessella_2">-1</SimpleData>
+		<SimpleData name="extrude_3">0</SimpleData>
+		<SimpleData name="visibili_2">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.658442,-38.552958,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="Name_3">T.Lastarria</SimpleData>
+		<SimpleData name="descript_2">T. Lastarria</SimpleData>
+		<SimpleData name="tessella_2">-1</SimpleData>
+		<SimpleData name="extrude_3">0</SimpleData>
+		<SimpleData name="visibili_2">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.682272,-39.322989,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="Name_3">T.Maicoya</SimpleData>
+		<SimpleData name="tessella_2">-1</SimpleData>
+		<SimpleData name="extrude_3">0</SimpleData>
+		<SimpleData name="visibili_2">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.959525,-37.997294,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="Name_3">T.Mininco</SimpleData>
+		<SimpleData name="tessella_2">-1</SimpleData>
+		<SimpleData name="extrude_3">0</SimpleData>
+		<SimpleData name="visibili_2">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.486681,-37.828675,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="Name_3">T.Montebello</SimpleData>
+		<SimpleData name="descript_2">T. Montebello</SimpleData>
+		<SimpleData name="tessella_2">-1</SimpleData>
+		<SimpleData name="extrude_3">0</SimpleData>
+		<SimpleData name="visibili_2">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-73.166139,-38.745461,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="Name_3">T.Placeres</SimpleData>
+		<SimpleData name="descript_2">T. Placeres</SimpleData>
+		<SimpleData name="tessella_2">-1</SimpleData>
+		<SimpleData name="extrude_3">0</SimpleData>
+		<SimpleData name="visibili_2">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.759811,-37.826797,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="Name_3">T.San.Ramon</SimpleData>
+		<SimpleData name="tessella_2">-1</SimpleData>
+		<SimpleData name="extrude_3">0</SimpleData>
+		<SimpleData name="visibili_2">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.349019,-38.119375,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="Name_3">T.SantaAmelia</SimpleData>
+		<SimpleData name="tessella_2">-1</SimpleData>
+		<SimpleData name="extrude_3">0</SimpleData>
+		<SimpleData name="visibili_2">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.417025,-37.978822,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="Name_3">T.totoras</SimpleData>
+		<SimpleData name="tessella_2">-1</SimpleData>
+		<SimpleData name="extrude_3">0</SimpleData>
+		<SimpleData name="visibili_2">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.514722,-37.907222,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+  <Placemark>
+	<ExtendedData><SchemaData schemaUrl="#puntos_stand_by_region_la_araucania">
+		<SimpleData name="Name_3">T.Vocolhue</SimpleData>
+		<SimpleData name="descript_2">T. Vocolhue</SimpleData>
+		<SimpleData name="tessella_2">-1</SimpleData>
+		<SimpleData name="extrude_3">0</SimpleData>
+		<SimpleData name="visibili_2">-1</SimpleData>
+	</SchemaData></ExtendedData>
+      <MultiGeometry><Point><coordinates>-72.87,-38.408056,0</coordinates></Point></MultiGeometry>
+  </Placemark>
+</Folder>
+</Document></kml>

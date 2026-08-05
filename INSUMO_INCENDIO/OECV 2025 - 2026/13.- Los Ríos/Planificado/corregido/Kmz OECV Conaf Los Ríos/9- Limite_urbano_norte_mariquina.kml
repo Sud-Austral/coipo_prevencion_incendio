@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document id="root_doc">
+	<name>9- Limite_urbano_norte_mariquina.kml</name>
+	<atom:link rel="app" href="https://www.google.com/earth/about/versions/#earth-pro" title="Google Earth Pro 7.3.6.10201"></atom:link>
+	<Schema name="limite_urbano_norte_mariquina" id="limite_urbano_norte_mariquina">
+		<SimpleField type="string" name="descriptio"></SimpleField>
+		<SimpleField type="string" name="timestamp"></SimpleField>
+		<SimpleField type="string" name="begin"></SimpleField>
+		<SimpleField type="string" name="end"></SimpleField>
+		<SimpleField type="string" name="altitudeMo"></SimpleField>
+		<SimpleField type="float" name="tessellate"></SimpleField>
+		<SimpleField type="float" name="extrude"></SimpleField>
+		<SimpleField type="float" name="visibility"></SimpleField>
+		<SimpleField type="float" name="drawOrder"></SimpleField>
+		<SimpleField type="string" name="icon"></SimpleField>
+		<SimpleField type="string" name="Name_2"></SimpleField>
+		<SimpleField type="string" name="descript_1"></SimpleField>
+		<SimpleField type="string" name="timestamp_"></SimpleField>
+		<SimpleField type="string" name="begin_2"></SimpleField>
+		<SimpleField type="string" name="end_2"></SimpleField>
+		<SimpleField type="string" name="altitude_1"></SimpleField>
+		<SimpleField type="float" name="tessella_1"></SimpleField>
+		<SimpleField type="float" name="extrude_2"></SimpleField>
+		<SimpleField type="float" name="visibili_1"></SimpleField>
+		<SimpleField type="float" name="drawOrder_"></SimpleField>
+		<SimpleField type="string" name="icon_2"></SimpleField>
+		<SimpleField type="string" name="Name_3"></SimpleField>
+		<SimpleField type="string" name="descript_2"></SimpleField>
+		<SimpleField type="string" name="timestam_1"></SimpleField>
+		<SimpleField type="string" name="begin_3"></SimpleField>
+		<SimpleField type="string" name="end_3"></SimpleField>
+		<SimpleField type="string" name="altitude_2"></SimpleField>
+		<SimpleField type="float" name="tessella_2"></SimpleField>
+		<SimpleField type="float" name="extrude_3"></SimpleField>
+		<SimpleField type="float" name="visibili_2"></SimpleField>
+		<SimpleField type="float" name="drawOrde_1"></SimpleField>
+		<SimpleField type="string" name="icon_3"></SimpleField>
+	</Schema>
+	<Style id="style">
+		<LineStyle>
+			<color>ff00ff00</color>
+			<width>1.5</width>
+		</LineStyle>
+		<PolyStyle>
+			<fill>0</fill>
+		</PolyStyle>
+	</Style>
+	<Style id="style0">
+		<LineStyle>
+			<color>ff00ff00</color>
+			<width>1.5</width>
+		</LineStyle>
+		<PolyStyle>
+			<fill>0</fill>
+		</PolyStyle>
+	</Style>
+	<Style id="style1">
+		<LineStyle>
+			<color>ff00ff00</color>
+			<width>1.5</width>
+		</LineStyle>
+		<PolyStyle>
+			<fill>0</fill>
+		</PolyStyle>
+	</Style>
+	<Style id="style2">
+		<LineStyle>
+			<color>ff00ff00</color>
+			<width>1.5</width>
+		</LineStyle>
+		<PolyStyle>
+			<fill>0</fill>
+		</PolyStyle>
+	</Style>
+	<Style id="style3">
+		<LineStyle>
+			<color>ff00ff00</color>
+			<width>1.5</width>
+		</LineStyle>
+		<PolyStyle>
+			<fill>0</fill>
+		</PolyStyle>
+	</Style>
+	<Style id="style4">
+		<LineStyle>
+			<color>ff00ff00</color>
+			<width>1.5</width>
+		</LineStyle>
+		<PolyStyle>
+			<fill>0</fill>
+		</PolyStyle>
+	</Style>
+	<StyleMap id="stylemap_id0">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#style1</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#style</styleUrl>
+		</Pair>
+	</StyleMap>
+	<StyleMap id="stylemap_id1">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#style4</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#style0</styleUrl>
+		</Pair>
+	</StyleMap>
+	<StyleMap id="stylemap_id2">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#style2</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#style3</styleUrl>
+		</Pair>
+	</StyleMap>
+	<Folder>
+		<name>limite_urbano_norte_mariquina</name>
+		<Placemark>
+			<name>Limite Urbano 4</name>
+			<styleUrl>#stylemap_id0</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#limite_urbano_norte_mariquina">
+					<SimpleData name="tessellate">1</SimpleData>
+					<SimpleData name="extrude">0</SimpleData>
+					<SimpleData name="visibility">-1</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<MultiGeometry>
+				<LineString>
+					<coordinates>
+						-72.9539255929888,-39.5336180322672,0 -72.9539540572889,-39.5347110508832,0 -72.953976299266,-39.5347110506786,0 -72.95491042103301,-39.5346905143847,0 -72.955272067377,-39.5357895689577,0 -72.95663792932601,-39.5358676730211,0 -72.956090733398,-39.534555618804,0 
+					</coordinates>
+				</LineString>
+			</MultiGeometry>
+		</Placemark>
+		<Placemark>
+			<styleUrl>#stylemap_id1</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#limite_urbano_norte_mariquina">
+					<SimpleData name="Name_2">LIMITE URBANO</SimpleData>
+					<SimpleData name="tessella_1">1</SimpleData>
+					<SimpleData name="extrude_2">0</SimpleData>
+					<SimpleData name="visibili_1">-1</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<MultiGeometry>
+				<LineString>
+					<coordinates>
+						-72.9508552542398,-39.5308719138139,0 -72.9508331328442,-39.53250845735,0 
+					</coordinates>
+				</LineString>
+				<LineString>
+					<coordinates>
+						-72.9506841317292,-39.5333144399637,0 -72.9507041291907,-39.5339302963746,0 -72.9506627647276,-39.5342023621501,0 -72.9507516348788,-39.5345073009985,0 -72.95087004877431,-39.5349464399683,0 -72.9508325995623,-39.5352210217068,0 -72.950709041531,-39.5352955187594,0 -72.95050186248601,-39.5352386643693,0 
+					</coordinates>
+				</LineString>
+				<LineString>
+					<coordinates>
+						-72.9507795452334,-39.5356126545403,0 -72.9497817307811,-39.5350311437844,0 -72.9493423041645,-39.5355258758455,0 -72.9493668809078,-39.535612317322,0 -72.9497262178925,-39.5357027842664,0 
+					</coordinates>
+				</LineString>
+				<LineString>
+					<coordinates>
+						-72.94863742245001,-39.5352231281648,0 -72.9484089652608,-39.5354496358469,0 -72.94620958945811,-39.5350522459556,0 
+					</coordinates>
+				</LineString>
+			</MultiGeometry>
+		</Placemark>
+		<Placemark>
+			<styleUrl>#stylemap_id2</styleUrl>
+			<ExtendedData>
+				<SchemaData schemaUrl="#limite_urbano_norte_mariquina">
+					<SimpleData name="Name_3">Mariquina Cancha</SimpleData>
+					<SimpleData name="tessella_2">1</SimpleData>
+					<SimpleData name="extrude_3">0</SimpleData>
+					<SimpleData name="visibili_2">-1</SimpleData>
+				</SchemaData>
+			</ExtendedData>
+			<MultiGeometry>
+				<LineString>
+					<coordinates>
+						-72.9518278702719,-39.5316251535266,0 -72.95187072001811,-39.5316251515083,0 -72.95191340436971,-39.5316337280701,0 -72.9524458472923,-39.5317192418048,0 -72.95260019963889,-39.5315993512331,0 -72.9531717235003,-39.5317277294124,0 -72.9531083047487,-39.5326477484321,0 
+					</coordinates>
+				</LineString>
+			</MultiGeometry>
+		</Placemark>
+	</Folder>
+</Document>
+</kml>
