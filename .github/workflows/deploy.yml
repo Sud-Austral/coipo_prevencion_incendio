@@ -1,0 +1,106 @@
+name: ETL y despliegue a GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'INSUMO_INCENDIO/**'
+      - 'ETL/**'
+      - 'frontend/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch: # botón manual en la pestaña Actions
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # El repo pesa ~600 MB por INSUMO_INCENDIO. Sin sparse-checkout el
+          # runner se trae también el historial completo.
+          fetch-depth: 1
+          sparse-checkout: |
+            INSUMO_INCENDIO
+            ETL
+            frontend
+          sparse-checkout-cone-mode: false
+
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: ETL/requirements.txt
+
+      - run: pip install -r ETL/requirements.txt
+
+      # tippecanoe es el motivo de correr el ETL aquí y no en Windows: convierte
+      # las capas viales (19.000 líneas, 5,7 M de vértices) en teselas
+      # vectoriales. Compilarlo toma ~2 min, así que se cachea el binario.
+      - name: Caché de tippecanoe
+        id: cache-tippecanoe
+        uses: actions/cache@v4
+        with:
+          path: /usr/local/bin/tippecanoe
+          key: tippecanoe-2.78.0-${{ runner.os }}
+
+      - name: Compilar tippecanoe
+        if: steps.cache-tippecanoe.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq build-essential libsqlite8-dev zlib1g-dev || \
+          sudo apt-get install -y -qq build-essential libsqlite3-dev zlib1g-dev
+          git clone --depth 1 --branch 2.78.0 https://github.com/felt/tippecanoe.git /tmp/tippecanoe
+          make -C /tmp/tippecanoe -j"$(nproc)"
+          sudo make -C /tmp/tippecanoe install
+          tippecanoe --version || true
+
+      # Genera las capas Y las valida. Si verify.py falla, el workflow falla y
+      # no se publica nada roto.
+      - name: ETL
+        run: python ETL/run.py -v
+
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+        working-directory: frontend
+
+      - run: npm run build
+        working-directory: frontend
+
+      - name: Resumen
+        run: |
+          echo "### Capas publicadas" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          ls -lh frontend/dist/data >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
