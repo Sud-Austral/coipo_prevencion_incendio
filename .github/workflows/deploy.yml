@@ -26,14 +26,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          # El repo pesa ~600 MB por INSUMO_INCENDIO. Sin sparse-checkout el
-          # runner se trae también el historial completo.
+          # fetch-depth 1 evita traerse el historial. No se usa sparse-checkout:
+          # INSUMO_INCENDIO es ~545 MB de un repo de 545 MB, así que excluir el
+          # resto no ahorraría nada y sí añade una forma de que falle.
           fetch-depth: 1
-          sparse-checkout: |
-            INSUMO_INCENDIO
-            ETL
-            frontend
-          sparse-checkout-cone-mode: false
 
       - name: Python
         uses: actions/setup-python@v5
@@ -58,7 +54,6 @@ jobs:
         if: steps.cache-tippecanoe.outputs.cache-hit != 'true'
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq build-essential libsqlite8-dev zlib1g-dev || \
           sudo apt-get install -y -qq build-essential libsqlite3-dev zlib1g-dev
           git clone --depth 1 --branch 2.78.0 https://github.com/felt/tippecanoe.git /tmp/tippecanoe
           make -C /tmp/tippecanoe -j"$(nproc)"
@@ -69,6 +64,17 @@ jobs:
       # no se publica nada roto.
       - name: ETL
         run: python ETL/run.py -v
+
+      # Deja las capas descargables desde la página del run, para no tener que
+      # reejecutar el ETL en local solo para trabajar en el frontend.
+      # El atajo diario es `npm run datos`, que las baja del sitio publicado.
+      - name: Publicar las capas como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: capas-geo
+          path: frontend/public/data
+          retention-days: 30
+          if-no-files-found: error
 
       - name: Node
         uses: actions/setup-node@v4

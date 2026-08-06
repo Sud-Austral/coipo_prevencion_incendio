@@ -8,13 +8,27 @@ Sin backend: todo se sirve como archivos estáticos.
 
 ## Uso
 
+Para trabajar solo en el frontend, sin correr el ETL:
+
 ```bash
-python ETL/run.py          # genera las capas y las valida  (~20 s)
-cd frontend && npm install && npm run dev
+cd frontend && npm install
+npm run datos     # baja las capas ya publicadas por Actions
+npm run dev
+```
+
+Para regenerar las capas desde los insumos:
+
+```bash
+python ETL/run.py          # 6 capas en paralelo + validación  (~20 s)
 ```
 
 `ETL/run.py` es el único punto de entrada: corre las 6 capas en paralelo,
 escribe `manifest.json` y ejecuta `verify.py` al terminar.
+
+`npm run datos` lee la lista de archivos del propio `manifest.json` publicado,
+así que baja lo que haya (GeoJSON o PMTiles) sin saber de antemano cuál toca.
+Cada run del workflow deja además las capas como artefacto `capas-geo`,
+descargable durante 30 días desde la página del run.
 
 ```
 python ETL/run.py [--layers incendios,oecv,…] [--jobs N] [--secuencial]
