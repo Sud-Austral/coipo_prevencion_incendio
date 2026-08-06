@@ -1,2 +1,31 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Binarios: nunca normalizar saltos de línea (corrompería el contenido).
+*.shp     binary
+*.shx     binary
+*.dbf     binary
+*.sbn     binary
+*.sbx     binary
+*.qix     binary
+*.xlsx    binary
+*.xls     binary
+*.kmz     binary
+*.rar     binary
+*.pdf     binary
+*.docx    binary
+*.qgz     binary
+*.lpkx    binary
+*.pmtiles binary
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+
+# Texto: LF explícito para que el ETL produzca el mismo byte en Windows y en el runner.
+*.geojson text eol=lf
+*.json    text eol=lf
+*.py      text eol=lf
+*.js      text eol=lf
+*.jsx     text eol=lf
+*.css     text eol=lf
+*.yml     text eol=lf
