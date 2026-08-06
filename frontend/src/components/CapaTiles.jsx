@@ -1,0 +1,63 @@
+import { useEffect } from 'react'
+import { PMTiles } from 'pmtiles'
+import { leafletLayer } from 'protomaps-leaflet'
+import { DATA } from '../config'
+
+/**
+ * Capa vial servida como teselas vectoriales PMTiles.
+ *
+ * Es el camino de PRODUCCION para rutas y red vial: juntas son 19.000 lineas y
+ * 5,7 M de vertices, y como GeoJSON obligarian a descargar el pais entero a
+ * detalle completo solo para ver el mapa nacional. Con teselas el navegador pide
+ * por HTTP Range unicamente el viewport al zoom actual (~300 KB) y tippecanoe ya
+ * dejo horneada la simplificacion de cada nivel.
+ *
+ * En desarrollo local no hay tippecanoe, asi que el ETL emite GeoJSON y App.jsx
+ * monta CapaLineas en lugar de esta.
+ */
+export default function CapaTiles({ map, meta, visible, color, weight = 1.5, opacity = 0.9, filtroRegion }) {
+  useEffect(() => {
+    if (!map || !visible || !meta) return
+
+    const source = new PMTiles(`${DATA}/${meta.archivo}`)
+    const capa = meta.capa_mvt
+
+    const layer = leafletLayer({
+      attribution: 'MOP / CONAF',
+      sources: { [capa]: { source, maxDataZoom: meta.maxzoom } },
+      paintRules: [
+        {
+          dataSource: capa,
+          dataLayer: capa,
+          // Filtrar es una regla de pintado, no una recarga: las teselas ya
+          // estan en memoria.
+          filter: filtroRegion ? (z, f) => f.props.region === filtroRegion : undefined,
+          symbolizer: {
+            draw(ctx, geom, zoom, feature) {
+              ctx.strokeStyle = color
+              ctx.globalAlpha = opacity
+              ctx.lineWidth = weight
+              ctx.lineCap = 'round'
+              ctx.lineJoin = 'round'
+              for (const parte of geom) {
+                ctx.beginPath()
+                parte.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)))
+                ctx.stroke()
+              }
+              void zoom
+              void feature
+            },
+          },
+        },
+      ],
+      labelRules: [],
+    })
+
+    layer.addTo(map)
+    return () => {
+      map.removeLayer(layer)
+    }
+  }, [map, meta, visible, color, weight, opacity, filtroRegion])
+
+  return null
+}

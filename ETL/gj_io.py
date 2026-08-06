@@ -84,6 +84,47 @@ def dominios(features: list[dict], campos: list[str]) -> dict:
     return out
 
 
+def codificar(features: list[dict], campos: list[str]) -> tuple[dict, dict]:
+    """Sustituye valores categoricos repetidos por indices enteros.
+
+    Medido sobre incendios.geojson: los 7 campos categoricos ocupaban 3,4 MiB de
+    un archivo de 5,95 MiB pese a tener entre 5 y 351 valores distintos
+    ('causa_especifica' pesaba 1,27 MiB para 92 valores unicos). Codificarlos
+    baja el archivo a ~2,4 MiB y ademas hace que filtrar sea comparacion de
+    enteros en vez de strings.
+
+    Muta `features` in-place. Devuelve (tablas, dominios) donde:
+      tablas[campo]   = ['La Araucanía', 'Biobío', ...]   (indice = codigo)
+      dominios[campo] = [{'i':0,'v':'La Araucanía','n':3428}, ...] por frecuencia
+    """
+    from collections import Counter
+
+    tablas: dict[str, list] = {}
+    doms: dict[str, list] = {}
+
+    for campo in campos:
+        cont = Counter(
+            f["properties"][campo]
+            for f in features
+            if f["properties"].get(campo) not in (None, "")
+        )
+        # Los valores mas frecuentes reciben los indices mas bajos: los codigos
+        # de 1 digito cubren la mayor parte de las filas.
+        orden = [v for v, _ in cont.most_common()]
+        idx = {v: i for i, v in enumerate(orden)}
+        tablas[campo] = orden
+        doms[campo] = [{"i": idx[v], "v": v, "n": cont[v]} for v in orden]
+
+        for f in features:
+            v = f["properties"].get(campo)
+            if v in idx:
+                f["properties"][campo] = idx[v]
+            elif campo in f["properties"]:
+                del f["properties"][campo]
+
+    return tablas, doms
+
+
 def humano(nbytes: int) -> str:
     """Formatea bytes como MiB/KiB."""
     if nbytes >= 1024 * 1024:
