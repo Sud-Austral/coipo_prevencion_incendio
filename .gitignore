@@ -1,0 +1,32 @@
+# Node
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Artefactos intermedios del ETL (GeoJSON crudo previo al teselado)
+ETL/_build/
+ETL/_report.json
+ETL/*.log
+
+# Datos derivados: los genera `python ETL/run.py` y los publica GitHub Actions.
+# No se commitean para no meter diffs de archivos de datos en el historial.
+frontend/public/data/
+!frontend/public/data/.gitkeep
+
+# Editores
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
