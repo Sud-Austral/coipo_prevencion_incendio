@@ -17,7 +17,13 @@ import struct
 import sys
 from pathlib import Path
 
+BUILD = Path(__file__).resolve().parent / "_build"
+
 CHILE = (-76.0, -56.0, -66.0, -17.0)  # minlon, minlat, maxlon, maxlat
+
+# Capas de red vial. Son la unica referencia valida del cruce espacial: los
+# incendios ocurren junto a caminos. OECV queda fuera a proposito.
+CAPAS_VIALES = ("rutas", "redvial")
 
 OK = "✔"
 NO = "✘"
@@ -101,6 +107,19 @@ def verificar(data: Path, muestra: int = 500) -> bool:
                     f"{nombre}: bbox dentro de Chile",
                     f"{[round(v, 3) for v in b]}",
                 )
+            # Las teselas no se pueden recorrer feature a feature, pero el
+            # GeoJSON intermedio que consumio tippecanoe sigue en _build/. Se usa
+            # para no perder el cruce espacial justo en produccion, que es donde
+            # mas importa.
+            if nombre in CAPAS_VIALES:
+                inter = BUILD / f"{nombre}.geojson"
+                if inter.exists():
+                    for f in json.loads(inter.read_text(encoding="utf-8"))["features"]:
+                        g = f.get("geometry")
+                        if g and g.get("coordinates"):
+                            lineas_para_cruce.append(g)
+                else:
+                    print(f"  · {nombre}: sin intermedio en _build/, queda fuera del cruce")
             continue
 
         gj = json.loads(archivo.read_text(encoding="utf-8"))
@@ -131,7 +150,10 @@ def verificar(data: Path, muestra: int = 500) -> bool:
                 if not (CHILE[0] <= lon <= CHILE[2] and CHILE[1] <= lat <= CHILE[3]):
                     fuera += 1
                     break
-            if g["type"] in ("LineString", "MultiLineString"):
+            # Solo la red vial sirve de referencia. OECV son cortafuegos, que
+            # por diseño no pasan por donde se queman los bosques: medir contra
+            # ellos da una mediana de 3,4 km y no significa nada.
+            if nombre in CAPAS_VIALES and g["type"] in ("LineString", "MultiLineString"):
                 lineas_para_cruce.append(g)
 
         r.check(malas == 0, f"{nombre}: sin NaN/Infinity", f"{malas} malas" if malas else "")
@@ -168,10 +190,7 @@ def verificar(data: Path, muestra: int = 500) -> bool:
     if inc.exists() and lineas_para_cruce:
         _cruce_espacial(r, inc, lineas_para_cruce, muestra)
     elif inc.exists():
-        print(
-            "  · cruce espacial omitido: las capas viales están en PMTiles "
-            "(se validan con su header)"
-        )
+        print("  · cruce espacial omitido: no hay geometría vial disponible")
 
     print("─────────────────────────────────────────────────────────────")
     print(f"{OK if r.fallos == 0 else NO} {'todo correcto' if r.fallos == 0 else f'{r.fallos} comprobaciones fallidas'}\n")
