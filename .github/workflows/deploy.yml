@@ -59,6 +59,7 @@ jobs:
           make -C /tmp/tippecanoe -j"$(nproc)"
           sudo make -C /tmp/tippecanoe install
           tippecanoe --version || true
+          
 
       # Genera las capas Y las valida. Si verify.py falla, el workflow falla y
       # no se publica nada roto.
