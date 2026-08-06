@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { PMTiles } from 'pmtiles'
-import { leafletLayer } from 'protomaps-leaflet'
+import { LineSymbolizer, leafletLayer } from 'protomaps-leaflet'
 import { DATA } from '../config'
 
 /**
@@ -12,42 +12,45 @@ import { DATA } from '../config'
  * por HTTP Range unicamente el viewport al zoom actual (~300 KB) y tippecanoe ya
  * dejo horneada la simplificacion de cada nivel.
  *
- * En desarrollo local no hay tippecanoe, asi que el ETL emite GeoJSON y App.jsx
- * monta CapaLineas en lugar de esta.
+ * En desarrollo local no hay tippecanoe (es C++ con Makefile y no corre nativo
+ * en Windows), asi que el ETL emite GeoJSON y App.jsx monta CapaLineas en lugar
+ * de esta. El manifest dice cual toca.
  */
-export default function CapaTiles({ map, meta, visible, color, weight = 1.5, opacity = 0.9, filtroRegion }) {
+export default function CapaTiles({
+  map,
+  meta,
+  visible,
+  color,
+  weight = 1.5,
+  opacity = 0.9,
+  filtroRegion,
+}) {
   useEffect(() => {
     if (!map || !visible || !meta) return
 
-    const source = new PMTiles(`${DATA}/${meta.archivo}`)
+    const pmtiles = new PMTiles(`${DATA}/${meta.archivo}`)
     const capa = meta.capa_mvt
 
     const layer = leafletLayer({
       attribution: 'MOP / CONAF',
-      sources: { [capa]: { source, maxDataZoom: meta.maxzoom } },
+      // SourceOptions espera `url`, no `source`.
+      sources: { [capa]: { url: pmtiles, maxDataZoom: meta.maxzoom } },
+      maxDataZoom: meta.maxzoom,
       paintRules: [
         {
           dataSource: capa,
           dataLayer: capa,
           // Filtrar es una regla de pintado, no una recarga: las teselas ya
-          // estan en memoria.
-          filter: filtroRegion ? (z, f) => f.props.region === filtroRegion : undefined,
-          symbolizer: {
-            draw(ctx, geom, zoom, feature) {
-              ctx.strokeStyle = color
-              ctx.globalAlpha = opacity
-              ctx.lineWidth = weight
-              ctx.lineCap = 'round'
-              ctx.lineJoin = 'round'
-              for (const parte of geom) {
-                ctx.beginPath()
-                parte.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)))
-                ctx.stroke()
-              }
-              void zoom
-              void feature
-            },
-          },
+          // estan en memoria. La firma es (zoom, feature) y los atributos
+          // viven en feature.props.
+          filter: filtroRegion ? (_z, f) => f.props.region === filtroRegion : undefined,
+          symbolizer: new LineSymbolizer({
+            color,
+            width: weight,
+            opacity,
+            lineCap: 'round',
+            lineJoin: 'round',
+          }),
         },
       ],
       labelRules: [],
