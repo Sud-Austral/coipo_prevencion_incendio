@@ -24,7 +24,8 @@ export default function CapaPuntos({
   onSeleccion,
   onCuenta,
 }) {
-  const renderer = useMemo(() => L.canvas({ padding: 0.5 }), [])
+  // Sin `renderer` propio: se usa el compartido del mapa (App.jsx). Uno por
+  // capa rompe los clics de todas menos la de encima.
   const grupo = useMemo(() => L.layerGroup(), [])
   const pool = useRef([])
 
@@ -34,7 +35,6 @@ export default function CapaPuntos({
     const markers = data.features.map((f) => {
       const [lon, lat] = f.geometry.coordinates
       const m = L.circleMarker([lat, lon], {
-        renderer,
         radius: radio ?? 4,
         weight: 1,
         color: '#fff',
@@ -57,7 +57,7 @@ export default function CapaPuntos({
       grupo.clearLayers()
       pool.current = []
     }
-  }, [data, renderer, grupo, color, radio, onSeleccion])
+  }, [data, grupo, color, radio, onSeleccion])
 
   // 2) Filtrado: solo cambia que markers estan en el grupo.
   useEffect(() => {

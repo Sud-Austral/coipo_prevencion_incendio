@@ -25,7 +25,8 @@ export default function CapaLineas({
   onSeleccion,
   onCuenta,
 }) {
-  const renderer = useMemo(() => L.canvas({ padding: 0.5 }), [])
+  // Sin `renderer` propio: se usa el compartido del mapa (App.jsx). Uno por
+  // capa rompe los clics de todas menos la de encima.
   const grupo = useMemo(() => L.layerGroup(), [])
   const pool = useRef([])
 
@@ -33,7 +34,6 @@ export default function CapaLineas({
     if (!data) return
     const lineas = data.features.map((f) => {
       const l = L.polyline(latlngs(f.geometry), {
-        renderer,
         color: typeof color === 'function' ? color(f.properties) : color,
         weight,
         opacity,
@@ -49,7 +49,7 @@ export default function CapaLineas({
       grupo.clearLayers()
       pool.current = []
     }
-  }, [data, renderer, grupo, color, weight, opacity, onSeleccion])
+  }, [data, grupo, color, weight, opacity, onSeleccion])
 
   useEffect(() => {
     if (!pool.current.length) return

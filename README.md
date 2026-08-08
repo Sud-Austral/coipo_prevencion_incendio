@@ -142,6 +142,16 @@ una brocha de 8 px. La ficha es un `<dialog>` nativo abierto con `showModal()`,
 así que el foco atrapado, el cierre con Escape y el fondo inerte los pone el
 navegador.
 
+**Todas las capas vectoriales comparten un único renderer de canvas**, declarado
+en las opciones del mapa y no en cada componente. No es un detalle de estilo:
+Leaflet engancha los eventos de ratón al elemento `<canvas>`, así que con un
+canvas por capa **solo la de encima recibe los clics** y las de debajo no llegan
+a consultarse. Y cuál queda encima lo decide el orden en que terminan de
+descargarse los archivos: incendios son 3,9 MB, siempre llega el último, y dejaba
+OECV y stand-by mudos. Un canvas por capa se ve idéntico en una captura y en una
+prueba de una sola capa, así que el fallo solo aparece usando la app con varias
+capas encendidas, que es como se usa siempre.
+
 ## Requisitos
 
 Python 3.13 con `pyproj`, `shapely`, `pandas`, `openpyxl` (`ETL/requirements.txt`).
