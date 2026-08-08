@@ -55,6 +55,16 @@ export default function App() {
       // Todo se dibuja en canvas: con ~15.000 puntos y 19.000 lineas, un nodo
       // SVG por feature haria inusable el paneo.
       preferCanvas: true,
+      // UN SOLO renderer para todas las capas vectoriales, y por eso se declara
+      // aqui y no en cada componente. Leaflet engancha los eventos de raton al
+      // ELEMENTO <canvas> (Canvas._initContainer), asi que con un canvas por
+      // capa solo el de encima recibe los clics y los de debajo no llegan a
+      // consultarse nunca. Cual queda encima lo decide el orden en que terminan
+      // de descargarse las capas, o sea el tamano del archivo: incendios son
+      // 3,9 MB, siempre llega el ultimo y tapaba los clics de OECV y stand-by.
+      // Con un renderer compartido, Canvas._onClick recorre TODAS las figuras y
+      // se queda con la de mas arriba que contenga el punto.
+      renderer: L.canvas({ padding: 0.5 }),
       center: inicial.center ?? VISTA_INICIAL.center,
       zoom: inicial.zoom ?? VISTA_INICIAL.zoom,
       minZoom: 4,
