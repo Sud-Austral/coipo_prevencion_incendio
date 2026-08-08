@@ -22,7 +22,7 @@ export default function CapaLineas({
   color,
   weight = 2,
   opacity = 0.9,
-  popup,
+  onSeleccion,
   onCuenta,
 }) {
   const renderer = useMemo(() => L.canvas({ padding: 0.5 }), [])
@@ -41,7 +41,7 @@ export default function CapaLineas({
         bubblingMouseEvents: false,
       })
       l._p = f.properties
-      if (popup) l.bindPopup(() => popup(l._p), { maxWidth: 360 })
+      if (onSeleccion) l.on('click', () => onSeleccion(l._p))
       return l
     })
     pool.current = lineas
@@ -49,7 +49,7 @@ export default function CapaLineas({
       grupo.clearLayers()
       pool.current = []
     }
-  }, [data, renderer, grupo, color, weight, opacity, popup])
+  }, [data, renderer, grupo, color, weight, opacity, onSeleccion])
 
   useEffect(() => {
     if (!pool.current.length) return

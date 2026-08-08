@@ -97,3 +97,17 @@ export const FILTROS = [
 
 export const fmt = new Intl.NumberFormat('es-CL')
 export const fmt1 = new Intl.NumberFormat('es-CL', { maximumFractionDigits: 1 })
+
+const fechaES = new Intl.DateTimeFormat('es-CL', { day: 'numeric', month: 'long', year: 'numeric' })
+
+/**
+ * `manifest.generado` es un instante ISO en UTC. Formatearlo con
+ * `new Date(iso)` lo pasa a hora local, y en Chile (UTC-4/-3) todo lo generado
+ * antes de las 03:00/04:00 UTC retrocede un dia: el ETL que corrio la madrugada
+ * del 7 se anunciaria como del 6. Se toman los componentes de la fecha tal cual
+ * vienen y se arma una fecha local, que es lo que el dato significa.
+ */
+export function fechaLarga(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso ?? '')
+  return m ? fechaES.format(new Date(+m[1], +m[2] - 1, +m[3])) : null
+}

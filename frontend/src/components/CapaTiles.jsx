@@ -24,6 +24,8 @@ export default function CapaTiles({
   weight = 1.5,
   opacity = 0.9,
   filtroRegion,
+  etiqueta,
+  onSeleccion,
 }) {
   useEffect(() => {
     if (!map || !visible || !meta) return
@@ -57,10 +59,34 @@ export default function CapaTiles({
     })
 
     layer.addTo(map)
+
+    // Un tramo dibujado en una tesela no es un objeto de Leaflet ni un nodo del
+    // DOM, asi que no hay nada a lo que atarle un clic: hay que preguntarle a
+    // protomaps por lo que cae bajo el cursor. La consulta es sincrona y se
+    // resuelve contra las teselas que ya estan en memoria (las que se estan
+    // pintando), asi que no dispara ninguna descarga.
+    //
+    // La brocha en pixeles es necesaria: acertar el pixel exacto de una linea de
+    // 1 px es imposible con el dedo, y bastante dificil con el raton.
+    const alClic = (e) => {
+      if (!onSeleccion) return
+      const halladas = layer.queryTileFeaturesDebug(e.latlng.lng, e.latlng.lat, 8)
+      // La clave del Map depende de como se nombren fuente y capa; aplanar es
+      // mas robusto que adivinarla.
+      const todas = halladas ? [...halladas.values()].flat() : []
+      const f = todas.find((x) => !filtroRegion || x.feature?.props?.region === filtroRegion)
+      // Solo se avisa si hay algo: asi, cuando dos capas de teselas se solapan,
+      // la que se monta despues (rutas, sobre red vial) gana sin que ninguna
+      // borre la seleccion de la otra al no encontrar nada.
+      if (f) onSeleccion(f.feature.props, etiqueta)
+    }
+    map.on('click', alClic)
+
     return () => {
+      map.off('click', alClic)
       map.removeLayer(layer)
     }
-  }, [map, meta, visible, color, weight, opacity, filtroRegion])
+  }, [map, meta, visible, color, weight, opacity, filtroRegion, etiqueta, onSeleccion])
 
   return null
 }

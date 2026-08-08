@@ -1,12 +1,72 @@
 .app {
   display: grid;
   grid-template-columns: 320px 1fr;
+  /* minmax(0, 1fr) y no 1fr: la min track sizing function de 1fr es auto, asi
+     que el contenido del mapa podria empujar la fila mas alla de 100dvh. */
+  grid-template-rows: auto minmax(0, 1fr);
   height: 100dvh;
 }
 
 .mapa {
   height: 100%;
   width: 100%;
+}
+
+/* ---------- banner institucional ---------- */
+
+/* Opcion A del §3 de INSUMO_GRAFICO/implementacion_banner.md: proporcion
+   natural con piso de altura. Sin object-fit y sin recorte vertical, asi que
+   el filete superior del asset queda intacto en cualquier ancho.
+
+   COSTE ACEPTADO: el alto crece con la ventana -- 112,08 px a 1920 y 79,74 px
+   a 1366, frente a 68 px constantes por debajo del cruce (1164,83 px).
+
+   ALTERNATIVA de alto fijo, si esos 112 px resultan inaceptables al MIRAR la
+   captura de 1920: recortar a la ultima columna segura del asset (2743) y
+   rellenar a la derecha con --verde-institucional, que es literalmente el
+   color del asset en esa columna, asi que no hay costura:
+       .banner     { height: 68px }
+       .banner img { width: calc(68px * 15.502825);   -- 1054,19 px  (2744/177)
+                     height: 100%;
+                     object-fit: cover; object-position: left center }
+   Precio: el remate decorativo derecho desaparece SIEMPRE, y a 1920 quedan
+   866 px (45 % del ancho) de verde plano. Un tope con clamp() sobre el ancho
+   NO es un termino medio: dejaria el remate multicolor pegado al verde plano,
+   y eso si se ve como costura. Techo de altura => recorte => adios remate.
+
+   PALETA: ver el comentario de los tokens en index.css. El verde institucional
+   convive con --accent, no lo reemplaza. */
+.banner {
+  grid-column: 1 / -1;
+  /* Por debajo del cruce la imagen es mas ancha que el contenedor y hay que
+     recortarla. Quien lo recorta de verdad ahora mismo es body{overflow:hidden}
+     (index.css), asi que esta linea es redundante en el estado actual --
+     comprobado quitandola: nada cambia, ni visualmente ni en las mediciones.
+     Se deja igual porque hace el recorte LOCAL y explicito: si alguien quita el
+     overflow:hidden de body para arreglar otra cosa, sin esto la imagen de
+     1164,83 px se saldria por la derecha en moviles. */
+  overflow: hidden;
+  background: var(--verde-institucional);
+  line-height: 0;
+  /* Si la imagen falla, el texto alternativo hereda --text (#6b6375), que
+     sobre este verde da 1,84:1. */
+  color: #fff;
+}
+
+.banner img {
+  display: block;
+  /* Por encima de 1164,83 px de viewport manda el 100 % (proporcion natural);
+     por debajo la imagen se ancla a 68 px de alto y desborda por la derecha,
+     y el contenedor la recorta. El borde derecho cae en la zona uniforme
+     #064928 del asset (columnas 864-2743) hasta 332 px de viewport: columna
+     1015 a 390 px, 1999 a 768 px, 2343 a 900 px. */
+  width: max(100%, calc(var(--alto-minimo-banner) * var(--razon-banner)));
+  /* height:auto + los atributos width/height del <img> => el navegador reserva
+     el alto ANTES de decodificar. Ver el comentario de Banner.jsx. */
+  height: auto;
+  /* Defensivo: un reset con `img { max-width: 100% }` anularia el piso en
+     silencio y dejaria la marca en 22 px de alto a 390 px. */
+  max-width: none;
 }
 
 /* ---------- panel ---------- */
@@ -37,6 +97,10 @@
   margin: 4px 0 0;
   font-size: 12px;
   opacity: 0.75;
+}
+
+.panel .sub .fecha {
+  white-space: nowrap;
 }
 
 .panel section {
@@ -183,34 +247,100 @@ select {
   background: var(--accent);
 }
 
-/* ---------- popups ---------- */
+/* ---------- ficha de la figura seleccionada ---------- */
 
-.pop h4 {
-  margin: 0 0 6px;
-  font-size: 13px;
-  color: var(--text-h);
+/* <dialog> nativo: el navegador pone el foco atrapado, el cierre con Escape y
+   el ::backdrop. Vive en la top layer, asi que no compite con ningun z-index. */
+.ficha {
+  width: min(480px, calc(100vw - 32px));
+  max-height: min(70dvh, 640px);
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  overflow: auto;
+  /* El agente de usuario centra los dialogos modales, pero no en todos los
+     navegadores con el mismo margen; se fija. */
+  margin: auto;
+}
+
+.ficha::backdrop {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.ficha-caja {
+  padding: 16px 18px 18px;
+}
+
+.ficha header {
+  position: relative;
+  padding-right: 28px;
+  margin-bottom: 12px;
+}
+
+.ficha-capa {
   display: flex;
   align-items: center;
   gap: 6px;
+  margin: 0 0 3px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.6;
 }
 
-.pop table {
+.ficha h2 {
+  font-size: 16px;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.ficha-cerrar {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 28px;
+  height: 28px;
+  font-size: 20px;
+  line-height: 1;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.ficha-cerrar:hover {
+  background: var(--panel);
+  color: var(--text-h);
+}
+
+.ficha table {
   border-collapse: collapse;
-  font-size: 12px;
+  font-size: 13px;
+  width: 100%;
 }
 
-.pop th {
+.ficha th {
   text-align: left;
   font-weight: 500;
   opacity: 0.65;
-  padding: 1px 10px 1px 0;
+  padding: 3px 12px 3px 0;
   vertical-align: top;
   white-space: nowrap;
 }
 
-.pop td {
-  padding: 1px 0;
+.ficha td {
+  padding: 3px 0;
   color: var(--text-h);
+}
+
+.ficha-vacia {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.7;
 }
 
 /* ---------- responsive: el panel pasa a cajon ---------- */
@@ -225,10 +355,15 @@ select {
     grid-template-columns: 1fr;
   }
 
+  /* INVARIANTE de las dos reglas de posicion que siguen: a <=900 px el banner
+     mide SIEMPRE --alto-minimo-banner, porque 900 < 1164,83 (el cruce). Si
+     alguien sube este breakpoint por encima del cruce, dejan de ser exactas. */
+
   .panel {
     position: fixed;
     z-index: 1000;
-    inset: 0 auto 0 0;
+    /* Arranca bajo el banner en vez de taparlo. */
+    inset: var(--alto-minimo-banner) auto 0 0;
     width: 300px;
     transform: translateX(-100%);
     transition: transform 0.18s ease;
@@ -243,7 +378,10 @@ select {
     display: block;
     position: fixed;
     z-index: 999;
-    top: 10px;
+    /* Bajo el banner, no encima: con top:10px el boton ocupaba y=10..46 y la
+       marca del asset se pinta de x=40,3 a x=207,8 (columnas 105-541 a la
+       escala del piso, 68/177), asi que se solapaban. */
+    top: calc(var(--alto-minimo-banner) + 10px);
     left: 10px;
     width: 36px;
     height: 36px;

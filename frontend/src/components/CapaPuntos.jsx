@@ -21,7 +21,7 @@ export default function CapaPuntos({
   pasa,
   color,
   radio,
-  popup,
+  onSeleccion,
   onCuenta,
 }) {
   const renderer = useMemo(() => L.canvas({ padding: 0.5 }), [])
@@ -41,11 +41,15 @@ export default function CapaPuntos({
         opacity: 0.85,
         fillColor: typeof color === 'function' ? color(f.properties) : color,
         fillOpacity: 0.9,
+        // Sin esto el clic tambien llega al mapa, y las capas de teselas -- que
+        // escuchan el clic del mapa -- pisarian la ficha del punto con la del
+        // camino que pase por debajo.
+        bubblingMouseEvents: false,
       })
       m._p = f.properties
-      // El popup se genera solo al abrirlo: crear 14.705 strings HTML de
-      // antemano gastaria varios MB de memoria para nada.
-      if (popup) m.bindPopup(() => popup(m._p), { maxWidth: 340 })
+      // Se pasan las propiedades tal cual: la ficha la arma React al abrirla.
+      // Construir 14.705 fichas de antemano gastaria memoria para nada.
+      if (onSeleccion) m.on('click', () => onSeleccion(m._p))
       return m
     })
     pool.current = markers
@@ -53,7 +57,7 @@ export default function CapaPuntos({
       grupo.clearLayers()
       pool.current = []
     }
-  }, [data, renderer, grupo, color, radio, popup])
+  }, [data, renderer, grupo, color, radio, onSeleccion])
 
   // 2) Filtrado: solo cambia que markers estan en el grupo.
   useEffect(() => {

@@ -107,11 +107,18 @@ ETL/
   build_*.py        una capa cada uno, exponen build(cfg)
   verify.py         validación empírica de las salidas
 
-frontend/src/
-  App.jsx           único dueño del estado
-  config.js         capas, filtros, paletas, basemaps
-  components/       CapaPuntos · CapaLineas · CapaTiles · PanelLateral
-  hooks/useDatos.js manifest + carga perezosa con caché
+frontend/
+  src/
+    App.jsx           único dueño del estado
+    config.js         capas, filtros, paletas, basemaps
+    fichas.js         qué muestra la ficha de cada capa, como datos
+    components/       Banner · CapaPuntos · CapaLineas · CapaTiles ·
+                      PanelLateral · ModalFicha
+    hooks/useDatos.js manifest + carga perezosa con caché
+    assets/           el banner institucional (ver INSUMO_GRAFICO/)
+  scripts/
+    descargar-datos.mjs  npm run datos
+    verify-banner.mjs    npm run verify:banner
 ```
 
 `manifest.json` es el contrato entre ambos: el frontend no hardcodea ninguna
@@ -121,6 +128,19 @@ aparece sola en los filtros al reejecutar el ETL.
 Los campos categóricos de incendios se emiten como índices enteros contra tablas
 del manifest (`tablas[campo][codigo]`): bajan el archivo de 6,0 a 3,9 MB y
 convierten el filtrado en comparación de enteros.
+
+`manifest.generado` se muestra en la cabecera del panel («datos al …»), no solo
+en el pie: el panel scrollea y el pie queda fuera de pantalla en cuanto hay capas
+y filtros, y de cuándo son los datos es lo primero que se pregunta quien abre el
+visor. La fecha se arma con los componentes del ISO, no con `new Date(iso)`: en
+Chile eso retrocedería un día todo lo generado antes de las 03:00 UTC.
+
+Al hacer clic en cualquier figura se abre una ficha con sus atributos, incluidas
+las dos capas viales, que son teselas vectoriales y no tienen ningún objeto al
+que atar un evento: ahí se le pregunta a protomaps qué cae bajo el cursor, con
+una brocha de 8 px. La ficha es un `<dialog>` nativo abierto con `showModal()`,
+así que el foco atrapado, el cierre con Escape y el fondo inerte los pone el
+navegador.
 
 ## Requisitos
 
@@ -140,21 +160,34 @@ el manifest, que las regiones están canonizadas, que nada quedó fuera de Chile
 y un cruce espacial de la distancia de cada incendio al camino más cercano
 (mediana 0,30 km; un punto con el huso invertido cae 300–600 km y lo delata).
 
-Para ver la app de verdad, y no solo suponer que funciona:
+La cabecera institucional tiene su propia verificación, que no supone que
+funciona: la mira.
 
-```powershell
-cd frontend; npm run dev
-& "C:\Program Files\Google\Chrome\Application\chrome.exe" `
-  --headless=new --disable-gpu --hide-scrollbars `
-  --user-data-dir="$env:TEMP\chrome-conaf" `
-  --window-size=1600,1000 --virtual-time-budget=45000 `
-  --run-all-compositor-stages-before-draw `
-  --screenshot="$env:TEMP\mapa.png" `
-  "http://localhost:5173/coipo_prevencion_incendio/"
+```bash
+cd frontend && npm run verify:banner
 ```
 
-El `--user-data-dir` propio es obligatorio: sin él, Chrome se adjunta a la
-sesión ya abierta, termina de inmediato y no genera ningún PNG.
+Construye, sirve el `dist` con un manifest de prueba, y captura los cinco anchos
+en tema claro y oscuro más la marca ampliada ×4, el caso sin imagen y la pantalla
+de error. Después **mide los píxeles pintados**: el alto de la banda contra
+`max(ancho/17,1299, 68)`, que el filete superior siga entero, que el borde
+derecho no tenga costura y que el asset haya llegado al artefacto. Corre también
+en CI, en un job aparte que no necesita el ETL y que bloquea el despliegue.
+Las capturas aceptadas viven en `INSUMO_GRAFICO/verificacion/`.
+
+Dos trampas que cuestan una tarde si se descubren a mano:
+
+- El `--user-data-dir` propio es obligatorio al lanzar Chrome headless. Sin él se
+  adjunta a la sesión ya abierta, termina de inmediato y no genera ningún PNG.
+- **Nunca sirvas la app en un puerto fijo para capturarla.** Si algo ya ocupa el
+  puerto, Vite se mueve solo al siguiente y capturas otro sitio sin enterarte.
+  `verify-banner.mjs` levanta su propio servidor en el puerto 0 y lee el que le
+  asignaron.
+
+Si sirves `dist` con un servidor propio para cualquier otra cosa, tiene que
+soportar **HTTP Range**: las capas viales son PMTiles y sin respuestas `206`
+el visor no dibuja ninguna carretera y falla con «Check that your storage
+backend supports HTTP Byte Serving».
 
 El estado va en la URL (`?lat=&lon=&z=&capas=&region=&causa_grupo=`), así que
 las capturas son reproducibles sin simular clics y las vistas son compartibles.

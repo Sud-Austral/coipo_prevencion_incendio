@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Capturas de `npm run verify:banner`. Las aceptadas se copian a mano a
+# INSUMO_GRAFICO/verificacion/; estas son el resultado de la ultima corrida.
+.verificacion
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
