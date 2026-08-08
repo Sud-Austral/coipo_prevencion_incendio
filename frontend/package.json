@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "datos": "node scripts/descargar-datos.mjs"
+    "datos": "node scripts/descargar-datos.mjs",
+    "verify:banner": "node scripts/verify-banner.mjs"
   },
   "dependencies": {
     "leaflet": "^1.9.4",

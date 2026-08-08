@@ -6,12 +6,16 @@ import {
   COLOR_CAUSA,
   COLOR_CAUSA_OTRA,
   COLOR_OECV,
+  COLOR_REDVIAL,
+  COLOR_RUTA,
   COLOR_STANDBY,
   LIMITES,
   VISTA_INICIAL,
 } from './config'
 import { useGeoJSON, useKpis, useManifest } from './hooks/useDatos'
-import { popupIncendio, popupOECV, popupRuta, popupStandBy } from './popups'
+import { fichaIncendio, fichaOECV, fichaRuta, fichaStandBy } from './fichas'
+import Banner from './components/Banner'
+import ModalFicha from './components/ModalFicha'
 import CapaLineas from './components/CapaLineas'
 import CapaPuntos from './components/CapaPuntos'
 import CapaTiles from './components/CapaTiles'
@@ -36,6 +40,9 @@ export default function App() {
   const [filtros, setFiltros] = useState(inicial.filtros ?? {})
   const [cuentas, setCuentas] = useState({})
   const [panelAbierto, setPanelAbierto] = useState(false)
+  // Figura seleccionada en el mapa. Es un objeto de ficha ya armado, no las
+  // propiedades crudas: quien sabe interpretar cada capa es el handler.
+  const [ficha, setFicha] = useState(null)
 
   // ---------- mapa ----------
   // Se crea una sola vez. El cleanup DEBE devolver el estado a null: en
@@ -63,6 +70,28 @@ export default function App() {
       setMap(null)
     }
   }, [])
+
+  // El alto del banner es proporcional al ancho del viewport, y Leaflet solo se
+  // entera de los resize de VENTANA. Los atributos width/height del <img> ya
+  // hacen que el primer encuadre salga bien (el alto esta reservado antes de
+  // que este efecto corra); esto es el seguro para lo que venga despues: que
+  // alguien cambie el asset u --alto-minimo-banner y la banda cambie de alto
+  // sin que la ventana se mueva. Se observa .mapa y no el banner porque es el
+  // tamano que le importa a Leaflet, y asi cubre cualquier causa.
+  useEffect(() => {
+    const nodo = contenedor.current
+    if (!map || !nodo) return
+    let pendiente = 0
+    const ro = new ResizeObserver(() => {
+      cancelAnimationFrame(pendiente)
+      pendiente = requestAnimationFrame(() => map.invalidateSize({ animate: false }))
+    })
+    ro.observe(nodo)
+    return () => {
+      cancelAnimationFrame(pendiente)
+      ro.disconnect()
+    }
+  }, [map])
 
   // Encuadre inicial a partir del bbox real de los datos, no de constantes:
   // Chile es muy alargado y cualquier zoom fijo desperdicia media pantalla.
@@ -192,8 +221,23 @@ export default function App() {
   )
   const colorOECV = useCallback((p) => COLOR_OECV[p.tipo] ?? COLOR_OECV['Sin determinar'], [])
 
-  const popIncendio = useCallback((p) => popupIncendio(p, decode), [decode])
-  const popOECV = useCallback((p) => popupOECV(p, colorOECV(p)), [colorOECV])
+  // ---------- seleccion ----------
+  // Cada capa traduce sus propiedades a una ficha; el modal solo pinta.
+  const selIncendio = useCallback(
+    (p) => setFicha(fichaIncendio(p, decode, colorIncendio(p))),
+    [decode, colorIncendio],
+  )
+  const selOECV = useCallback((p) => setFicha(fichaOECV(p, colorOECV(p))), [colorOECV])
+  const selStandby = useCallback((p) => setFicha(fichaStandBy(p, COLOR_STANDBY)), [])
+  const selRuta = useCallback(
+    (p, etiqueta = 'Ruta de despliegue') => setFicha(fichaRuta(p, etiqueta, COLOR_RUTA)),
+    [],
+  )
+  const selVial = useCallback(
+    (p, etiqueta = 'Red vial MOP') => setFicha(fichaRuta(p, etiqueta, COLOR_REDVIAL)),
+    [],
+  )
+  const cerrarFicha = useCallback(() => setFicha(null), [])
 
   const setCuenta = useCallback(
     (id) => (n) => setCuentas((c) => (c[id] === n ? c : { ...c, [id]: n })),
@@ -211,6 +255,10 @@ export default function App() {
       return n
     })
 
+  // Sin <Banner/> a proposito: la pantalla de error no debe depender de que
+  // cargue una imagen (§9 de INSUMO_GRAFICO/implementacion_banner.md). NO lo
+  // subas a main.jsx por encima de <App/> para "no duplicarlo": la asercion
+  // A10 de scripts/verify-banner.mjs comprueba que este arbol no lo lleva.
   if (error) {
     return (
       <div className="error">
@@ -228,6 +276,8 @@ export default function App() {
 
   return (
     <div className="app">
+      <Banner />
+
       <button className="abrir" onClick={() => setPanelAbierto(true)} aria-label="Abrir panel">
         ☰
       </button>
@@ -262,7 +312,7 @@ export default function App() {
             color={CAPAS.find((c) => c.id === 'redvial').color}
             weight={1}
             opacity={0.55}
-            popup={popupRuta}
+            onSeleccion={selVial}
             onCuenta={setCuenta('redvial')}
           />
         ) : (
@@ -274,6 +324,8 @@ export default function App() {
             weight={1}
             opacity={0.55}
             filtroRegion={filtros.region}
+            etiqueta="Red vial MOP"
+            onSeleccion={selVial}
           />
         ))}
 
@@ -286,7 +338,7 @@ export default function App() {
             pasa={pasaVial}
             color={CAPAS.find((c) => c.id === 'rutas').color}
             weight={2}
-            popup={popupRuta}
+            onSeleccion={selRuta}
             onCuenta={setCuenta('rutas')}
           />
         ) : (
@@ -297,6 +349,8 @@ export default function App() {
             color={CAPAS.find((c) => c.id === 'rutas').color}
             weight={2}
             filtroRegion={filtros.region}
+            etiqueta="Ruta de despliegue"
+            onSeleccion={selRuta}
           />
         ))}
 
@@ -307,7 +361,7 @@ export default function App() {
         pasa={pasaOECV}
         color={colorOECV}
         weight={3}
-        popup={popOECV}
+        onSeleccion={selOECV}
         onCuenta={setCuenta('oecv')}
       />
 
@@ -318,7 +372,7 @@ export default function App() {
         pasa={pasaStandby}
         color={COLOR_STANDBY}
         radio={5}
-        popup={popupStandBy}
+        onSeleccion={selStandby}
         onCuenta={setCuenta('puntos_standby')}
       />
 
@@ -328,9 +382,11 @@ export default function App() {
         visible={activa('incendios')}
         pasa={pasaIncendio}
         color={colorIncendio}
-        popup={popIncendio}
+        onSeleccion={selIncendio}
         onCuenta={setCuenta('incendios')}
       />
+
+      <ModalFicha ficha={ficha} onCerrar={cerrarFicha} />
     </div>
   )
 }

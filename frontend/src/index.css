@@ -12,6 +12,24 @@
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
+  /* ---- banner institucional CONAF/UIA ----------------------------------
+     Medidos pixel a pixel sobre INSUMO_GRAFICO/banner3.jpg, no estimados. Si
+     el asset cambia hay que volver a medirlos: INSUMO_GRAFICO/README.md.
+     No van al bloque prefers-color-scheme: el banner es un raster, el mismo
+     archivo en los dos temas.
+
+     PALETA: --verde-institucional viste SOLO el banner y los iconos; NO
+     reemplaza a --accent. La leyenda ya asigna significado normativo a dos
+     verdes -- COLOR_OECV.Fiscal #2E7D32 (simbologia oficial del Memo 3045/2025)
+     y COLOR_CAUSA.Naturales #009E73 (Okabe-Ito) --, y --accent viste
+     .barra span, que es justamente la barra de avance de OECV: pintarla del
+     verde del banner junto a un chip "Fiscal" de otro verde confunde dos cosas
+     distintas. Ademas #064928 sobre el fondo oscuro da 1,70:1, inservible para
+     enlaces. No lo "unifiques". */
+  --razon-banner: 17.1299; /* 3032 / 177 */
+  --alto-minimo-banner: 68px; /* piso; cruza con la proporcion natural en 1164,83 px */
+  --verde-institucional: #064928; /* campo principal del asset; 10,55:1 con blanco (AAA) */
+
   font: 15px/1.45 var(--sans);
   color-scheme: light dark;
   color: var(--text);
@@ -61,14 +79,6 @@ h3 {
 
 a {
   color: var(--accent);
-}
-
-/* Los popups de Leaflet heredan su propio tema claro; se alinean con el nuestro. */
-.leaflet-popup-content-wrapper,
-.leaflet-popup-tip {
-  background: var(--bg);
-  color: var(--text);
-  box-shadow: var(--shadow);
 }
 
 .leaflet-container {

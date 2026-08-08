@@ -102,8 +102,51 @@ jobs:
         with:
           path: frontend/dist
 
+  # Verificación visual del banner institucional. Va en un job APARTE y en
+  # paralelo, no como paso de `build`: no necesita nada del ETL (todas las capas
+  # se piden con fetch en runtime, no hay ningún import de GeoJSON y `vite build`
+  # funciona sin frontend/public/data), así que no tiene por qué pagar los
+  # ~545 MB de INSUMO_INCENDIO ni la compilación de tippecanoe.
+  verificar-banner:
+    runs-on: ubuntu-latest
+    steps:
+      # sparse-checkout sí compensa aquí, al revés que en `build`: se salta
+      # INSUMO_INCENDIO entero y baja menos de 1 MB.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: frontend
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22' # WebSocket global (para CDP) es estable desde 22.4
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+        working-directory: frontend
+
+      - run: npm run build
+        working-directory: frontend
+
+      # ubuntu-24.04 trae Google Chrome preinstalado; no hace falta instalarlo.
+      - run: npm run verify:banner
+        working-directory: frontend
+
+      # if: always() porque cuando falla es justo cuando hacen falta las capturas.
+      - name: Capturas del banner
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capturas-banner
+          path: frontend/.verificacion
+          retention-days: 14
+
   deploy:
-    needs: build
+    # El build caro arranca de inmediato, pero no se publica nada si el banner
+    # regresó.
+    needs: [build, verificar-banner]
     runs-on: ubuntu-latest
     environment:
       name: github-pages

@@ -1,4 +1,15 @@
-import { CAPAS, COLOR_CAUSA, COLOR_OECV, COLOR_RUTA, COLOR_REDVIAL, COLOR_STANDBY, FILTROS, fmt, fmt1 } from '../config'
+import {
+  CAPAS,
+  COLOR_CAUSA,
+  COLOR_OECV,
+  COLOR_RUTA,
+  COLOR_REDVIAL,
+  COLOR_STANDBY,
+  FILTROS,
+  fechaLarga,
+  fmt,
+  fmt1,
+} from '../config'
 
 const kb = (b) => (b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.round(b / 1024)} KB`)
 
@@ -23,6 +34,7 @@ export default function PanelLateral({
   onCerrar,
 }) {
   const capasMan = manifest?.capas ?? {}
+  const fecha = fechaLarga(manifest?.generado)
 
   // Las opciones de cada filtro salen del manifest: el frontend no hardcodea
   // ninguna temporada, region ni causa. Si el ETL ve una temporada nueva,
@@ -44,7 +56,22 @@ export default function PanelLateral({
     <aside className={`panel${abierto ? ' abierto' : ''}`}>
       <header>
         <h1>Prevención de Incendios Forestales</h1>
-        <p className="sub">CONAF · Temporada 2025-2026</p>
+        {/* Sin "CONAF ·": el banner de arriba ya lo dice, y repetirlo a 12 px
+            bajo la marca institucional es ruido (§7.3 del prompt del insumo).
+            La fecha va AQUI y no solo en el pie: el panel scrollea, y el pie
+            queda fuera de pantalla en cuanto hay capas y filtros: preguntarse
+            de cuando son los datos es lo primero que hace quien abre el visor. */}
+        <p className="sub">
+          Temporada 2025-2026
+          {fecha && (
+            <>
+              {' · '}
+              <span className="fecha" title={`Generado por el ETL el ${fecha}`}>
+                datos al {fecha}
+              </span>
+            </>
+          )}
+        </p>
         <button className="cerrar" onClick={onCerrar} aria-label="Cerrar panel">
           ×
         </button>
@@ -168,7 +195,7 @@ export default function PanelLateral({
       </section>
 
       <footer>
-        Datos generados el {(manifest?.generado ?? '').slice(0, 10)} desde{' '}
+        {fecha ? `Datos generados el ${fecha} desde ` : 'Datos generados desde '}
         <code>INSUMO_INCENDIO</code>.
       </footer>
     </aside>
