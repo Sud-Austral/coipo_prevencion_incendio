@@ -1,12 +1,27 @@
 // Primitivas de grafico del panel de indicadores. SVG y HTML a mano, sin
-// libreria, y no por minimalismo:
+// libreria. Las razones, y tambien lo que cuesta:
 //
-// el modo oscuro de este repo es SOLO CSS (@media prefers-color-scheme en
-// index.css); no hay estado de tema en JS en ninguna parte. Toda libreria de
-// graficos recibe los colores como valores JS, asi que para que ejes y rotulos
-// siguieran al tema del sistema habria que meter matchMedia + estado, que es
-// justo lo que el resto de la app evita. Escribiendo el SVG a mano basta con
-// fill="var(--text)" y el tema sale gratis.
+// 1. La mancuerna -- el grafico de impacto en prevencion, el mas importante del
+//    panel -- no es un tipo estandar en ninguna libreria: Recharts y Chart.js no
+//    la traen y en ECharts sale con custom series. Habria que dibujarla a mano
+//    igual, con la libreria encima.
+// 2. El repo no tiene NINGUNA dependencia de UI: leaflet, pmtiles,
+//    protomaps-leaflet, react, react-dom y react-leaflet son todas cañeria de
+//    mapa. Anadir la primera es una decision de proyecto, no un detalle.
+// 3. El bundle ya va por 523 kB minificados (152 kB gzip) y Vite avisa por
+//    pasar de 500.
+// 4. A 288 px de ancho util se pelea mas con los margenes, leyendas y
+//    contenedores responsivos por defecto de una libreria que lo que se ahorra.
+//
+// LO QUE NO ES razon, aunque una version anterior de este comentario lo decia:
+// que una libreria impida seguir el tema. Recharts pasa fill/stroke tal cual al
+// SVG, asi que <Bar fill="var(--accent)" /> funciona sin matchMedia ni estado.
+// El SVG a mano lo hace igual de bien, no mejor.
+//
+// EL COSTE: 320 lineas propias que mantener, sin tooltips ni transiciones y sin
+// la red de seguridad de una libreria probada. Si algun dia el panel necesita
+// interaccion de verdad, cambiar de opinion es barato: todo esto es
+// presentacional y solo recibe props.
 //
 // Lienzo util: 288 px = 320 del panel - 2x16 de padding. Los SVG se declaran a
 // ese ancho exacto para dibujarse 1:1, con max-width:100% por si el panel se
