@@ -8,7 +8,6 @@ import {
   FILTROS,
   fechaLarga,
   fmt,
-  fmt1,
 } from '../config'
 
 const kb = (b) => (b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.round(b / 1024)} KB`)
@@ -19,7 +18,6 @@ function Chip({ color }) {
 
 export default function PanelLateral({
   manifest,
-  kpis,
   capasActivas,
   onToggleCapa,
   filtros,
@@ -167,21 +165,9 @@ export default function PanelLateral({
         )}
       </section>
 
-      {kpis?.oecv && (
-        <section>
-          <h2>Resumen OECV</h2>
-          <div className="kpi">
-            <b>{fmt1.format(kpis.oecv.km_planificados)} km</b> planificados
-          </div>
-          <div className="kpi">
-            <b>{fmt1.format(kpis.oecv.km_reportados)} km</b> reportados
-          </div>
-          <div className="barra">
-            <span style={{ width: `${Math.min(100, kpis.oecv.avance_pct)}%` }} />
-          </div>
-          <div className="kpi">{fmt1.format(kpis.oecv.avance_pct)} % de avance nacional</div>
-        </section>
-      )}
+      {/* El resumen OECV vivia aqui y se movio a PanelIndicadores, donde esta
+          desglosado por region y por kilometros faltantes. Tenerlo en los dos
+          paneles era el mismo dato en dos sitios que pueden divergir. */}
 
       <section>
         <h2>Mapa base</h2>

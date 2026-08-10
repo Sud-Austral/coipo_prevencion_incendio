@@ -102,12 +102,17 @@ jobs:
         with:
           path: frontend/dist
 
-  # Verificación visual del banner institucional. Va en un job APARTE y en
-  # paralelo, no como paso de `build`: no necesita nada del ETL (todas las capas
-  # se piden con fetch en runtime, no hay ningún import de GeoJSON y `vite build`
-  # funciona sin frontend/public/data), así que no tiene por qué pagar los
-  # ~545 MB de INSUMO_INCENDIO ni la compilación de tippecanoe.
-  verificar-banner:
+  # Verificación visual del banner institucional y del panel de indicadores. Va
+  # en un job APARTE y en paralelo, no como paso de `build`: no necesita nada
+  # del ETL (todas las capas se piden con fetch en runtime, no hay ningún import
+  # de GeoJSON y `vite build` funciona sin frontend/public/data), así que no
+  # tiene por qué pagar los ~545 MB de INSUMO_INCENDIO ni la compilación de
+  # tippecanoe.
+  #
+  # Por eso mismo aquí NO hay capas, y verify:panel cae solo a su modo de datos
+  # ficticios: un fixture de 12 incendios con cifras calculadas a mano. En local,
+  # donde sí existe frontend/public/data, afirma las cifras de producción.
+  verificar-visual:
     runs-on: ubuntu-latest
     steps:
       # sparse-checkout sí compensa aquí, al revés que en `build`: se salta
@@ -134,19 +139,26 @@ jobs:
       - run: npm run verify:banner
         working-directory: frontend
 
+      # if: always() para que el panel se verifique aunque el banner regrese:
+      # son dos superficies independientes y saber que fallaron las dos, o solo
+      # una, ahorra una vuelta entera.
+      - if: always()
+        run: npm run verify:panel
+        working-directory: frontend
+
       # if: always() porque cuando falla es justo cuando hacen falta las capturas.
-      - name: Capturas del banner
+      - name: Capturas de verificación
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: capturas-banner
+          name: capturas-verificacion
           path: frontend/.verificacion
           retention-days: 14
 
   deploy:
-    # El build caro arranca de inmediato, pero no se publica nada si el banner
-    # regresó.
-    needs: [build, verificar-banner]
+    # El build caro arranca de inmediato, pero no se publica nada si el banner o
+    # el panel regresaron.
+    needs: [build, verificar-visual]
     runs-on: ubuntu-latest
     environment:
       name: github-pages
