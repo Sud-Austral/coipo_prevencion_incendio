@@ -20,6 +20,8 @@ import CapaLineas from './components/CapaLineas'
 import CapaPuntos from './components/CapaPuntos'
 import CapaTiles from './components/CapaTiles'
 import PanelLateral from './components/PanelLateral'
+import PanelIndicadores from './components/PanelIndicadores'
+import { IconoIndicadores } from './components/graficos'
 import { escribirURL, leerURL } from './urlState'
 import './App.css'
 
@@ -40,6 +42,7 @@ export default function App() {
   const [filtros, setFiltros] = useState(inicial.filtros ?? {})
   const [cuentas, setCuentas] = useState({})
   const [panelAbierto, setPanelAbierto] = useState(false)
+  const [kpiAbierto, setKpiAbierto] = useState(false)
   // Figura seleccionada en el mapa. Es un objeto de ficha ya armado, no las
   // propiedades crudas: quien sabe interpretar cada capa es el handler.
   const [ficha, setFicha] = useState(null)
@@ -294,7 +297,6 @@ export default function App() {
 
       <PanelLateral
         manifest={manifest}
-        kpis={kpis}
         capasActivas={capasActivas}
         onToggleCapa={toggleCapa}
         filtros={filtros}
@@ -310,6 +312,34 @@ export default function App() {
       />
 
       <div className="mapa" ref={contenedor} />
+
+      {/* DESPUES de .mapa a proposito: la rejilla coloca por orden del DOM y
+          esta es la tercera columna. Los Capa* de abajo devuelven null y no
+          ocupan celda, y ModalFicha es un <dialog> que vive en la top layer. */}
+      <div className="funda-kpi">
+        <PanelIndicadores
+          manifest={manifest}
+          kpis={kpis}
+          incendios={incendios.data}
+          oecv={oecv.data}
+          filtros={filtros}
+          capasActivas={capasActivas}
+          pasaIncendio={pasaIncendio}
+          onToggleCapa={toggleCapa}
+          cargando={cargando}
+          abierto={kpiAbierto}
+          onCerrar={() => setKpiAbierto(false)}
+        />
+      </div>
+
+      <button
+        className="abrir-kpi"
+        onClick={() => setKpiAbierto(true)}
+        aria-label="Abrir indicadores"
+        aria-expanded={kpiAbierto}
+      >
+        <IconoIndicadores />
+      </button>
 
       {/* Red vial primero: es contexto y debe quedar bajo el resto. */}
       {metaRedvial &&

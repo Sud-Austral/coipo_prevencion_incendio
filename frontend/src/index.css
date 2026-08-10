@@ -12,6 +12,12 @@
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
+  /* Mismo ancho que el panel izquierdo a proposito: deja el lienzo util de los
+     graficos en exactamente 288 px (320 - 2x16 de padding) tanto anclado como
+     en cajon, asi los SVG se dibujan 1:1 y los filetes de 1 px no se emborronan
+     con un factor de escala fraccionario. */
+  --ancho-kpi: 320px;
+
   /* ---- banner institucional CONAF/UIA ----------------------------------
      Medidos pixel a pixel sobre INSUMO_GRAFICO/banner3.jpg, no estimados. Si
      el asset cambia hay que volver a medirlos: INSUMO_GRAFICO/README.md.

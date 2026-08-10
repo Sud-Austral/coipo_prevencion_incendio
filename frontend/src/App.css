@@ -1,6 +1,13 @@
 .app {
   display: grid;
-  grid-template-columns: 320px 1fr;
+  /* Tres pistas: control a la izquierda, mapa, lectura a la derecha. La central
+     sigue siendo minmax(0, 1fr) y su min es 0, asi que las dos columnas fijas
+     no pueden empujar la rejilla mas alla del viewport -- eso es lo que mantiene
+     verde A9 de scripts/verify-banner.mjs.
+     Los cortes en 1200 y 900 px existen para que NUNCA haya mas ancho fijo que
+     viewport: a 1201 px quedan 561 px de mapa, el minimo con el que Chile
+     continental sigue siendo legible a z6. */
+  grid-template-columns: 320px minmax(0, 1fr) var(--ancho-kpi);
   /* minmax(0, 1fr) y no 1fr: la min track sizing function de 1fr es auto, asi
      que el contenido del mapa podria empujar la fila mas alla de 100dvh. */
   grid-template-rows: auto minmax(0, 1fr);
@@ -69,16 +76,35 @@
   max-width: none;
 }
 
-/* ---------- panel ---------- */
+/* ---------- paneles laterales ---------- */
 
-.panel {
+/* Los dos paneles comparten el idioma de columna-de-secciones, asi que los
+   selectores van agrupados en vez de duplicados: el de la izquierda controla
+   (capas, filtros, leyenda) y el de la derecha lee (KPI y graficos). Lo unico
+   que no comparten es el borde y el comportamiento responsive. */
+.panel,
+.panel-kpi {
   overflow-y: auto;
   background: var(--panel);
-  border-right: 1px solid var(--border);
   padding: 0 0 24px;
 }
 
-.panel header {
+.panel {
+  border-right: 1px solid var(--border);
+}
+
+.panel-kpi {
+  border-left: 1px solid var(--border);
+  /* min-width:0 impide que un rotulo largo o un SVG ensanchen la pista de la
+     rejilla, que es la otra forma de romper A9. overflow-y:auto ya computa
+     overflow-x a auto, pero se declara explicito porque de eso depende que
+     nada se salga por la derecha. */
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.panel header,
+.panel-kpi header {
   position: sticky;
   top: 0;
   z-index: 2;
@@ -87,13 +113,15 @@
   padding: 14px 16px 12px;
 }
 
-.panel h1 {
+.panel h1,
+.panel-kpi h1 {
   font-size: 15px;
   line-height: 1.25;
   letter-spacing: -0.01em;
 }
 
-.panel .sub {
+.panel .sub,
+.panel-kpi .sub {
   margin: 4px 0 0;
   font-size: 12px;
   opacity: 0.75;
@@ -103,12 +131,14 @@
   white-space: nowrap;
 }
 
-.panel section {
+.panel section,
+.panel-kpi section {
   padding: 14px 16px 4px;
   border-bottom: 1px solid var(--border);
 }
 
-.panel h2 {
+.panel h2,
+.panel-kpi h2 {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -116,13 +146,15 @@
   margin-bottom: 10px;
 }
 
-.panel h3 {
+.panel h3,
+.panel-kpi h3 {
   font-size: 12px;
   margin: 10px 0 6px;
   font-weight: 600;
 }
 
-.panel footer {
+.panel footer,
+.panel-kpi footer {
   padding: 14px 16px;
   font-size: 11px;
   opacity: 0.6;
@@ -247,6 +279,185 @@ select {
   background: var(--accent);
 }
 
+/* ---------- panel de indicadores ---------- */
+
+/* Ambito de las cifras. Va arriba y siempre: sustituye a la reactividad al
+   viewport, y sin el "89,9 % evitables" no dice de que universo habla. */
+.ambito {
+  margin: 0;
+  font: 11px var(--mono);
+  opacity: 0.7;
+}
+
+.cifra {
+  margin: 2px 0 10px;
+}
+
+.cifra b {
+  display: block;
+  color: var(--text-h);
+  font-size: 40px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  /* Proporcional y no tabular: las cifras tabulares son para columnas que se
+     comparan verticalmente, no para un numero de display. */
+  font-variant-numeric: proportional-nums;
+}
+
+.cifra-u {
+  font-size: 20px;
+  font-weight: 500;
+  margin-left: 2px;
+  opacity: 0.75;
+}
+
+.cifra-etq {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--text-h);
+}
+
+/* Advertencias y pies de grafico. Nunca opcionales: aqui viven los limites de
+   lo que el dato puede afirmar. */
+.nota {
+  margin: 6px 0 0;
+  font-size: 11px;
+  line-height: 1.35;
+  opacity: 0.7;
+}
+
+/* ---------- tabla-barra ---------- */
+
+.fila-kpi {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  column-gap: 8px;
+  row-gap: 2px;
+  align-items: baseline;
+  margin-bottom: 9px;
+}
+
+.fila-etq {
+  font-size: 12px;
+  color: var(--text-h);
+  /* Los nombres de causa son frases enteras: se recortan a una linea y el
+     titulo del elemento guarda el texto completo. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.fila-num,
+.fila-extra {
+  font: 11px var(--mono);
+  color: var(--text-h);
+  white-space: nowrap;
+}
+
+.fila-extra {
+  opacity: 0.65;
+}
+
+.fila-kpi .barra {
+  grid-column: 1 / -1;
+  margin: 1px 0 0;
+}
+
+.fila-kpi.atenuada .fila-etq,
+.fila-kpi.atenuada .fila-num {
+  color: var(--text);
+  opacity: 0.7;
+}
+
+/* ---------- graficos SVG ---------- */
+
+.grafico {
+  display: block;
+  /* Se declaran a 288 px para dibujarse 1:1, pero nunca deben ensanchar la
+     pista: eso dispararia A9. */
+  max-width: 100%;
+  height: auto;
+  margin: 2px 0 4px;
+}
+
+.grafico .eje {
+  font: 9px var(--mono);
+  opacity: 0.7;
+}
+
+.grafico .rotulo {
+  font-size: 11px;
+  font-family: var(--sans);
+}
+
+.grafico .brecha,
+.grafico .anot {
+  font: 10px var(--mono);
+}
+
+.grafico .rotulo-serie {
+  font-size: 10px;
+  font-family: var(--sans);
+  font-weight: 600;
+}
+
+.leyenda-formas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-size: 11px;
+  margin: 2px 0 4px;
+}
+
+.leyenda-formas span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Gemela accesible de cada grafico: fuera de la vista, no del lector de
+   pantalla. clip-path y no display:none, que la sacaria tambien del arbol.
+   La clase va en un <div> envoltorio y NO en la <table>: width:1px no encoge
+   una tabla (el layout automatico la deja en su ancho de contenido minimo, 413
+   px medidos), y sin el envoltorio sumaba 109 px al scrollWidth del documento.
+   Un bloque si respeta el ancho, y su overflow:hidden corta el resto. */
+.tabla-kpi {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Recarga en curso: se atenua el render anterior en vez de vaciarlo. Un
+   esqueleto que parpadea cada vez que se enciende una capa es peor que un
+   numero que envejece medio segundo. */
+.panel-kpi.refrescando section {
+  opacity: 0.55;
+}
+
+.apagada {
+  margin: 0 0 10px;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.apagada button {
+  font: inherit;
+  padding: 0;
+  background: none;
+  border: none;
+  border-bottom: 1px solid currentcolor;
+  color: var(--accent);
+  cursor: pointer;
+}
+
 /* ---------- ficha de la figura seleccionada ---------- */
 
 /* <dialog> nativo: el navegador pone el foco atrapado, el cierre con Escape y
@@ -343,11 +554,103 @@ select {
   opacity: 0.7;
 }
 
-/* ---------- responsive: el panel pasa a cajon ---------- */
+/* ---------- responsive: los paneles pasan a cajon ---------- */
 
 .abrir,
-.panel .cerrar {
+.abrir-kpi,
+.panel .cerrar,
+.panel-kpi .cerrar {
   display: none;
+}
+
+/* Anclada, la funda no debe existir como caja: con display:contents el panel es
+   directamente el tercer item de la rejilla. Solo por debajo de 1200 px se
+   convierte en la caja que recorta el cajon. */
+.funda-kpi {
+  display: contents;
+}
+
+/* El cajon derecho NO puede deslizarse como el izquierdo, y esto no es una
+   preferencia. .panel usa translateX(-100%) y no desborda porque el
+   desbordamiento hacia el INICIO de linea no es scrollable; hacia el FINAL si
+   lo es, y documentElement.scrollWidth lo delata aunque body{overflow:hidden}
+   (index.css) esconda la barra. Eso es justo lo que mide A9 de
+   scripts/verify-banner.mjs, asi que un cajon derecho ingenuo rompe CI con el
+   cajon CERRADO, que es cuando nadie lo miraria.
+   Por eso el panel vive dentro de una funda fija que lo recorta: la funda esta
+   siempre dentro del viewport y el panel se desliza DENTRO de ella.
+   Si algun dia estorba, la alternativa de riesgo cero es alternar
+   display:none/block y perder la animacion de 180 ms. */
+@media (max-width: 1200px) {
+  .app {
+    grid-template-columns: 320px minmax(0, 1fr);
+  }
+
+  .funda-kpi {
+    display: block;
+    position: fixed;
+    /* NO var(--alto-minimo-banner) a secas como .panel: aquella regla solo es
+       exacta porque su media query corta en 900, por debajo del cruce de
+       1164,83 px. Esta llega hasta 1200, donde la banda ya mide 70,05 px, asi
+       que se reproduce la formula del banner. */
+    inset: calc(max(var(--alto-minimo-banner), 100vw / var(--razon-banner))) 0 0 auto;
+    width: var(--ancho-kpi);
+    overflow: hidden;
+    /* Cerrada, la funda ocupa 320 px sobre el mapa: sin esto se comeria los
+       clics de una franja del mapa que se ve perfectamente. */
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  .panel-kpi {
+    position: absolute;
+    inset: 0;
+    width: var(--ancho-kpi);
+    border-left: 1px solid var(--border);
+    transform: translateX(100%);
+    transition: transform 0.18s ease;
+    box-shadow: var(--shadow);
+  }
+
+  .panel-kpi.abierto {
+    transform: none;
+    pointer-events: auto;
+  }
+
+  .abrir-kpi {
+    display: grid;
+    place-items: center;
+    position: fixed;
+    z-index: 999;
+    /* Arriba-derecha es la unica esquina que Leaflet deja libre: zoom
+       arriba-izquierda, atribucion abajo-derecha, escala abajo-izquierda. Y
+       .abrir vive en left:10px, asi que tampoco chocan entre si. */
+    top: calc(max(var(--alto-minimo-banner), 100vw / var(--razon-banner)) + 10px);
+    right: 10px;
+    width: 36px;
+    height: 36px;
+    background: var(--bg);
+    color: var(--text-h);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+  }
+
+  .panel-kpi .cerrar {
+    display: block;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 28px;
+    height: 28px;
+    font-size: 20px;
+    line-height: 1;
+    background: none;
+    border: none;
+    color: var(--text);
+    cursor: pointer;
+  }
 }
 
 @media (max-width: 900px) {

@@ -9,7 +9,8 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "datos": "node scripts/descargar-datos.mjs",
-    "verify:banner": "node scripts/verify-banner.mjs"
+    "verify:banner": "node scripts/verify-banner.mjs",
+    "verify:panel": "node scripts/verify-panel.mjs"
   },
   "dependencies": {
     "leaflet": "^1.9.4",
