@@ -19,6 +19,22 @@
   width: 100%;
 }
 
+/* Texto solo para el lector de pantalla: fuera de la vista, no del arbol de
+   accesibilidad. Mismo mecanismo que .tabla-kpi, y por la MISMA razon el
+   position:absolute no es decorativo -- .app es una rejilla de tres pistas y un
+   hijo en flujo crearia una fila implicita que desplazaria el mapa. */
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ---------- banner institucional ---------- */
 
 /* Opcion A del §3 de INSUMO_GRAFICO/implementacion_banner.md: proporcion
@@ -113,22 +129,39 @@
   padding: 14px 16px 12px;
 }
 
-.panel h1,
-.panel-kpi h1 {
+/* El titulo de cada panel. El de la derecha es un h2 desde que se degrado para
+   dejar un solo h1 en el documento, asi que se nombra por su posicion --dentro
+   del <header>-- y no por su etiqueta. */
+.panel header h1,
+.panel-kpi header h2 {
   font-size: 15px;
   line-height: 1.25;
   letter-spacing: -0.01em;
 }
 
+/* Aqui vive «investigados por la UAD, no la totalidad de los incendios del
+   país», que es la frase que acota TODO lo que dice el panel derecho. Con
+   opacity .75 daba 3,28:1. */
 .panel .sub,
 .panel-kpi .sub {
   margin: 4px 0 0;
   font-size: 12px;
-  opacity: 0.75;
+  color: var(--text-2);
 }
 
 .panel .sub .fecha {
   white-space: nowrap;
+}
+
+/* Lo primero que tiene que leer alguien de fuera del programa. SIN opacity y
+   con --text a plena tinta (5,54:1): es exactamente el texto que no puede
+   quedarse en el 3:1 del resto del texto secundario, porque desmonta el
+   malentendido de que el mapa muestra incendios activos. */
+.aviso {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--text);
 }
 
 .panel section,
@@ -137,9 +170,18 @@
   border-bottom: 1px solid var(--border);
 }
 
-.panel h2,
-.panel-kpi h2 {
-  font-size: 11px;
+/* CONSERVA su opacity .6, al reves que el resto de este archivo: sobre
+   --text-h da 5,34:1 y SI pasa contraste. Su problema era solo el tamaño --era
+   el texto mas pequeño de cada sección siendo su encabezado--, asi que sube a
+   12 px y nada mas.
+
+   `section h2` y no `h2` a secas: el titulo del panel derecho tambien es un h2
+   desde que se degrado, y vive en el <header>. Escrito sin acotar, este bloque
+   le caia encima --text-transform, letter-spacing, opacity y margin-bottom--
+   porque .panel-kpi header h2 (0,1,2) solo gana en lo que redeclara. */
+.panel section h2,
+.panel-kpi section h2 {
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   opacity: 0.6;
@@ -156,8 +198,8 @@
 .panel footer,
 .panel-kpi footer {
   padding: 14px 16px;
-  font-size: 11px;
-  opacity: 0.6;
+  font-size: 12px;
+  color: var(--text-2);
 }
 
 .panel code {
@@ -166,28 +208,56 @@
 
 /* ---------- capas ---------- */
 
+/* flex-start y no center: la fila ya no es de una linea, porque cada capa lleva
+   su descripcion debajo. Con center, la casilla y el peso quedaban flotando a
+   media altura de un bloque de tres lineas. */
 .fila-capa {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
-  padding: 5px 0;
+  padding: 6px 0;
   cursor: pointer;
 }
 
 .fila-capa input {
   accent-color: var(--accent);
-  margin: 0;
+  margin: 2px 0 0;
+  flex: none;
+}
+
+/* min-width:0 es lo que impide que una descripcion larga ensanche la pista de
+   320 px de la rejilla. */
+.capa-txt {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .fila-capa .etq {
-  flex: 1;
   color: var(--text-h);
   font-size: 13px;
 }
 
+.capa-desc {
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--text-2);
+}
+
+/* Fallo de descarga de UNA capa. En --text-h y no en --text-2: es lo contrario
+   de una nota al pie, es la unica señal de que el mapa esta incompleto.
+   El margen izquierdo lo alinea con el texto de la fila, saltando la casilla. */
+.capa-error {
+  margin: 0 0 8px 21px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--text-h);
+}
+
 .fila-capa .meta {
-  font: 11px var(--mono);
-  opacity: 0.6;
+  font: 12px var(--mono);
+  color: var(--text-2);
   white-space: nowrap;
 }
 
@@ -228,6 +298,25 @@ select {
   cursor: pointer;
 }
 
+/* Recentrar en la region filtrada. Aparece solo con el filtro puesto, justo
+   bajo su desplegable, para que se lea como parte de ese control. */
+.centrar {
+  width: 100%;
+  margin: -4px 0 12px;
+  padding: 6px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--accent);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.centrar:hover {
+  border-color: var(--accent);
+}
+
 .limpiar:disabled {
   opacity: 0.4;
   cursor: default;
@@ -235,6 +324,44 @@ select {
 
 .limpiar:not(:disabled):hover {
   border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ---------- compartir ---------- */
+
+.compartir {
+  width: 100%;
+  padding: 8px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--text-h);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.compartir:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.url-manual {
+  width: 100%;
+  margin-top: 8px;
+  padding: 6px;
+  font: 12px var(--mono);
+  color: var(--text-h);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+}
+
+.aviso-copia {
+  display: block;
+  min-height: 16px;
+  margin-top: 6px;
+  font-size: 12px;
   color: var(--accent);
 }
 
@@ -285,8 +412,8 @@ select {
    viewport, y sin el "89,9 % evitables" no dice de que universo habla. */
 .ambito {
   margin: 0;
-  font: 11px var(--mono);
-  opacity: 0.7;
+  font: 12px var(--mono);
+  color: var(--text-2);
 }
 
 .cifra {
@@ -309,7 +436,7 @@ select {
   font-size: 20px;
   font-weight: 500;
   margin-left: 2px;
-  opacity: 0.75;
+  color: var(--text-2);
 }
 
 .cifra-etq {
@@ -318,13 +445,27 @@ select {
   color: var(--text-h);
 }
 
+/* Bajada de seccion: que PREGUNTA responde el bloque, en el idioma de quien
+   llega de fuera. Los ocho h2 estan en el idioma del programa ("Cobertura
+   preventiva vs presion", "Composicion de causas") y el CSS los pinta como
+   separadores decorativos, asi que no guian la lectura de nadie.
+   El margen superior negativo no es un truco de maquetacion: colapsa con el
+   margin-bottom:10px del h2 y deja 6 px entre titulo y bajada, que es lo que
+   los ata visualmente. */
+.bajada {
+  margin: -4px 0 10px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--text-2);
+}
+
 /* Advertencias y pies de grafico. Nunca opcionales: aqui viven los limites de
    lo que el dato puede afirmar. */
 .nota {
   margin: 6px 0 0;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.35;
-  opacity: 0.7;
+  color: var(--text-2);
 }
 
 /* ---------- tabla-barra ---------- */
@@ -349,15 +490,20 @@ select {
   min-width: 0;
 }
 
+/* 12 px como el resto del texto: son cifras, no anotaciones. El coste es que la
+   etiqueta de la izquierda pierde unos pixeles, pero vive en una pista 1fr con
+   min-width:0 y ya se recorta con elipsis y title, asi que no puede ensanchar
+   la rejilla ni disparar B3/B6. */
 .fila-num,
 .fila-extra {
-  font: 11px var(--mono);
+  font: 12px var(--mono);
   color: var(--text-h);
   white-space: nowrap;
 }
 
+/* Las hectareas junto a cada barra: son un dato, no decoracion. */
 .fila-extra {
-  opacity: 0.65;
+  color: var(--text-2);
 }
 
 .fila-kpi .barra {
@@ -367,8 +513,7 @@ select {
 
 .fila-kpi.atenuada .fila-etq,
 .fila-kpi.atenuada .fila-num {
-  color: var(--text);
-  opacity: 0.7;
+  color: var(--text-2);
 }
 
 /* ---------- graficos SVG ---------- */
@@ -382,9 +527,21 @@ select {
   margin: 2px 0 4px;
 }
 
+/* 10 px, y es la unica excepcion al piso de 12 px de este archivo. El tamaño
+   esta MEDIDO sobre el grafico real, no elegido a ojo: los nueve rotulos de
+   temporada ("17-18"…"25-26") comparten un lienzo fijo de 288 px con un paso
+   de 32 px, y getBBox() sobre ellos da
+      10 px -> rotulo 25,09 px, hueco minimo entre vecinos 6,91 px
+      11 px -> rotulo 30,11 px, hueco minimo entre vecinos 1,89 px
+   o sea que a 11 px los rotulos se tocan. Y B6 no lo veria: mide la caja del
+   <svg>, no el texto que quede apretado por dentro, asi que CI seguiria verde
+   con el eje ilegible. 10 px es el maximo que conserva un hueco legible.
+   (En este entorno la fuente mono rinde 9 y 10 px con el mismo avance, asi que
+   subir de 9 a 10 no costo un solo pixel de hueco.)
+   El color lo pone el atributo fill de cada <text> en graficos.jsx, que es
+   donde el resto del proyecto declara sus tintas. */
 .grafico .eje {
-  font: 9px var(--mono);
-  opacity: 0.7;
+  font: 10px var(--mono);
 }
 
 .grafico .rotulo {
@@ -417,6 +574,13 @@ select {
   gap: 5px;
 }
 
+/* Explica la unidad de la columna derecha de la mancuerna. No es una serie:
+   por eso no lleva muestra de color y ocupa su propia linea. */
+.leyenda-nota {
+  color: var(--text-2);
+  line-height: 1.35;
+}
+
 /* Gemela accesible de cada grafico: fuera de la vista, no del lector de
    pantalla. clip-path y no display:none, que la sacaria tambien del arbol.
    La clase va en un <div> envoltorio y NO en la <table>: width:1px no encoge
@@ -445,10 +609,11 @@ select {
 .apagada {
   margin: 0 0 10px;
   font-size: 12px;
-  opacity: 0.8;
+  color: var(--text-2);
 }
 
-.apagada button {
+.apagada button,
+.capa-error button {
   font: inherit;
   padding: 0;
   background: none;
@@ -456,6 +621,162 @@ select {
   border-bottom: 1px solid currentcolor;
   color: var(--accent);
   cursor: pointer;
+}
+
+/* ---------- punto de mira del teclado ---------- */
+
+/* Marca el centro del mapa, que es adonde apunta Enter. Se posiciona con la
+   misma tecnica que .cartel --fixed con insets que reproducen las pistas de la
+   rejilla-- porque tiene que centrarse sobre el MAPA y no sobre el viewport, y
+   meterlo dentro del contenedor de Leaflet seria pedir que React y Leaflet se
+   pisen los hijos. Aqui los insets van a 0 y no a 8 px: debe coincidir con el
+   area del mapa al pixel. */
+.mira {
+  position: fixed;
+  z-index: 997;
+  pointer-events: none;
+  display: none;
+  place-items: center;
+  top: calc(max(var(--alto-minimo-banner), 100vw / var(--razon-banner)));
+  bottom: 0;
+  left: 320px;
+  right: var(--ancho-kpi);
+}
+
+.mira::before {
+  content: '';
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  /* Halo del color del fondo: sobre una mancha densa de puntos naranjos, un
+     aro de una sola tinta desaparece. */
+  box-shadow: 0 0 0 2px var(--bg);
+}
+
+/* :focus-visible y NUNCA :focus ni :focus-within, y esto no es una preferencia.
+   Leaflet enfoca el contenedor del mapa en CADA mousedown
+   (Keyboard._onMouseDown), asi que con :focus el punto de mira apareceria tras
+   cualquier clic de raton y se quedaria ahi para todo usuario vidente -- una
+   regresion que ni verify-banner ni verify-panel detectarian, porque ninguno
+   hace clic sobre el mapa. Y :focus-within se activaria al tabular hacia los
+   botones de zoom, que viven dentro del contenedor. */
+.mapa:focus-visible ~ .mira {
+  display: grid;
+}
+
+/* ---------- aviso de descarga ---------- */
+
+/* Fixed por la misma razon que .cartel: no puede ser item de la rejilla.
+   ARRIBA y no abajo: el borde inferior ya lo ocupan la escala y la atribucion
+   de Leaflet, y a 390 px se solaparian.
+   Los 80 px por debajo de la banda no son a ojo: dejan libres los dos controles
+   flotantes que viven ahi arriba -- .abrir termina en banda+46 (top banda+10,
+   36 px de alto) y la barra de zoom de Leaflet en banda+64 (margin-top 10 mas
+   dos botones de 26 px con sus bordes). Ninguna asercion comprueba este choque:
+   B5 solo compara .abrir-kpi contra los controles de Leaflet, asi que un
+   solape aqui seria invisible para CI y evidente para el usuario. */
+.descargando {
+  position: fixed;
+  z-index: 998;
+  top: calc(max(var(--alto-minimo-banner), 100vw / var(--razon-banner)) + 80px);
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100vw - 32px);
+  margin: 0;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--text-h);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- cartel de contexto sobre el mapa ---------- */
+
+/* position:fixed y NO un item de la rejilla: .app es un grid de tres pistas y
+   un cuarto hijo en flujo crearia una fila implicita que desplazaria el mapa
+   hacia abajo -- la misma trampa que documenta .tabla-kpi en graficos.jsx.
+   Fixed tampoco mueve .mapa, asi que A7 de verify-banner y B2 de verify-panel
+   (|mapa.top - banner.height| <= 1) siguen verdes.
+
+   JAMAS width:100vw: con barra de scroll vertical, 100vw incluye su ancho y el
+   elemento desborda por la derecha, que es exactamente lo que miden A9 y B3
+   (documentElement.scrollWidth). Se posiciona con left/right, que por
+   definicion no pueden desbordar. */
+.cartel {
+  position: fixed;
+  /* Por debajo de .abrir y .abrir-kpi (999), de los controles de Leaflet
+     (.leaflet-top/.leaflet-bottom, 1000) y de los dos cajones (1000), que deben
+     taparlo al abrirse. La atribucion de OpenStreetMap/CARTO es obligacion de
+     licencia y no puede quedar cubierta por esto. */
+  z-index: 998;
+  /* Los controles del borde inferior tampoco se pueden tapar. Alto REAL medido
+     sobre leaflet.css con la fuente de 13 px que fija index.css, no estimado:
+       escala      13*1,1 + 3 padding + 2 borde + 5 margen = 24,3 px
+                   (.leaflet-bottom .leaflet-control-scale, leaflet.css:440)
+       atribucion  13*1,4 + 0 de margen                    = 18,2 px
+                   (.leaflet-container .leaflet-control-attribution, :413, que
+                    gana por orden de fuente a .leaflet-bottom .leaflet-control)
+     Se ancla sobre la mas alta de las dos, con holgura. */
+  bottom: 32px;
+  /* Sobre el mapa y no sobre los paneles: se reproducen los cortes de la
+     rejilla en las media queries de mas abajo. */
+  left: 320px;
+  right: var(--ancho-kpi);
+  margin: 0 auto;
+  max-width: 560px;
+  padding: 12px 14px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.cartel p {
+  margin: 0 0 8px;
+}
+
+.cartel strong {
+  color: var(--text-h);
+}
+
+.cartel-clave {
+  margin-bottom: 0;
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.cartel-botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.cartel-botones button {
+  font: inherit;
+  padding: 7px 10px;
+  color: var(--text-h);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.cartel-botones button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.cartel-ok {
+  margin-left: auto;
 }
 
 /* ---------- ficha de la figura seleccionada ---------- */
@@ -496,10 +817,10 @@ select {
   align-items: center;
   gap: 6px;
   margin: 0 0 3px;
-  font-size: 11px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  opacity: 0.6;
+  color: var(--text-2);
 }
 
 .ficha h2 {
@@ -537,7 +858,7 @@ select {
 .ficha th {
   text-align: left;
   font-weight: 500;
-  opacity: 0.65;
+  color: var(--text-2);
   padding: 3px 12px 3px 0;
   vertical-align: top;
   white-space: nowrap;
@@ -551,7 +872,7 @@ select {
 .ficha-vacia {
   margin: 0;
   font-size: 13px;
-  opacity: 0.7;
+  color: var(--text-2);
 }
 
 /* ---------- responsive: los paneles pasan a cajon ---------- */
@@ -602,19 +923,35 @@ select {
     z-index: 1000;
   }
 
+  /* visibility:hidden y no solo transform: un translateX saca el cajon de la
+     PANTALLA pero no del orden de tabulacion ni del arbol de accesibilidad, y
+     pointer-events:none bloquea el dedo, no el teclado. Quien navega con
+     teclado o con lector atravesaba los controles de un cajon cerrado que no
+     puede ver.
+     Conserva la caja de layout, asi que getBoundingClientRect, scrollWidth y
+     textContent siguen devolviendo lo mismo y B1/B3/B6/B8/B9 no se enteran.
+     El retardo de 0,18 s la mantiene visible mientras dura el deslizamiento de
+     salida; al abrir se aplica al instante. */
   .panel-kpi {
     position: absolute;
     inset: 0;
     width: var(--ancho-kpi);
     border-left: 1px solid var(--border);
     transform: translateX(100%);
-    transition: transform 0.18s ease;
+    visibility: hidden;
+    transition:
+      transform 0.18s ease,
+      visibility 0s linear 0.18s;
     box-shadow: var(--shadow);
   }
 
   .panel-kpi.abierto {
     transform: none;
+    visibility: visible;
     pointer-events: auto;
+    transition:
+      transform 0.18s ease,
+      visibility 0s;
   }
 
   .abrir-kpi {
@@ -651,6 +988,15 @@ select {
     color: var(--text);
     cursor: pointer;
   }
+
+  /* El panel derecho ya es cajon: el mapa llega al borde. */
+  .cartel {
+    right: 8px;
+  }
+
+  .mira {
+    right: 0;
+  }
 }
 
 @media (max-width: 900px) {
@@ -662,6 +1008,7 @@ select {
      mide SIEMPRE --alto-minimo-banner, porque 900 < 1164,83 (el cruce). Si
      alguien sube este breakpoint por encima del cruce, dejan de ser exactas. */
 
+  /* Mismo motivo que .panel-kpi: ver el comentario del bloque de 1200 px. */
   .panel {
     position: fixed;
     z-index: 1000;
@@ -669,12 +1016,19 @@ select {
     inset: var(--alto-minimo-banner) auto 0 0;
     width: 300px;
     transform: translateX(-100%);
-    transition: transform 0.18s ease;
+    visibility: hidden;
+    transition:
+      transform 0.18s ease,
+      visibility 0s linear 0.18s;
     box-shadow: var(--shadow);
   }
 
   .panel.abierto {
     transform: none;
+    visibility: visible;
+    transition:
+      transform 0.18s ease,
+      visibility 0s;
   }
 
   .abrir {
@@ -715,6 +1069,136 @@ select {
   .leaflet-top.leaflet-left {
     margin-left: 52px;
   }
+
+  /* Los dos paneles son cajones: el mapa ocupa todo el ancho. Los 8 px de
+     holgura evitan que el cartel toque los bordes a 390 px. */
+  .cartel {
+    left: 8px;
+  }
+
+  .mira {
+    left: 0;
+  }
+}
+
+/* ---------- foco visible y menos movimiento ---------- */
+
+/* Hasta ahora un grep de `focus` sobre src/ no devolvia UNA sola regla: el
+   visor no declaraba ningun estilo de foco y quien navega con teclado dependia
+   del anillo por defecto del navegador, que sobre los botones flotantes que
+   viven encima del mapa apenas se distingue.
+
+   NO se incluye [tabindex] en la lista: capturaria el contenedor del mapa, al
+   que Leaflet pone tabIndex 0, y un anillo de 3 px con offset hacia fuera sobre
+   un elemento del tamaño del viewport se dibuja fuera de pantalla y se recorta.
+   Ese caso lleva su propia regla, con el offset hacia dentro.
+   Tampoco se toca border-radius: cambiar la geometria de las esquinas justo al
+   enfocar es un defecto, y .limpiar, select y .compartir ya declaran el suyo. */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+summary:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* El objetivo real de una fila de capa es la FILA entera --lleva cursor:pointer
+   y es un <label>--, no la casilla de 13 px. El anillo se traslada a la fila y
+   se retira de la casilla para no dibujar dos. */
+.fila-capa:has(input:focus-visible) {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.fila-capa input:focus-visible {
+  outline: none;
+}
+
+/* Offset hacia DENTRO: con el offset positivo por defecto, el anillo del mapa
+   se dibujaria fuera del viewport. No se toca el outline-offset:1px que Leaflet
+   declara para .leaflet-container. */
+.leaflet-container:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: -3px;
+}
+
+/* Las cabeceras de los dos paneles son sticky con fondo opaco, asi que al
+   tabular hacia abajo el navegador deja el control enfocado DEBAJO de ellas.
+   Medido sobre el render real, no estimado: 139,1 px la izquierda (lleva
+   titulo, subtitulo y el aviso de "ya ocurridos") y 98,5 px la derecha. Se
+   redondea al alza. */
+.panel button,
+.panel input,
+.panel select,
+.panel summary {
+  scroll-margin-top: 148px;
+}
+
+.panel-kpi button,
+.panel-kpi input,
+.panel-kpi select,
+.panel-kpi summary {
+  scroll-margin-top: 108px;
+}
+
+/* Para alguien con vertigo o migraña vestibular, abrir el visor era un vuelo
+   animado sobre Chile que no pidio y no podia desactivar: el sistema operativo
+   ya le esta diciendo al navegador "menos movimiento" y este visor era lo unico
+   en pantalla que no escuchaba. Las animaciones del MAPA se apagan en App.jsx,
+   porque son opciones de Leaflet y no CSS. */
+@media (prefers-reduced-motion: reduce) {
+  .panel,
+  .panel-kpi {
+    transition: none;
+  }
+}
+
+/* ---------- objetivos tactiles ---------- */
+
+/* En pantalla tactil los blancos suben a 44x44, el minimo recomendado, desde
+   los 36x36 de los dos botones flotantes y los 28x28 de las tres «×».
+   VA DESPUES de las media queries de ancho a proposito: `.abrir` y `.abrir-kpi`
+   fijan su tamaño ahi dentro con la misma especificidad (0,1,0), asi que solo
+   gana por orden de fuente. Si alguien mueve este bloque mas arriba, deja de
+   aplicarse sin previo aviso.
+   Los selectores repiten la especificidad del original --.panel .cerrar y
+   .panel-kpi .cerrar son (0,2,0)-- por la misma razon.
+
+   CI NO CUBRE ESTE BLOQUE: verify-panel.mjs emula el viewport con
+   Emulation.setDeviceMetricsOverride y mobile:false, y nunca llama a
+   setTouchEmulationEnabled, asi que el puntero sigue siendo `fine` y B5 evalua
+   los botones a 36x36. En un telefono de verdad, B5 deja de estar verificado:
+   hay que mirar las capturas de 390 px. */
+@media (pointer: coarse) {
+  .abrir,
+  .abrir-kpi {
+    width: 44px;
+    height: 44px;
+  }
+
+  .panel .cerrar,
+  .panel-kpi .cerrar,
+  .ficha-cerrar {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* Los <select> de filtro miden ~29 px de alto: son el control que mas se usa
+     del panel y el mas dificil de acertar. */
+  select {
+    min-height: 44px;
+  }
+
+  /* .leaflet-touch .leaflet-bar a y NO .leaflet-bar a: leaflet.css ya declara
+     el primero con especificidad (0,2,1) contra (0,1,1) del segundo, y una
+     media query no aporta especificidad. Leaflet añade .leaflet-touch al
+     contenedor en cualquier dispositivo tactil real. */
+  .leaflet-touch .leaflet-bar a {
+    width: 44px;
+    height: 44px;
+    line-height: 44px;
+  }
 }
 
 /* ---------- error ---------- */
@@ -729,4 +1213,34 @@ select {
 .error h1 {
   font-size: 20px;
   margin-bottom: 10px;
+}
+
+.error .reintentar {
+  font: inherit;
+  margin: 6px 0 18px;
+  padding: 8px 16px;
+  color: var(--text-h);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.error .reintentar:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.error details {
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.error summary {
+  cursor: pointer;
+}
+
+/* Procedencia del pie: una linea por dato, sin repetir la fecha. */
+.procedencia {
+  margin: 0 0 4px;
 }

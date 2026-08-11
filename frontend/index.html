@@ -14,9 +14,112 @@
       content="Visor de prevención de incendios forestales: incendios investigados por las UAD, obras de eliminación de combustible vegetal, rutas de despliegue y red vial."
     />
     <title>Prevención de Incendios Forestales — CONAF</title>
+
+    <!-- SIN el atributo crossorigin, y no es un olvido: no lo "arregles".
+         Leaflet pide las teselas con <img> y sin crossOrigin, o sea peticiones
+         en modo no-CORS. Un preconnect anonimo abre la conexion en OTRO pool de
+         sockets, no se reutiliza para esas peticiones y obliga al navegador a
+         abrir una segunda: el apreton se pagaria dos veces en vez de cero.
+         El host esta acoplado a BASEMAPS.Claro en src/config.js. -->
+    <link rel="preconnect" href="https://basemaps.cartocdn.com" />
+    <link rel="dns-prefetch" href="https://basemaps.cartocdn.com" />
+
+    <!-- Colapsa las N variantes ?lat=&lon=&z=&capas=&base=&region= que
+         src/urlState.js escribe en cada moveend: cada vista compartida es una
+         URL distinta del MISMO documento. -->
+    <link rel="canonical" href="https://sud-austral.github.io/coipo_prevencion_incendio/" />
+
+    <!-- Previsualizacion al compartir el enlace. La decision de abrir un sitio
+         de varios MB en un telefono con plan de datos se toma mirando esta
+         tarjeta, y hoy no existe.
+         og:description y twitter:description repiten TEXTUALMENTE el content de
+         la meta description de arriba: dos redacciones del mismo texto divergen
+         a la primera edicion.
+         card=summary y NO summary_large_image: todavia no existe una PNG de
+         1200x630, y declarar og:image apuntando a un archivo inexistente hace
+         que varios scrapers descarten la tarjeta ENTERA -- peor que no tener
+         imagen. Cuando el asset exista se anaden og:image, og:image:width,
+         og:image:height y og:image:alt, y se sube la card a
+         summary_large_image. Recortar la franja 17,13:1 del banner a 1,9:1 es
+         trabajo de diseno, no de codigo. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="CONAF · Unidad de Información y Análisis" />
+    <meta property="og:locale" content="es_CL" />
+    <meta property="og:url" content="https://sud-austral.github.io/coipo_prevencion_incendio/" />
+    <meta property="og:title" content="Prevención de Incendios Forestales — CONAF" />
+    <meta
+      property="og:description"
+      content="Visor de prevención de incendios forestales: incendios investigados por las UAD, obras de eliminación de combustible vegetal, rutas de despliegue y red vial."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Prevención de Incendios Forestales — CONAF" />
+    <meta
+      name="twitter:description"
+      content="Visor de prevención de incendios forestales: incendios investigados por las UAD, obras de eliminación de combustible vegetal, rutas de despliegue y red vial."
+    />
+    <!-- NO se crea frontend/public/robots.txt: el sitio vive bajo
+         /coipo_prevencion_incendio/ y robots.txt solo se consulta en la RAIZ
+         del origen (sud-austral.github.io), que pertenece al Pages de la
+         organizacion. Si algun dia hace falta control de indexado, va aqui como
+         <meta name="robots">. -->
+
+    <!-- Esqueleto de arranque. Su CSS va en linea porque el bundle y la hoja
+         externa todavia no han llegado: es justamente el hueco que cubre.
+         ATENCION: los dos numeros de la banda son --alto-minimo-banner (68px) y
+         --razon-banner (17.1299) de src/index.css. Si cambia el asset del
+         banner hay que tocarlos en TRES sitios: src/index.css, este bloque y
+         scripts/verify-banner.mjs. -->
+    <style>
+      #arranque {
+        font: 15px/1.45 system-ui, 'Segoe UI', Roboto, sans-serif;
+        color: #6b6375;
+      }
+      #arranque .banda {
+        height: max(68px, calc(100vw / 17.1299));
+        background: #064928;
+      }
+      #arranque p {
+        margin: 0;
+        padding: 24px 16px;
+        text-align: center;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- id="arranque" y NUNCA class="banner": la asercion A10 de
+           scripts/verify-banner.mjs afirma !document.querySelector('.banner')
+           sobre la pantalla de error, y el sondeo de A1 espera un .banner con
+           altura e img.complete. Este esqueleto se elimina en src/main.jsx
+           ANTES del primer render, asi que ninguna de las dos lo ve. -->
+      <div id="arranque">
+        <div class="banda"></div>
+        <p id="arranque-texto">Cargando el visor de prevención de incendios de CONAF…</p>
+      </div>
+    </div>
+    <script>
+      // Clasico y NO type="module" a proposito: un modulo se descarga junto al
+      // resto del grafo y no correria si el bundle nunca llega, que es
+      // exactamente el fallo que este temporizador tiene que cubrir. Sin el, un
+      // arranque roto se queda en «Cargando…» para siempre, que es mentir con
+      // mejor tipografia.
+      setTimeout(function () {
+        var t = document.getElementById('arranque-texto')
+        if (t)
+          t.textContent =
+            'Está tardando más de lo normal. Revisa tu conexión y recarga la página.'
+      }, 15000)
+    </script>
+    <noscript>
+      <p>
+        Este visor necesita JavaScript para dibujar el mapa y calcular los indicadores. Actívalo en
+        tu navegador y vuelve a cargar la página.
+      </p>
+      <p>
+        El detalle de los datos publicados, con su fecha de generación, está en
+        <a href="./data/manifest.json">./data/manifest.json</a>.
+      </p>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

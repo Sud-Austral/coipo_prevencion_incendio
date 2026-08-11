@@ -33,6 +33,50 @@ export const INST_ELECTRICA = 'Empresa eléctrica'
 // copia tal cual del Excel: una coma de mas romperia la comparacion exacta.
 const RE_CONTACTO_TENDIDO = /contacto o proximidad con el tendido/i
 
+/**
+ * Familia de quemas dentro de las causas especificas negligentes. Por patron y
+ * no por igualdad literal, por la misma razon que RE_CONTACTO_TENDIDO: el ETL
+ * copia el texto del catalogo tal cual del Excel.
+ *
+ * Agrupa 7 categorias del catalogo oficial que son la MISMA conducta contada
+ * con distinto detalle administrativo (basura residencial, limpieza de canales,
+ * desechos agricolas, desechos forestales, desechos industriales y las dos
+ * variantes "avisada … mal ejecutada"). Sueltas, cada una parece un problema
+ * menor; juntas son 3.778 de 8.730 incendios por negligencia.
+ *
+ * La agrupacion vive SOLO en la capa de presentacion: la TablaKpi gemela lista
+ * las categorias originales sin tocar, para que el dato oficial siga accesible.
+ */
+export const RE_QUEMA = /^quema /i
+
+/**
+ * Funde la familia de quemas en una sola fila. Devuelve la lista intacta si hay
+ * menos de dos, que es cuando agrupar no aportaria nada y solo escondería el
+ * nombre real de la unica categoria.
+ *
+ * La etiqueta DECLARA cuantas categorias agrupa, y `detalle` lleva la lista
+ * completa para el title: agrupar sin decirlo es reescribir el catalogo.
+ */
+export function agruparQuemas(filas) {
+  if (!filas?.length) return filas ?? []
+  const quemas = filas.filter((d) => RE_QUEMA.test(d.v))
+  if (quemas.length < 2) return filas
+  const suma = (campo) => quemas.reduce((a, d) => a + (d[campo] ?? 0), 0)
+  return [
+    ...filas.filter((d) => !RE_QUEMA.test(d.v)),
+    {
+      // "de basura, desechos y limpieza" y NO "sin aviso": dos de las siete son
+      // quemas AVISADAS mal ejecutadas, y decir lo contrario seria falso.
+      v: `Quemas de basura, desechos y limpieza (${quemas.length} categorías)`,
+      n: suma('n'),
+      ha: suma('ha'),
+      pct: suma('pct'),
+      pctHa: suma('pctHa'),
+      detalle: quemas.map((d) => d.v).join(' · '),
+    },
+  ].sort((a, b) => b.n - a.n)
+}
+
 const pct = (parte, total) => (total ? (100 * parte) / total : 0)
 
 /**
@@ -68,6 +112,10 @@ export function resumenIncendios(features, tablas, pasa) {
   const bolsa = (k) => ({ n: new Int32Array(k), ha: new Float64Array(k) })
   const grupo = bolsa(TG.length)
   const general = bolsa(TCG.length)
+  // Causa especifica SOLO de los negligentes: es lo que traduce «tres cuartas
+  // partes son evitables» a conductas concretas. 58 categorias vistas sobre una
+  // pasada que ya toma 1,57 ms: el coste es irrelevante.
+  const especifica = bolsa(TCE.length)
   const region = bolsa(TR.length)
   const temporada = bolsa(TT.length)
   const tempInt = new Int32Array(TT.length)
@@ -82,6 +130,11 @@ export function resumenIncendios(features, tablas, pasa) {
   let elecHa = 0
   let contN = 0
   let contHa = 0
+  // Total del GRUPO negligentes: es el denominador correcto del desglose por
+  // conducta. Tomarlo de `n` (el total del ambito) daria porcentajes sobre un
+  // universo que incluye intencionales, accidentales y naturales.
+  let negN = 0
+  let negHa = 0
 
   for (const f of features) {
     const p = f.properties
@@ -99,6 +152,13 @@ export function resumenIncendios(features, tablas, pasa) {
     if (g === iNeg || g === iInt) {
       evN++
       evHa += S
+    }
+    if (g === iNeg) {
+      negN++
+      negHa += S
+      const ce = p.causa_especifica
+      especifica.n[ce]++
+      especifica.ha[ce] += S
     }
 
     const cg = p.causa_general
@@ -124,10 +184,19 @@ export function resumenIncendios(features, tablas, pasa) {
     else if (g === iNeg) tempNeg[t]++
   }
 
-  const listar = (tabla, b) =>
+  // El denominador entra como parametro: el desglose de conductas negligentes
+  // se reparte sobre el total de NEGLIGENTES, no sobre el del ambito.
+  const listarSobre = (tabla, b, total, totalHa) =>
     tabla
-      .map((v, i) => ({ v, n: b.n[i], ha: b.ha[i], pct: pct(b.n[i], n), pctHa: pct(b.ha[i], ha) }))
+      .map((v, i) => ({
+        v,
+        n: b.n[i],
+        ha: b.ha[i],
+        pct: pct(b.n[i], total),
+        pctHa: pct(b.ha[i], totalHa),
+      }))
       .filter((d) => d.n > 0)
+  const listar = (tabla, b) => listarSobre(tabla, b, n, ha)
 
   return {
     fuente: 'geojson',
@@ -149,6 +218,11 @@ export function resumenIncendios(features, tablas, pasa) {
     }))
       .filter((d) => d.n > 0)
       .sort((a, b) => a.v.localeCompare(b.v)),
+    negligentes: {
+      n: negN,
+      ha: negHa,
+      porEspecifica: listarSobre(TCE, especifica, negN, negHa).sort((a, b) => b.n - a.n),
+    },
     electrico: {
       n: elecN,
       ha: elecHa,
@@ -221,7 +295,7 @@ export function resumenDesdeManifest(manifest) {
  * temporadas: es stock contra flujo) y confundido por superficie regional y tipo
  * de vegetacion. Cualquier r se citaria fuera de contexto en una semana.
  */
-export function cruceCoberturaPresion(kmPorRegion, porRegion, { top = 8 } = {}) {
+export function cruceCoberturaPresion(kmPorRegion, porRegion, { top = 8, destacada } = {}) {
   if (!kmPorRegion || !porRegion?.length) return null
   const km = new Map()
   for (const [k, v] of Object.entries(kmPorRegion)) km.set(normRegion(k), v)
@@ -242,11 +316,30 @@ export function cruceCoberturaPresion(kmPorRegion, porRegion, { top = 8 } = {}) 
     })
     .sort((a, b) => b.pctPeso - a.pctPeso)
 
-  const mostradas = filas.slice(0, top)
+  // La fila de la region filtrada SIEMPRE se muestra, aunque el corte por
+  // superficie la deje fuera. Sin esto, filtrar por una de las ocho regiones de
+  // menor peso (Los Rios, Los Lagos, Magallanes, Coquimbo, Tarapaca, Atacama,
+  // Arica y Parinacota, Antofagasta -- la MITAD del pais) apagaba las ocho
+  // filas del grafico sin dejar ninguna destacada: la region elegida no estaba,
+  // asi que ninguna cumplia `f.region === destacada`. Medido sobre los datos
+  // reales antes de arreglarlo: ?region=Los Ríos daba 8 filas y 0 destacadas.
+  const clave = normRegion(destacada ?? '')
+  const propia = clave ? (filas.find((d) => normRegion(d.region) === clave) ?? null) : null
+  const top8 = filas.slice(0, top)
+  const mostradas = propia && !top8.includes(propia) ? [...top8, propia] : top8
+
   return {
     filas: mostradas,
+    // La fila de la region filtrada, para poder enunciar sus dos cifras aparte
+    // del grafico. null sin filtro, o si la region no aparece en los incendios.
+    propia,
+    // true cuando la region entro por ser la filtrada y no por su peso: la nota
+    // lo dice, en vez de dejar una novena fila sin explicacion.
+    propiaFueraDelTop: !!propia && !top8.includes(propia),
     usaHa,
     totalKm,
+    // Sobre las filas REALMENTE mostradas, no sobre el top fijo: si no, la nota
+    // «estas 8 regiones concentran X %» mentiria en cuanto se anade la novena.
     cubrePeso: mostradas.reduce((a, d) => a + d.pctPeso, 0),
     cubreKm: mostradas.reduce((a, d) => a + d.pctKm, 0),
     max: Math.max(1, ...mostradas.map((d) => Math.max(d.pctKm, d.pctPeso))),
@@ -270,7 +363,7 @@ export function cruceCoberturaPresion(kmPorRegion, porRegion, { top = 8 } = {}) 
  * Se ordena por KILOMETROS FALTANTES y no por porcentaje: ordenar por % pone
  * primero los 2,1 km de Antofagasta, que es ruido operativo.
  */
-export function avanceOECV(kpis) {
+export function avanceOECV(kpis, region) {
   const o = kpis?.oecv
   if (!o) return null
 
@@ -297,8 +390,19 @@ export function avanceOECV(kpis) {
   const cabeza = Math.min(4, pendientes.length)
   const enCabeza = pendientes.slice(0, cabeza).reduce((a, f) => a + f.falta, 0)
 
+  // El avance de la region filtrada. Estaba calculado desde siempre --es una de
+  // las 16 filas de arriba-- y no se publicaba: filtrar por Biobio no decia
+  // absolutamente nada del avance de Biobio, aunque kpis.json trae sus 731,6 km
+  // planificados y sus 734,5 reportados. Con `atenuada` tampoco se notaba, y
+  // ahi habia un fallo silencioso: Biobio esta AL DIA, o sea que no aparece en
+  // `pendientes`, asi que filtrar por el atenuaba las nueve barras y no
+  // destacaba ninguna. Medido antes de arreglarlo: 9 barras, 0 sin atenuar.
+  const clave = normRegion(region ?? '')
+  const propia = clave ? (filas.find((f) => normRegion(f.region) === clave) ?? null) : null
+
   return {
     nacional: { plan: o.km_planificados, rep: o.km_reportados, pct: o.avance_pct },
+    propia,
     pendientes,
     alDia: filas.filter((f) => f.estado === 'al-dia').sort((a, b) => b.pct - a.pct),
     sinPrograma: filas.filter((f) => f.estado === 'sin-programa'),
@@ -347,7 +451,7 @@ export function riesgoElectrico(resumen, oecvFeatures, manifest) {
  * como brecha de REGISTRO, nunca operativa: que una region no aparezca en la
  * fuente no significa que no tenga brigadas.
  */
-export function coberturaStandby(manifest, porRegion) {
+export function coberturaStandby(manifest, porRegion, region) {
   const dom = manifest?.capas?.puntos_standby?.dominios?.region
   if (!dom) return null
   const conPuntos = new Set(dom.map((d) => normRegion(d.v)))
@@ -358,8 +462,16 @@ export function coberturaStandby(manifest, porRegion) {
     .sort((a, b) => peso(b) - peso(a))
   const pesoTot = (porRegion ?? []).reduce((a, d) => a + peso(d), 0)
 
+  // Puntos de la region filtrada. `propia` es 0 --no null-- cuando la region
+  // existe en los incendios pero no registra ningun punto: ese cero es
+  // justamente el hallazgo del que habla la nota de la seccion, y hay que poder
+  // decirlo en voz alta en vez de callarlo.
+  const clave = normRegion(region ?? '')
+  const propia = clave ? (dom.find((d) => normRegion(d.v) === clave)?.n ?? 0) : null
+
   return {
     puntos: dom.reduce((a, d) => a + d.n, 0),
+    propia,
     regiones: dom.length,
     regionesTotales: porRegion?.length ?? null,
     porRegion: dom,

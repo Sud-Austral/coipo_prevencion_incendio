@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { DATA } from '../config'
 
 // Cache a nivel de modulo: sobrevive a los remontajes de React (incluido el
@@ -35,6 +35,9 @@ export function useGeoJSON(archivo, activo) {
   const [data, setData] = useState(() => (archivo ? cache.get(archivo) : null) ?? null)
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState(null)
+  // Contador de reintentos: es lo unico que puede volver a disparar el efecto
+  // cuando ni `archivo` ni `activo` han cambiado.
+  const [intento, setIntento] = useState(0)
   const abort = useRef(null)
 
   useEffect(() => {
@@ -59,15 +62,32 @@ export function useGeoJSON(archivo, activo) {
         setCargando(false)
       })
       .catch((e) => {
+        // El setCargando(false) va ANTES del return por aborto, no despues:
+        // apagar una capa a mitad de descarga cancela el fetch, y con la
+        // bandera arriba para siempre el aviso «Descargando … incendios» se
+        // quedaba clavado y el panel entero al 55 % de opacidad por la clase
+        // `refrescando`.
+        setCargando(false)
         if (e.name === 'AbortError') return
         setError(e)
-        setCargando(false)
       })
 
     return () => ctrl.abort()
-  }, [archivo, activo])
+  }, [archivo, activo, intento])
 
-  return { data, cargando, error }
+  /**
+   * Reintenta una descarga que fallo. La clave se borra del cache de modulo por
+   * si acaso: hoy `cache.set` solo corre tras un fetch correcto, asi que un
+   * fallo no puede envenenarlo, pero si alguien mueve ese set el early-return
+   * de `cache.has` dejaria el reintento sin efecto y en silencio.
+   */
+  const reintentar = useCallback(() => {
+    if (archivo) cache.delete(archivo)
+    setError(null)
+    setIntento((n) => n + 1)
+  }, [archivo])
+
+  return { data, cargando, error, reintentar }
 }
 
 export function useKpis() {

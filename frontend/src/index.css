@@ -1,5 +1,17 @@
 :root {
   --text: #6b6375;
+  /* Texto SECUNDARIO. No lo unifiques con --text, igual que --verde-institucional
+     no reemplaza a --accent (ver el comentario de mas abajo).
+
+     No es un arreglo de contraste: --text a plena opacidad ya da 5,54:1 sobre
+     --panel. Es JERARQUIA DELIBERADA -- notas metodologicas, pies, ejes y
+     rotulos atenuados tienen que leerse por debajo de la cifra sin dejar de
+     leerse. Antes esa jerarquia se conseguia con `opacity`, que mezcla con el
+     fondo y hundia el texto hasta 2,48:1: justo donde viven las advertencias
+     que impiden leer mal el dato.
+
+     Medido, no estimado: #6f6879 sobre --panel #fbfbfc da 5,16:1. */
+  --text-2: #6f6879;
   --text-h: #08060d;
   --bg: #fff;
   --panel: #fbfbfc;
@@ -49,6 +61,8 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --text: #9ca3af;
+    /* 5,20:1 sobre el --panel oscuro #1b1d24. */
+    --text-2: #8b919c;
     --text-h: #f3f4f6;
     --bg: #16171d;
     --panel: #1b1d24;

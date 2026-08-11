@@ -73,11 +73,23 @@ export function Cifra({ valor, unidad, etiqueta, detalle }) {
  * panel claro, por debajo de 3:1, y el requisito es que el color no sea la unica
  * codificacion. Con el numero al lado, la barra es refuerzo, no informacion.
  */
-export function BarraFila({ etiqueta, valor, max, texto, extra, color = 'var(--accent)', atenuada }) {
+export function BarraFila({
+  etiqueta,
+  valor,
+  max,
+  texto,
+  extra,
+  color = 'var(--accent)',
+  atenuada,
+  // Por omision el title repite la etiqueta, que es lo que hace falta cuando se
+  // recorta con elipsis. Se puede sustituir cuando la fila agrupa varias
+  // categorias y el detalle no cabe en el rotulo.
+  titulo,
+}) {
   const ancho = max > 0 ? Math.max(0, Math.min(100, (100 * valor) / max)) : 0
   return (
     <div className={`fila-kpi${atenuada ? ' atenuada' : ''}`}>
-      <span className="fila-etq" title={etiqueta}>
+      <span className="fila-etq" title={titulo ?? etiqueta}>
         {etiqueta}
       </span>
       <span className="fila-num">{texto}</span>
@@ -157,7 +169,7 @@ export function Columnas({ datos, valor, alto = 88, anotacion, etiqueta, formato
           x={cx(i)}
           y={H - 3}
           textAnchor="middle"
-          fill="var(--text)"
+          fill="var(--text-2)"
         >
           {d.v.slice(2, 4)}-{d.v.slice(7, 9)}
         </text>
@@ -191,6 +203,12 @@ export function Columnas({ datos, valor, alto = 88, anotacion, etiqueta, formato
  */
 export function Mancuerna({ filas, max, destacada, etiqueta }) {
   if (!filas?.length) return null
+  // Cinturon: si la region destacada NO esta entre las filas, no se atenua
+  // ninguna. Sin esto, destacar una region ausente apagaba el grafico entero y
+  // dejaba cero señal -- que es peor que no destacar nada. Hoy quien llama se
+  // encarga de que la fila este siempre (ver cruceCoberturaPresion), pero esto
+  // impide que cualquier otra llamada futura reproduzca el fallo.
+  const hayDestacada = !destacada || filas.some((f) => f.region === destacada)
   const FILA = 22
   const CABEZA = 14
   const X0 = 86
@@ -222,24 +240,39 @@ export function Mancuerna({ filas, max, destacada, etiqueta }) {
             stroke="var(--border)"
             strokeWidth="1"
           />
-          <text className="eje" x={x(t)} y={8} textAnchor="middle" fill="var(--text)">
+          <text className="eje" x={x(t)} y={8} textAnchor="middle" fill="var(--text-2)">
             {t}
           </text>
         </g>
       ))}
 
+      {/* Cabecera de la columna de la derecha. La unidad tiene que verse EN
+          PANTALLA: hasta ahora «Brecha (pp)» solo existia en la TablaKpi, que
+          App.css esconde con clip-path, asi que quien mira leia numeros sueltos
+          sin unidad.
+          Va como cabecera de columna y NO pegada a cada cifra porque «+12,1 pp»
+          mide 40,1 px de los 42 que hay entre x=246 y x=288 (medido: 5,018 px
+          por caracter a 10 px), y con la region mas alta pegada al tope del eje
+          su disco de r=4,5 llegaria a pisar el rotulo. */}
+      <text className="eje" x={W} y={8} textAnchor="end" fill="var(--text-2)">
+        pp
+      </text>
+
       {filas.map((f, i) => {
         const y = CABEZA + i * FILA + FILA / 2
-        const activa = !destacada || f.region === destacada
+        const activa = !destacada || !hayDestacada || f.region === destacada
         const tinta = activa ? 'var(--accent)' : 'var(--border)'
         return (
           <g key={f.region}>
+            {/* Atenuar con opacity hundia el rotulo hasta ~2,3:1, el peor
+                contraste del visor, y es justo el nombre de la region que el
+                filtro NO destaca: sigue siendo un dato que hay que poder leer.
+                --text-2 baja la jerarquia sin mezclar con el fondo. */}
             <text
               className="rotulo"
               x="0"
               y={y + 3.5}
-              fill={activa ? 'var(--text-h)' : 'var(--text)'}
-              opacity={activa ? 1 : 0.55}
+              fill={activa ? 'var(--text-h)' : 'var(--text-2)'}
             >
               {recortar(f.region)}
               <title>{f.region}</title>
@@ -269,8 +302,7 @@ export function Mancuerna({ filas, max, destacada, etiqueta }) {
               x={W}
               y={y + 3.5}
               textAnchor="end"
-              fill={activa ? 'var(--text-h)' : 'var(--text)'}
-              opacity={activa ? 1 : 0.55}
+              fill={activa ? 'var(--text-h)' : 'var(--text-2)'}
             >
               {f.brecha > 0 ? '+' : '−'}
               {fmt1.format(Math.abs(f.brecha))}
@@ -282,8 +314,15 @@ export function Mancuerna({ filas, max, destacada, etiqueta }) {
   )
 }
 
-/** Leyenda de la mancuerna: repite las dos formas a tamaño real. */
-export function LeyendaMancuerna({ a, b }) {
+/**
+ * Leyenda de la mancuerna: repite las dos formas a tamaño real.
+ *
+ * `c` es opcional y expande la abreviatura de la columna de la derecha, que en
+ * el SVG solo cabe como «pp». Va sin muestra de color a proposito: no nombra
+ * una serie, explica una unidad. Y este <div> NO es un svg.grafico, asi que no
+ * entra ni en el recuento de B7 ni en la igualdad de B9 de verify-panel.
+ */
+export function LeyendaMancuerna({ a, b, c }) {
   return (
     <div className="leyenda-formas">
       <span>
@@ -298,6 +337,7 @@ export function LeyendaMancuerna({ a, b }) {
         </svg>
         {b}
       </span>
+      {c && <span className="leyenda-nota">{c}</span>}
     </div>
   )
 }
