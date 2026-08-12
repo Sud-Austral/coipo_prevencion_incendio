@@ -209,12 +209,25 @@ async function conectar(url) {
   return { ws, enviar }
 }
 
-async function pestana(cdp) {
+/**
+ * `activar` no es decorativo, y el mismo comentario esta en verify-panel.mjs:
+ * Chrome SUSPENDE el renderizado de las pestañas en segundo plano. Durante
+ * mucho tiempo aqui daba igual, porque este script solo captura y
+ * Page.captureScreenshot fuerza un fotograma aunque la pestaña este oculta.
+ *
+ * Deja de dar igual en cuanto la espera depende de img.decode(): decodificar es
+ * parte del rasterizado, asi que en una pestaña oculta esa promesa no resuelve
+ * NUNCA y el sondeo se cuelga en la primera captura sin imprimir una sola
+ * asercion. La pestaña de la pagina se activa; la del laboratorio no lo
+ * necesita, porque solo usa OffscreenCanvas y no pinta nada.
+ */
+async function pestana(cdp, activar = false) {
   const { targetId } = await cdp.enviar('Target.createTarget', { url: 'about:blank' })
   const { sessionId } = await cdp.enviar('Target.attachToTarget', { targetId, flatten: true })
   await cdp.enviar('Page.enable', {}, sessionId)
   await cdp.enviar('Runtime.enable', {}, sessionId)
   await cdp.enviar('Network.enable', {}, sessionId)
+  if (activar) await cdp.enviar('Target.activateTarget', { targetId })
   return sessionId
 }
 
@@ -321,11 +334,28 @@ async function capturar(cdp, sesion, { ancho, tema, puerto, sinImagen = false, e
   // Sondeo en vez de --virtual-time-budget a ojo: se espera una condicion real.
   // `complete` tambien es true cuando la imagen falla, asi que el caso sin
   // imagen no se cuelga.
+  //
+  // Y NO basta con `complete`: eso solo dice que el recurso llego. El <img> del
+  // banner declara decoding="async" a proposito (ver Banner.jsx), lo que
+  // autoriza al navegador a pintar un fotograma ANTES de tener la imagen
+  // decodificada; en esa ventana la banda se ve verde plana --.banner lleva
+  // background: var(--verde-institucional)-- y A3 no encuentra el filete azul y
+  // rojo. Se manifestaba solo en la PRIMERA medicion de la corrida, porque a
+  // partir de la segunda navegacion la imagen ya esta decodificada en memoria:
+  // en CI fallo el 1920 light y paso el 1920 dark con los mismos valores.
+  //
+  // decode() resuelve cuando la imagen ya se puede pintar sin retraso, y no
+  // depende de que se produzcan fotogramas -- importante, porque esta pestaña
+  // no se activa y en una pestaña oculta requestAnimationFrame no correria.
+  // Si la imagen fallo (caso sinImagen, con el JPEG bloqueado) decode() rechaza
+  // y se sigue adelante igual, que es justo lo que A2 y A6 necesitan.
   const cond =
     esperar === '.error'
       ? `!!document.querySelector('.error')`
-      : `(() => { const b = document.querySelector('.banner'); const i = b && b.querySelector('img');
-                  return !!b && b.getBoundingClientRect().height > 0 && !!i && i.complete })()`
+      : `(async () => { const b = document.querySelector('.banner'); const i = b && b.querySelector('img')
+                  if (!b || b.getBoundingClientRect().height <= 0 || !i || !i.complete) return false
+                  try { await i.decode() } catch { /* imagen bloqueada o rota: A2/A6 */ }
+                  return true })()`
   await sondear(cdp, sesion, cond, esperar)
 
   const { data } = await cdp.enviar(
@@ -364,8 +394,11 @@ async function main() {
   await mkdir(SALIDA, { recursive: true })
   const { proc, perfil, ws: wsUrl } = await lanzarChrome()
   const cdp = await conectar(wsUrl)
-  const pagina = await pestana(cdp)
+  // El laboratorio PRIMERO y la pagina despues, activandola: activar pone en
+  // primer plano, asi que la ultima en activarse es la que conserva el
+  // renderizador vivo, y tiene que ser la pagina.
   const lab = await pestana(cdp)
+  const pagina = await pestana(cdp, true)
   await evaluar(cdp, lab, ANALISIS)
 
   const { s: srv, puerto } = await servidor()
