@@ -56,7 +56,16 @@ const ANCHO_KPI = 320
 const ANCHOS = [1920, 1440, 1366, 1201, 1200, 1165, 901, 900, 768, 390]
 const CAJON = [1165, 768, 390] // anchos donde el panel derecho es cajon
 
-const TILES = ['*basemaps.cartocdn.com*', '*tile.openstreetmap.org*', '*server.arcgisonline.com*']
+// services.arcgisonline.com es un host DISTINTO de server.arcgisonline.com: el
+// segundo sirve las teselas satelitales y el primero la metadata de fecha de
+// captura que consulta src/hooks/useFechaImagen.js. Sin bloquearlo, la
+// verificacion saldria a internet de verdad.
+const TILES = [
+  '*basemaps.cartocdn.com*',
+  '*tile.openstreetmap.org*',
+  '*server.arcgisonline.com*',
+  '*services.arcgisonline.com*',
+]
 
 // ---------------------------------------------------------------------------
 // Fixture: 12 incendios con cifras que salen exactas a mano. Se usa en CI.

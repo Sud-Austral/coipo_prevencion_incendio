@@ -14,9 +14,11 @@ import {
   fmt,
 } from './config'
 import { useGeoJSON, useKpis, useManifest } from './hooks/useDatos'
+import { useFechaImagen } from './hooks/useFechaImagen'
 import { fichaIncendio, fichaOECV, fichaRuta, fichaStandBy } from './fichas'
 import Banner from './components/Banner'
 import CartelContexto from './components/CartelContexto'
+import EtiquetaImagen from './components/EtiquetaImagen'
 import ModalFicha from './components/ModalFicha'
 import CapaLineas from './components/CapaLineas'
 import CapaPuntos from './components/CapaPuntos'
@@ -283,6 +285,10 @@ export default function App() {
     window.addEventListener('popstate', alVolver)
     return () => window.removeEventListener('popstate', alVolver)
   }, [map])
+
+  // Fecha de captura de la imagen satelital bajo el centro de la vista. Solo se
+  // consulta con ese mapa base: con Claro y Calles la pregunta no aplica.
+  const imagen = useFechaImagen(map, base === 'Satelital')
 
   // ---------- datos ----------
   const capaMeta = useCallback((id) => manifest?.capas?.[id], [manifest])
@@ -679,6 +685,7 @@ export default function App() {
         base={base}
         onBase={setBase}
         basemaps={BASEMAPS}
+        imagen={imagen}
         abierto={panelAbierto}
         onCerrar={cerrarPanel}
       />
@@ -853,6 +860,8 @@ export default function App() {
         onSeleccion={selIncendio}
         onCuenta={setCuenta('incendios')}
       />
+
+      <EtiquetaImagen map={map} info={imagen} />
 
       <ModalFicha ficha={ficha} onCerrar={cerrarFicha} />
     </div>

@@ -13,6 +13,7 @@ import {
   NO_ACTIVOS,
   fechaLarga,
   fmt,
+  fmt1,
   temporadasIncendios,
 } from '../config'
 
@@ -44,6 +45,55 @@ function Chip({ color }) {
   return <span className="chip" style={{ background: color }} />
 }
 
+/**
+ * Fecha de captura de la imagen satelital bajo el CENTRO de la vista.
+ *
+ * Los cuatro estados se dicen, ninguno se calla. Que la respuesta valga solo
+ * para el centro no es un detalle menor y va escrito: World Imagery es un
+ * mosaico de miles de escenas de fechas distintas, asi que una sola fecha para
+ * toda la pantalla seria falsa.
+ */
+function FechaImagen({ info }) {
+  if (info.estado === 'cargando') {
+    return <p className="nota">Consultando la fecha de la imagen…</p>
+  }
+  if (info.estado === 'error') {
+    return <p className="nota">No se pudo consultar la fecha de la imagen.</p>
+  }
+
+  const detalle = [
+    info.resolucion != null && `${fmt1.format(info.resolucion)} m por píxel`,
+    info.fuente,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+
+  if (info.estado === 'sin-fecha') {
+    return (
+      <p className="nota">
+        {info.motivo === 'mosaico'
+          ? `A este nivel de acercamiento se ve el mosaico global de baja resolución${
+              detalle ? ` (${detalle})` : ''
+            }, que no publica fecha de captura. Acércate para ver la fecha de la imagen de alta resolución.`
+          : 'El servicio no informa qué imagen cubre este punto.'}
+      </p>
+    )
+  }
+
+  return (
+    <>
+      <p className="kpi">
+        Imagen del <b>{fechaLarga(info.iso)}</b>
+      </p>
+      {detalle && <p className="nota">{detalle}.</p>}
+      <p className="nota">
+        Corresponde al centro de la vista y cambia al desplazar el mapa: el fondo satelital es un
+        mosaico de escenas de distintas fechas, no una sola foto.
+      </p>
+    </>
+  )
+}
+
 export default function PanelLateral({
   manifest,
   capasActivas,
@@ -59,6 +109,7 @@ export default function PanelLateral({
   base,
   onBase,
   basemaps,
+  imagen,
   abierto,
   onCerrar,
 }) {
@@ -379,6 +430,7 @@ export default function PanelLateral({
             </option>
           ))}
         </select>
+        {imagen && <FechaImagen info={imagen} />}
       </section>
 
       {/* Procedencia. Antes decia «Datos generados desde INSUMO_INCENDIO», que

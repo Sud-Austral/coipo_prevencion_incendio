@@ -65,7 +65,16 @@ const BASE = '/coipo_prevencion_incendio/'
 
 // Los tiles se bloquean en TODOS los casos: son la mayor fuente de flake en CI
 // y no aportan nada a la verificacion de una cabecera.
-const TILES = ['*basemaps.cartocdn.com*', '*tile.openstreetmap.org*', '*server.arcgisonline.com*']
+// services.arcgisonline.com es un host DISTINTO de server.arcgisonline.com: el
+// segundo sirve las teselas satelitales y el primero la metadata de fecha de
+// captura que consulta src/hooks/useFechaImagen.js. Sin bloquearlo, la
+// verificacion saldria a internet de verdad.
+const TILES = [
+  '*basemaps.cartocdn.com*',
+  '*tile.openstreetmap.org*',
+  '*server.arcgisonline.com*',
+  '*services.arcgisonline.com*',
+]
 const JPEG = '*banner-conaf-uia*'
 
 const args = process.argv.slice(2)
