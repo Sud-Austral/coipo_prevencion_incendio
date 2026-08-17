@@ -872,7 +872,6 @@ export default function App() {
         onBase={setBase}
         basemaps={BASEMAPS}
         imagen={imagen}
-        abierto={panelAbierto}
         abierto={panelVisible}
         onCerrar={cerrarPanel}
       >
