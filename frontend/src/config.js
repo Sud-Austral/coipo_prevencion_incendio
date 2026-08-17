@@ -75,10 +75,44 @@ export const BASEMAPS = {
     maxZoom: 19,
   },
   // Permite ver el combustible vegetal junto a las fajas OECV.
+  //
+  // `fecha` declara COMO se sabe de cuando es la imagen, para que la etiqueta
+  // del mapa no tenga que conocer cada proveedor: 'esri' se consulta al vuelo
+  // por punto y zoom (ver src/hooks/useFechaImagen.js), 'fijo' es una fecha
+  // conocida de antemano, y sin `fecha` no se muestra nada.
   Satelital: {
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     attribution: 'Esri, Maxar, Earthstar Geographics',
     maxZoom: 18,
+    fecha: { tipo: 'esri' },
+  },
+
+  // Sentinel-2 cloudless de EOX: mosaico ANUAL sin nubes a 10 m, no la imagen
+  // de la ultima pasada. Sentinel-2 revisita cada ~5 dias, pero acceder a esas
+  // escenas sueltas exige credenciales de Copernicus Data Space --comprobado:
+  // el endpoint sin clave responde 404--, y este sitio es estatico y no puede
+  // guardar un secreto. Lo que si es gratis y sin clave es este compuesto.
+  //
+  // LICENCIA: CC BY-NC-SA 4.0, o sea NO COMERCIAL (la version 2016 es la unica
+  // CC BY sin esa clausula, pero tiene una decada y para prevencion no sirve).
+  // CONAF es una institucion sin fines de lucro del Estado de Chile y este
+  // visor entrega informacion publica de prevencion de incendios de forma
+  // gratuita: ese es el encaje con la clausula, y lo decidio CONAF, no este
+  // codigo. Si algun dia el visor se usara con fin comercial, hay que revisarlo
+  // con EOX (https://cloudless.eox.at). La atribucion de abajo es obligacion de
+  // la licencia y no se toca.
+  //
+  // maxNativeZoom 14: el dato nativo son 10 m/pixel, que a la latitud de Chile
+  // se agota cerca de z14. Mas alla el servidor sigue entregando teselas, pero
+  // son interpolacion: se deja que Leaflet estire la ultima real en vez de
+  // pedir detalle que no existe.
+  'Sentinel-2': {
+    url: 'https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2025_3857/default/g/{z}/{y}/{x}.jpg',
+    attribution:
+      'Sentinel-2 cloudless 2025 por <a href="https://cloudless.eox.at">EOX</a> (datos Copernicus Sentinel modificados) &middot; CC BY-NC-SA 4.0',
+    maxZoom: 18,
+    maxNativeZoom: 14,
+    fecha: { tipo: 'fijo', texto: 'Mosaico anual sin nubes de 2025' },
   },
 }
 
