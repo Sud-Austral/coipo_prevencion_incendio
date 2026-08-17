@@ -4,6 +4,7 @@ import {
   AVISO_CIVICO,
   CAPAS,
   CONTACTO,
+  DIACRITICOS,
   COLOR_CAUSA,
   COLOR_OECV,
   COLOR_RUTA,
@@ -17,13 +18,6 @@ import {
 } from '../config'
 
 const kb = (b) => (b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.round(b / 1024)} KB`)
-
-// Marcas diacriticas combinantes (U+0300..U+036F), las que deja sueltas
-// normalize('NFD'). Se construye desde una CADENA y no como literal de regex
-// para que el rango viaje en ASCII puro: escrito como literal, el archivo acaba
-// guardando los combinantes de verdad, que son invisibles al revisar el diff y
-// los destruye cualquier herramienta que normalice el fuente.
-const DIACRITICOS = new RegExp('[\u0300-\u036f]', 'g')
 
 /**
  * Clave de ordenacion de regiones: sin diacriticos, sin el prefijo "Region de/
@@ -61,6 +55,7 @@ export default function PanelLateral({
   basemaps,
   abierto,
   onCerrar,
+  children,
 }) {
   const capasMan = manifest?.capas ?? {}
   const fecha = fechaLarga(manifest?.generado)
@@ -105,8 +100,16 @@ export default function PanelLateral({
   // boton de fuera y el lector de pantalla no anuncia nada de lo que se acaba
   // de abrir. Solo al abrir -- devolverlo al cerrar es cosa de App, que es
   // quien tiene la referencia al boton.
+  // Se salta el primer render: anclado el panel nace visible, y sin la guarda el
+  // foco saltaria a su encabezado nada mas cargar la pagina, robandoselo a quien
+  // no ha pedido nada.
   const cabecera = useRef(null)
+  const montado = useRef(false)
   useEffect(() => {
+    if (!montado.current) {
+      montado.current = true
+      return
+    }
     if (abierto) cabecera.current?.focus()
   }, [abierto])
 
@@ -256,6 +259,12 @@ export default function PanelLateral({
           {aviso}
         </span>
       </section>
+
+      {/* La seccion de descargas llega como children y no como diez props mas:
+          necesita las features cargadas, los predicados de filtro, el mapa y el
+          basemap, y todo eso ya vive en App. Este panel sigue sin saber nada de
+          exportar. */}
+      {children}
 
       <section>
         <h2>Capas</h2>

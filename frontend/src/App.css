@@ -7,7 +7,13 @@
      Los cortes en 1200 y 900 px existen para que NUNCA haya mas ancho fijo que
      viewport: a 1201 px quedan 561 px de mapa, el minimo con el que Chile
      continental sigue siendo legible a z6. */
-  grid-template-columns: 320px minmax(0, 1fr) var(--ancho-kpi);
+  /* Las pistas laterales son variables para que plegar un panel NO cambie el
+     NUMERO de pistas: siguen siendo tres siempre, solo que una mide 0. De eso
+     depende B1, y ademas mantiene la colocacion automatica de los items en su
+     sitio (si la rejilla pasara a dos pistas, .panel-kpi caeria en la del
+     mapa). El ancho del panel izquierdo lo escribe el tirador. */
+  grid-template-columns: var(--pista-panel, 320px) minmax(0, 1fr)
+    var(--pista-kpi, var(--ancho-kpi));
   /* minmax(0, 1fr) y no 1fr: la min track sizing function de 1fr es auto, asi
      que el contenido del mapa podria empujar la fila mas alla de 100dvh. */
   grid-template-rows: auto minmax(0, 1fr);
@@ -107,6 +113,72 @@
 
 .panel {
   border-right: 1px solid var(--border);
+  /* Sin min-width:0 el contenido impone un ancho minimo y la pista no puede
+     llegar a 0 al plegar: el panel se quedaria en ~200 px. .panel-kpi ya lo
+     tenia por el mismo motivo. */
+  min-width: 0;
+  /* position:relative es el marco de referencia del tirador, que va absoluto
+     sobre el borde derecho para no consumir una pista de la rejilla. */
+  position: relative;
+}
+
+/* Plegado y anclado: la pista mide 0 y el panel deja de existir para el foco.
+   visibility:hidden y no solo overflow:hidden, porque un boton recortado sigue
+   siendo tabulable y el foco se perderia en una franja invisible.
+
+   Las dos declaraciones de pista van en reglas de CLASE y no en el estilo en
+   linea de App.jsx: un estilo en linea le ganaria en especificidad a esto y el
+   panel no se plegaria nunca. Por eso App.jsx solo escribe --pista-panel cuando
+   el panel se ve. */
+.app.sin-panel {
+  --pista-panel: 0px;
+}
+
+.app.sin-kpi {
+  --pista-kpi: 0px;
+}
+
+/* ANCLADO y plegado: display:none, no visibility.
+   Con la pista a 0 el panel seguia midiendo -- su <header> es sticky y tiene un
+   ancho minimo de contenido, y ni overflow:hidden ni visibility:hidden lo
+   sacaban del calculo: medido, documentElement.scrollWidth se iba a 1937 sobre
+   un viewport de 1920, que es exactamente lo que tumba A9 y B3.
+   display:none NO cambia el numero de pistas, porque grid-template-columns las
+   declara explicitamente y no dependen de que haya items. B1 sigue viendo tres.
+   Va acotado por media query al regimen ANCLADO: en cajon el panel debe seguir
+   con caja para poder deslizarse, y ahi el ocultamiento ya lo resuelven las
+   reglas de .panel/.panel-kpi con visibility. Eso es lo que vigila B11. */
+/* COLOCACION EXPLICITA, y es obligatoria junto al display:none de arriba: sin
+   ella la auto-colocacion recorre los items en orden de DOM y los reasigna al
+   desaparecer uno. Medido: al plegar el panel izquierdo, .mapa caia en la pista
+   de 0 px y .panel-kpi se quedaba con los 1600 -- el mapa desaparecia.
+   Solo donde son items de la rejilla: en cajon estan fuera de flujo (fixed), y
+   colocarlos ahi crearia una pista implicita que le cambiaria la cuenta a B1. */
+@media (min-width: 901px) {
+  .panel {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .mapa {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .app.sin-panel .panel {
+    display: none;
+  }
+}
+
+@media (min-width: 1201px) {
+  .panel-kpi {
+    grid-column: 3;
+    grid-row: 2;
+  }
+
+  .app.sin-kpi .panel-kpi {
+    display: none;
+  }
 }
 
 .panel-kpi {
@@ -639,8 +711,8 @@ select {
   place-items: center;
   top: calc(max(var(--alto-minimo-banner), 100vw / var(--razon-banner)));
   bottom: 0;
-  left: 320px;
-  right: var(--ancho-kpi);
+  left: var(--pista-panel, 320px);
+  right: var(--pista-kpi, var(--ancho-kpi));
 }
 
 .mira::before {
@@ -726,8 +798,8 @@ select {
   bottom: 32px;
   /* Sobre el mapa y no sobre los paneles: se reproducen los cortes de la
      rejilla en las media queries de mas abajo. */
-  left: 320px;
-  right: var(--ancho-kpi);
+  left: var(--pista-panel, 320px);
+  right: var(--pista-kpi, var(--ancho-kpi));
   margin: 0 auto;
   max-width: 560px;
   padding: 12px 14px;
@@ -875,13 +947,228 @@ select {
   color: var(--text-2);
 }
 
-/* ---------- responsive: los paneles pasan a cajon ---------- */
+/* ---------- plegar, desplegar y pasar a cajon ---------- */
 
+/* Los botones de abrir ya NO dependen del ancho sino del ESTADO: aparecen
+   cuando su panel esta oculto, este anclado (pista a 0) o en cajon (cerrado).
+   Antes vivian dentro de las media queries y por eso a 1920 px no habia forma
+   de recuperar los 640 px que ocupaban los dos paneles. */
 .abrir,
-.abrir-kpi,
+.abrir-kpi {
+  display: none;
+}
+
+.app.sin-panel .abrir,
+.app.sin-kpi .abrir-kpi {
+  display: grid;
+  place-items: center;
+  position: fixed;
+  z-index: 999;
+  /* La formula COMPLETA del banner, no var(--alto-minimo-banner) a secas: ese
+     atajo solo era exacto mientras el boton vivia por debajo de 900 px, porque
+     el cruce con la proporcion natural esta en 1164,83. Ahora estos botones
+     aparecen tambien a 1920, donde la banda mide 112,08 px.
+     Bajo el banner y no encima: con top:10px el boton ocupaba y=10..46 y la
+     marca del asset se pinta de x=40,3 a x=207,8, asi que se solapaban. */
+  top: calc(max(var(--alto-minimo-banner), 100vw / var(--razon-banner)) + 10px);
+  width: 36px;
+  height: 36px;
+  background: var(--bg);
+  color: var(--text-h);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+}
+
+.app.sin-panel .abrir {
+  left: 10px;
+  font-size: 17px;
+}
+
+/* Arriba-derecha es la unica esquina que Leaflet deja libre: zoom
+   arriba-izquierda, atribucion abajo-derecha, escala abajo-izquierda. */
+.app.sin-kpi .abrir-kpi {
+  right: 10px;
+}
+
+/* El zoom de Leaflet vive arriba a la izquierda, igual que ☰. La regla estaba
+   dentro de la media query de 900 px porque el boton solo existia ahi; ahora
+   cuelga del mismo estado que lo muestra. */
+.app.sin-panel .leaflet-top.leaflet-left {
+  margin-left: 52px;
+}
+
+/* La X de la cabecera existe SIEMPRE: es quien pliega. Antes solo aparecia en
+   cajon, cuando plegar anclado no era posible. Va absoluta contra el <header>,
+   que es sticky y por tanto posicionado. */
 .panel .cerrar,
 .panel-kpi .cerrar {
+  display: block;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  font-size: 20px;
+  line-height: 1;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+}
+
+/* Hueco para la X, o el titulo le pasa por debajo a 280 px de panel. */
+.panel header h1,
+.panel-kpi header h2 {
+  padding-right: 30px;
+}
+
+/* ---------- tirador de ancho ---------- */
+
+/* FIXED y hermano del panel, no hijo suyo. Dentro de .panel no funcionaba, y
+   por dos motivos a la vez: .panel tiene overflow-y:auto, asi que un hijo
+   absoluto en right:-4px queda RECORTADO --el hit-testing respeta el recorte
+   aunque getBoundingClientRect siga informando la caja-- y ademas se habria ido
+   con el scroll del panel, dejando el tirador fuera de pantalla en cuanto se
+   baja a los filtros.
+   Se posiciona con la misma tecnica que .mira y .cartel: insets que reproducen
+   las pistas de la rejilla. Tampoco es un item de la rejilla: una cuarta pista
+   obligaria a reescribir las tres media queries y romperia el recuento de B1.
+   9 px de ancho contra 1 px de linea visible: el blanco de raton comodo son
+   ~8 px y el borde solo no se puede agarrar. touch-action:none es obligatorio
+   o el navegador se queda el gesto para hacer scroll y pointermove no llega. */
+.tirador {
+  position: fixed;
+  z-index: 998;
+  top: calc(max(var(--alto-minimo-banner), 100vw / var(--razon-banner)));
+  bottom: 0;
+  left: calc(var(--pista-panel, 320px) - 4px);
+  width: 9px;
+  cursor: col-resize;
+  touch-action: none;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+/* Sin panel no hay borde que arrastrar. */
+.app.sin-panel .tirador {
   display: none;
+}
+
+/* La marca visible: una linea del color del borde que se refuerza al apuntar.
+   Sin esto el tirador es invisible y nadie descubre que el panel se ensancha. */
+.tirador::before {
+  content: '';
+  position: absolute;
+  inset: 0 4px;
+  background: var(--border);
+}
+
+.tirador:hover::before,
+.tirador:focus-visible::before {
+  background: var(--accent);
+  inset: 0 3px;
+}
+
+/* Tres muescas al centro: la linea sola se confunde con el borde del panel. */
+.tirador::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3px;
+  height: 26px;
+  transform: translate(-50%, -50%);
+  border-left: 1px solid var(--text-2);
+  border-right: 1px solid var(--text-2);
+  opacity: 0.55;
+}
+
+.tirador:hover::after,
+.tirador:focus-visible::after {
+  opacity: 0;
+}
+
+/* Mientras se arrastra, el cursor y la seleccion se fijan en TODO el documento:
+   sin esto, al pasar el puntero sobre el mapa el cursor parpadea y el gesto
+   selecciona texto del panel. */
+.app.redimensionando {
+  cursor: col-resize;
+  user-select: none;
+}
+
+/* ---------- descargas ---------- */
+
+.fila-descarga {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.fila-descarga .etq {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--text-h);
+}
+
+.fila-descarga .meta {
+  font-size: 11px;
+  color: var(--text-2);
+  text-align: right;
+  max-width: 55%;
+  line-height: 1.3;
+}
+
+.fila-descarga .acciones {
+  display: flex;
+  gap: 6px;
+  flex: none;
+}
+
+.fila-descarga button {
+  font: 11px var(--mono);
+  padding: 3px 8px;
+  color: var(--text-h);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.fila-descarga button:not(:disabled):hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.fila-descarga button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* El aviso de error NO va por aria-live polite: quien mira si se abre una
+   pestaña nueva se pierde un mensaje cortes. Va con role=alert y a la vista. */
+.aviso-error {
+  color: var(--error, #b3261e);
+}
+
+@media (prefers-color-scheme: dark) {
+  .aviso-error {
+    color: #f2b8b5;
+  }
+}
+
+/* A 560 px los controles de ancho completo quedan estirados y feos: un select
+   de 528 px para elegir una region es peor que uno de 420. */
+.panel select,
+.panel .limpiar,
+.panel .compartir,
+.panel .centrar {
+  max-width: 420px;
 }
 
 /* Anclada, la funda no debe existir como caja: con display:contents el panel es
@@ -904,7 +1191,7 @@ select {
    display:none/block y perder la animacion de 180 ms. */
 @media (max-width: 1200px) {
   .app {
-    grid-template-columns: 320px minmax(0, 1fr);
+    grid-template-columns: var(--pista-panel, 320px) minmax(0, 1fr);
   }
 
   .funda-kpi {
@@ -954,41 +1241,6 @@ select {
       visibility 0s;
   }
 
-  .abrir-kpi {
-    display: grid;
-    place-items: center;
-    position: fixed;
-    z-index: 999;
-    /* Arriba-derecha es la unica esquina que Leaflet deja libre: zoom
-       arriba-izquierda, atribucion abajo-derecha, escala abajo-izquierda. Y
-       .abrir vive en left:10px, asi que tampoco chocan entre si. */
-    top: calc(max(var(--alto-minimo-banner), 100vw / var(--razon-banner)) + 10px);
-    right: 10px;
-    width: 36px;
-    height: 36px;
-    background: var(--bg);
-    color: var(--text-h);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    box-shadow: var(--shadow);
-    cursor: pointer;
-  }
-
-  .panel-kpi .cerrar {
-    display: block;
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 28px;
-    height: 28px;
-    font-size: 20px;
-    line-height: 1;
-    background: none;
-    border: none;
-    color: var(--text);
-    cursor: pointer;
-  }
-
   /* El panel derecho ya es cajon: el mapa llega al borde. */
   .cartel {
     right: 8px;
@@ -1001,14 +1253,19 @@ select {
 
 @media (max-width: 900px) {
   .app {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  /* INVARIANTE de las dos reglas de posicion que siguen: a <=900 px el banner
-     mide SIEMPRE --alto-minimo-banner, porque 900 < 1164,83 (el cruce). Si
-     alguien sube este breakpoint por encima del cruce, dejan de ser exactas. */
+  /* INVARIANTE de la regla de posicion que sigue: a <=900 px el banner mide
+     SIEMPRE --alto-minimo-banner, porque 900 < 1164,83 (el cruce). Si alguien
+     sube este breakpoint por encima del cruce, deja de ser exacta. */
 
-  /* Mismo motivo que .panel-kpi: ver el comentario del bloque de 1200 px. */
+  /* Mismo motivo que .panel-kpi: ver el comentario del bloque de 1200 px.
+     El tirador no tiene sentido en un cajon de ancho fijo. */
+  .tirador {
+    display: none;
+  }
+
   .panel {
     position: fixed;
     z-index: 1000;
@@ -1029,45 +1286,6 @@ select {
     transition:
       transform 0.18s ease,
       visibility 0s;
-  }
-
-  .abrir {
-    display: block;
-    position: fixed;
-    z-index: 999;
-    /* Bajo el banner, no encima: con top:10px el boton ocupaba y=10..46 y la
-       marca del asset se pinta de x=40,3 a x=207,8 (columnas 105-541 a la
-       escala del piso, 68/177), asi que se solapaban. */
-    top: calc(var(--alto-minimo-banner) + 10px);
-    left: 10px;
-    width: 36px;
-    height: 36px;
-    font-size: 17px;
-    background: var(--bg);
-    color: var(--text-h);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    box-shadow: var(--shadow);
-    cursor: pointer;
-  }
-
-  .panel .cerrar {
-    display: block;
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 28px;
-    height: 28px;
-    font-size: 20px;
-    line-height: 1;
-    background: none;
-    border: none;
-    color: var(--text);
-    cursor: pointer;
-  }
-
-  .leaflet-top.leaflet-left {
-    margin-left: 52px;
   }
 
   /* Los dos paneles son cajones: el mapa ocupa todo el ancho. Los 8 px de
