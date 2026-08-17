@@ -13,6 +13,12 @@
      Medido, no estimado: #6f6879 sobre --panel #fbfbfc da 5,16:1. */
   --text-2: #6f6879;
   --text-h: #08060d;
+  /* Rojo de la etiqueta de fecha de imagen satelital, y SOLO de eso. No entra
+     en la leyenda ni codifica ningun dato: los grupos de causa usan Okabe-Ito
+     (Intencionales es el bermellon #D55E00) y la titularidad OECV su simbologia
+     normativa, asi que este rojo no puede confundirse con ninguno.
+     Medido: 5,69:1 sobre --panel #fbfbfc. */
+  --rojo-imagen: #cc0000;
   --bg: #fff;
   --panel: #fbfbfc;
   --border: #e5e4e7;
@@ -63,6 +69,8 @@
     --text: #9ca3af;
     /* 5,20:1 sobre el --panel oscuro #1b1d24. */
     --text-2: #8b919c;
+    /* #cc0000 sobre el panel oscuro solo da 2,86:1, hay que aclararlo. 6,06:1. */
+    --rojo-imagen: #ff6b6b;
     --text-h: #f3f4f6;
     --bg: #16171d;
     --panel: #1b1d24;
