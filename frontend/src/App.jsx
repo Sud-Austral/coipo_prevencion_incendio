@@ -9,7 +9,13 @@ import {
   COLOR_REDVIAL,
   COLOR_RUTA,
   COLOR_STANDBY,
+  ANCHO_KPI,
+  CORTE_KPI,
+  CORTE_PANEL,
   LIMITES,
+  MAX_PANEL,
+  MIN_MAPA,
+  MIN_PANEL,
   VISTA_INICIAL,
   fmt,
 } from './config'
@@ -25,11 +31,27 @@ import CapaPuntos from './components/CapaPuntos'
 import CapaTiles from './components/CapaTiles'
 import PanelLateral from './components/PanelLateral'
 import PanelIndicadores from './components/PanelIndicadores'
+import Tirador from './components/Tirador'
+import SeccionDescargas from './components/SeccionDescargas'
 import { IconoIndicadores } from './components/graficos'
 import { escribirURL, leerURL } from './urlState'
+import { guardarDisposicion, leerDisposicion } from './preferencias'
 import './App.css'
 
 const inicial = leerURL()
+// Objeto MUTABLE a proposito: guarda la ultima disposicion elegida con los
+// paneles anclados, para poder restaurarla al volver de un regimen de cajon.
+const disposicion = leerDisposicion()
+
+/**
+ * Regimen de disposicion, que decide si la X pliega una pista o cierra un cajon:
+ *   1 · los dos paneles anclados          (> CORTE_KPI)
+ *   2 · izquierdo anclado, derecho cajon  (> CORTE_PANEL)
+ *   3 · los dos en cajon
+ * ACOPLADO a las media queries de App.css; ver el comentario de CORTE_KPI en
+ * config.js. La asercion B12 comprueba que no se desincronicen.
+ */
+const regimenDe = (ancho) => (ancho > CORTE_KPI ? 1 : ancho > CORTE_PANEL ? 2 : 3)
 
 /** El sistema operativo pide menos movimiento. Se consulta en cada uso porque
  *  la preferencia puede cambiar sin recargar. */
@@ -99,12 +121,28 @@ export default function App() {
   )
   const [filtros, setFiltros] = useState(inicial.filtros ?? {})
   const [cuentas, setCuentas] = useState({})
-  const [panelAbierto, setPanelAbierto] = useState(false)
-  const [kpiAbierto, setKpiAbierto] = useState(false)
-  // Cartel de contexto sobre el mapa: visible de entrada y descartable. Sin
-  // localStorage ni cookies a proposito -- el sitio no guarda nada del visitante
-  // y no vamos a estrenar almacenamiento para recordar que alguien leyo un
-  // aviso. El precio es que cada recarga lo vuelve a mostrar.
+  // ---------- disposicion de los paneles ----------
+  // Un solo booleano por panel para los dos regimenes: anclado significa que su
+  // pista de la rejilla mide 0, y en cajon significa que el cajon esta cerrado.
+  // Anclado nace como quedo la ultima vez; en cajon nace SIEMPRE cerrado, o al
+  // estrechar la ventana aparecerian dos cajones tapando el mapa sin pedirlo.
+  const [regimen, setRegimen] = useState(() => regimenDe(window.innerWidth))
+  const panelAnclado = regimen < 3
+  const kpiAnclado = regimen < 2
+  const [panelVisible, setPanelVisible] = useState(
+    () => regimenDe(window.innerWidth) < 3 && disposicion.panel,
+  )
+  const [kpiVisible, setKpiVisible] = useState(
+    () => regimenDe(window.innerWidth) < 2 && disposicion.kpi,
+  )
+  const [anchoPanel, setAnchoPanel] = useState(disposicion.ancho)
+  const [redimensionando, setRedimensionando] = useState(false)
+
+  // Cartel de contexto sobre el mapa: visible de entrada y descartable. Que se
+  // haya leido NO se recuerda: el unico almacenamiento del visor es la
+  // disposicion de los paneles (ver src/preferencias.js), y nada de lo que
+  // hace el visitante entra ahi. El precio es que cada recarga lo vuelve a
+  // mostrar, y se acepta.
   const [cartelVisible, setCartelVisible] = useState(true)
   // Figura seleccionada en el mapa. Es un objeto de ficha ya armado, no las
   // propiedades crudas: quien sabe interpretar cada capa es el handler.
@@ -582,34 +620,146 @@ export default function App() {
     [],
   )
 
-  // Cerrar un cajon devuelve el foco al boton que lo abrio. Sin esto, el foco
-  // se queda dentro de un subarbol que acaba de volverse invisible y el
-  // siguiente Tab reempieza desde el principio del documento.
-  const btnPanel = useRef(null)
-  const btnKpi = useRef(null)
-  const cerrarPanel = useCallback(() => {
-    setPanelAbierto(false)
-    btnPanel.current?.focus()
-  }, [])
-  const cerrarKpi = useCallback(() => {
-    setKpiAbierto(false)
-    btnKpi.current?.focus()
+  // ---------- regimen ----------
+  // matchMedia y no un listener de resize: se despierta solo al CRUZAR el corte,
+  // no en cada pixel de un arrastre de ventana.
+  useEffect(() => {
+    const anclaKpi = window.matchMedia(`(min-width: ${CORTE_KPI + 1}px)`)
+    const anclaPanel = window.matchMedia(`(min-width: ${CORTE_PANEL + 1}px)`)
+    const al = () => setRegimen(anclaKpi.matches ? 1 : anclaPanel.matches ? 2 : 3)
+    anclaKpi.addEventListener('change', al)
+    anclaPanel.addEventListener('change', al)
+    al()
+    return () => {
+      anclaKpi.removeEventListener('change', al)
+      anclaPanel.removeEventListener('change', al)
+    }
   }, [])
 
+  // Al pasar a cajon se cierra; al volver a anclado se restaura lo que habia.
+  // Se salta el primer render, que ya nacio coherente, o restauraria en el
+  // montaje algo que el usuario no ha pedido todavia.
+  const primerRegimen = useRef(true)
   useEffect(() => {
-    if (!panelAbierto && !kpiAbierto) return
+    if (primerRegimen.current) {
+      primerRegimen.current = false
+      return
+    }
+    setPanelVisible(panelAnclado && disposicion.panel)
+    setKpiVisible(kpiAnclado && disposicion.kpi)
+  }, [panelAnclado, kpiAnclado])
+
+  // ---------- mostrar y ocultar ----------
+  // Abrir y cerrar un CAJON no es una preferencia de disposicion: solo se
+  // recuerda lo que se elige con el panel anclado.
+  const mostrarPanel = useCallback(
+    (v) => {
+      setPanelVisible(v)
+      if (panelAnclado) {
+        disposicion.panel = v
+        guardarDisposicion(disposicion)
+      }
+    },
+    [panelAnclado],
+  )
+  const mostrarKpi = useCallback(
+    (v) => {
+      setKpiVisible(v)
+      if (kpiAnclado) {
+        disposicion.kpi = v
+        guardarDisposicion(disposicion)
+      }
+    },
+    [kpiAnclado],
+  )
+
+  // Ocultar un panel devuelve el foco al boton que lo recupera. Sin esto el foco
+  // se queda dentro de un subarbol que acaba de volverse invisible y el
+  // siguiente Tab reempieza desde el principio del documento.
+  //
+  // El foco NO se puede pedir en el mismo manejador: el boton esta display:none
+  // hasta que React aplica la clase .sin-panel, y focus() sobre un elemento sin
+  // caja no hace nada. Por eso se apunta a quien enfocar y se hace en un efecto,
+  // que corre despues de que el DOM este actualizado.
+  const btnPanel = useRef(null)
+  const btnKpi = useRef(null)
+  const aEnfocar = useRef(null)
+  useEffect(() => {
+    if (!aEnfocar.current) return
+    const boton = aEnfocar.current === 'panel' ? btnPanel.current : btnKpi.current
+    aEnfocar.current = null
+    boton?.focus()
+  }, [panelVisible, kpiVisible])
+
+  const cerrarPanel = useCallback(() => {
+    aEnfocar.current = 'panel'
+    mostrarPanel(false)
+  }, [mostrarPanel])
+  const cerrarKpi = useCallback(() => {
+    aEnfocar.current = 'kpi'
+    mostrarKpi(false)
+  }, [mostrarKpi])
+
+  // Escape solo cierra CAJONES. Anclado, plegar un panel no es «salir» de nada y
+  // hacerlo con Escape seria una sorpresa: el mapa se reordenaria bajo el cursor
+  // al pulsar una tecla que el usuario asocia a cancelar.
+  useEffect(() => {
+    const hayCajonAbierto = (!panelAnclado && panelVisible) || (!kpiAnclado && kpiVisible)
+    if (!hayCajonAbierto) return
     const alPulsar = (e) => {
       if (e.key !== 'Escape') return
       // ModalFicha es un <dialog> modal: el navegador ya cierra con Escape y su
       // keydown burbujea hasta aqui. Sin esta guarda, un Escape cerraria la
       // ficha Y el cajon de debajo de una vez.
       if (document.querySelector('dialog[open]')) return
-      if (kpiAbierto) cerrarKpi()
+      if (!kpiAnclado && kpiVisible) cerrarKpi()
       else cerrarPanel()
     }
     window.addEventListener('keydown', alPulsar)
     return () => window.removeEventListener('keydown', alPulsar)
-  }, [panelAbierto, kpiAbierto, cerrarPanel, cerrarKpi])
+  }, [panelAnclado, kpiAnclado, panelVisible, kpiVisible, cerrarPanel, cerrarKpi])
+
+  // ---------- ancho del panel ----------
+  // El ancho de ventana entra como ESTADO y no se lee en el render: `regimen`
+  // solo cambia al cruzar un corte, asi que estirar la ventana de 1300 a 1900
+  // dejaria el techo del tirador congelado en el valor de 1300.
+  const [anchoVentana, setAnchoVentana] = useState(() => window.innerWidth)
+  useEffect(() => {
+    let pendiente = 0
+    const al = () => {
+      cancelAnimationFrame(pendiente)
+      pendiente = requestAnimationFrame(() => setAnchoVentana(window.innerWidth))
+    }
+    window.addEventListener('resize', al)
+    return () => {
+      cancelAnimationFrame(pendiente)
+      window.removeEventListener('resize', al)
+    }
+  }, [])
+
+  // El techo es DINAMICO y no MAX_PANEL a secas: con los dos paneles anclados a
+  // 1201 px, 560 de panel dejarian 321 px de mapa. Acotarlo aqui es lo que hace
+  // que el tirador no pueda violar el suelo que la asercion B4 comprueba.
+  const maxPanel = Math.max(
+    MIN_PANEL,
+    Math.min(MAX_PANEL, anchoVentana - MIN_MAPA - (kpiAnclado && kpiVisible ? ANCHO_KPI : 0)),
+  )
+
+  const cambiarAncho = useCallback(
+    (px) => {
+      const v = Math.round(Math.min(maxPanel, Math.max(MIN_PANEL, px)))
+      setAnchoPanel(v)
+      disposicion.ancho = v
+      guardarDisposicion(disposicion)
+    },
+    [maxPanel],
+  )
+
+  // Al encoger la ventana el techo baja, y un ancho guardado mayor dejaria el
+  // mapa por debajo de su suelo sin que nadie haya tocado el tirador.
+  useEffect(() => {
+    setAnchoPanel((a) => Math.min(a, maxPanel))
+  }, [maxPanel])
 
   const toggleCapa = (id) =>
     setCapasActivas((cs) => (cs.includes(id) ? cs.filter((x) => x !== id) : [...cs, id]))
@@ -654,17 +804,53 @@ export default function App() {
   const metaRutas = capaMeta('rutas')
   const metaRedvial = capaMeta('redvial')
 
+  // Un solo juego de props para el panel de indicadores: lo pinta la barra
+  // derecha Y lo reutiliza el informe, que lo renderiza a markup. Describirlas
+  // dos veces era la via mas corta a que el PDF y la pantalla divergieran.
+  const propsIndicadores = {
+    manifest,
+    kpis,
+    incendios: incendios.data,
+    oecv: oecv.data,
+    filtros,
+    capasActivas,
+    pasaIncendio,
+    onToggleCapa: toggleCapa,
+    cargando,
+  }
+
+  // data-regimen lo publica JS para que la verificacion pueda comprobar que
+  // coincide con el numero de pistas que resuelve el CSS: los cortes viven en
+  // los dos sitios y esa duplicacion es la que B12 vigila.
+  const clases = [
+    'app',
+    panelVisible ? '' : 'sin-panel',
+    kpiVisible ? '' : 'sin-kpi',
+    redimensionando ? 'redimensionando' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
   return (
-    <div className="app">
+    <div
+      className={clases}
+      data-regimen={regimen}
+      // La variable en linea SOLO cuando el panel se ve. Plegarlo es cosa de la
+      // clase .sin-panel, y un estilo en linea le ganaria siempre en
+      // especificidad: escribir aqui '0px' y dejar que el CSS lo repita seria
+      // duplicar la regla; escribir el ancho y esperar que la clase lo pise, un
+      // error silencioso.
+      style={panelVisible ? { '--pista-panel': `${anchoPanel}px` } : undefined}
+    >
       <Banner />
 
       {/* aria-expanded y aria-controls, que .abrir-kpi ya tenia y este no. */}
       <button
         ref={btnPanel}
         className="abrir"
-        onClick={() => setPanelAbierto(true)}
+        onClick={() => mostrarPanel(true)}
         aria-label="Abrir capas y filtros"
-        aria-expanded={panelAbierto}
+        aria-expanded={panelVisible}
         aria-controls="panel-control"
       >
         ☰
@@ -687,7 +873,30 @@ export default function App() {
         basemaps={BASEMAPS}
         imagen={imagen}
         abierto={panelAbierto}
+        abierto={panelVisible}
         onCerrar={cerrarPanel}
+      >
+        <SeccionDescargas
+          manifest={manifest}
+          filtros={filtros}
+          capasActivas={capasActivas}
+          datos={{ incendios: incendios.data, oecv: oecv.data, puntos_standby: standby.data }}
+          predicados={{ incendios: pasaIncendio, oecv: pasaOECV, puntos_standby: pasaStandby }}
+          map={map}
+          base={base}
+          propsIndicadores={propsIndicadores}
+        />
+      </PanelLateral>
+
+      {/* Hermano del panel y no hijo suyo: .panel scrollea, y dentro quedaba
+          recortado por su overflow y se iba con el scroll. Ver .tirador en
+          App.css. */}
+      <Tirador
+        ancho={anchoPanel}
+        min={MIN_PANEL}
+        max={maxPanel}
+        onAncho={cambiarAncho}
+        onArrastre={setRedimensionando}
       />
 
       {/* <main> y no <div>: el elemento mas grande de la pantalla no tenia
@@ -735,11 +944,11 @@ export default function App() {
           manifest={manifest}
           capasActivas={capasActivas}
           onAbrirPanel={() => {
-            setPanelAbierto(true)
+            mostrarPanel(true)
             setCartelVisible(false)
           }}
           onAbrirKpi={() => {
-            setKpiAbierto(true)
+            mostrarKpi(true)
             setCartelVisible(false)
           }}
           onCerrar={() => setCartelVisible(false)}
@@ -750,27 +959,15 @@ export default function App() {
           esta es la tercera columna. Los Capa* de abajo devuelven null y no
           ocupan celda, y ModalFicha es un <dialog> que vive en la top layer. */}
       <div className="funda-kpi">
-        <PanelIndicadores
-          manifest={manifest}
-          kpis={kpis}
-          incendios={incendios.data}
-          oecv={oecv.data}
-          filtros={filtros}
-          capasActivas={capasActivas}
-          pasaIncendio={pasaIncendio}
-          onToggleCapa={toggleCapa}
-          cargando={cargando}
-          abierto={kpiAbierto}
-          onCerrar={cerrarKpi}
-        />
+        <PanelIndicadores {...propsIndicadores} abierto={kpiVisible} onCerrar={cerrarKpi} />
       </div>
 
       <button
         ref={btnKpi}
         className="abrir-kpi"
-        onClick={() => setKpiAbierto(true)}
+        onClick={() => mostrarKpi(true)}
         aria-label="Abrir indicadores"
-        aria-expanded={kpiAbierto}
+        aria-expanded={kpiVisible}
         aria-controls="panel-indicadores"
       >
         <IconoIndicadores />

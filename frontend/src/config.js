@@ -10,6 +10,48 @@ export const LIMITES = [
   [-17, -64],
 ]
 
+// ---------------------------------------------------------------------------
+// Geometria de los paneles.
+//
+// ACOPLADO a las media queries de App.css: los cortes viven en los dos sitios
+// porque una media query no puede leer una constante de JS y JS necesita saber
+// en que regimen esta para decidir si la X pliega una pista o cierra un cajon.
+// La duplicacion es inevitable; lo que NO es inevitable es que se desincronicen,
+// y por eso .app publica data-regimen y la asercion B12 comprueba que coincida
+// con el numero de pistas que resuelve el CSS en los diez anchos.
+// ---------------------------------------------------------------------------
+
+/** Por encima: los dos paneles anclados. Por debajo, el derecho pasa a cajon. */
+export const CORTE_KPI = 1200
+/** Por encima: el panel izquierdo anclado. Por debajo, pasa a cajon. */
+export const CORTE_PANEL = 900
+
+export const MIN_PANEL = 280
+export const MAX_PANEL = 560
+export const ANCHO_PANEL = 320
+/** ACOPLADO a --ancho-kpi de index.css: el panel derecho no es redimensionable. */
+export const ANCHO_KPI = 320
+
+/**
+ * Suelo de ancho del mapa. No es estetico: a 1201 px con los dos paneles
+ * anclados quedan 561 px de mapa, y por debajo de ~520 Chile continental a z6
+ * deja de ser legible. La asercion B4 ya lo exigia; ahora ademas ACOTA EL
+ * TIRADOR, de modo que arrastrar no pueda violar lo que B4 comprueba.
+ */
+export const MIN_MAPA = 520
+
+/**
+ * Marcas diacriticas combinantes (U+0300..U+036F), las que deja sueltas
+ * normalize('NFD'). Se construye desde una CADENA y no como literal de regex
+ * para que el rango viaje en ASCII puro: escrito como literal, el archivo acaba
+ * guardando los combinantes de verdad, que son invisibles al revisar el diff y
+ * los destruye cualquier herramienta que normalice el fuente.
+ *
+ * Vive aqui y no en PanelLateral porque lo usan tambien los nombres de archivo
+ * de las descargas: dos copias de esta regex acabarian divergiendo.
+ */
+export const DIACRITICOS = new RegExp('[\u0300-\u036f]', 'g')
+
 export const BASEMAPS = {
   // Fondo neutro y claro: es el unico que deja leer ~15.000 puntos superpuestos.
   //

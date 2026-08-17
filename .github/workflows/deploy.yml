@@ -142,6 +142,12 @@ jobs:
       # if: always() para que el panel se verifique aunque el banner regrese:
       # son dos superficies independientes y saber que fallaron las dos, o solo
       # una, ahorra una vuelta entera.
+      #
+      # Aquí NO hay capas (este job hace sparse-checkout de `frontend` y no corre
+      # el ETL), así que verify:panel cae solo a su modo de datos ficticios: un
+      # fixture de 12 incendios con cifras calculadas a mano, una capa servida
+      # por teselas y una región escrita con acento agudo, para ejercitar los
+      # tres caminos que en producción se rompen en silencio.
       - if: always()
         run: npm run verify:panel
         working-directory: frontend
