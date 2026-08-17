@@ -255,6 +255,9 @@ export default function App() {
     capaBase.current = L.tileLayer(cfg.url, {
       attribution: cfg.attribution,
       maxZoom: cfg.maxZoom,
+      // Solo lo declara Sentinel-2: por encima de su resolucion nativa Leaflet
+      // estira la ultima tesela real en vez de pedir detalle inventado.
+      maxNativeZoom: cfg.maxNativeZoom,
     }).addTo(map)
     capaBase.current.bringToBack()
   }, [map, base])
@@ -326,7 +329,13 @@ export default function App() {
 
   // Fecha de captura de la imagen satelital bajo el centro de la vista. Solo se
   // consulta con ese mapa base: con Claro y Calles la pregunta no aplica.
-  const imagen = useFechaImagen(map, base === 'Satelital')
+  // Cada mapa base declara en config.js como se sabe su fecha. Solo el de Esri
+  // se consulta a un servicio; el de Sentinel-2 la trae escrita, y los de calle
+  // no tienen ninguna que mostrar.
+  const fuenteFecha = BASEMAPS[base]?.fecha ?? null
+  const fechaEsri = useFechaImagen(map, fuenteFecha?.tipo === 'esri')
+  const imagen =
+    fuenteFecha?.tipo === 'fijo' ? { estado: 'fijo', texto: fuenteFecha.texto } : fechaEsri
 
   // ---------- datos ----------
   const capaMeta = useCallback((id) => manifest?.capas?.[id], [manifest])

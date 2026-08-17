@@ -74,6 +74,7 @@ const TILES = [
   '*tile.openstreetmap.org*',
   '*server.arcgisonline.com*',
   '*services.arcgisonline.com*',
+  '*tiles.maps.eox.at*',
 ]
 const JPEG = '*banner-conaf-uia*'
 

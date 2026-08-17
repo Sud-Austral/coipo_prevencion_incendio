@@ -54,6 +54,22 @@ function FechaImagen({ info }) {
   if (info.estado === 'error') {
     return <p className="nota">No se pudo consultar la fecha de la imagen.</p>
   }
+  // Fecha conocida de antemano. Se dice ademas QUE ES un mosaico anual, porque
+  // Sentinel-2 revisita cada ~5 dias y es facil suponer que se esta viendo la
+  // pasada mas reciente: esto es un compuesto de todo el año, sin nubes.
+  if (info.estado === 'fijo') {
+    return (
+      <>
+        <p className="kpi">
+          <b>{info.texto}</b>
+        </p>
+        <p className="nota">
+          10 m por píxel. No es la última pasada del satélite: es un compuesto de todo el año con
+          las nubes descartadas, así que la misma imagen cubre el país entero.
+        </p>
+      </>
+    )
+  }
 
   const detalle = [
     info.resolucion != null && `${fmt1.format(info.resolucion)} m por píxel`,

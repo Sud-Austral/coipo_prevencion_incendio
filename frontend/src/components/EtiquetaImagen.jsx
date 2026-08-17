@@ -62,6 +62,8 @@ export default function EtiquetaImagen({ map, info }) {
 function texto(info) {
   if (!info) return null
   if (info.estado === 'ok') return `Imagen del ${fechaLarga(info.iso)}`
+  // Fecha conocida de antemano, no consultada: el mosaico anual de Sentinel-2.
+  if (info.estado === 'fijo') return info.texto
   if (info.estado === 'sin-fecha') return 'Imagen sin fecha publicada'
   return null
 }
