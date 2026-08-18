@@ -159,6 +159,16 @@ export function csvOECV(features, pasa) {
   return { texto: armarCSV(['nombre', 'tipo', 'inst', 'region', 'grupo', 'longitud_km'], filas), n: filas.length }
 }
 
+export function csvVerificado(features, pasa) {
+  const filas = []
+  for (const f of features ?? []) {
+    const p = f.properties
+    if (pasa && !pasa(p)) continue
+    filas.push([p.nombre, p.inst, p.region, p.origen, num(p.longitud_km)])
+  }
+  return { texto: armarCSV(['nombre', 'inst', 'region', 'origen', 'longitud_km'], filas), n: filas.length }
+}
+
 export function csvStandby(features, pasa) {
   const filas = []
   for (const f of features ?? []) {

@@ -6,6 +6,7 @@ import {
   COLOR_REDVIAL,
   COLOR_RUTA,
   COLOR_STANDBY,
+  COLOR_VERIFICADO,
   NO_ACTIVOS,
   fechaLarga,
   fmt,
@@ -15,6 +16,7 @@ import {
   csvIncendios,
   csvOECV,
   csvStandby,
+  csvVerificado,
   geojsonDe,
   guardar,
   hoy,
@@ -32,7 +34,7 @@ const kb = (b) => (b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.max
 /** Capas que se pueden exportar como datos: las que llegan como GeoJSON. En
  *  produccion rutas y redvial se sirven por teselas y no hay features en el
  *  cliente -- se ofrecen igual, pero deshabilitadas y con el motivo escrito. */
-const EXPORTABLES = ['incendios', 'oecv', 'puntos_standby', 'rutas', 'redvial']
+const EXPORTABLES = ['incendios', 'oecv', 'oecv_verificado', 'puntos_standby', 'rutas', 'redvial']
 
 /**
  * Leyenda del mapa del informe. Se arma de las MISMAS constantes que pinta el
@@ -47,6 +49,8 @@ function leyendaDe(capasActivas) {
   if (capasActivas.includes('oecv')) {
     for (const [k, v] of Object.entries(COLOR_OECV)) l.push({ etiqueta: `OECV ${k.toLowerCase()}`, color: v })
   }
+  if (capasActivas.includes('oecv_verificado'))
+    l.push({ etiqueta: 'OECV verificado', color: COLOR_VERIFICADO })
   if (capasActivas.includes('puntos_standby')) l.push({ etiqueta: 'Punto stand-by', color: COLOR_STANDBY })
   if (capasActivas.includes('rutas')) l.push({ etiqueta: 'Ruta de despliegue', color: COLOR_RUTA })
   if (capasActivas.includes('redvial')) l.push({ etiqueta: 'Red vial MOP', color: COLOR_REDVIAL })
@@ -94,6 +98,7 @@ export default function SeccionDescargas({
     if (!fs) return null
     if (id === 'incendios') return csvIncendios(fs, tablas, predicados.incendios)
     if (id === 'oecv') return csvOECV(fs, predicados.oecv)
+    if (id === 'oecv_verificado') return csvVerificado(fs, predicados.oecv_verificado)
     if (id === 'puntos_standby') return csvStandby(fs, predicados.puntos_standby)
     return null
   }

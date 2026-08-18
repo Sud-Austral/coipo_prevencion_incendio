@@ -35,6 +35,7 @@ TAREAS = [
     ("rutas", "build_rutas", 150, False),       # 3,8 M de vertices en 15 shapefiles
     ("incendios", "build_incendios", 40, False),
     ("oecv", "build_oecv", 25, False),
+    ("verificado", "build_verificado", 15, False),
     ("puntos", "build_puntos", 10, False),
     ("kpis", "build_kpis", 5, False),
 ]
@@ -42,6 +43,7 @@ TAREAS = [
 CLAVE_MANIFEST = {
     "incendios": "incendios",
     "oecv": "oecv",
+    "verificado": "oecv_verificado",
     "puntos": "puntos_standby",
     "rutas": "rutas",
     "redvial": "redvial",
@@ -67,7 +69,9 @@ def main() -> int:
     )
     ap.add_argument("--insumo", type=Path, default=RAIZ / "INSUMO_INCENDIO")
     ap.add_argument("--out", type=Path, default=RAIZ / "frontend" / "public" / "data")
-    ap.add_argument("--layers", default="all", help="all | incendios,oecv,puntos,rutas,redvial,kpis")
+    ap.add_argument(
+        "--layers", default="all", help="all | incendios,oecv,verificado,puntos,rutas,redvial,kpis"
+    )
     ap.add_argument("--jobs", type=int, default=0, help="0 = automatico")
     ap.add_argument("--secuencial", action="store_true", help="equivale a --jobs 1")
     ap.add_argument("--no-tiles", action="store_true", help="fuerza GeoJSON en las capas viales")
