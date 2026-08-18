@@ -675,6 +675,16 @@ const MEDIR = `(() => {
                orient: t.getAttribute('aria-orientation'), controla: t.getAttribute('aria-controls'),
                foco: t.tabIndex }
     })(),
+    tiradorKpi: (() => {
+      const t = document.querySelector('.tirador-kpi')
+      if (!t || getComputedStyle(t).display === 'none') return null
+      const r = t.getBoundingClientRect()
+      return { x: r.left + r.width / 2, y: r.top + Math.min(300, r.height / 2),
+               ahora: +t.getAttribute('aria-valuenow'), min: +t.getAttribute('aria-valuemin'),
+               max: +t.getAttribute('aria-valuemax'), rol: t.getAttribute('role'),
+               orient: t.getAttribute('aria-orientation'), controla: t.getAttribute('aria-controls'),
+               foco: t.tabIndex }
+    })(),
     // Razon lienzo/mapa: Leaflet dimensiona el canvas del renderer como funcion
     // fija de map.getSize(), asi que la razon solo se conserva si invalidateSize
     // corrio de verdad. No hace falta ningun gancho de prueba.
@@ -1047,6 +1057,58 @@ async function main() {
       `panel ${apretado.panel.width.toFixed(0)} + mapa ${apretado.mapa.width.toFixed(0)} + kpi ${apretado.kpi.width.toFixed(0)} de ${apretado.vw}`,
     )
 
+    // ---- B13..B15 · el gemelo derecho ------------------------------------
+    // Mismo componente con la geometria espejada: aqui se comprueba EXACTAMENTE
+    // la parte que cambia con `lado` -- que arrastrar hacia la izquierda
+    // ensanche, que las flechas esten invertidas y que el suelo del mapa
+    // tambien lo acote a el. Lo que no cambia (captura de puntero, rAF,
+    // persistencia) ya lo cubren las aserciones del izquierdo.
+    console.log('\n▶ tirador del panel de indicadores')
+    await ir(cdp, pagina, { ancho: 1920, puerto })
+    const antesK = await evaluar(cdp, pagina, MEDIR)
+    comprobar(
+      !!antesK.tiradorKpi &&
+        antesK.tiradorKpi.rol === 'separator' &&
+        antesK.tiradorKpi.controla === 'panel-indicadores' &&
+        antesK.tiradorKpi.foco === 0 &&
+        antesK.tiradorKpi.ahora === Math.round(antesK.kpi.width),
+      'B15 el tirador derecho se anuncia como separador',
+      `role=${antesK.tiradorKpi?.rol} controla=${antesK.tiradorKpi?.controla} valuenow=${antesK.tiradorKpi?.ahora}`,
+    )
+
+    await arrastrar(cdp, pagina, antesK.tiradorKpi.x, antesK.tiradorKpi.y, -160)
+    const trasK = await evaluar(cdp, pagina, MEDIR)
+    comprobar(
+      Math.abs(trasK.kpi.width - (antesK.kpi.width + 160)) <= 2 &&
+        Math.abs(trasK.mapa.width - (antesK.mapa.width - 160)) <= 2 &&
+        trasK.pistas === 3 &&
+        trasK.scrollW <= trasK.vw + 1,
+      'B13 arrastrar a la izquierda ensancha los indicadores y encoge el mapa',
+      `kpi ${antesK.kpi.width.toFixed(0)} → ${trasK.kpi.width.toFixed(0)} · mapa ${trasK.mapa.width.toFixed(0)}`,
+    )
+
+    // Flechas espejadas: en el lado derecho, IZQUIERDA es ensanchar.
+    await evaluar(cdp, pagina, `document.querySelector('.tirador-kpi').focus()`)
+    for (let i = 0; i < 5; i++) await tecla(cdp, pagina, 'ArrowLeft', 37)
+    const tecladoK = await evaluar(cdp, pagina, MEDIR)
+    comprobar(
+      Math.abs(tecladoK.kpi.width - (trasK.kpi.width + 40)) <= 1 &&
+        tecladoK.tiradorKpi.ahora === Math.round(tecladoK.kpi.width),
+      'B15 en el derecho las flechas van espejadas',
+      `${trasK.kpi.width.toFixed(0)} → ${tecladoK.kpi.width.toFixed(0)} con 5×ArrowLeft`,
+    )
+
+    await ir(cdp, pagina, { ancho: 1201, puerto })
+    await evaluar(cdp, pagina, `document.querySelector('.tirador-kpi').focus()`)
+    await tecla(cdp, pagina, 'End', 35)
+    const apretadoK = await evaluar(cdp, pagina, MEDIR)
+    comprobar(
+      apretadoK.mapa.width >= MIN_MAPA - 1 &&
+        apretadoK.panel.width + apretadoK.mapa.width + apretadoK.kpi.width <= apretadoK.vw + 1,
+      'B14 tampoco el derecho puede violar el suelo del mapa',
+      `panel ${apretadoK.panel.width.toFixed(0)} + mapa ${apretadoK.mapa.width.toFixed(0)} + kpi ${apretadoK.kpi.width.toFixed(0)} de ${apretadoK.vw}`,
+    )
+
     // ---- B17 · almacenamiento --------------------------------------------
     console.log('\n▶ disposición recordada')
     await ir(cdp, pagina, { ancho: 1920, puerto })
@@ -1063,8 +1125,8 @@ async function main() {
     const guardado = await evaluar(cdp, pagina, MEDIR)
     const claves = Object.keys(JSON.parse(guardado.almacen ?? '{}')).sort()
     comprobar(
-      claves.join(',') === 'ancho,kpi,panel',
-      'B17 la clave guarda EXACTAMENTE ancho, panel y kpi',
+      claves.join(',') === 'ancho,anchoKpi,kpi,panel',
+      'B17 la clave guarda EXACTAMENTE ancho, anchoKpi, panel y kpi',
       `campos: ${claves.join(', ') || '(ninguno)'}`,
     )
 

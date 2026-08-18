@@ -1,0 +1,102 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8">
+<title>Inventario INSUMO_INCENDIO vs despliegue</title>
+<style>
+  @page { size: A4; margin: 14mm 12mm; }
+  * { box-sizing: border-box; }
+  body { font: 9.5pt/1.45 "Segoe UI", Arial, sans-serif; color: #222; margin: 0; }
+  h1 { font-size: 17pt; color: #1F4E5F; margin: 0 0 2px; }
+  h2 { font-size: 12pt; color: #1F4E5F; border-bottom: 2px solid #1F4E5F; padding-bottom: 2px; margin: 18px 0 8px; page-break-after: avoid; }
+  .sub { color: #666; font-size: 9pt; margin-bottom: 4px; }
+  .kv { margin: 2px 0; }
+  .kv b { display: inline-block; min-width: 150px; }
+  table { border-collapse: collapse; width: 100%; margin: 6px 0; page-break-inside: auto; }
+  th { background: #1F4E5F; color: #fff; font-size: 8pt; text-align: left; padding: 3px 5px; }
+  td { border: 1px solid #ccc; font-size: 8pt; padding: 3px 5px; vertical-align: top; }
+  tr { page-break-inside: avoid; }
+  tbody tr:nth-child(even) { background: #F4F7F8; }
+  .capa { border: 1px solid #cfd8dc; border-left: 4px solid #1F4E5F; border-radius: 3px; padding: 6px 9px; margin: 7px 0; page-break-inside: avoid; }
+  .capa p { margin: 2px 0; font-size: 8.5pt; }
+  .capa-h { display: flex; justify-content: space-between; }
+  .capa-nombre { font-weight: 700; color: #1F4E5F; font-size: 10.5pt; }
+  .capa-meta { color: #666; font-size: 8.5pt; }
+  .capa-url { font-family: Consolas, monospace; font-size: 8pt; color: #0B5394; margin: 1px 0 4px; }
+  .num { text-align: right; }
+  .aviso { background: #FFF8E1; border: 1px solid #E6C200; border-radius: 3px; padding: 6px 9px; font-size: 8.5pt; margin: 8px 0; }
+</style></head><body>
+
+<h1>INSUMO_INCENDIO vs despliegue</h1>
+<div class="sub">Qué contiene la carpeta de insumos, qué publica realmente el visor y qué falta · CONAF, Programa de prevención de incendios · 2026-08-17</div>
+
+<h2>1 · Dónde está desplegado</h2>
+<div class="kv"><b>Visor:</b> https://sud-austral.github.io/coipo_prevencion_incendio/</div>
+<div class="kv"><b>Datos:</b> https://sud-austral.github.io/coipo_prevencion_incendio/data/&lt;archivo&gt;</div>
+<div class="kv"><b>Última corrida del ETL:</b> 2026-08-07 — se re-ejecuta automáticamente (GitHub Actions) con cada push que toque INSUMO_INCENDIO/, ETL/ o frontend/.</div>
+<div class="kv"><b>INSUMO_INCENDIO:</b> 775 archivos · 832 MB. De ellos, 26 son fuentes directas del visor.</div>
+
+<h2>2 · Qué se está desplegando (archivo publicado → dónde se ve)</h2>
+<div class="capa">
+      <div class="capa-h"><span class="capa-nombre">incendios.geojson</span>
+      <span class="capa-meta">geojson · 3.9 MB</span></div>
+      <div class="capa-url">https://sud-austral.github.io/coipo_prevencion_incendio/data/incendios.geojson</div>
+      <p><b>Contenido:</b> 14705 incendios investigados por la UAD, temporadas 2017-2018 a 2025-2026 (14985 leídos, 280 descartados sin coordenada válida)</p>
+      <p><b>Dónde se ve:</b> Mapa: capa 'Incendios investigados' (activa por defecto, color por grupo de causa) · Filtros: Región/Temporada/Grupo de causa/Causa general · Panel de indicadores (todas las secciones de incendios) · Ficha al clic · Descargas CSV+GeoJSON · Informe imprimible</p>
+      <p><b>Origen en INSUMO_INCENDIO:</b> BBDD INVESTIGACIÓN UAD CONSOLIDADA COMPLETA.xlsx</p>
+    </div><div class="capa">
+      <div class="capa-h"><span class="capa-nombre">oecv.geojson</span>
+      <span class="capa-meta">geojson · 908 KB</span></div>
+      <div class="capa-url">https://sud-austral.github.io/coipo_prevencion_incendio/data/oecv.geojson</div>
+      <p><b>Contenido:</b> 1863 obras (cortafuegos y fajas), 4790 km medidos, 15 regiones</p>
+      <p><b>Dónde se ve:</b> Mapa: capa 'OECV (cortafuegos)' (activa por defecto, color oficial por titularidad) · Filtros: Región/Titularidad/Institución · Ficha al clic · Descargas CSV+GeoJSON · Indicadores: cruce cobertura-presión y riesgo eléctrico</p>
+      <p><b>Origen en INSUMO_INCENDIO:</b> OECV 2025 - 2026/COMPILADO/SHAPE/Compilado shape/Compilado_OECV_2025.shp</p>
+    </div><div class="capa">
+      <div class="capa-h"><span class="capa-nombre">puntos_standby.geojson</span>
+      <span class="capa-meta">geojson · 54 KB</span></div>
+      <div class="capa-url">https://sud-austral.github.io/coipo_prevencion_incendio/data/puntos_standby.geojson</div>
+      <p><b>Contenido:</b> 327 posiciones de espera de brigadas en 7 regiones</p>
+      <p><b>Dónde se ve:</b> Mapa: capa 'Puntos stand-by' (activa por defecto, morado) · Filtro: Región · Ficha al clic · Descargas CSV+GeoJSON</p>
+      <p><b>Origen en INSUMO_INCENDIO:</b> Despliegue territorial/11.- Biobío/Puntos_Región_Biobio_25-26_Conaf/Puntos_Región_Biobio_25-26_Conaf.shp · Despliegue territorial/12.- Araucanía/Puntos Stand By Región de La Araucanía/Puntos_Stand_By_Region_La_Araucania.shp · Despliegue territorial/14.- Los Lagos/Puntos_Región de Los Lagos_25-26_Conaf.shp · Despliegue territorial/15.- Aysén/Puntos_Aysen_25-26_Conaf/Puntos_Aysen_25-26_Conaf.shp · Despliegue territorial/6.- Valparaíso/Puntos_Valparaiso_25-26_Conaf/Puntos_Valparaíso_25-26_Conaf.kmz · Despliegue territorial/7.- Metropolitana/Puntos_stand_by/Puntos_stand_by.shp · Despliegue territorial/8.- O_Higgins/Puntos_O_Higgins_25-26_Conaf.shp</p>
+    </div><div class="capa">
+      <div class="capa-h"><span class="capa-nombre">rutas.pmtiles</span>
+      <span class="capa-meta">pmtiles · 6.7 MB</span></div>
+      <div class="capa-url">https://sud-austral.github.io/coipo_prevencion_incendio/data/rutas.pmtiles</div>
+      <p><b>Contenido:</b> 5278 rutas de despliegue 25-26 (14 regiones + CORMA), teselas vectoriales</p>
+      <p><b>Dónde se ve:</b> Mapa: capa 'Rutas de despliegue' (apagada por defecto, azul, teselas a demanda) · Filtros: Región/Tipo de carpeta · Ficha al clic · En Descargas aparece deshabilitada (se sirve por teselas)</p>
+      <p><b>Origen en INSUMO_INCENDIO:</b> Despliegue territorial/10.- Ñuble/Rutas_Ñuble_25-26_Conaf.shp · Despliegue territorial/11.- Biobío/Rutas_Correccion/Rutas_Biobio_25-26_Conaf.shp · Despliegue territorial/12.- Araucanía/Rutas Región de La Araucanía/Rutas_Region_La_Araucanía.shp · Despliegue territorial/14.- Los Lagos/Rutas_Región de Los Lagos_25-26_Conaf.shp · Despliegue territorial/9.- Maule/Rutas_Maule_25-26_Conaf.shp · Despliegue territorial/Consolidado/Rutas_Antofagasta_25-26_Conaf.shp · Despliegue territorial/Consolidado/Rutas_Arica_25-26_Conaf.shp · Despliegue territorial/Consolidado/Rutas_Aysen_25-26_Conaf.shp · Despliegue territorial/Consolidado/Rutas_Corma_25-26.shp · Despliegue territorial/Consolidado/Rutas_LosRios_25-26_Conaf.shp · Despliegue territorial/Consolidado/Rutas_Magallanes_25-26_Conaf.shp · Despliegue territorial/Consolidado/Rutas_Metropolitana_25-26_Conaf.shp · Despliegue territorial/Consolidado/Rutas_OHiggins_25-26_Conaf.shp · Despliegue territorial/Consolidado/Rutas_Tarapaca_25-26_Conaf.shp · Despliegue territorial/Consolidado/Rutas_Valparaiso_25-26_Conaf.shp</p>
+    </div><div class="capa">
+      <div class="capa-h"><span class="capa-nombre">redvial.pmtiles</span>
+      <span class="capa-meta">pmtiles · 17.9 MB</span></div>
+      <div class="capa-url">https://sud-austral.github.io/coipo_prevencion_incendio/data/redvial.pmtiles</div>
+      <p><b>Contenido:</b> 13964 tramos de la red vial MOP 2024, teselas vectoriales</p>
+      <p><b>Dónde se ve:</b> Mapa: capa 'Red vial MOP 2024' (apagada por defecto, gris, teselas a demanda) · Filtros: Región/Tipo de carpeta · En Descargas aparece deshabilitada (se sirve por teselas)</p>
+      <p><b>Origen en INSUMO_INCENDIO:</b> Red-vial_MOP_2024/Red-vial_MOP_2024.json</p>
+    </div><div class="capa">
+      <div class="capa-h"><span class="capa-nombre">kpis.json</span>
+      <span class="capa-meta">json · 3 KB</span></div>
+      <div class="capa-url">https://sud-austral.github.io/coipo_prevencion_incendio/data/kpis.json</div>
+      <p><b>Contenido:</b> KPI OECV: 4899 km planificados, 3860 reportados (78.8% de avance), por región e institución</p>
+      <p><b>Dónde se ve:</b> Panel de indicadores: sección de avance OECV (km planificados vs reportados y % de avance, por región)</p>
+      <p><b>Origen en INSUMO_INCENDIO:</b> OECV 2025 - 2026/OECV 2025-2026.xlsx</p>
+    </div><div class="capa">
+      <div class="capa-h"><span class="capa-nombre">manifest.json</span>
+      <span class="capa-meta">json · 104 KB</span></div>
+      <div class="capa-url">https://sud-austral.github.io/coipo_prevencion_incendio/data/manifest.json</div>
+      <p><b>Contenido:</b> Contrato frontend-ETL, generado 2026-08-07</p>
+      <p><b>Dónde se ve:</b> Contrato de datos: fecha de actualización mostrada en la app, dominios de los filtros, tablas de decodificación de campos, tamaños en la sección Descargas</p>
+      <p><b>Origen en INSUMO_INCENDIO:</b> Generado por ETL/run.py a partir de todas las capas</p>
+    </div>
+
+<h2>3 · Cobertura por región</h2>
+<table class=""><thead><tr><th>Región</th><th>Incendios (n)</th><th>OECV dibujado (km)</th><th>OECV planif. (km)</th><th>OECV reportado (km)</th><th>Puntos stand-by (n)</th><th>Rutas 25-26 (n)</th><th>Fuente rutas</th></tr></thead><tbody><tr><td>Arica y Parinacota</td><td>19</td><td></td><td>0.0</td><td></td><td></td><td>31</td><td>Consolidado</td></tr><tr><td>Tarapacá</td><td>27</td><td>94.2</td><td>24.0</td><td>23.0</td><td></td><td>24</td><td>Consolidado</td></tr><tr><td>Antofagasta</td><td>8</td><td>2.2</td><td>2.1</td><td>0.0</td><td></td><td>5</td><td>Consolidado</td></tr><tr><td>Atacama</td><td>65</td><td>28.7</td><td>28.7</td><td>0.0</td><td></td><td></td><td>—</td></tr><tr><td>Coquimbo</td><td>345</td><td>64.4</td><td>42.6</td><td>42.9898</td><td></td><td></td><td>—</td></tr><tr><td>Valparaíso</td><td>1212</td><td>163.0</td><td>203.0</td><td>203.9</td><td>108</td><td>311</td><td>Consolidado</td></tr><tr><td>Metropolitana</td><td>1218</td><td>877.6</td><td>878.8</td><td>380.776</td><td>21</td><td>189</td><td>Consolidado</td></tr><tr><td>O'Higgins</td><td>1092</td><td>836.5</td><td>836.8</td><td>745.126</td><td>11</td><td>463</td><td>Consolidado</td></tr><tr><td>Maule</td><td>1734</td><td>496.1</td><td>422.2</td><td>457.28</td><td></td><td>1288</td><td>Regional</td></tr><tr><td>Ñuble</td><td>1346</td><td>394.5</td><td>394.4</td><td>244.2</td><td></td><td>330</td><td>Regional</td></tr><tr><td>Biobío</td><td>2820</td><td>601.0</td><td>731.595</td><td>734.545</td><td>62</td><td>382</td><td>Regional</td></tr><tr><td>La Araucanía</td><td>3370</td><td>694.4</td><td>695.1</td><td>435.06</td><td>51</td><td>480</td><td>Regional</td></tr><tr><td>Los Ríos</td><td>518</td><td>223.3</td><td>223.1</td><td>244.528</td><td></td><td>142</td><td>Consolidado</td></tr><tr><td>Los Lagos</td><td>662</td><td>260.5</td><td>317.8</td><td>261.9</td><td>50</td><td>203</td><td>Regional</td></tr><tr><td>Aysén</td><td>177</td><td>46.0</td><td>46.0</td><td>46.0</td><td>24</td><td>95</td><td>Consolidado</td></tr><tr><td>Magallanes</td><td>92</td><td>7.4</td><td>52.4</td><td>40.983</td><td></td><td>58</td><td>Consolidado</td></tr><tr><td>CORMA (gremial)</td><td></td><td></td><td></td><td></td><td></td><td>1277</td><td>Consolidado</td></tr></tbody></table>
+<div class="aviso">Celdas vacías = esa región no tiene ese insumo. Puntos stand-by: solo 7 de 16 regiones entregaron insumo. OECV: el Excel de KPI trae 16 regiones; la geometría dibujada cubre 15 (Arica y Parinacota planificó 0 km).</div>
+
+<h2>4 · Estado del inventario (775 archivos)</h2>
+<table class=""><thead><tr><th>Estado</th><th>Archivos</th><th>MB</th></tr></thead><tbody><tr><td>YA COMPILADO</td><td>266</td><td>16.9</td></tr><tr><td>NO DESPLEGADO — verificación</td><td>182</td><td>93.1</td></tr><tr><td>USADO — componente del shapefile</td><td>88</td><td>7.4</td></tr><tr><td>SUPERSEDIDO — no se usa</td><td>85</td><td>93.2</td></tr><tr><td>RESPALDO — no desplegado</td><td>81</td><td>396.2</td></tr><tr><td>AUXILIAR — no lo lee el ETL</td><td>34</td><td>0.1</td></tr><tr><td>USADO — fuente directa</td><td>26</td><td>212.8</td></tr><tr><td>SUPERSEDIDO — duplicado</td><td>9</td><td>7.8</td></tr><tr><td>NO USADO — formato no legible</td><td>2</td><td>0.1</td></tr><tr><td>NO USADO — sin extraer</td><td>2</td><td>2.4</td></tr></tbody></table>
+<table class=""><thead><tr><th>Estado</th><th>Qué significa</th></tr></thead><tbody><tr><td>USADO — fuente directa</td><td>El ETL lo lee tal cual; su contenido está publicado en el visor.</td></tr><tr><td>USADO — componente del shapefile</td><td>.dbf/.prj/.shx/.cpg que acompañan a un .shp usado.</td></tr><tr><td>YA COMPILADO</td><td>Insumo regional OECV cuya geometría entra al visor a través del shape compilado (fuente única de oecv.geojson).</td></tr><tr><td>AUXILIAR — no lo lee el ETL</td><td>Índices y metadatos (.sbn/.sbx/.qmd/.qix/.xml/.qgz) de shapefiles usados.</td></tr><tr><td>SUPERSEDIDO — no se usa</td><td>Existe una versión mejor del mismo dato (regional vs Consolidado, SHP vs KML) y el ETL usa la otra.</td></tr><tr><td>SUPERSEDIDO — duplicado</td><td>Copia byte a byte con nombre corrupto.</td></tr><tr><td>RESPALDO — no desplegado</td><td>Actas, fichas PDF, oficios, fotos: documentación que no forma parte del visor.</td></tr><tr><td>NO DESPLEGADO — verificación</td><td>Evidencia de verificación en terreno OECV; al visor solo llega el km reportado agregado (kpis.json).</td></tr><tr><td>NO USADO — formato no legible</td><td>Formatos ArcGIS Pro (.lpkx/.lyrx) que el ETL no puede leer.</td></tr><tr><td>NO USADO — sin extraer</td><td>.rar sin descomprimir; contenido no revisado.</td></tr></tbody></table>
+
+<h2>5 · Qué falta o no se está mostrando</h2>
+<table class=""><thead><tr><th>Ámbito</th><th>Brecha</th><th>Acción sugerida</th></tr></thead><tbody><tr><td>Puntos stand-by</td><td>9 regiones sin insumo: Arica y Parinacota, Tarapacá, Antofagasta, Atacama, Coquimbo, Maule, Ñuble, Los Ríos y Magallanes. La capa solo cubre 7 regiones (327 puntos).</td><td>Pedir los puntos 25-26 a esas regiones (shapefile o KMZ)</td></tr><tr><td>OECV — geometría</td><td>El compilado no trae obras de Arica y Parinacota (consistente: 0 km planificados en el Excel). Antofagasta aparece con solo 2,2 km dibujados frente a 2,1 planificados.</td><td>Sin acción si el Excel manda; verificar Antofagasta</td></tr><tr><td>OECV — verificado</td><td>Los KMZ/shape de las carpetas 'Verificado' (Tarapacá, Coquimbo, Valparaíso, RM, Maule, Los Ríos, Aysén) NO se despliegan como capa; el avance solo aparece agregado por región (km reportados de la 'Matriz de avance').</td><td>Decidir si se quiere una capa 'OECV verificado' en el mapa; hoy es solo un número en el panel</td></tr><tr><td>OECV — fichas</td><td>Las 15 fichas PDF del COMPILADO y las fichas regionales (Aysén, Ñuble, etc.) no se muestran ni se enlazan desde el visor.</td><td>Decidir si se enlazan desde la ficha de cada obra</td></tr><tr><td>Incendios</td><td>280 de 14.985 filas descartadas (1,9%) por coordenada inválida o fuera de Chile.</td><td>Corregir coordenadas en la BBDD UAD si se quieren recuperar</td></tr><tr><td>Rutas</td><td>El Consolidado traía 201 geometrías vacías (198 en La Araucanía); se resolvió usando las fuentes regionales en 5 regiones. Los Lagos: 3 features corruptas (UTM 17S) filtradas.</td><td>Ya mitigado en el ETL; corregir el Consolidado en origen si se reemplaza</td></tr><tr><td>Actas de reunión</td><td>Las actas del Despliegue territorial (Arica, Tarapacá, Valparaíso, RM, Ñuble, Los Ríos) son solo respaldo; no se muestran en la app.</td><td>Sin acción salvo que se quieran publicar</td></tr><tr><td>Metropolitana</td><td>2 archivos .rar sin extraer en 'Despliegue territorial/7.- Metropolitana'; contenido no revisado.</td><td>Extraer y revisar si contienen insumo nuevo</td></tr><tr><td>Valparaíso — puntos</td><td>Única región cuyos puntos vienen en KMZ (sin shapefile); los .lpkx/.lyrx de ArcGIS no son legibles por el ETL.</td><td>Pedir shapefile si se quiere homologar</td></tr><tr><td>Textos institucionales</td><td>AVISO_CIVICO y CONTACTO están en null en config.js: falta el texto autorizado por la Unidad de Información y Análisis (teléfono/canal de reclamos).</td><td>Solicitar redacción oficial a la Unidad</td></tr><tr><td>KPIs</td><td>kpis.json solo cubre OECV; no hay indicadores agregados de rutas ni de puntos stand-by.</td><td>Definir si se necesitan</td></tr></tbody></table>
+
+<h2>6 · Nota metodológica</h2>
+<p style="font-size:8.5pt">Este informe se construyó cruzando los 775 archivos de INSUMO_INCENDIO contra lo que los scripts del ETL (ETL/build_*.py) declaran leer, contra el manifest.json y kpis.json publicados (corrida del 2026-08-07) y contra la configuración del visor (frontend/src/config.js). El detalle archivo por archivo —con estado, destino, URL y elemento del despliegue de cada uno— está en la hoja «Inventario completo» del Excel que acompaña a este PDF: <b>Inventario_INSUMO_INCENDIO_2026-08-17.xlsx</b>.</p>
+
+</body></html>

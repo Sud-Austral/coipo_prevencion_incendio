@@ -964,6 +964,27 @@ select {
   color: var(--text-h);
 }
 
+.ficha-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+.ficha-acciones a {
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--accent);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  text-decoration: none;
+}
+
+.ficha-acciones a:hover {
+  border-color: var(--accent);
+}
+
 .ficha-vacia {
   margin: 0;
   font-size: 13px;
@@ -1075,9 +1096,22 @@ select {
   padding: 0;
 }
 
-/* Sin panel no hay borde que arrastrar. */
-.app.sin-panel .tirador {
+/* Sin panel no hay borde que arrastrar. Cada tirador se apaga con SU panel:
+   el selector de la izquierda excluye al gemelo, o plegar el panel de control
+   esconderia tambien el tirador del de indicadores. */
+.app.sin-panel .tirador:not(.tirador-kpi) {
   display: none;
+}
+
+.app.sin-kpi .tirador-kpi {
+  display: none;
+}
+
+/* El gemelo derecho: misma pieza, anclada al borde IZQUIERDO del panel de
+   indicadores. Sigue a --pista-kpi igual que .cartel y .mira. */
+.tirador-kpi {
+  left: auto;
+  right: calc(var(--pista-kpi, var(--ancho-kpi)) - 4px);
 }
 
 /* La marca visible: una linea del color del borde que se refuerza al apuntar.
@@ -1267,6 +1301,11 @@ select {
   /* El panel derecho ya es cajon: el mapa llega al borde. */
   .cartel {
     right: 8px;
+  }
+
+  /* En cajon el ancho es fijo (--ancho-kpi): no hay borde que arrastrar. */
+  .tirador-kpi {
+    display: none;
   }
 
   .mira {

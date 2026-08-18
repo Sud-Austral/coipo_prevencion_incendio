@@ -64,8 +64,13 @@ function FechaImagen({ info }) {
           <b>{info.texto}</b>
         </p>
         <p className="nota">
-          10 m por píxel. No es la última pasada del satélite: es un compuesto de todo el año con
-          las nubes descartadas, así que la misma imagen cubre el país entero.
+          10 m por píxel. No hay un mes de captura: cada píxel se toma de la observación menos
+          nublada del año, así que dos puntos vecinos pueden ser de fechas muy distintas. Eso es lo
+          que permite que no haya nubes.
+        </p>
+        <p className="nota">
+          Si necesitas la fecha exacta de una imagen, usa el mapa base <b>Satelital</b>: ese sí la
+          informa punto por punto.
         </p>
       </>
     )

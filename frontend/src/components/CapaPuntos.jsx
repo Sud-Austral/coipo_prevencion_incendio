@@ -49,7 +49,9 @@ export default function CapaPuntos({
       m._p = f.properties
       // Se pasan las propiedades tal cual: la ficha la arma React al abrirla.
       // Construir 14.705 fichas de antemano gastaria memoria para nada.
-      if (onSeleccion) m.on('click', () => onSeleccion(m._p))
+      // La coordenada del PROPIO punto, no la del clic: para un marcador ambas
+      // difieren en unos pixeles y la del punto es la del registro oficial.
+      if (onSeleccion) m.on('click', () => onSeleccion(m._p, m.getLatLng()))
       return m
     })
     pool.current = markers

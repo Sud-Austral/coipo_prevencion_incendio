@@ -29,8 +29,18 @@ export const CORTE_PANEL = 900
 export const MIN_PANEL = 280
 export const MAX_PANEL = 560
 export const ANCHO_PANEL = 320
-/** ACOPLADO a --ancho-kpi de index.css: el panel derecho no es redimensionable. */
+/**
+ * Ancho POR OMISION y minimo del panel derecho. ACOPLADO a --ancho-kpi de
+ * index.css, que sigue siendo el ancho del cajon (<= 1200 px) y el valor de
+ * los graficos: el lienzo SVG de 288 px se dibuja 1:1 a 320 de panel. Por eso
+ * el panel se puede AMPLIAR pero no encoger por debajo de 320: mas angosto,
+ * los filetes de 1 px de los graficos se emborronarian con escala fraccionaria.
+ * Al ampliar no pasa nada de eso: max-width:100% solo encoge, nunca estira,
+ * asi que los graficos se quedan en 288 y lo que gana espacio es el texto --
+ * las notas metodologicas y los nombres de causa, que es lo que se recorta.
+ */
 export const ANCHO_KPI = 320
+export const MAX_KPI = 560
 
 /**
  * Suelo de ancho del mapa. No es estetico: a 1201 px con los dos paneles
@@ -112,7 +122,12 @@ export const BASEMAPS = {
       'Sentinel-2 cloudless 2025 por <a href="https://cloudless.eox.at">EOX</a> (datos Copernicus Sentinel modificados) &middot; CC BY-NC-SA 4.0',
     maxZoom: 18,
     maxNativeZoom: 14,
-    fecha: { tipo: 'fijo', texto: 'Mosaico anual sin nubes de 2025' },
+    // "sin fecha única" va en la ETIQUETA y no solo en la nota del panel: decir
+    // solo "mosaico de 2025" invita a preguntar de que mes es, y la respuesta
+    // es que no hay uno. Comprobado contra el WMTS de EOX: la capa no declara
+    // dimension TIME, no trae ningun campo de fecha y GetFeatureInfo responde
+    // 400, asi que no existe forma de saber la fecha de un pixel.
+    fecha: { tipo: 'fijo', texto: 'Compuesto de todo 2025 · sin fecha única' },
   },
 }
 
