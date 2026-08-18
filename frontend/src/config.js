@@ -153,6 +153,9 @@ export const COLOR_CAUSA_OTRA = '#7F7F7F'
 export const COLOR_RUTA = '#1F78B4'
 export const COLOR_REDVIAL = '#9E9E9E'
 export const COLOR_STANDBY = '#6A1B9A'
+// Cian oscuro: no choca con la simbología oficial OECV (verde/naranjo/amarillo)
+// ni con el azul de rutas, y sigue distinguible con daltonismo.
+export const COLOR_VERIFICADO = '#00838F'
 
 export const radioPorZoom = (z) => (z < 7 ? 2.5 : z < 10 ? 3.5 : 5)
 
@@ -179,6 +182,18 @@ export const CAPAS = [
       'Obras de Eliminación de Combustible Vegetal: cortafuegos y fajas que se construyen para frenar el avance del fuego',
     tipo: 'lineas',
     porDefecto: true,
+    weight: 3,
+  },
+  {
+    id: 'oecv_verificado',
+    etiqueta: 'OECV verificado (terreno)',
+    // Definición en la cabecera de ETL/build_verificado.py: es la evidencia
+    // tal como la enviaron las regiones, NO el avance oficial de kpis.json.
+    descripcion:
+      'Evidencia enviada por las regiones de obras ya verificadas en terreno; no es el avance oficial',
+    tipo: 'lineas',
+    porDefecto: false,
+    color: COLOR_VERIFICADO,
     weight: 3,
   },
   {
@@ -217,7 +232,7 @@ export const FILTROS = [
   {
     campo: 'region',
     etiqueta: 'Región · ver solo mi región',
-    capas: ['incendios', 'oecv', 'puntos_standby', 'rutas', 'redvial'],
+    capas: ['incendios', 'oecv', 'oecv_verificado', 'puntos_standby', 'rutas', 'redvial'],
   },
   { campo: 'temporada', etiqueta: 'Temporada', capas: ['incendios'] },
   { campo: 'causa_grupo', etiqueta: 'Grupo de causa', capas: ['incendios'] },

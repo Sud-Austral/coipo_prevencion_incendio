@@ -9,6 +9,7 @@ import {
   COLOR_REDVIAL,
   COLOR_RUTA,
   COLOR_STANDBY,
+  COLOR_VERIFICADO,
   ANCHO_KPI,
   CORTE_KPI,
   CORTE_PANEL,
@@ -22,7 +23,7 @@ import {
 } from './config'
 import { useGeoJSON, useKpis, useManifest } from './hooks/useDatos'
 import { useFechaImagen } from './hooks/useFechaImagen'
-import { fichaIncendio, fichaOECV, fichaRuta, fichaStandBy } from './fichas'
+import { fichaIncendio, fichaOECV, fichaRuta, fichaStandBy, fichaVerificado } from './fichas'
 import Banner from './components/Banner'
 import CartelContexto from './components/CartelContexto'
 import EtiquetaImagen from './components/EtiquetaImagen'
@@ -347,6 +348,7 @@ export default function App() {
 
   const incendios = useGeoJSON(capaMeta('incendios')?.archivo, activa('incendios'))
   const oecv = useGeoJSON(capaMeta('oecv')?.archivo, activa('oecv'))
+  const verificado = useGeoJSON(capaMeta('oecv_verificado')?.archivo, activa('oecv_verificado'))
   const standby = useGeoJSON(capaMeta('puntos_standby')?.archivo, activa('puntos_standby'))
   const rutas = useGeoJSON(
     esGeoJSON(capaMeta('rutas')) ? capaMeta('rutas')?.archivo : null,
@@ -360,6 +362,7 @@ export default function App() {
   const cargando = {
     incendios: incendios.cargando,
     oecv: oecv.cargando,
+    oecv_verificado: verificado.cargando,
     puntos_standby: standby.cargando,
     rutas: rutas.cargando,
     redvial: redvial.cargando,
@@ -375,6 +378,7 @@ export default function App() {
   const errores = {
     incendios: incendios.error,
     oecv: oecv.error,
+    oecv_verificado: verificado.error,
     puntos_standby: standby.error,
     rutas: rutas.error,
     redvial: redvial.error,
@@ -382,6 +386,7 @@ export default function App() {
   const reintentos = {
     incendios: incendios.reintentar,
     oecv: oecv.reintentar,
+    oecv_verificado: verificado.reintentar,
     puntos_standby: standby.reintentar,
     rutas: rutas.reintentar,
     redvial: redvial.reintentar,
@@ -441,6 +446,7 @@ export default function App() {
   )
 
   const pasaOECV = useMemo(() => pasaPorCampos(['region', 'tipo', 'inst']), [pasaPorCampos])
+  const pasaVerificado = useMemo(() => pasaPorCampos(['region']), [pasaPorCampos])
   const pasaVial = useMemo(() => pasaPorCampos(['region', 'carpeta']), [pasaPorCampos])
 
   /**
@@ -552,6 +558,10 @@ export default function App() {
   const selOECV = useCallback(
     (p, ll) => abrirFicha(conCoord(fichaOECV(p, colorOECV(p)), ll)),
     [abrirFicha, colorOECV],
+  )
+  const selVerificado = useCallback(
+    (p, ll) => abrirFicha(conCoord(fichaVerificado(p, COLOR_VERIFICADO), ll)),
+    [abrirFicha],
   )
   const selStandby = useCallback(
     (p, ll) => abrirFicha(conCoord(fichaStandBy(p, COLOR_STANDBY), ll)),
@@ -930,8 +940,18 @@ export default function App() {
           manifest={manifest}
           filtros={filtros}
           capasActivas={capasActivas}
-          datos={{ incendios: incendios.data, oecv: oecv.data, puntos_standby: standby.data }}
-          predicados={{ incendios: pasaIncendio, oecv: pasaOECV, puntos_standby: pasaStandby }}
+          datos={{
+            incendios: incendios.data,
+            oecv: oecv.data,
+            oecv_verificado: verificado.data,
+            puntos_standby: standby.data,
+          }}
+          predicados={{
+            incendios: pasaIncendio,
+            oecv: pasaOECV,
+            oecv_verificado: pasaVerificado,
+            puntos_standby: pasaStandby,
+          }}
           map={map}
           base={base}
           propsIndicadores={propsIndicadores}
@@ -1099,6 +1119,19 @@ export default function App() {
         weight={3}
         onSeleccion={selOECV}
         onCuenta={setCuenta('oecv')}
+      />
+
+      {/* Encima de la OECV planificada a propósito: encender las dos capas
+          deja ver qué parte del plan tiene evidencia de verificación. */}
+      <CapaLineas
+        map={map}
+        data={verificado.data}
+        visible={activa('oecv_verificado')}
+        pasa={pasaVerificado}
+        color={COLOR_VERIFICADO}
+        weight={3}
+        onSeleccion={selVerificado}
+        onCuenta={setCuenta('oecv_verificado')}
       />
 
       <CapaPuntos

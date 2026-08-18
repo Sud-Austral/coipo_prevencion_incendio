@@ -53,6 +53,21 @@ export function fichaOECV(p, color) {
   )
 }
 
+/** Evidencia de verificación en terreno; `origen` dice qué archivo la envió. */
+export function fichaVerificado(p, color) {
+  return ficha(
+    'OECV verificado en terreno',
+    p.nombre,
+    [
+      fila('Institución', p.inst),
+      fila('Región', p.region),
+      fila('Longitud', p.longitud_km != null ? `${fmt1.format(p.longitud_km)} km` : null),
+      fila('Archivo de origen', p.origen),
+    ],
+    color,
+  )
+}
+
 export function fichaRuta(p, capa = 'Tramo vial', color) {
   return ficha(
     capa,
