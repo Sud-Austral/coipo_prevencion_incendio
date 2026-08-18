@@ -41,7 +41,10 @@ export default function CapaLineas({
         bubblingMouseEvents: false,
       })
       l._p = f.properties
-      if (onSeleccion) l.on('click', () => onSeleccion(l._p))
+      // Para una linea se entrega el punto TOCADO, no un centroide: una faja
+      // OECV puede medir kilometros y lo que el usuario quiere ver en Google
+      // es el tramo que tiene delante, no el punto medio de la obra.
+      if (onSeleccion) l.on('click', (e) => onSeleccion(l._p, e.latlng))
       return l
     })
     pool.current = lineas

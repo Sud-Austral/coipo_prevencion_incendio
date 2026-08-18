@@ -78,7 +78,7 @@ export default function CapaTiles({
       // Solo se avisa si hay algo: asi, cuando dos capas de teselas se solapan,
       // la que se monta despues (rutas, sobre red vial) gana sin que ninguna
       // borre la seleccion de la otra al no encontrar nada.
-      if (f) onSeleccion(f.feature.props, etiqueta)
+      if (f) onSeleccion(f.feature.props, e.latlng, etiqueta)
     }
     map.on('click', alClic)
 

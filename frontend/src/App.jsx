@@ -13,6 +13,7 @@ import {
   CORTE_KPI,
   CORTE_PANEL,
   LIMITES,
+  MAX_KPI,
   MAX_PANEL,
   MIN_MAPA,
   MIN_PANEL,
@@ -136,6 +137,7 @@ export default function App() {
     () => regimenDe(window.innerWidth) < 2 && disposicion.kpi,
   )
   const [anchoPanel, setAnchoPanel] = useState(disposicion.ancho)
+  const [anchoKpi, setAnchoKpi] = useState(disposicion.anchoKpi)
   const [redimensionando, setRedimensionando] = useState(false)
 
   // Cartel de contexto sobre el mapa: visible de entrada y descartable. Que se
@@ -536,21 +538,33 @@ export default function App() {
     setFicha(f)
   }, [])
 
+  // Adjunta a la ficha la coordenada seleccionada, redondeada a 5 decimales
+  // (~1 m): mas precision en una URL publica es falsa exactitud. Para un punto
+  // es el punto mismo; para una linea, el lugar tocado. Con ella la ficha
+  // ofrece abrir el sitio en Google Maps y Google Earth como enlaces planos --
+  // sin API y sin clave; ver el comentario en ModalFicha.jsx.
+  const conCoord = (f, ll) => (ll ? { ...f, coord: [+ll.lat.toFixed(5), +ll.lng.toFixed(5)] } : f)
+
   const selIncendio = useCallback(
-    (p) => abrirFicha(fichaIncendio(p, decode, colorIncendio(p))),
+    (p, ll) => abrirFicha(conCoord(fichaIncendio(p, decode, colorIncendio(p)), ll)),
     [abrirFicha, decode, colorIncendio],
   )
-  const selOECV = useCallback((p) => abrirFicha(fichaOECV(p, colorOECV(p))), [abrirFicha, colorOECV])
+  const selOECV = useCallback(
+    (p, ll) => abrirFicha(conCoord(fichaOECV(p, colorOECV(p)), ll)),
+    [abrirFicha, colorOECV],
+  )
   const selStandby = useCallback(
-    (p) => abrirFicha(fichaStandBy(p, COLOR_STANDBY)),
+    (p, ll) => abrirFicha(conCoord(fichaStandBy(p, COLOR_STANDBY), ll)),
     [abrirFicha],
   )
   const selRuta = useCallback(
-    (p, etiqueta = 'Ruta de despliegue') => abrirFicha(fichaRuta(p, etiqueta, COLOR_RUTA)),
+    (p, ll, etiqueta = 'Ruta de despliegue') =>
+      abrirFicha(conCoord(fichaRuta(p, etiqueta, COLOR_RUTA), ll)),
     [abrirFicha],
   )
   const selVial = useCallback(
-    (p, etiqueta = 'Red vial MOP') => abrirFicha(fichaRuta(p, etiqueta, COLOR_REDVIAL)),
+    (p, ll, etiqueta = 'Red vial MOP') =>
+      abrirFicha(conCoord(fichaRuta(p, etiqueta, COLOR_REDVIAL), ll)),
     [abrirFicha],
   )
 
@@ -749,9 +763,18 @@ export default function App() {
   // El techo es DINAMICO y no MAX_PANEL a secas: con los dos paneles anclados a
   // 1201 px, 560 de panel dejarian 321 px de mapa. Acotarlo aqui es lo que hace
   // que el tirador no pueda violar el suelo que la asercion B4 comprueba.
+  // Cada techo descuenta el ancho REAL del otro panel, no su constante: los dos
+  // tiradores comparten el mismo suelo de mapa y el acuerdo entre ambos es este
+  // par de formulas. Si los dos estan al tope y la ventana encoge, los dos
+  // efectos de abajo van cediendo en pasadas alternas hasta que la suma vuelve
+  // a caber; converge porque cada pasada solo ENCOGE.
   const maxPanel = Math.max(
     MIN_PANEL,
-    Math.min(MAX_PANEL, anchoVentana - MIN_MAPA - (kpiAnclado && kpiVisible ? ANCHO_KPI : 0)),
+    Math.min(MAX_PANEL, anchoVentana - MIN_MAPA - (kpiAnclado && kpiVisible ? anchoKpi : 0)),
+  )
+  const maxKpi = Math.max(
+    ANCHO_KPI,
+    Math.min(MAX_KPI, anchoVentana - MIN_MAPA - (panelAnclado && panelVisible ? anchoPanel : 0)),
   )
 
   const cambiarAncho = useCallback(
@@ -764,8 +787,22 @@ export default function App() {
     [maxPanel],
   )
 
+  const cambiarAnchoKpi = useCallback(
+    (px) => {
+      const v = Math.round(Math.min(maxKpi, Math.max(ANCHO_KPI, px)))
+      setAnchoKpi(v)
+      disposicion.anchoKpi = v
+      guardarDisposicion(disposicion)
+    },
+    [maxKpi],
+  )
+
   // Al encoger la ventana el techo baja, y un ancho guardado mayor dejaria el
   // mapa por debajo de su suelo sin que nadie haya tocado el tirador.
+  useEffect(() => {
+    setAnchoKpi((a) => Math.min(a, maxKpi))
+  }, [maxKpi])
+
   useEffect(() => {
     setAnchoPanel((a) => Math.min(a, maxPanel))
   }, [maxPanel])
@@ -849,7 +886,12 @@ export default function App() {
       // especificidad: escribir aqui '0px' y dejar que el CSS lo repita seria
       // duplicar la regla; escribir el ancho y esperar que la clase lo pise, un
       // error silencioso.
-      style={panelVisible ? { '--pista-panel': `${anchoPanel}px` } : undefined}
+      style={{
+        // La variable en linea SOLO cuando cada panel se ve: plegar es cosa de
+        // las clases .sin-panel/.sin-kpi, y un estilo en linea les ganaria.
+        ...(panelVisible && { '--pista-panel': `${anchoPanel}px` }),
+        ...(kpiVisible && { '--pista-kpi': `${anchoKpi}px` }),
+      }}
     >
       <Banner />
 
@@ -969,6 +1011,20 @@ export default function App() {
       <div className="funda-kpi">
         <PanelIndicadores {...propsIndicadores} abierto={kpiVisible} onCerrar={cerrarKpi} />
       </div>
+
+      {/* El gemelo derecho del tirador. Mismo componente con la geometria
+          espejada; solo existe anclado (>1200 px): en cajon el ancho es fijo. */}
+      <Tirador
+        lado="der"
+        objetivo="panel-indicadores"
+        etiqueta="Ancho del panel de indicadores"
+        ancho={anchoKpi}
+        min={ANCHO_KPI}
+        max={maxKpi}
+        reposo={ANCHO_KPI}
+        onAncho={cambiarAnchoKpi}
+        onArrastre={setRedimensionando}
+      />
 
       <button
         ref={btnKpi}

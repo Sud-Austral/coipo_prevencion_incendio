@@ -45,6 +45,32 @@ export default function ModalFicha({ ficha, onCerrar }) {
             </button>
           </header>
 
+          {/* Enlaces de ida, no integracion: son deep links publicos que se
+              abren en la sesion del PROPIO usuario. No consumen ninguna API,
+              no requieren clave y no le cuentan nada de este visor a Google
+              mas alla de la coordenada que el usuario decide abrir. Formatos
+              verificados contra ambos servicios (HTTP 200):
+              Maps con la URL universal documentada (maps/search/?api=1) y
+              Earth con la URL de camara de earth.google.com/web. */}
+          {ficha.coord && (
+            <p className="ficha-acciones">
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${ficha.coord[0]}%2C${ficha.coord[1]}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Ver en Google Maps
+              </a>
+              <a
+                href={`https://earth.google.com/web/@${ficha.coord[0]},${ficha.coord[1]},0a,1200d,35y,0h,0t,0r`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Ver en Google Earth
+              </a>
+            </p>
+          )}
+
           {ficha.filas.length ? (
             <table>
               <tbody>
