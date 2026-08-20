@@ -38,6 +38,7 @@ import { createServer } from 'node:http'
 import { tmpdir } from 'node:os'
 import { dirname, extname, join, normalize, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import net from 'node:net'
 
 // ---------------------------------------------------------------------------
 // Constantes medidas pixel a pixel sobre INSUMO_GRAFICO/3_banner_INCENDIOS.jpg.
@@ -172,7 +173,7 @@ function chromePath() {
 
 const espera = (ms) => new Promise((ok) => setTimeout(ok, ms))
 
-async function lanzarChrome() {
+async function lanzarChrome2() {
   const perfil = await mkdtemp(join(tmpdir(), 'verify-banner-'))
   const proc = spawn(
     chromePath(),
@@ -212,6 +213,94 @@ async function lanzarChrome() {
   throw new Error('Chrome no publicó su puerto de depuración')
 }
 
+/*
+*/
+async function puertoLibre() {
+  return await new Promise((resolve, reject) => {
+    const server = net.createServer()
+
+    server.listen(0, '127.0.0.1', () => {
+      const address = server.address()
+
+      if (!address || typeof address === 'string') {
+        server.close()
+        reject(new Error('No se pudo obtener un puerto libre'))
+        return
+      }
+
+      const { port } = address
+
+      server.close(() => resolve(port))
+    })
+
+    server.on('error', reject)
+  })
+}
+
+async function lanzarChrome() {
+  const perfil = await mkdtemp(join(tmpdir(), 'verify-banner-'))
+  const puerto = await puertoLibre()
+
+  const proc = spawn(
+    chromePath(),
+    [
+      '--headless=new',
+      '--no-sandbox',
+      '--disable-gpu',
+      '--disable-dev-shm-usage',
+      '--hide-scrollbars',
+      '--force-device-scale-factor=1',
+      '--no-first-run',
+      '--no-default-browser-check',
+      '--disable-extensions',
+      '--disable-background-networking',
+      `--remote-debugging-port=${puerto}`,
+      `--user-data-dir=${perfil}`,
+      'about:blank',
+    ],
+    {
+      stdio: 'ignore',
+    },
+  )
+
+  // Esperamos a que Chrome publique su endpoint CDP.
+  for (let i = 0; i < 200; i++) {
+    try {
+      if (proc.exitCode !== null) {
+        throw new Error(
+          `Chrome terminó prematuramente con código ${proc.exitCode}`,
+        )
+      }
+
+      const r = await fetch(
+        `http://127.0.0.1:${puerto}/json/version`,
+      )
+
+      if (r.ok) {
+        const info = await r.json()
+
+        if (info.webSocketDebuggerUrl) {
+          return {
+            proc,
+            perfil,
+            ws: info.webSocketDebuggerUrl,
+          }
+        }
+      }
+    } catch {
+      // Chrome todavía está iniciando.
+    }
+
+    await espera(50)
+  }
+
+  throw new Error(
+    `Chrome no inició CDP en el puerto ${puerto}`,
+  )
+}
+
+/*
+*/
 async function conectar(url) {
   const ws = new WebSocket(url)
   await new Promise((ok, mal) => {
