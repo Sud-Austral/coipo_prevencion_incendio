@@ -24,6 +24,17 @@ export default function EtiquetaImagen({ map, info }) {
     const c = L.control({ position: 'topleft' })
     c.onAdd = () => {
       const d = L.DomUtil.create('div', 'leaflet-control fecha-imagen')
+      // NACE OCULTO. Quien decide la visibilidad es el efecto de mas abajo, que
+      // depende de [info]; pero en el primer render `map` todavia es null, asi
+      // que este onAdd corre DESPUES de que ese efecto ya haya pasado de largo
+      // con el contenedor sin crear. Y con el mapa base por omision --Claro, que
+      // no tiene fecha que mostrar-- `info` se queda en null para siempre, o sea
+      // que el efecto no vuelve a correr y nadie llega a poner el display:none
+      // que ya estaba escrito ahi abajo.
+      // Resultado medido a 390 px: una pastilla blanca VACIA de 18x10 px pegada
+      // bajo la barra de zoom, encima del mapa, en toda sesion que no encienda
+      // el satelital. Se veia en la captura.
+      d.style.display = 'none'
       // Sin esto, arrastrar encima de la etiqueta arrastra el mapa de debajo y
       // un doble clic hace zoom.
       L.DomEvent.disableClickPropagation(d)

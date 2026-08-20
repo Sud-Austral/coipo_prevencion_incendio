@@ -40,7 +40,7 @@ import { dirname, extname, join, normalize, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 // ---------------------------------------------------------------------------
-// Constantes medidas pixel a pixel sobre INSUMO_GRAFICO/banner3.jpg.
+// Constantes medidas pixel a pixel sobre INSUMO_GRAFICO/3_banner_INCENDIOS.jpg.
 // Si el asset cambia hay que volver a medirlas Y actualizar los tokens de
 // src/index.css: estos numeros y aquellos describen el mismo archivo.
 // ---------------------------------------------------------------------------
@@ -48,10 +48,29 @@ const ASSET = { ancho: 3032, alto: 177 }
 const RAZON = 17.1299
 const ALTO_MINIMO = 68
 const CRUCE = ALTO_MINIMO * RAZON // 1164,83 px de viewport
-const ZONA_SEGURA = [864, 2743] // columnas uniformemente #064928 en las 177 filas
+const ZONA_SEGURA = [880, 2743] // columnas uniformemente #064928 en las 177 filas
+//                      880 y no 864: el asset de INCENDIOS lleva a la derecha del
+//                      logotipo UIA las tres lineas de «Gerencia de proteccion contra
+//                      incendios forestales», que llegan hasta la columna 804 y empujan
+//                      el arranque del campo uniforme.
+//                      MEDIDO con la MISMA tolerancia que usa A4 (<=24 de distancia
+//                      Manhattan a CAMPO, las 177 filas): el campo corre de la 874 a la
+//                      2744, contra 858..2744 del asset anterior. Se conserva el margen
+//                      del par viejo --seis columnas por la izquierda, una por la
+//                      derecha-- en vez de pegarse al borde medido.
+//                      NO es #084728: ese valor sale de mirar UNA fila 0 de UNA columna
+//                      del borde, donde el ringing del JPEG lava el color. La media de
+//                      las 177 filas por las 1800 columnas del campo da exactamente
+//                      6,73,40 en los DOS assets.
 const CAMPO = [6, 73, 40] // #064928
 const FILETE_FILA = 2 // NUNCA la 0: el ringing del JPEG la deja lavada
-const FILETE_EXT = [64, 287] // extension del filete en el asset, transiciones incluidas
+const FILETE_EXT = [56, 249] // extension del filete en el asset, transiciones incluidas
+//                              Re-MEDIDO sobre 3_banner_INCENDIOS.jpg: el filete
+//                              corre de la columna 58 a la 245 (era 66..283 en
+//                              banner3.jpg). Se deja la misma holgura que tenia el
+//                              par anterior: -2 a la izquierda, +4 a la derecha.
+//                              No es cosmetico: con el valor viejo, A3 fallaba a
+//                              1920 por medio pixel.
 const COL_SONDA = 900 // columna del asset para barrer el alto de la banda:
 //                       dentro de la zona uniforme, y debajo siempre hay mapa
 //                       (nunca el panel, nunca la marca)
@@ -76,7 +95,7 @@ const TILES = [
   '*services.arcgisonline.com*',
   '*tiles.maps.eox.at*',
 ]
-const JPEG = '*banner-conaf-uia*'
+const JPEG = '*banner-conaf-incendios*'
 
 const args = process.argv.slice(2)
 const SALIDA = args.includes('--salida') ? args[args.indexOf('--salida') + 1] : join(RAIZ, '.verificacion')
@@ -300,8 +319,25 @@ window.__analizar = async (b64, p) => {
   const disp = Math.max(...[0, 1, 2].map((i) => Math.max(...canal(i)) - Math.min(...canal(i))))
   const medio = [0, 1, 2].map((i) => Math.round(canal(i).reduce((a, b) => a + b, 0) / col.length))
 
+  // Alto de la BANDA por su color de campo, no por «la primera fila distinta de
+  // la 3». A2 bloquea la imagen, y entonces el <img> pinta su texto alternativo
+  // en blanco sobre el verde: basta UN pixel de una letra en la columna de la
+  // sonda para que el barrido de arriba corte en y=5 y A2 declare que la banda
+  // se desplomo cuando en realidad mide 80 px. Paso de verdad al alargar el alt
+  // con «Gerencia de proteccion contra incendios forestales», que es texto que
+  // cruza la sonda; el alt corto de antes se quedaba corto y no la cruzaba.
+  // Se tolera cualquier hueco de menos de 8 filas seguidas --las letras-- y se
+  // corta al octavo, que es lo que hay debajo de la banda (mapa o panel, nunca
+  // verde). Si la banda se desploma de verdad, aqui no hay filas de campo y la
+  // asercion sigue poniendose roja: comprobado quitando width/height del <img>.
+  let ultimoCampo = -1, seguidasFuera = 0
+  for (let y = 0; y < img.height; y++) {
+    if (dif(px(p.sonda, y), p.campo) <= 24) { ultimoCampo = y; seguidasFuera = 0 }
+    else if (++seguidasFuera >= 8) break
+  }
+
   return {
-    ancho: img.width, altoPng: img.height, alto,
+    ancho: img.width, altoPng: img.height, alto, altoCampo: ultimoCampo + 1,
     azul: mayor('azul'), rojo: mayor('rojo'),
     bordeDisp: disp, bordeMedio: medio,
     centro: px(Math.round(img.width / 2), Math.min(20, Math.max(4, alto - 4))),
@@ -414,7 +450,7 @@ async function main() {
   const { s: srv, puerto } = await servidor()
   const guardar = (nombre, b64) => writeFile(join(SALIDA, nombre), Buffer.from(b64, 'base64'))
   const analizar = (b64, sonda) =>
-    evaluar(cdp, lab, `window.__analizar(${JSON.stringify(b64)}, ${JSON.stringify({ sonda })})`)
+    evaluar(cdp, lab, `window.__analizar(${JSON.stringify(b64)}, ${JSON.stringify({ sonda, campo: CAMPO })})`)
 
   try {
     console.log(`▶ verificando el banner · dist servido en :${puerto}${BASE}`)
@@ -534,10 +570,11 @@ async function main() {
       if (ancho === 1366) await guardar('captura-banner-sin-imagen.png', b64)
       const m = await analizar(b64, sondaX(ancho))
       const esp = altoEsperado(ancho)
+      // m.altoCampo y no m.alto: ver el comentario de altoCampo en el laboratorio.
       comprobar(
-        Math.abs(m.alto - esp) <= 1,
+        Math.abs(m.altoCampo - esp) <= 1,
         `A2 alto reservado sin la imagen (${ancho})`,
-        `${m.alto} px · esperado ${esp.toFixed(2)}`,
+        `${m.altoCampo} px · esperado ${esp.toFixed(2)}`,
       )
       comprobar(
         dif(m.centro, CAMPO) <= 24,

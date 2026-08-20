@@ -37,8 +37,13 @@
   --ancho-kpi: 320px;
 
   /* ---- banner institucional CONAF/UIA ----------------------------------
-     Medidos pixel a pixel sobre INSUMO_GRAFICO/banner3.jpg, no estimados. Si
-     el asset cambia hay que volver a medirlos: INSUMO_GRAFICO/README.md.
+     Medidos pixel a pixel sobre INSUMO_GRAFICO/3_banner_INCENDIOS.jpg, no
+     estimados. Si el asset cambia hay que volver a medirlos:
+     INSUMO_GRAFICO/implementacion_banner.md.
+     El asset de INCENDIOS mide lo MISMO que el anterior (3032x177) y solo
+     difiere en las columnas 57..872, asi que --razon-banner no cambia; lo que
+     si cambia es el arranque del campo verde uniforme (864 -> 875), que vive
+     en ZONA_SEGURA de scripts/verify-banner.mjs.
      No van al bloque prefers-color-scheme: el banner es un raster, el mismo
      archivo en los dos temas.
 
