@@ -685,25 +685,40 @@ export default function App() {
   // ---------- mostrar y ocultar ----------
   // Abrir y cerrar un CAJON no es una preferencia de disposicion: solo se
   // recuerda lo que se elige con el panel anclado.
+  //
+  // LOS DOS CAJONES SE EXCLUYEN, y solo en el regimen 3, que es donde los dos lo
+  // son. Anclado no aplica: ahi cada barra tiene su pista en la rejilla y abrir
+  // una no le quita sitio a la otra.
+  // Sin esto, en el regimen 3 se podian abrir los dos a la vez y quedaban
+  // apilados uno encima del otro. Medido a 390 px: el izquierdo ocupa x=0..300 y
+  // el derecho x=70..390, o sea que el derecho tapa el 77 % del izquierdo --su
+  // «×» incluida-- y no queda UN pixel de mapa. Se veia en la captura, no es una
+  // deduccion. A 320 px es peor todavia, porque solo el cajon derecho ya mide el
+  // viewport entero.
+  // Se llama a setKpiVisible/setPanelVisible y NO a cerrarKpi/cerrarPanel: esos
+  // apuntan el foco al boton que reabre el cajon, y aqui el foco tiene que ir al
+  // cajon que se acaba de abrir, no al que se cierra sin que nadie lo pida.
   const mostrarPanel = useCallback(
     (v) => {
       setPanelVisible(v)
+      if (v && !panelAnclado && !kpiAnclado) setKpiVisible(false)
       if (panelAnclado) {
         disposicion.panel = v
         guardarDisposicion(disposicion)
       }
     },
-    [panelAnclado],
+    [panelAnclado, kpiAnclado],
   )
   const mostrarKpi = useCallback(
     (v) => {
       setKpiVisible(v)
+      if (v && !panelAnclado && !kpiAnclado) setPanelVisible(false)
       if (kpiAnclado) {
         disposicion.kpi = v
         guardarDisposicion(disposicion)
       }
     },
-    [kpiAnclado],
+    [panelAnclado, kpiAnclado],
   )
 
   // Ocultar un panel devuelve el foco al boton que lo recupera. Sin esto el foco

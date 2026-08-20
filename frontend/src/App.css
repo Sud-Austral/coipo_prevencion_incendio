@@ -87,8 +87,12 @@
   /* Por encima de 1164,83 px de viewport manda el 100 % (proporcion natural);
      por debajo la imagen se ancla a 68 px de alto y desborda por la derecha,
      y el contenedor la recorta. El borde derecho cae en la zona uniforme
-     #064928 del asset (columnas 864-2743) hasta 332 px de viewport: columna
-     1015 a 390 px, 1999 a 768 px, 2343 a 900 px. */
+     #064928 del asset (columnas 880-2743) hasta 336 px de viewport: columna
+     1015 a 390 px, 1999 a 768 px, 2343 a 900 px.
+     880 y no 864: el asset de INCENDIOS lleva a la derecha del logotipo UIA
+     tres lineas de texto que llegan hasta la columna 804 y empujan el arranque
+     del campo uniforme. El verde NO cambia -- medida la media de las 177 filas
+     del campo, los dos assets dan #064928. */
   width: max(100%, calc(var(--alto-minimo-banner) * var(--razon-banner)));
   /* height:auto + los atributos width/height del <img> => el navegador reserva
      el alto ANTES de decodificar. Ver el comentario de Banner.jsx. */
@@ -1038,7 +1042,12 @@ select {
 
 /* El zoom de Leaflet vive arriba a la izquierda, igual que ☰. La regla estaba
    dentro de la media query de 900 px porque el boton solo existia ahi; ahora
-   cuelga del mismo estado que lo muestra. */
+   cuelga del mismo estado que lo muestra.
+   52 PARECE INSUFICIENTE Y NO LO ES: en tactil ☰ mide 44 y arranca en left:10,
+   o sea que termina en 54, dos pixeles MAS ALLA de este margen. No se solapan
+   porque leaflet.css le pone al control sus propios 10 px de margen sobre este.
+   Medido a 390 px con puntero grueso: ☰ ocupa 10..54 y el zoom 62..110, ocho
+   pixeles de aire. No lo "corrijas" a 54 sin volver a medir. */
 .app.sin-panel .leaflet-top.leaflet-left {
   margin-left: 52px;
 }
@@ -1264,7 +1273,19 @@ select {
     /* Cerrada, la funda ocupa 320 px sobre el mapa: sin esto se comeria los
        clics de una franja del mapa que se ve perfectamente. */
     pointer-events: none;
-    z-index: 1000;
+    /* 1100 y no 1000: leaflet.css declara .leaflet-top y .leaflet-bottom con
+       z-index 1000, y viven dentro de .mapa, que es position:relative con
+       z-index:auto y por tanto NO abre contexto de apilado. O sea que los
+       controles de Leaflet y los dos cajones compiten en el MISMO contexto con
+       el MISMO z-index, y ahi decide el orden del DOM. Esta funda iba despues
+       de .mapa y ganaba por accidente; ver el comentario gemelo de .panel, que
+       va antes y perdia. Se sube el par a 1100 para que deje de depender del
+       orden de los nodos.
+       NO se resuelve dando z-index a .mapa: eso encerraria TODO Leaflet en un
+       contexto propio y .cartel (998) pasaria a taparle la atribucion de
+       OpenStreetMap/CARTO, que es obligacion de licencia. Ver el comentario de
+       .cartel. */
+    z-index: 1100;
   }
 
   /* visibility:hidden y no solo transform: un translateX saca el cajon de la
@@ -1330,7 +1351,13 @@ select {
 
   .panel {
     position: fixed;
-    z-index: 1000;
+    /* 1100 y no 1000: con 1000 este cajon EMPATABA con .leaflet-top (leaflet.css)
+       y perdia por orden de DOM, porque .panel va antes que .mapa. Resultado
+       medido a 390 px: la barra de zoom +/- de Leaflet se pintaba ENCIMA de la
+       cabecera del cajon y tapaba el titulo «Prevencion de Incendios Forestales»
+       y la fecha. El cajon derecho no lo sufria solo porque su funda va DESPUES
+       de .mapa. Ver el comentario largo de .funda-kpi. */
+    z-index: 1100;
     /* Arranca bajo el banner en vez de taparlo. */
     inset: var(--alto-minimo-banner) auto 0 0;
     width: 300px;
@@ -1432,18 +1459,40 @@ a:focus-visible {
   .panel-kpi {
     transition: none;
   }
+
+  /* EL ESTADO ABIERTO LLEVA SU PROPIA `transition` Y HAY QUE APAGARLA APARTE.
+     `.panel.abierto` pesa (0,2,0) y le gana a `.panel` (0,1,0) por
+     especificidad, asi que la regla de arriba solo apagaba el CIERRE: quien
+     pide menos movimiento seguia viendo los 300 px de deslizamiento CADA VEZ
+     QUE ABRIA un cajon, que es justo el movimiento que se nota. La misma
+     trampa de especificidad que tenia el bloque (pointer: coarse); ver alli. */
+  .panel.abierto,
+  .panel-kpi.abierto {
+    transition: none;
+  }
 }
 
 /* ---------- objetivos tactiles ---------- */
 
 /* En pantalla tactil los blancos suben a 44x44, el minimo recomendado, desde
    los 36x36 de los dos botones flotantes y los 28x28 de las tres «×».
-   VA DESPUES de las media queries de ancho a proposito: `.abrir` y `.abrir-kpi`
-   fijan su tamaño ahi dentro con la misma especificidad (0,1,0), asi que solo
-   gana por orden de fuente. Si alguien mueve este bloque mas arriba, deja de
-   aplicarse sin previo aviso.
-   Los selectores repiten la especificidad del original --.panel .cerrar y
-   .panel-kpi .cerrar son (0,2,0)-- por la misma razon.
+
+   CADA SELECTOR DE AQUI REPITE LA ESPECIFICIDAD DEL QUE FIJA EL TAMAÑO ARRIBA,
+   y el bloque va al FINAL de la hoja para ganar por orden de fuente. Una media
+   query no aporta especificidad: si un selector de aqui pesa menos que el de
+   arriba, esta regla no hace NADA y no hay forma de notarlo leyendo el codigo.
+     .panel .cerrar / .panel-kpi .cerrar   (0,2,0) contra (0,2,0) de la linea 1052
+     .ficha-cerrar                         (0,1,0) contra (0,1,0) de la linea 930
+     .app.sin-panel .abrir / .app.sin-kpi .abrir-kpi
+                                           (0,3,0) contra (0,3,0) de la linea 1005
+
+   Ese ultimo par estuvo ROTO: se escribio como `.abrir, .abrir-kpi` (0,1,0)
+   cuando el tamaño lo fija `.app.sin-panel .abrir` (0,3,0), que gana por
+   especificidad pese a ir antes. Medido con Chrome headless y touch emulation
+   --matchMedia('(pointer: coarse)').matches === true-- el ancho USADO seguia
+   siendo 36 px: los dos unicos controles del visor en movil se quedaron por
+   debajo del minimo tactil sin que nadie se enterara. Si vuelves a tocar esto,
+   comprueba la especificidad, no la intencion.
 
    CI NO CUBRE ESTE BLOQUE: verify-panel.mjs emula el viewport con
    Emulation.setDeviceMetricsOverride y mobile:false, y nunca llama a
@@ -1451,8 +1500,8 @@ a:focus-visible {
    los botones a 36x36. En un telefono de verdad, B5 deja de estar verificado:
    hay que mirar las capturas de 390 px. */
 @media (pointer: coarse) {
-  .abrir,
-  .abrir-kpi {
+  .app.sin-panel .abrir,
+  .app.sin-kpi .abrir-kpi {
     width: 44px;
     height: 44px;
   }
@@ -1464,10 +1513,66 @@ a:focus-visible {
     height: 44px;
   }
 
+  /* SUBIR EL BOTON OBLIGA A SUBIR EL HUECO QUE LE RESERVA EL TITULO. Las dos
+     reglas de abajo son la contrapartida de las dos de arriba, y sin ellas el
+     titulo se mete por debajo de un area de toque que ha crecido 16 px sin que
+     el hueco crezca con ella.
+     Medido a 390 px con el cajon izquierdo abierto y puntero grueso: el <h1>
+     ocupa x=16..283 con padding-right:30, o sea que su texto puede llegar a
+     x=253, y la «×» de 44 px arranca en x=245. Ocho pixeles de titulo debajo
+     del boton. Con la «×» de 28 px el mismo calculo daba nueve pixeles de aire,
+     que es la holgura que estas dos reglas devuelven.
+       .panel header h1 / .panel-kpi header h2  (0,1,2) contra (0,1,2) de la 1070
+       .ficha header                            (0,1,1) contra (0,1,1) de la 908 */
+  .panel header h1,
+  .panel-kpi header h2 {
+    padding-right: 46px;
+  }
+
+  /* La «×» de la ficha va en right:-4px, asi que sobresale 4 px del <header>:
+     44 - 4 = 40 de boton, mas 4 de aire. */
+  .ficha header {
+    padding-right: 44px;
+  }
+
   /* Los <select> de filtro miden ~29 px de alto: son el control que mas se usa
      del panel y el mas dificil de acertar. */
   select {
     min-height: 44px;
+  }
+
+  /* LOS BOTONES DE VERDAD, que hasta ahora este bloque no tocaba: subia las dos
+     «×», los dos flotantes y los <select>, y dejaba fuera todo lo que se pulsa
+     para HACER algo. Medido en el render real a 390 px con puntero grueso, no
+     estimado:
+       CSV        21,0 x 36,2      GeoJSON     21,0 x 60,3
+       .limpiar   31,4 x 267       .compartir  35,4 x 267
+       botones del cartel  32,8 de alto
+     El peor es CSV, con 21 px de alto: menos de la mitad del minimo. Se sube el
+     ALTO con min-height y no con height para no romper los que ya envuelven a
+     dos lineas, y el ANCHO solo donde el boton no ocupa ya toda la columna.
+     NO entra .fila-capa input: su casilla mide 13 px pero el objetivo real es
+     la fila entera, que es un <label> con cursor:pointer -- ver la regla de
+     .fila-capa:has(input:focus-visible). Tampoco entra el enlace de atribucion
+     de Leaflet, que es texto de licencia y no un control. */
+  .fila-descarga button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .limpiar,
+  .compartir {
+    min-height: 44px;
+  }
+
+  .cartel-botones button {
+    min-height: 44px;
+  }
+
+  .ficha-acciones a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
   }
 
   /* .leaflet-touch .leaflet-bar a y NO .leaflet-bar a: leaflet.css ya declara

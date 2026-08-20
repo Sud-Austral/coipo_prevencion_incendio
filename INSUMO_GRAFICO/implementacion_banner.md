@@ -9,6 +9,24 @@ Reemplaza lo que va entre `⟨⟩` y borra el anexo si tu asset no es `banner3.j
 
 ---
 
+## 0. Herramientas: usa la que resuelva el problema
+
+Este documento describe **qué medir y qué mirar**, no con qué. Los ejemplos van con Pillow y con
+Chrome por línea de comandos porque son el mínimo común denominador —sirven en una máquina donde no
+puedes instalar nada—, pero **no son una restricción**: si puedes añadir dependencias, añádelas.
+
+- **Capturar y medir en página**: Playwright o Puppeteer. Te dan
+  `getBoundingClientRect` sobre el elemento real, esperas deterministas (`waitForSelector`) en vez
+  de un `--virtual-time-budget` elegido a ojo, viewports sin relanzar el navegador, bloqueo de
+  peticiones para el caso «sin imagen», y `storageState` para las pantallas tras autenticación.
+- **Leer píxeles y derivar iconos**: sharp, Pillow, ImageMagick.
+
+Una versión anterior de este documento indujo a un agente a imponerse una «regla de cero
+dependencias» que nadie había pedido, y que solo empeoró el trabajo. La obligación es **medir y
+mirar**; evitar librerías no es una virtud.
+
+---
+
 ## Objetivo
 
 Integrar `⟨ruta/al/banner.jpg⟩` como cabecera institucional de la aplicación, sin
@@ -93,6 +111,20 @@ Esa diferencia es la que rompe casi todas las implementaciones ingenuas.
 altoRenderizado = anchoContenedor / razónDelAsset
 recorteVertical = altoRenderizado − altoContenedor     // si es > 0, cover recorta arriba y abajo
 ```
+
+⚠️ **`anchoContenedor` no es `anchoViewport`.** Es el error más fácil de cometer, porque todas las
+fórmulas de aquí en adelante se leen como si lo fuera. Si metes el banner dentro de una columna
+—junto a una barra lateral, o dentro de un contenedor con `max-width`— el contenedor mide
+`viewport − loQueLeQuiten`, y **todos los umbrales se desplazan exactamente esa cantidad**: el ancho
+de cruce del §3 y el ancho mínimo antes de que aparezca costura.
+
+Caso real: con una barra lateral de 280 px, un asset de 17,13:1 y un piso de 68 px, el cruce pasa de
+1164,83 a **1444,83 px de viewport** —por encima de 1366 y de 1440, los dos anchos de escritorio más
+comunes—, así que el banner queda permanentemente recortado justo donde más se mira; y el ancho
+mínimo sin costura pasa de 330 px (inalcanzable) a **610 px**, que sí se alcanza.
+
+**Regla: el banner va a ancho completo de viewport salvo razón fuerte.** Si no puede, recalcula los
+dos umbrales antes de escribir una línea de CSS.
 
 Si el brief pide simultáneamente «alto fijo de 64-80 px» y «no recortes las franjas
 superior e inferior», **esos dos requisitos son incompatibles** con un asset de 10:1.
@@ -189,6 +221,10 @@ ingenioso en CSS.**
   usa la carpeta pública/estática si el bundler no procesa imágenes, y ahí compón la URL
   con la variable de base del proyecto, **nunca con una barra inicial literal**: se rompe
   en cuanto la app se despliegue bajo un subpath.
+- **Si el material ya trae derivados generados y aceptados** (favicon, apple-touch-icon), cópialos:
+  no escribas un generador para reproducir archivos que ya existen a partir de un asset congelado.
+  Lo que sí hay que conservar es la **caja de recorte medida**, escrita, para poder rehacerlos si el
+  asset cambia. Y si cambia, entonces sí: escribe el script con la librería que prefieras (§0).
 
 ---
 
@@ -197,6 +233,12 @@ ingenioso en CSS.**
 Reutilizable, sin lógica de negocio, con la marca como único contenido obligatorio:
 
 - Etiqueta semántica de cabecera con `role="banner"` (o el landmark equivalente).
+  ⚠️ **Busca primero si ya hay uno.** Casi todas las apps tienen ya un `<header>` de primer nivel
+  (la barra de título, la de usuario) que **ya es** el landmark `banner`, sin haberlo declarado:
+  `<header>` lo es implícitamente salvo que esté dentro de `article`/`aside`/`main`/`nav`/`section`.
+  Añadir un segundo es un defecto de accesibilidad (`landmark-no-duplicate-banner` en axe). Decide
+  cuál de los dos es el banner —normalmente el institucional— y **degrada el otro a `<div>`**.
+  Comprueba que queda uno solo contando `<header>` en el DOM renderizado, no en el código fuente.
 - La imagen va como `<img>` con `alt` **descriptivo de la organización**, no
   `alt="banner"` ni `alt=""`. Ej.: `alt="⟨Organización⟩ — ⟨Unidad⟩"`.
 - `width` y `height` con las dimensiones **originales**: el navegador reserva el alto
@@ -210,12 +252,19 @@ Reutilizable, sin lógica de negocio, con la marca como único contenido obligat
   slots, y colócalos **solo sobre la zona sin marca** (la derecha), con contraste AA
   comprobado contra el color de fondo real de esa zona.
 
-**Define tokens de color** (`--color-institucional`, `--color-acento`) con los valores
-medidos. Decide explícitamente **si reemplazan o conviven** con la paleta actual de la
-app: si ya hay un color primario en uso en botones, gráficos y favicon, propagarlo es un
-rediseño que toca muchos archivos. Cualquiera de las dos opciones es válida; lo que no
-vale es dejarlo ambiguo. Escribe la decisión en un comentario del CSS, para que nadie la
-«arregle» después.
+**Define tokens de color** con los valores medidos. Decide explícitamente **si reemplazan o
+conviven** con la paleta actual de la app: si ya hay un color primario en uso en botones, gráficos y
+favicon, propagarlo es un rediseño que toca muchos archivos. Cualquiera de las dos opciones es
+válida; lo que no vale es dejarlo ambiguo. Escribe la decisión en un comentario del CSS, para que
+nadie la «arregle» después.
+
+**Los nombres los manda el repo destino, no este documento.** Adopta el idioma, el casing y los
+prefijos de la hoja de tokens que ya exista; un prompt portable no tiene por qué imponer
+nomenclatura. Lo que sí conviene conservar es un criterio: si la decisión fue «convive», **nombra
+el token por su función y no por su color** — `--banner-bg` en vez de `--verde-institucional`. El
+nombre por función impide que alguien propague el color por toda la app sin darse cuenta de que
+está revirtiendo una decisión; y si algún día se hace el rebranding, el renombrado es la señal
+visible de que la decisión cambió.
 
 ---
 
@@ -255,6 +304,23 @@ Tres reglas:
    serlo. Dos elementos fijos se comen permanentemente el alto de ambos; en una
    herramienta que se lee a diario, eso es espacio robado en cada scroll. Deja que el
    banner se vaya y que quede la barra.
+
+   ⚠️ **Salvo que la página no scrollee.** Muchos paneles son un *app shell*: un contenedor de
+   `height:100vh; overflow:hidden` donde el único scroll es un panel interior. Ahí «deja que el
+   banner se vaya» **no existe como opción**: nada se va, y el banner cuesta su alto en cada
+   pantalla, para siempre. Cuantifícalo antes de decidir dónde ponerlo —banner + barra de título
+   pueden ser fácilmente el 20 % del alto de viewport— y di el número en voz alta.
+
+   La receta para apilarlo sin romper el scroll interior es envolver el shell:
+
+   ```css
+   .app-frame { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+   .app-shell { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+   ```
+
+   **`min-height: 0` no es opcional**: sin él, el hijo flex no baja de su `min-content`, el panel
+   interior deja de scrollear y empuja el layout fuera de la pantalla. Es el fallo clásico, y se
+   manifiesta lejos del banner, así que cuesta relacionarlo con este cambio.
 2. **No apiles bandas del mismo color.** Si el banner y la navbar comparten familia
    cromática, cualquier tercera franja de ese color (una cabecera de título, por ejemplo)
    se lee como error. Despinta esa tercera franja y déjala como barra de estado neutra,
@@ -265,6 +331,22 @@ Tres reglas:
    login/error deben seguir siendo **texto**. Meter ahí una imagen agrava justo lo que
    ese esqueleto existe para evitar: la página en blanco inicial.
 
+   ⚠️ **Matiza esa excepción: prohíbe el banner, no la identidad.** Es incondicional para el
+   esqueleto del HTML, pero para login/error el argumento es de primer pintado, y conviene medirlo
+   en vez de suponerlo: si importas el asset desde el código, la petición **no** ocurre hasta que se
+   renderiza el `<img>`, así que hoy esas pantallas no pagan nada por el banner que no muestran
+   (compruébalo contando peticiones, no leyendo el bundle). Y hay un caso donde la regla se vuelve
+   contraproducente: **si la app es un proveedor de identidad**, el login es la página a la que
+   redirigen las demás aplicaciones, o sea el momento exacto en que alguien necesita reconocer la
+   institución antes de escribir su contraseña. Ahí, dejar solo la marca de la *aplicación* es el
+   error. La salida que respeta ambas cosas es **el isotipo, no el banner**: un icono de ~64 px
+   derivado del mismo asset, que cuesta unos pocos KB y no obliga a reestructurar la pantalla.
+
+   Antes de intentarlo, mira cómo está montada: si el login vive en un overlay `position: fixed;
+   inset: 0`, un banner renderizado ahí quedaría **debajo del overlay, invisible**, y meterlo no es
+   añadir un componente sino rehacer esa pantalla. El isotipo, en cambio, entra donde ya estaba la
+   marca.
+
 Solo introduce una variable de alto de cabecera (`--altura-cabecera`) si algo la usa de
 verdad (compensar un elemento fijo, `scroll-margin-top` para anclas). Si no, es deuda.
 
@@ -272,8 +354,9 @@ verdad (compensar un elemento fijo, `scroll-margin-top` para anclas). Si no, es 
 
 ## 8. Verificación — obligatoria, y es mirar, no razonar
 
-Que el código compile no verifica nada de esto. **Genera capturas y míralas.** Con
-Chrome headless basta:
+Que el código compile no verifica nada de esto. **Genera capturas y míralas.** Con Playwright o
+Puppeteer (§0) tienes esperas deterministas y medición en página; si no puedes instalar nada, Chrome
+headless por línea de comandos basta:
 
 ```bash
 chrome --headless=new --disable-gpu --hide-scrollbars \
@@ -282,7 +365,7 @@ chrome --headless=new --disable-gpu --hide-scrollbars \
 ```
 
 (`--virtual-time-budget` es imprescindible si la app carga por JS: sin él capturas una
-página vacía.)
+página vacía. Con Playwright no hace falta: espera al selector.)
 
 Matriz mínima **a mirar**:
 
@@ -291,6 +374,7 @@ Matriz mínima **a mirar**:
 | 1920 | El alto no se descontrola; la zona derecha no queda vacía de forma rara |
 | 1366 | Franjas/filetes **intactos**; sin línea clara de 1 px en los bordes |
 | ⟨ancho de cruce⟩ | Opción B: los pseudo-elementos siguen alineados. Opción A con piso: el alto deja de encoger justo ahí y el borde derecho no muestra costura |
+| ⟨peor caso de recorte⟩ | **Calcúlalo, no lo supongas.** Entre el cruce y el ancho donde el corte vuelve a caer en zona uniforme hay una banda donde el recorte entra más adentro del remate decorativo. Ese ancho, no los redondos, es el que puede verse mal |
 | 768 | Transición al modo móvil sin salto ni deformación |
 | 390 | **El texto más pequeño de la marca se lee** (amplía el recorte para juzgarlo) |
 
@@ -311,11 +395,33 @@ Y además:
 - **Verifica los elementos de identidad por color, no mirando**: barre la fila del filete
   buscando sus valores RGB en cada captura. «Se ve bien» es exactamente el juicio que
   falla con una franja de 2 px en una miniatura.
-- **Sin la imagen** (bloquéala en DevTools): debe verse el color de fondo, no blanco.
+  ⚠️ **Compara con tolerancia, nunca por igualdad.** El navegador reescala el JPEG y los valores se
+  mueven unas unidades; el mismo píxel leído a dos escalas da dos números distintos. Usa distancia
+  Manhattan con umbral (60 funciona bien). Que esto no es teórico lo demuestra este mismo material:
+  el README y el anexo de aquí abajo registran el mismo filete como `#0e69b0`/`#eb3d49` y
+  `#0c6bad`/`#f03c47` —distancia 7 y 8—, y una comparación exacta habría dado por perdido un filete
+  intacto.
+- **Sin la imagen** (bloquea la petición): debe verse el color de fondo, no blanco. Si el `<img>`
+  lleva `width`/`height`, la caja se conserva por el `aspect-ratio` y verás la banda entera.
+- **Si el banner vive tras autenticación**, un contexto de navegador limpio te redirige al login y
+  **capturarás la pantalla de login creyendo que capturaste el banner**. Siembra la sesión antes
+  (`storageState`, `addInitScript`, o un perfil persistente). Es un fallo silencioso: la captura
+  sale bien, solo que de otra página.
 
 Comprueba también que el asset **llega al artefacto desplegado** (que el bundler lo
 emitió, que no lo excluye un `.dockerignore` o equivalente) y que no rompiste las vistas
 que compartían la hoja de estilos que tocaste.
+
+⚠️ **Cómo falla realmente un asset que falta en una SPA.** Con la configuración de nginx casi
+universal para aplicaciones de una sola página —`try_files $uri $uri/ /index.html`— una ruta
+inexistente **no devuelve 404**: devuelve **200 con el `index.html` dentro**. Mirar el código de
+estado no prueba nada, y en DevTools tampoco verás un error rojo; solo un icono que no aparece.
+Verifica el **`Content-Type`** y los bytes mágicos del cuerpo (`\x89PNG`, `\xFF\xD8\xFF`):
+
+```bash
+curl -sI ⟨URL⟩/favicon.png            # espera: Content-Type: image/png
+curl -s  ⟨URL⟩/favicon.png | head -c 4 | xxd   # espera: 89 50 4e 47
+```
 
 ---
 
@@ -329,6 +435,10 @@ que compartían la hoja de estilos que tocaste.
 - No dejes el banner y la navegación fijos a la vez.
 - No metas la imagen en las pantallas de pre-pintado, login o error.
 - No des por buena la maqueta sin haber mirado una captura a 390 px.
+- No supongas que `anchoContenedor == anchoViewport` (§2).
+- No añadas un segundo landmark `banner` sin comprobar si ya hay uno (§5).
+- No te inventes restricciones que nadie pidió —«sin dependencias», «sin tocar ese archivo»— y
+  luego las defiendas como si vinieran del encargo (§0).
 
 ---
 
@@ -355,11 +465,8 @@ todos mal. Los valores del asset viejo van al final, para poder leer el historia
   filete por color, mídelo en `y=2`, nunca en `y=0`** — ahí darías por perdido un
   filete que está intacto.
 - **Filete BICOLOR, solo en el borde SUPERIOR** (el membrete lo llevaba arriba y abajo):
-  tramo estable del azul en `x = 88`–`167` y del rojo en `x = 176`–`279`, adyacentes, en
-  `y = 1` a `14` (~8 % del alto); el filete entero, transiciones incluidas, va de `x = 64`
-  a `287` (2,11 %–9,47 %). Los valores RGB dominantes son `#1068b2` y `#eb3b45`: cada banda
-  varía un par de unidades por píxel, así que si los verificas por color hazlo con
-  tolerancia, no por igualdad exacta.
+  azul `#0c6bad` de `x = 67` a `169` (2,21 %–5,61 %), rojo `#f03c47` de `x = 170` a `283`
+  (5,61 %–9,37 %), adyacentes, en `y = 1` a `14` (~8 % del alto).
   **No es la bandera de Chile**: no hay banda blanca entre los dos colores. Es un recurso
   decorativo, no un emblema nacional, así que **no hay obligación normativa de
   conservarlo intacto** — aunque sí conviene, por acabado.
@@ -369,18 +476,14 @@ todos mal. Los valores del asset viejo van al final, para poder leer el historia
   blindó el asset contra cualquier recorte durante toda la discusión. Es el ejemplo
   exacto de por qué el §1 dice medir en vez de heredar.
 - **El campo NO es un solo verde**, aunque a simple vista lo parezca: `#15301d` bajo la
-  marca y `#064928` a la derecha, con una **transición diagonal** entre `x = 744` y `x = 863`.
-  Barriendo columna por columna, la primera uniformemente `#064928` **en las 177 filas** es la
-  **864**, y lo sigue siendo hasta la **2743**.
-  ⚠️ Una versión anterior de este anexo daba **858** y **2744**. Estaban mal: las columnas
-  850–863 todavía varían entre `#054b29` y `#0a4728` según la fila, y la 2744 ya trae el
-  micro-ruido del remate. Seis píxeles no cambian ninguna decisión de maqueta, pero un anexo
-  que se anuncia como medido píxel a píxel no puede llevar números aproximados.
-- **Remate decorativo** de formas orgánicas en verde claro desde `x = 2744` hasta el borde
+  marca y `#064928` a la derecha, con una **transición diagonal**. Barriendo columna por
+  columna, la primera uniformemente `#064928` **en las 177 filas** es la **858**, y lo
+  sigue siendo hasta la **2744**.
+- **Remate decorativo** de formas orgánicas en verde claro desde `x = 2745` hasta el borde
   (`#5e8f19`, `#368627`, `#388429`…). **Esto es la diferencia práctica con el membrete**:
   el borde derecho ya **no** es verde plano, así que un recorte con relleno de color
   sólido no «no pierde nada» — se come el remate. Zona segura para cortar sin costura:
-  **`864 ≤ x ≤ 2743`**.
+  **`858 ≤ x ≤ 2744`**.
 - **Marca** (isotipo CONAF + logotipo UIA con tres líneas de texto) hasta `x = 540`: el
   **17,8 % izquierdo**, contra el 30 % del membrete. Todo lo demás es sacrificable.
 - **Colores**: campo izquierdo `#15301d`, campo principal `#064928`, acento del remate
@@ -405,7 +508,7 @@ todos mal. Los valores del asset viejo van al final, para poder leer el historia
   El filete azul+rojo está **íntegro en los cinco anchos y en los dos temas** (barrido de
   la fila `y=2` buscando sus RGB); el remate derecho se ve por encima del cruce y lo
   recorta el piso por debajo, que es el precio aceptado.
-- **Límite inferior**: por debajo de **332 px** de viewport (864 × 68 × 17,1299 / 3032) el
+- **Límite inferior**: por debajo de **330 px** de viewport (858 × 68 × 17,1299 / 3032) el
   borde derecho deja de caer en la zona uniforme y aterriza en la transición diagonal
   `#15301d` → `#064928`, o sea que se vería una costura. 390 px es el ancho mínimo
   realista, así que queda fuera del rango que importa — pero conviene tenerlo escrito.
