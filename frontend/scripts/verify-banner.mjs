@@ -236,8 +236,71 @@ async function puertoLibre() {
     server.on('error', reject)
   })
 }
-
 async function lanzarChrome() {
+  const perfil = await mkdtemp(join(tmpdir(), 'verify-banner-'))
+  const puerto = await puertoLibre()
+
+  const proc = spawn(
+    chromePath(),
+    [
+      '--headless=new',
+      '--no-sandbox',
+      '--disable-gpu',
+      '--disable-dev-shm-usage',
+      '--hide-scrollbars',
+      '--force-device-scale-factor=1',
+      '--no-first-run',
+      '--no-default-browser-check',
+      '--disable-extensions',
+      '--disable-background-networking',
+      `--remote-debugging-port=${puerto}`,
+      `--remote-debugging-address=127.0.0.1`, // <-- 1. FUERZA LA INTERFAZ IPv4
+      `--user-data-dir=${perfil}`,
+      'about:blank',
+    ],
+    {
+      stdio: 'ignore',
+    },
+  )
+
+  // Esperamos a que Chrome publique su endpoint CDP.
+  // <-- 2. AUMENTA A 400 PARA DARLE MÁS TIEMPO AL RUNNER DE GITHUB ACTIONS
+  for (let i = 0; i < 400; i++) { 
+    try {
+      if (proc.exitCode !== null) {
+        throw new Error(
+          `Chrome terminó prematuramente con código ${proc.exitCode}`,
+        )
+      }
+
+      const r = await fetch(
+        `http://127.0.0.1:${puerto}/json/version`,
+      )
+
+      if (r.ok) {
+        const info = await r.json()
+
+        if (info.webSocketDebuggerUrl) {
+          return {
+            proc,
+            perfil,
+            ws: info.webSocketDebuggerUrl,
+          }
+        }
+      }
+    } catch {
+      // Chrome todavía está iniciando.
+    }
+
+    await espera(50)
+  }
+
+  throw new Error(
+    `Chrome no inició CDP en el puerto ${puerto}`,
+  )
+}
+
+async function lanzarChrome3() {
   const perfil = await mkdtemp(join(tmpdir(), 'verify-banner-'))
   const puerto = await puertoLibre()
 
