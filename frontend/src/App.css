@@ -83,6 +83,7 @@
 }
 
 .banner img {
+  color: transparent;
   display: block;
   /* Por encima de 1164,83 px de viewport manda el 100 % (proporcion natural);
      por debajo la imagen se ancla a 68 px de alto y desborda por la derecha,
