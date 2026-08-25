@@ -42,7 +42,7 @@ push a `INSUMO_INCENDIO/`, `ETL/` o `frontend/`, y los publica en Pages.
 
 | Capa | Origen | Features | Salida |
 |---|---|---:|---|
-| Incendios investigados | `BBDD INVESTIGACIÓN UAD…xlsx`, hoja `Hoja 1` | 14.705 de 14.985 (98,1 %) | `incendios.geojson` 3,9 MB |
+| Incendios investigados | `BBDD INVESTIGACIÓN UAD…xlsx`, hoja `Hoja 1` (las 23 columnas) | 14.705 de 14.985 (98,1 %) | `incendios.geojson` 7,6 MB (0,9 MB comprimido) |
 | OECV (cortafuegos) | `OECV 2025 - 2026/COMPILADO/SHAPE/Compilado_OECV_2025.shp` | 1.863 · 4.790 km | `oecv.geojson` 908 KB |
 | Puntos stand-by | 6 shapefiles + 1 KMZ, uno por región | 327 | `puntos_standby.geojson` 54 KB |
 | Rutas de despliegue | 15 shapefiles de `Despliegue territorial` | 5.278 | `rutas.pmtiles` |

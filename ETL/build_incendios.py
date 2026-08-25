@@ -1,7 +1,9 @@
 """Capa de incendios investigados por las UAD -> incendios.geojson
 
 Fuente: 'BBDD INVESTIGACION UAD CONSOLIDADA COMPLETA.xlsx', hoja 'Hoja 1'
-(14.985 filas x 23 columnas).
+(14.985 filas x 23 columnas). SE EMITEN LAS 23; ver el diccionario `c` en
+build(). Durante un tiempo se emitieron solo trece y las otras diez no existian
+para el visor, que no es lo mismo que no existir en la fuente.
 
 El problema central de esta fuente: las columnas X/Y son UTM WGS84 en metros
 pero NO declaran el huso, y el huso cambia por fila.
@@ -40,7 +42,28 @@ CATEGORICOS = [
     "causa_grupo",
     "causa_general",
     "causa_especifica",
+    # Anadidos al emitir las 23 columnas de la hoja: todos tienen pocos valores
+    # distintos (21, 92, 203, 84 y 13) sobre 14.985 filas, asi que codificarlos
+    # cuesta un entero por fila en vez de la cadena entera. Los que NO entran
+    # aqui son los de alta cardinalidad --informe (9.945 unicos), las tres
+    # fechas y la hora--, donde la tabla pesaria mas que el ahorro.
+    "causa_general_codigo",
+    "causa_codigo",
+    "jefe_brigada",
+    "investigado_por",
+    "mes_investigacion",
 ]
+
+# Meses escritos a mano durante nueve temporadas: 30 formas distintas para 12
+# meses. Se unifican por minusculas sin tildes; lo que no reconoce se deja tal
+# cual (hay rangos legitimos como 'Abril-Mayo') en vez de tirarlo.
+MESES = {
+    "enero": "Enero", "febrero": "Febrero", "marzo": "Marzo", "abril": "Abril",
+    "abrill": "Abril",  # erratura real en la fuente
+    "mayo": "Mayo", "junio": "Junio", "julio": "Julio", "agosto": "Agosto",
+    "septiembre": "Septiembre", "setiembre": "Septiembre", "octubre": "Octubre",
+    "noviembre": "Noviembre", "diciembre": "Diciembre",
+}
 
 # Centinelas de "no hay dato" que aparecen en columnas numericas.
 NULOS = {
@@ -85,6 +108,75 @@ def parse_coord(v) -> float | None:
         return None
 
 
+def fmt_codigo(v) -> str | None:
+    """Codigo jerarquico que Excel entrego como float.
+
+    '%g' y no round(): 4.1 y 4.11 son codigos DISTINTOS --seccion 4 apartado 1
+    contra seccion 4 apartado 11-- y redondear a un decimal los fundiria.
+    """
+    if v is None or (isinstance(v, float) and pd.isna(v)):
+        return None
+    if isinstance(v, (int, float)):
+        return f"{v:g}"
+    return norm_txt(v)
+
+
+def norm_fecha(v) -> str | None:
+    """Devuelve ISO 'YYYY-MM-DD' o None.
+
+    La columna llega MEZCLADA: openpyxl resuelve unas celdas como datetime y
+    otras se quedan en texto 'dd/mm/yyyy', mas los centinelas de NULOS. Ademas
+    hay dos celdas con seriales fuera del rango de fechas de Excel (V3650 y
+    V4446, 6.692.303 y 6.692.449 = anno ~20.300) que openpyxl marca como error;
+    caen por el except y salen como None, que es lo correcto: una fecha
+    imposible no es un dato.
+    """
+    import datetime as _dt
+
+    if v is None or (isinstance(v, float) and pd.isna(v)):
+        return None
+    if isinstance(v, _dt.datetime):
+        return v.date().isoformat()
+    if isinstance(v, _dt.date):
+        return v.isoformat()
+    s = norm_txt(v)
+    if s is None or s.lower() in NULOS or s.lower().startswith("sin "):
+        return None
+    for fmt in ("%d/%m/%Y", "%d-%m-%Y", "%Y-%m-%d", "%d/%m/%y"):
+        try:
+            return _dt.datetime.strptime(s, fmt).date().isoformat()
+        except ValueError:
+            continue
+    return None
+
+
+def norm_hora(v) -> str | None:
+    """Devuelve 'HH:MM' o None. Mezcla time / datetime / texto, igual que arriba."""
+    import datetime as _dt
+
+    if v is None or (isinstance(v, float) and pd.isna(v)):
+        return None
+    if isinstance(v, _dt.datetime):
+        return v.strftime("%H:%M")
+    if isinstance(v, _dt.time):
+        return v.strftime("%H:%M")
+    s = norm_txt(v)
+    if s is None or s.lower() in NULOS or s.lower().startswith("sin "):
+        return None
+    m = re.match(r"^(\d{1,2})[:.h](\d{2})", s)
+    return f"{int(m.group(1)):02d}:{m.group(2)}" if m else None
+
+
+def norm_mes(v) -> str | None:
+    """Unifica el mes de investigacion. Ver MESES."""
+    s = norm_txt(v)
+    if s is None or s.lower() in NULOS or s.lower().startswith("sin ") or s.lower() == "no aplica":
+        return None
+    k = unicodedata.normalize("NFKD", s.lower())
+    k = "".join(ch for ch in k if not unicodedata.combining(ch))
+    return MESES.get(k, s)
+
+
 def _col(df: pd.DataFrame, *candidatos: str) -> str | None:
     """Busca una columna por nombre normalizado (las hay con '\\n' embebido)."""
     def k(s):
@@ -119,6 +211,15 @@ def build(cfg: Cfg) -> dict:
     except Exception as e:  # el catalogo es una ayuda, no un requisito
         log(cfg, "incendios", f"aviso: no se pudo leer la hoja Provincias ({e})")
 
+    # LAS 23 COLUMNAS DE 'Hoja 1', TODAS. Antes se leian trece y las otras diez
+    # no llegaban al visor: el usuario no las echaba de menos porque no habia
+    # forma de saber que existian. Si manana la fuente pierde una columna, esto
+    # revienta con su nombre en vez de publicar un campo vacio en silencio --que
+    # es exactamente como se perdieron las diez anteriores.
+    #
+    # 'Hoja 1' y no 'Hoja 8': la 8 tiene una columna mas ('mes finalizacion')
+    # pero solo 3.205 filas contra 14.985, o sea un subconjunto. La consolidada
+    # completa es esta.
     c = {
         "id": _col(df, "ID"),
         "region": _col(df, "Región"),
@@ -127,12 +228,29 @@ def build(cfg: Cfg) -> dict:
         "temporada": _col(df, "Temporada"),
         "n_incendio": _col(df, "N° Incendio"),
         "nombre": _col(df, "Nombre"),
+        "causa_codigo": _col(df, "Causa investigada 2023"),
         "causa_especifica": _col(df, "Nombre causa específica 2023"),
         "causa_general": _col(df, "Causa general 2023"),
+        "causa_general_codigo": _col(df, "Código causa general 2023"),
         "causa_grupo": _col(df, "Grupo causas 2023"),
         "x": _col(df, "X"),
         "y": _col(df, "Y"),
         "superficie_ha": _col(df, "Superficie"),
+        # El encabezado dice 'jefe brigada' pero la columna NO trae personas:
+        # trae codigos de causa en dos formatos ('01.01.02' y '4.1.2'), 203
+        # distintos, y NO coincide con 'Causa investigada 2023' (coinciden en el
+        # 0,2 % de las filas). Comprobado sobre el archivo, no deducido del
+        # nombre. Se emite con el nombre de la columna de origen para que quien
+        # lo lea pueda cotejarlo contra el Excel; ponerle 'Jefe de brigada' en
+        # la ficha seria propagar el error del encabezado.
+        "jefe_brigada": _col(df, "jefe brigada****", "jefe brigada"),
+        "mes_investigacion": _col(df, "Mes investigación"),
+        "investigado_por": _col(df, "Investigado por"),
+        "inicio_r20": _col(df, "Inicio R20"),
+        "hora_r20": _col(df, "Hora R20"),
+        "inv_inicio": _col(df, "Fecha de inicio investigación"),
+        "inv_fin": _col(df, "Fecha finalización investigación"),
+        "informe": _col(df, "Informe"),
     }
     faltan = [k for k, v in c.items() if v is None]
     if faltan:
@@ -188,6 +306,31 @@ def build(cfg: Cfg) -> dict:
             "superficie_ha": round(sup, 2) if sup is not None else None,
             "n_incendio": norm_txt(row[c["n_incendio"]]),
             "nombre": norm_txt(row[c["nombre"]]),
+            # --- las diez que faltaban -------------------------------------
+            "causa_codigo": norm_txt(row[c["causa_codigo"]]),
+            "causa_general_codigo": fmt_codigo(row[c["causa_general_codigo"]]),
+            "jefe_brigada": norm_txt(row[c["jefe_brigada"]]),
+            "mes_investigacion": norm_mes(row[c["mes_investigacion"]]),
+            "investigado_por": norm_txt(row[c["investigado_por"]]),
+            "inicio_r20": norm_fecha(row[c["inicio_r20"]]),
+            "hora_r20": norm_hora(row[c["hora_r20"]]),
+            "inv_inicio": norm_fecha(row[c["inv_inicio"]]),
+            "inv_fin": norm_fecha(row[c["inv_fin"]]),
+            # 'Sin informe' se CONSERVA: dice que la investigacion no produjo
+            # informe, que es un dato. Lo que se descarta son los centinelas de
+            # ausencia ('Sin info', 'Sin informacion'), que solo dicen que nadie
+            # lleno la celda.
+            "informe": None if es_nulo(row[c["informe"]]) else norm_txt(row[c["informe"]]),
+            # Las coordenadas de origen, tal como vienen en el Excel. La
+            # geometria ya lleva el punto en WGS84, pero quien trabaja en
+            # terreno usa UTM y son dos columnas de la fuente como cualquier
+            # otra. `epsg` dice en que huso hay que leerlas: cambia por fila.
+            # Entero cuando lo es --el 99,87 % de las filas-- para no escribir
+            # 14.705 veces un '.0' que no significa nada. La precision
+            # submetrica de las 19 filas que si traen decimal se conserva.
+            "utm_x": int(x) if float(x).is_integer() else round(x, 1),
+            "utm_y": int(y) if float(y).is_integer() else round(y, 1),
+            "utm_epsg": epsg,
         }
 
         feats.append(

@@ -1275,15 +1275,37 @@ async function main() {
     comprobar(
       !!csv &&
         csv.bom &&
-        csv.cabecera.startsWith('id;n_incendio;nombre;temporada;region') &&
         csv.filas === E.nacionalN + 1 &&
         /^incendios_nacional_\d{4}-\d{2}-\d{2}\.csv$/.test(csv.nombre),
-      'B22 el CSV tiene BOM, cabecera y una fila por incendio',
+      'B22 el CSV tiene BOM y una fila por incendio',
       csv ? `${csv.nombre} · ${csv.filas - 1} filas · BOM ${csv.bom}` : 'sin descarga',
     )
+    // La cabecera se compara ENTERA y no con startsWith. El motivo es concreto:
+    // durante un tiempo el ETL emitio 13 de las 23 columnas de la hoja y nadie
+    // se entero, porque desde el visor no habia forma de saber que existian las
+    // otras diez. Un startsWith sobre los cinco primeros nombres habria seguido
+    // en verde con la mitad de la fuente perdida. Si manana falta una columna,
+    // esta asercion la nombra.
+    // El orden es el del Excel; lon/lat van al final porque son derivadas.
+    const CSV_COLS = [
+      'id', 'region', 'provincia', 'comuna', 'temporada', 'n_incendio', 'nombre',
+      'causa_codigo', 'causa_especifica', 'causa_general', 'causa_general_codigo',
+      'causa_grupo', 'utm_x', 'utm_y', 'utm_epsg', 'superficie_ha', 'jefe_brigada',
+      'mes_investigacion', 'investigado_por', 'inicio_r20', 'hora_r20', 'inv_inicio',
+      'inv_fin', 'informe', 'lon', 'lat',
+    ]
+    const faltanCols = csv ? CSV_COLS.filter((c) => !csv.cabecera.split(';').includes(c)) : CSV_COLS
     comprobar(
-      !!csv && csv.muestra.split(';').length === 13 && !/\d\.\d/.test(csv.muestra.split(';')[10] ?? ''),
-      'B22 decimales con coma y 13 columnas',
+      !!csv && csv.cabecera === CSV_COLS.join(';'),
+      `B22 el CSV lleva las ${CSV_COLS.length} columnas de la fuente, en orden`,
+      faltanCols.length ? `faltan: ${faltanCols.join(', ')}` : csv?.cabecera.slice(0, 100) ?? '—',
+    )
+    comprobar(
+      // indice 15 = superficie_ha, la unica columna con decimales del CSV.
+      !!csv &&
+        csv.muestra.split(';').length === CSV_COLS.length &&
+        !/\d\.\d/.test(csv.muestra.split(';')[15] ?? ''),
+      'B22 decimales con coma',
       csv ? csv.muestra.slice(0, 90) : '—',
     )
 
