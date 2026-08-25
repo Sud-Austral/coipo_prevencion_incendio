@@ -567,6 +567,26 @@ select {
   min-width: 0;
 }
 
+/* RECORTAR CON title= SOLO ES HONESTO DONDE HAY HOVER. En un telefono no lo
+   hay --matchMedia('(hover: hover)').matches es false, comprobado-- asi que el
+   texto completo que guarda el title no es que cueste alcanzarlo: es
+   INALCANZABLE. Y lo que se pierde no es adorno: en el cajon de indicadores se
+   lee «Quemas de basura, desechos…» y «Generado por el uso de equipo…», o sea
+   la conducta que la barra esta midiendo.
+   Se condiciona a (hover: none) y NO a un ancho: la pregunta no es cuanto mide
+   la pantalla sino si existe el gesto que revela el title. Un telefono grande
+   sigue sin tenerlo y un escritorio estrecho sigue teniendolo.
+   Se conserva overflow:hidden y se anade overflow-wrap:anywhere en vez de
+   soltar el recorte: la etiqueta vive en una pista 1fr con min-width:0, asi
+   que una palabra mas larga que la pista se saldria del panel y tumbaria B3 y
+   B6. Partiendola, el texto entero cabe y no desborda nada. */
+@media (hover: none) {
+  .fila-etq {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+
 /* 12 px como el resto del texto: son cifras, no anotaciones. El coste es que la
    etiqueta de la izquierda pierde unos pixeles, pero vive en una pista 1fr con
    min-width:0 y ya se recorta con elipsis y title, asi que no puede ensanchar
@@ -678,9 +698,30 @@ select {
 
 /* Recarga en curso: se atenua el render anterior en vez de vaciarlo. Un
    esqueleto que parpadea cada vez que se enciende una capa es peor que un
-   numero que envejece medio segundo. */
-.panel-kpi.refrescando section {
-  opacity: 0.55;
+   numero que envejece medio segundo.
+   
+   LA ATENUACION VA SOBRE EL DATO, NO SOBRE LA SECCION ENTERA, y el motivo es el
+   mismo que index.css explica en el comentario de --text-2: `opacity` mezcla
+   con el fondo y hunde el contraste. Esta regla decia `section { opacity: .55 }`
+   y arrastraba consigo TODO el texto del cajon. Calculado sobre los tokens
+   reales:
+     --text-2 (#6f6879) al 55 % sobre --panel  ->  2,20:1 en claro, 2,54:1 en
+     oscuro. Peor que el 2,48:1 que aquel comentario condena por escrito, y
+     justo encima de las notas metodologicas que impiden leer mal la cifra.
+   Y no se arregla subiendo el valor: haria falta 0,94 para volver a 4,5:1, o
+   sea no atenuar nada. La opacidad sobre texto no puede ser a la vez visible y
+   legible.
+   Asi que se atenua lo que SI puede: las barras, los SVG y los numeros, que van
+   en --text-h. A 0,6 --text-h da 5,34:1 en claro y 6,28:1 en oscuro, AA con
+   holgura; a 0,55 daba 4,47:1, dos centesimas por debajo del umbral. La prosa
+   se queda a plena opacidad, que es donde tiene que estar.
+   El aviso de que hay una descarga en curso no depende de esto: lo da la
+   pastilla .descargando, que lo dice con palabras. */
+.panel-kpi.refrescando .cifra b,
+.panel-kpi.refrescando .fila-num,
+.panel-kpi.refrescando .barra span,
+.panel-kpi.refrescando svg {
+  opacity: 0.6;
 }
 
 .apagada {
@@ -791,9 +832,17 @@ select {
   border: 1px solid var(--border);
   border-radius: 999px;
   box-shadow: var(--shadow);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  text-align: center;
+  /* SIN nowrap/ellipsis, y NO es un descuido de estilo. El texto lo construye
+     App.jsx y su comentario declara el calificativo «investigados por la UAD»
+     OBLIGATORIO: sin el, la frase contradice a PanelIndicadores, que dice que
+     estos no son todos los incendios del pais. La elipsis se comia justamente
+     eso. Medido a 320 px: scrollWidth 325 contra clientWidth 286, y en pantalla
+     se leia «Descargando 14.705 incendios investigados por...». Se veia en la
+     captura.
+     Prefiere DOS LINEAS a media frase: una pastilla mas alta se lee, una frase
+     amputada miente. A 390 px y por encima sigue entrando en una sola linea, o
+     sea que esto solo cambia lo que estaba roto. */
 }
 
 /* ---------- cartel de contexto sobre el mapa ---------- */
@@ -967,6 +1016,22 @@ select {
 .ficha td {
   padding: 3px 0;
   color: var(--text-h);
+  /* LOS VALORES LLEGAN DEL ETL Y TRAEN TOKENS SIN UN SOLO ESPACIO. El peor de
+     la capa OECV es el `grupo` «avances_caminos_motoniveladora_conaf_2024»: 41
+     caracteres, y el guion bajo NO ofrece punto de corte, asi que la celda
+     imponia un min-content de 358 px dentro de un dialogo que a 320 px de
+     viewport mide 282. Medido: scrollWidth 358 contra clientWidth 282 -- 76 px
+     de dato fuera de la caja, y como en movil el scroll lateral no pinta barra,
+     el valor no parece cortado sino terminado. Se veia en la captura.
+     `anywhere` y no `break-word`: solo el primero reduce TAMBIEN el min-content
+     con el que la tabla reparte el ancho, que es lo que causaba el desborde.
+     El <h2> va en la misma regla porque el `nombre` sufre lo mismo:
+     «D687_Costanera_CruceLaChima_CruceTerminal», otros 41 caracteres. */
+  overflow-wrap: anywhere;
+}
+
+.ficha h2 {
+  overflow-wrap: anywhere;
 }
 
 .ficha-acciones {
@@ -1534,6 +1599,20 @@ a:focus-visible {
      44 - 4 = 40 de boton, mas 4 de aire. */
   .ficha header {
     padding-right: 44px;
+  }
+
+  /* LA PASTILLA DE DESCARGA CAE DENTRO DE LA BARRA DE ZOOM CON PUNTERO GRUESO.
+     Su comentario calcula los 80 px de separacion contando «dos botones de
+     26 px», y ese numero solo vale con puntero fino: aqui arriba esos mismos
+     botones pasan a 44, asi que la barra crece de 64 a 92 px de alto. Medido a
+     320 px: la barra ocupa y=78..170 y la pastilla arrancaba en y=148 -- se
+     pintaba el boton «−» encima del texto. Y como .descargando va en z-index
+     998 contra los 1000 de .leaflet-top, pierde siempre.
+     El propio comentario de .descargando avisaba de que «ninguna asercion
+     comprueba este choque»: no lo comprobaba, y estaba ocurriendo.
+     102 px es donde termina la barra medida (170 - 68 de banda); +10 de aire. */
+  .descargando {
+    top: calc(max(var(--alto-minimo-banner), 100vw / var(--razon-banner)) + 112px);
   }
 
   /* Los <select> de filtro miden ~29 px de alto: son el control que mas se usa
