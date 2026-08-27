@@ -5,7 +5,7 @@
 // tres servidores de teselas mandan Access-Control-Allow-Origin: *, comprobado
 // con curl-- pero el crossOrigin en la capa tiene dos costes que este no tiene:
 //
-//   1. Invertiria la decision documentada en index.html:18-25, que deja el
+//   1. Invertiria la decision documentada en index.html:18-29, que deja el
 //      <link rel="preconnect"> SIN crossorigin a proposito porque Leaflet pide
 //      las teselas con <img> en modo no-CORS. Con la capa en modo CORS, ese
 //      preconnect precalentaria el pool equivocado y el apreton se pagaria dos
@@ -126,7 +126,7 @@ export async function capturarMapa(map, base = 'Claro') {
   }
 
   // ---- atribucion ----
-  // NO es decorativa: OSM y CARTO la exigen, y los controles de Leaflet son
+  // NO es decorativa: OSM, Esri y EOX la exigen, y los controles de Leaflet son
   // HTML, asi que no entran en el lienzo por si solos. Una captura sin
   // atribucion es una infraccion de licencia esperando a publicarse.
   const texto = String(cfg.attribution ?? '')
@@ -136,12 +136,36 @@ export async function capturarMapa(map, base = 'Claro') {
     .trim()
   if (texto) {
     ctx.font = '11px system-ui, sans-serif'
-    const m = ctx.measureText(texto)
-    const w = m.width + 10
+    // SE ENVUELVE, y no es refinamiento. Las atribuciones de Esri son largas:
+    // la de Topografico son ~110 caracteres YA ACORTADA (el copyrightText
+    // integro son 232), o sea unos 715 px a 11 px de fuente, contra los 510 px
+    // utiles que quedan cuando el mapa esta en su minimo (MIN_MAPA, 520). En
+    // una sola linea el rectangulo arrancaba en x NEGATIVO y la atribucion
+    // salia cortada por la izquierda: justo la infraccion que este bloque
+    // existe para evitar, y encima dentro del archivo que el usuario descarga
+    // y reparte. Se parte por palabras y se apilan las lineas que hagan falta,
+    // asi que tampoco hay que volver aqui si manana una capa trae otra mas.
+    const anchoMax = ancho - 10
+    const lineas = []
+    let linea = ''
+    for (const palabra of texto.split(/\s+/)) {
+      const cand = linea ? `${linea} ${palabra}` : palabra
+      if (linea && ctx.measureText(cand).width > anchoMax) {
+        lineas.push(linea)
+        linea = palabra
+      } else {
+        linea = cand
+      }
+    }
+    if (linea) lineas.push(linea)
+
+    const ALTO_LINEA = 13
+    const w = Math.min(anchoMax, Math.max(...lineas.map((l) => ctx.measureText(l).width))) + 10
+    const h = lineas.length * ALTO_LINEA + 5
     ctx.fillStyle = 'rgba(255,255,255,0.75)'
-    ctx.fillRect(ancho - w, alto - 18, w, 18)
+    ctx.fillRect(ancho - w, alto - h, w, h)
     ctx.fillStyle = '#333'
-    ctx.fillText(texto, ancho - w + 5, alto - 5)
+    lineas.forEach((l, i) => ctx.fillText(l, ancho - w + 5, alto - h + ALTO_LINEA * (i + 1)))
   }
 
   return { lienzo, teselas: teselas.length, fallidas }

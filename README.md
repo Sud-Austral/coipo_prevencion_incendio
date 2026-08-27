@@ -35,8 +35,17 @@ python ETL/run.py [--layers incendios,oecv,…] [--jobs N] [--secuencial]
                   [--no-tiles] [--simplify 25] [--sin-verify] [-v]
 ```
 
-Los datos generados **no se commitean**: los reconstruye GitHub Actions en cada
-push a `INSUMO_INCENDIO/`, `ETL/` o `frontend/`, y los publica en Pages.
+Los datos generados **sí se commitean**, en `frontend/public/data/`: los
+reconstruye GitHub Actions en cada push a `INSUMO_INCENDIO/`, `ETL/` o
+`frontend/`, los publica en Pages y los deja versionados en `main` con un commit
+`datos: capas del ETL …`. Así están disponibles al clonar, sin pasos extra, para
+trabajar con ellos fuera del visor.
+
+> **No commitees una corrida local del ETL en Windows.** Ahí no existe
+> tippecanoe y `ETL/tiles.py` cae en modo degradado: emite `rutas.geojson` y
+> `redvial.geojson` en vez de los `.pmtiles`, y lo anota en el manifest. El único
+> productor válido de lo versionado es el runner de Actions. Para trabajar en
+> local, `npm run datos`.
 
 ## Capas
 

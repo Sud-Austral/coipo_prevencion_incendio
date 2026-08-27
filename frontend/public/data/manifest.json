@@ -1,0 +1,6490 @@
+{
+  "generado": "2026-08-25T12:47:42+0000",
+  "simplify_m": 25.0,
+  "precision": 5,
+  "tippecanoe": "tippecanoe v2.78.0",
+  "capas": {
+    "incendios": {
+      "titulo": "Incendios investigados (UAD)",
+      "formato": "geojson",
+      "geometria": "Point",
+      "carga": "inmediata",
+      "leidos": 14985,
+      "descartados": 280,
+      "husos": {
+        "32718": 8645,
+        "32719": 6060
+      },
+      "filtros": [
+        "temporada",
+        "region",
+        "provincia",
+        "causa_grupo",
+        "causa_general"
+      ],
+      "codificados": [
+        "region",
+        "provincia",
+        "comuna",
+        "temporada",
+        "causa_grupo",
+        "causa_general",
+        "causa_especifica",
+        "causa_general_codigo",
+        "causa_codigo",
+        "jefe_brigada",
+        "investigado_por",
+        "mes_investigacion"
+      ],
+      "tablas": {
+        "region": [
+          "La Araucanía",
+          "Biobío",
+          "Maule",
+          "Ñuble",
+          "Metropolitana",
+          "Valparaíso",
+          "O'Higgins",
+          "Los Lagos",
+          "Los Ríos",
+          "Coquimbo",
+          "Aysén",
+          "Magallanes",
+          "Atacama",
+          "Tarapacá",
+          "Arica y Parinacota",
+          "Antofagasta"
+        ],
+        "provincia": [
+          "Cautín",
+          "Malleco",
+          "Concepción",
+          "Biobío",
+          "Diguillín",
+          "Arauco",
+          "Talca",
+          "Linares",
+          "Cachapoal",
+          "Melipilla",
+          "Curicó",
+          "Valdivia",
+          "Punilla",
+          "Valparaíso",
+          "Cardenal Caro",
+          "Chacabuco",
+          "Marga Marga",
+          "Llanquihue",
+          "San Antonio",
+          "Chiloé",
+          "Colchagua",
+          "Itata",
+          "Quillota",
+          "Limarí",
+          "Cauquenes",
+          "Ranco",
+          "Santiago",
+          "Talagante",
+          "Osorno",
+          "Maipo",
+          "Coyhaique",
+          "Elqui",
+          "Cordillera",
+          "Sin registro",
+          "Choapa",
+          "San Felipe",
+          "Huasco",
+          "Petorca",
+          "General Carrera",
+          "Última Esperanza",
+          "Magallanes",
+          "Tamarugal",
+          "Copiapó",
+          "Aysén",
+          "Tierra del Fuego",
+          "Capitán Prat",
+          "Arica",
+          "Palena",
+          "El Loa",
+          "Parinacota",
+          "Los Andes",
+          "Antártica Chilena"
+        ],
+        "comuna": [
+          "Los Ángeles",
+          "Galvarino",
+          "Temuco",
+          "Tomé",
+          "Collipulli",
+          "Chillán",
+          "Victoria",
+          "Valparaíso",
+          "Melipilla",
+          "Lautaro",
+          "Lebu",
+          "Cholchol",
+          "Cañete",
+          "Puerto Montt",
+          "Angol",
+          "Padre las Casas",
+          "San Javier",
+          "Ovalle",
+          "Yumbel",
+          "Carahue",
+          "Nueva Imperial",
+          "Pitrufquén",
+          "Mulchén",
+          "Lampa",
+          "Coronel",
+          "Freire",
+          "San Pedro",
+          "Los Álamos",
+          "Maule",
+          "Cauquenes",
+          "Purén",
+          "San Antonio",
+          "La Unión",
+          "San Nicolás",
+          "Linares",
+          "Talca",
+          "Coyhaique",
+          "Penco",
+          "Limache",
+          "Traiguén",
+          "Quillón",
+          "Coihueco",
+          "Hualqui",
+          "Chillán Viejo",
+          "Quillota",
+          "Florida",
+          "Los Sauces",
+          "San Clemente",
+          "San Carlos",
+          "Nacimiento",
+          "Colina",
+          "Cabrero",
+          "Parral",
+          "San Pedro de la Paz",
+          "Mariquina",
+          "Lumaco",
+          "Laja",
+          "Quilpué",
+          "Río Claro",
+          "Curicó",
+          "Litueche",
+          "Pencahue",
+          "Vilcún",
+          "Villarrica",
+          "Curacaví",
+          "San Ignacio",
+          "Santo Domingo",
+          "Villa Alemana",
+          "Tiltil",
+          "Casablanca",
+          "Longaví",
+          "Sin registro",
+          "Valdivia",
+          "Las Cabras",
+          "Bulnes",
+          "Paine",
+          "San Vicente de Tagua Tagua",
+          "Molina",
+          "Marchigüe",
+          "San Rafael",
+          "Retiro",
+          "Gorbea",
+          "Arauco",
+          "Santa Juana",
+          "Castro",
+          "Concepción",
+          "Paillaco",
+          "Yerbas Buenas",
+          "Perquenco",
+          "Navidad",
+          "Talcahuano",
+          "Teno",
+          "La Estrella",
+          "Tirúa",
+          "Rengo",
+          "San Fernando",
+          "Curepto",
+          "Ránquil",
+          "Lota",
+          "Sagrada Familia",
+          "Paredones",
+          "La Serena",
+          "La Calera",
+          "Loncoche",
+          "Coelemu",
+          "El Carmen",
+          "Coltauco",
+          "Dalcahue",
+          "Los Lagos",
+          "Talagante",
+          "María Pinto",
+          "Hualañé",
+          "Pichidegua",
+          "Santa Cruz",
+          "Cunco",
+          "Puerto Saavedra",
+          "Ancud",
+          "Chonchi",
+          "Pinto",
+          "Quellón",
+          "Ercilla",
+          "Pudahuel",
+          "Quirihue",
+          "Yungay",
+          "Curanilahue",
+          "Calbuco",
+          "Portezuelo",
+          "Constitución",
+          "Chimbarongo",
+          "Panguipulli",
+          "Negrete",
+          "Mostazal",
+          "Río Bueno",
+          "Quilleco",
+          "San Juan de la Costa",
+          "Ninhue",
+          "Viña del Mar",
+          "Renaico",
+          "La Ligua",
+          "Natales",
+          "Machalí",
+          "Nogales",
+          "Padre Las Casas",
+          "Pemuco",
+          "Rancagua",
+          "Puente Alto",
+          "Pichilemu",
+          "Osorno",
+          "Máfil",
+          "Cartagena",
+          "Teodoro Schmidt",
+          "Peñaflor",
+          "San Rosendo",
+          "Melipeuco",
+          "Romeral",
+          "Villa Alegre",
+          "Buin",
+          "Monte Patria",
+          "Chanco",
+          "Olmué",
+          "Los Vilos",
+          "Ñiquén",
+          "Padre Hurtado",
+          "Toltén",
+          "Pirque",
+          "Codegua",
+          "Lolol",
+          "LEBU",
+          "Pucón",
+          "Lonquimay",
+          "Punta Arenas",
+          "Quilicura",
+          "Doñihue",
+          "San José de Maipo",
+          "Hijuelas",
+          "Algarrobo",
+          "Alhué",
+          "Vallenar",
+          "El Quisco",
+          "Pumanque",
+          "Coquimbo",
+          "El Monte",
+          "Curacautín",
+          "Rauco",
+          "Coinco",
+          "Malloa",
+          "Peralillo",
+          "Vicuña",
+          "Maullín",
+          "Salamanca",
+          "Hualpén",
+          "Vichuquén",
+          "San Pablo",
+          "Pelarco",
+          "Chillán VIejo",
+          "Chiguayante",
+          "Puerto Varas",
+          "Corral",
+          "Río Ibáñez",
+          "Lanco",
+          "Trehuaco",
+          "Contulmo",
+          "Chépica",
+          "Los Muermos",
+          "Pelluhue",
+          "Santa Bárbara",
+          "Llay-Llay",
+          "Graneros",
+          "Requínoa",
+          "Peumo",
+          "Quintero",
+          "La Cruz",
+          "Catemu",
+          "Colbún",
+          "Río Negro",
+          "Palmilla",
+          "San Felipe",
+          "San Bernardo",
+          "Cochrane",
+          "Queilén",
+          "Lago Ranco",
+          "Paihuano",
+          "Arica",
+          "El Tabo",
+          "Chile Chico",
+          "Freirina",
+          "Maipú",
+          "Tucapel",
+          "Fresia",
+          "Providencia",
+          "Panquehue",
+          "Copiapó",
+          "Illapel",
+          "Puqueldón",
+          "Isla de Maipo",
+          "Quilaco",
+          "Puchuncaví",
+          "Puerto Octay",
+          "Porvenir",
+          "Cobquecura",
+          "Nancagua",
+          "SAN CARLOS",
+          "Curaco de Vélez",
+          "Chile chico",
+          "Torres del Paine",
+          "Aysén",
+          "Pica",
+          "COIHUECO",
+          "Curarrehue",
+          "Huara",
+          "Isla De Maipo",
+          "Concón",
+          "Placilla",
+          "Licantén",
+          "San Pedro de La Paz",
+          "Tierra Amarilla",
+          "San Pedro De La Paz",
+          "Renca",
+          "Huechuraba",
+          "Quinta de Tilcoco",
+          "Cisnes",
+          "Futrono",
+          "Calera de Tango",
+          "Recoleta",
+          "Vitacura",
+          "San Gregorio",
+          "Las Condes",
+          "Calama",
+          "PEMUCO",
+          "Alto del Carmen",
+          "Lo Barnechea",
+          "Olivar",
+          "San Fabián",
+          "Purranque",
+          "Río Hurtado",
+          "Zapallar",
+          "Putre",
+          "QUIRIHUE",
+          "COELEMU",
+          "Quemchi",
+          "San Vicente",
+          "Hualaihué",
+          "Huasco",
+          "Padre las casas",
+          "Nueva imperial",
+          "Futaleufú",
+          "Río Verde",
+          "SAN IGNACIO",
+          "ARAUCO",
+          "San pedro de la paz",
+          "Quinchao",
+          "Camiña",
+          "Rinconada",
+          "Cochamó",
+          "La Florida",
+          "Lago Verde",
+          "Colchane",
+          "Papudo",
+          "Antuco",
+          "Combarbalá",
+          "Cabildo",
+          "Cabo de Hornos",
+          "La Reina",
+          "Timaukel",
+          "Primavera",
+          "Peñalolén",
+          "Punitaqui",
+          "San Miguel",
+          "EL CARMEN",
+          "TREHUACO",
+          "PINTO",
+          "BULNES",
+          "San Pedro de la paz",
+          "San Pedro de Atacama",
+          "Alto Biobío",
+          "Llanquihue",
+          "Pozo Almonte",
+          "La Pintana",
+          "CholChol",
+          "Cerrillos",
+          "La serena",
+          "CasaBlanca",
+          "PORTEZUELO",
+          "COBQUECURA",
+          "NINHUE",
+          "YUNGAY",
+          "talcahuano",
+          "LAJA",
+          "san pedro de la paz",
+          "TALCAHUANO",
+          "NACIMIENTO",
+          "CABRERO",
+          "Palena",
+          "San Juan de La Costa",
+          "Laguna Blanca",
+          "Frutillar",
+          "Villa O'Higgins",
+          "Camarones",
+          "Putaendo",
+          "San Esteban",
+          "COINCO",
+          "quinta DE TILCOCO",
+          "Villa O´Higgins",
+          "General Lagos",
+          "Canela",
+          "Santa María",
+          "Los Andes",
+          "San pedro",
+          "lolol",
+          "palmilla",
+          "Puyehue"
+        ],
+        "temporada": [
+          "2025-2026",
+          "2024-2025",
+          "2023-2024",
+          "2022-2023",
+          "2021-2022",
+          "2020-2021",
+          "2019-2020",
+          "2018-2019",
+          "2017-2018"
+        ],
+        "causa_grupo": [
+          "Negligentes",
+          "Intencionales",
+          "Accidentales",
+          "Indeterminadas",
+          "Naturales"
+        ],
+        "causa_general": [
+          "Incendios intencionales",
+          "Otras quemas",
+          "Faenas agrícolas y pecuarias",
+          "Líneas eléctricas",
+          "Otras causas",
+          "Parcelaciones, edificaciones residenciales, industriales u otras en zonas rurales o de interfaz",
+          "Faenas forestales",
+          "Actividades al aire libre",
+          "Incendios de causa indeterminada",
+          "Originados por desplazamiento de personas, vehículos o aeronaves",
+          "Actividades de control y extinción de incendios forestales",
+          "Producción y/o extracción de productos y/o derivados del bosque",
+          "Incendios naturales",
+          "Vías férreas"
+        ],
+        "causa_especifica": [
+          "No se identifica la motivación",
+          "Quema de basuras residencial o desechos vegetales",
+          "Quema no avisada con fines de limpieza en canales, cunetas, cercos o caminos (en predios particulares o públicos) que se propaga libre y sin control",
+          "Quema no avisada de desechos agrícolas que se propaga libre y sin control",
+          "Quema no avisada de desechos forestales que se propaga libre y sin control",
+          "Ataque incendiario (ataques dirigidos a bienes muebles o inmuebles)",
+          "Vandalismo (excluidos terrorismo y atentado incendiario)",
+          "Acciones asociadas a fumar",
+          "Generado por el uso de equipos o herramientas con fines de construcción, limpieza o montaje de estructuras",
+          "Empleo de fuentes de calor en áreas no habilitadas, como fogatas para cocinar, cocinillas, calefacción, elementos para iluminar u otros",
+          "Se investiga, pero no es posible establecer la causa",
+          "Obtención de beneficios económicos (compra de madera, presión por trabajo, robo maderero, otros)",
+          "Corte de conductor eléctrico por caída de rama o árbol (excepto por faena forestal o agrícola)",
+          "Rebrote de incendio anterior, declarado extinto",
+          "Sobrecalentamiento de estructuras asociados al sistema eléctrico (poste, transformador, uniones, aisladores, otros)",
+          "Uso de fuego por transeúntes",
+          "Partículas incandescentes generadas por roce de maquinaria o herramienta agrícola con rocas, cercos o material metálico",
+          "Incendio estructural",
+          "Combustión de la vegetación, producto del contacto o proximidad con el tendido eléctrico",
+          "Otras causas negligentes no clasificadas en faenas agrícolas y pecuarias",
+          "Otras causas eléctricas negligentes no clasificadas",
+          "Corte de conductor eléctrico por caída o fatiga de estructura de tendido eléctrico o postación",
+          "Otras actividades negligentes no clasificadas",
+          "Empleo de fuentes de calor en faena de extracción y/o confección de leña no industrial",
+          "Empleo de fuentes de calor en actividades relacionadas a parcelaciones (asados, tijerales, fogatas, otros)",
+          "Empleo de fuentes de calor en vertederos o basurales",
+          "Generado por conexión irregular de energía eléctrica",
+          "Empleo de fuentes de calor por personas en situación de calle",
+          "Conflicto territorial o patrimonial (deslindes, propiedades, apropiaciones de terreno, otros)",
+          "Conflicto entre personas (venganza, familiares, pasionales, otros)",
+          "Caída de rayo",
+          "Accidente o incendio de vehículo",
+          "Empleo de fuentes de calor por menores de edad",
+          "Cambio irregular de uso del suelo (habitacional, parcelaciones, agrícola, recreacional, otros)",
+          "Quema avisada de desechos agrícolas que se propaga libre y sin control",
+          "Provocado por persona bajo la influencia del alcohol y/o drogas",
+          "Otros incendios accidentales no clasificados en faenas agropecuarias",
+          "Contacto o corte de conductor eléctrico producto de faena forestal",
+          "Generado por vehículo (roce metálico, tubo de escape, desperfecto, otros)",
+          "Quema avisada de desechos agrícolas mal ejecutada que se propaga libre y sin control (según plan de quema y/o aviso de quemas)",
+          "Otro accidente eléctrico no clasificado",
+          "Otras causas accidentales no clasificadas",
+          "Corte de cable por crecimiento de vegetación bajo tendido eléctrico",
+          "Partículas incandescentes generadas por roce de maquinaria o herramienta forestal con rocas, cercos o material metálico",
+          "Partícula incandescente generada sin roce por vehículo, maquinaria o herramienta agrícola",
+          "Incendio de maquinaria agrícola (desperfecto, falta de mantención, otros)",
+          "Para observar operaciones de combate de incendios forestales",
+          "Fuegos artificiales, bengalas, otros artefactos pirotécnicos o globos aerostáticos",
+          "Quema avisada de desechos forestales mal ejecutada que se propaga libre y sin control (plan de quemas, aviso de quemas)",
+          "Contacto de fauna con el tendido eléctrico",
+          "Desecho de cenizas de chimenea, calefacción, cocina leña, tinajas, otros",
+          "Otras causas negligentes no clasificadas en faenas forestales",
+          "Partícula incandescente generada sin roce por vehículo, maquinaria o herramienta forestal",
+          "Empleo de fuentes de calor en zonas de faenas agropecuarias",
+          "Empleo de fuentes de calor para eliminación de fauna (roedores, reptiles, avispas, otros)",
+          "Pirómano (insano mental que disfruta del fuego)",
+          "Generado por material en combustión expulsado desde chimeneas, cocina a leña, otros",
+          "Empleo de fuentes de calor en zonas de faenas/campamentos forestales",
+          "Otros incendios accidentales no clasificados en faenas forestales",
+          "Quema de desechos industriales",
+          "Empleo de fuentes de calor para eliminar recubrimiento de conductores eléctricos",
+          "Generado por infraestructura destinada a la producción de energía (solar, eólica, otros)",
+          "Rebrote de quema forestal no avisada que se propaga libre y sin control",
+          "Incendio de maquinaria en faena forestal (desperfecto, falta de mantención, otros)",
+          "Elaboración de carbón",
+          "Ignición por combustión espontánea en combustibles orgánicos (fardos de pastos, acopios de aserrín o chips de madera)",
+          "Empleo de fuentes de calor en actividades religiosas, de peregrinación o de veneración",
+          "Empleo de fuentes de calor en faenas de extracción de productos del bosque (hongos, frutos, otros), como fogatas para cocinar, calefacción, elementos para iluminar u otros.",
+          "Contacto o corte de conductor eléctrico producto de faena agrícola o pecuaria",
+          "Maniobras militares o policiales",
+          "Encubrimiento de delitos o faltas",
+          "Contacto de material vegetal (ej. Corteza de eucalipto) o no vegetal (ej. Pizarreños), desprendido y desplazado por acción del viento, con el tendido eléctrico",
+          "La causa no es investigada",
+          "Particulas incandescentes generadas por el paso del ferrocarril (sin mantención de fajas de seguridad)",
+          "Quema avisada de desechos forestales que se propaga libre y sin control",
+          "Empleo de fuentes de calor en áreas habilitadas, como fogatas, cocinillas u otro elemento para cocinar, calefacción, iluminación u otros fines",
+          "Empleo de fuentes de calor en actividades de apicultura",
+          "Partículas incandescentes generadas por el paso del ferrocarril (con mantención de fajas de seguridad)",
+          "Rebrote de quema agrícola o pecuaria no avisada que se propaga libre y sin control",
+          "Quema avisada con fines de limpieza en canales, cunetas, cercos o caminos (en predios particulares o públicos) que se propaga libre y sin control",
+          "Contacto o corte del conductor eléctrico de línea férrea",
+          "Provocado por persona enferma (loco o demente, excluido el pirómano)",
+          "Empleo de fuentes de calor en faena de mantención o reparación de líneas férreas",
+          "Empleo de fuentes de calor para señalización en la ruta o faenas de mantención (campamentos de empresas de mantención, otras)",
+          "Explosiones",
+          "Ignición por combustión espontánea en vertederos sin tratamientos y sin reciclaje",
+          "Parcelaciones, edificaciones residenciales, industriales u otras en zonas rurales o de interfaz",
+          "Faenas mineras",
+          "Elaboración y/o cocción de ladrillos",
+          "Otras causas naturales no clasificadas",
+          "Accidente ferroviario",
+          "Extracción o producción de hongos o frutos"
+        ],
+        "causa_general_codigo": [
+          "2.1",
+          "4.8",
+          "4.1",
+          "4.9",
+          "4.2",
+          "4.6",
+          "4.3",
+          "5.1",
+          "1.2",
+          "4.5",
+          "4.7",
+          "4.11",
+          "1.6",
+          "1.7",
+          "1.1",
+          "1.9",
+          "3.1",
+          "4.4",
+          "1.4",
+          "1.3",
+          "1.8"
+        ],
+        "causa_codigo": [
+          "2.1.1",
+          "4.8.2",
+          "4.8.1",
+          "4.2.1",
+          "4.1.1",
+          "2.1.3",
+          "2.1.13",
+          "4.10.4",
+          "4.6.1",
+          "4.3.1",
+          "5.1.1",
+          "2.1.5",
+          "4.9.2",
+          "4.5.1",
+          "4.9.4",
+          "4.7.3",
+          "1.2.2",
+          "1.6.1",
+          "4.9.1",
+          "4.2.8",
+          "4.9.5",
+          "4.9.3",
+          "4.10.12",
+          "4.11.3",
+          "4.6.5",
+          "4.8.5",
+          "4.6.2",
+          "4.10.11",
+          "2.1.4",
+          "2.1.2",
+          "3.1.1",
+          "1.7.1",
+          "4.10.5",
+          "2.1.9",
+          "1.2.1",
+          "2.1.12",
+          "1.2.3",
+          "4.1.3",
+          "1.7.3",
+          "4.2.6",
+          "1.9.3",
+          "1.10.1",
+          "4.9.6",
+          "1.1.2",
+          "4.2.4",
+          "4.2.2",
+          "2.1.6",
+          "4.10.6",
+          "4.1.6",
+          "1.9.1",
+          "4.6.6",
+          "4.1.8",
+          "4.1.4",
+          "4.2.7",
+          "4.8.4",
+          "2.1.10",
+          "4.6.4",
+          "4.1.7",
+          "1.1.3",
+          "4.8.3",
+          "4.10.10",
+          "4.6.3",
+          "4.1.5",
+          "4.1.2",
+          "4.11.1",
+          "4.10.8",
+          "4.7.1",
+          "4.11.2",
+          "4.2.3",
+          "4.10.1",
+          "2.1.7",
+          "1.9.2",
+          "5.1.2",
+          "4.4.1",
+          "1.1.1",
+          "1.3.1",
+          "4.11.4",
+          "1.4.2",
+          "4.2.5",
+          "1.8.1",
+          "4.4.3",
+          "2.1.11",
+          "4.4.2",
+          "4.7.2",
+          "4.10.3",
+          "4.10.9",
+          "4.6",
+          "4.10.2",
+          "4.10.7",
+          "3.1.3",
+          "1.4.1",
+          "2.1.8"
+        ],
+        "jefe_brigada": [
+          "5.1",
+          "2.1",
+          "4.1.2",
+          "4.8",
+          "Sin información",
+          "1.7.1",
+          "1.9",
+          "4.9",
+          "4.7",
+          "4.10",
+          "4.2",
+          "4.1",
+          "1.7",
+          "4.6",
+          "Sin estimar",
+          "Sin causa",
+          "2.1.11",
+          "4:01:02",
+          "4.3",
+          "1.2",
+          "1.10",
+          "3.1",
+          "1.8.1",
+          "1.6",
+          "4.1.1",
+          "2.1.8",
+          "1.1",
+          "1.8",
+          "1.2.2",
+          "1.1.10",
+          "1.9.4",
+          "4.5",
+          "Sin determinar",
+          "1.3",
+          "2:01:08",
+          "2.1. 11",
+          "1.2.5",
+          "Sin Información",
+          "1.10.5",
+          "2.1.1",
+          "1.4.1",
+          "1.4.5",
+          "1.9.3",
+          "1.9.2",
+          "1.1.2",
+          "1.6.3",
+          "4.11",
+          "Sin Estimar",
+          "1.8.5",
+          "1.10.4",
+          "1.9.1",
+          "02.01.11",
+          "Accidentales",
+          "1.6.1",
+          "1.2.4",
+          "1.1.19",
+          "1:07:01",
+          "2:01:11",
+          "1.7.3",
+          "2.1.2",
+          "1.1.14",
+          "1.7. 1",
+          "2:01:03",
+          "Negligentes",
+          "1.5",
+          "2.1.6",
+          "1.9. 4",
+          "01.01.02",
+          "4.2.1",
+          "1.10.6",
+          "1.4.2",
+          "1:02:02",
+          "4.4",
+          "1.4",
+          "1.1.21",
+          "2.1.4",
+          "1.2.8",
+          "--",
+          "01.07.01",
+          "01.02.02",
+          "04.01.01",
+          "1:08:01",
+          "1:06:01",
+          "1.8.3",
+          "1.7.2",
+          "1.2.6",
+          "s/d",
+          "04.01.02",
+          "1:01:10",
+          "2.1.5",
+          "1.4.4",
+          "1.1.6",
+          "1.8.14",
+          "1.8.2",
+          "1.1.9",
+          "1.2.1",
+          "1.1.18",
+          "2.1.3",
+          "1.8.4",
+          "1.8.9",
+          "1.7.2001",
+          "02.01.08",
+          "1.4.6",
+          "1.1.1",
+          "1.8.13",
+          "1.1.23",
+          "3.1.1",
+          "1.10.1",
+          "1.2.9",
+          "1.1.8",
+          "1.4.3",
+          "1.1.4",
+          "1.3.3",
+          "1.1.12",
+          "1.4. 1",
+          "4.1. 2",
+          "1.1.20",
+          "01.06.01",
+          "01.06.03",
+          "01.09.04",
+          "01.09.03",
+          "01.09.01",
+          "01.02.01",
+          "01.02.04",
+          "1:01:02",
+          "1:02:05",
+          "2:01:01",
+          "1.7'1",
+          "1.1.11",
+          "1.3.1",
+          "1.10.8",
+          "1.2.10",
+          "1.2.3",
+          "1.1.3",
+          "1.3.4",
+          "1.5.1",
+          "2.1.",
+          "40545",
+          "1.8. 1",
+          "1.9. 3",
+          "1.4. 6",
+          "2.1. 5",
+          "1.6. 3",
+          "1.1. 6",
+          "1.1. 2",
+          "1.5.4",
+          "1.10.2",
+          "2.1.7",
+          "3.1.3",
+          "1.7.4",
+          "1.8.7",
+          "01.08.01",
+          "02.01.05",
+          "01.09.02",
+          "01.01.20",
+          "01.03.02",
+          "01.06.04",
+          "01.10.04",
+          "01.01.22",
+          "01.10.05",
+          "01.07.03",
+          "02.01.03",
+          "01.02.05",
+          "01.01.06",
+          "01.01.10",
+          "01.01.19",
+          "01.04.01",
+          "01.02.07",
+          "4.1.3",
+          "4.1.4",
+          "4.1.5",
+          "4.1.6",
+          "1:09:04",
+          "1:09:03",
+          "1:03:03",
+          "1:01:14",
+          "2:01:02",
+          "1:02:08",
+          "2:01:04",
+          "1:02:01",
+          "1:10:05",
+          "1:02:04",
+          "2:01:06",
+          "1:10:04",
+          "1:09:01",
+          "1:01:19",
+          "2:01:05",
+          "1:08:03",
+          "3:01:08",
+          "1:08:12",
+          "1:01:18",
+          "1:04:05",
+          "01.01.14",
+          "1.1.22",
+          "1.1.04",
+          "1.0.4",
+          "1.0.7",
+          "1814",
+          "Período sin brigada",
+          "Período sin brigadas",
+          "Líneas eléctricas",
+          "Negligente"
+        ],
+        "investigado_por": [
+          "UAD",
+          "UAD.7",
+          "UAD.86A",
+          "UAD.84A",
+          "UAD.9B",
+          "UAD.83B",
+          "UAD.5B",
+          "UAD.9C",
+          "UAD.83A",
+          "UAD.9D",
+          "UAD.13B",
+          "UAD.9A",
+          "UAD.16B",
+          "UAD.6A",
+          "UAD.13A",
+          "UAD.4A",
+          "UAD.16A",
+          "UAD.16D",
+          "UAD.16C",
+          "UAD.6C",
+          "UAD.5C",
+          "UAD.10C",
+          "UAD.14A",
+          "UAD.10A",
+          "UAD.13C",
+          "UAD.6B",
+          "UAD.9E",
+          "UAD.73",
+          "UAD.5A",
+          "UAD.74",
+          "UAD.10B",
+          "BRIDECA",
+          "UAD.78",
+          "UAD.11A",
+          "UAD.3A",
+          "UAD.76",
+          "UIS.75",
+          "UAD.141",
+          "UAD.Cautín",
+          "UAD.71",
+          "UAD.Malleco",
+          "UAD.77",
+          "UAD.72",
+          "UAD 3",
+          "UAD.143",
+          "UAD 2",
+          "UAD.1A",
+          "UAD.5D",
+          "UAD.147",
+          "UAD.0A",
+          "UAD1",
+          "UAD.15A",
+          "UAD.144",
+          "UAD.149",
+          "UAD.11B",
+          "UAD.9F",
+          "UAD.10D",
+          "UAD 4",
+          "UAD13A",
+          "UIS.71",
+          "UAD.9H",
+          "UAD.9M",
+          "UAD 124-UAD 125",
+          "UAD.9X",
+          "UAD.2A",
+          "UAD multiequipo",
+          "UAD.146",
+          "UAD.13AB",
+          "UAD.12A",
+          "UAD.5A.UAD.5B",
+          "UAD.5D.UAD.5B",
+          "UAD.140",
+          "UAD 121-UAD 122",
+          "UAD.Araucania",
+          "UAD.8A",
+          "UAD.5C.UAD.5A",
+          "UIS.754",
+          "UAD.83",
+          "UAD83B",
+          "UAD.86A-UAD.83A",
+          "UAD 122-UAD 123",
+          "UAD 122-UAD 127"
+        ],
+        "mes_investigacion": [
+          "Enero",
+          "Febrero",
+          "Marzo",
+          "Diciembre",
+          "Abril",
+          "Noviembre",
+          "Mayo",
+          "Octubre",
+          "Junio",
+          "Septiembre",
+          "Agosto",
+          "Julio",
+          "Abril-Mayo"
+        ]
+      },
+      "dominios": {
+        "region": [
+          {
+            "i": 0,
+            "v": "La Araucanía",
+            "n": 3370
+          },
+          {
+            "i": 1,
+            "v": "Biobío",
+            "n": 2820
+          },
+          {
+            "i": 2,
+            "v": "Maule",
+            "n": 1734
+          },
+          {
+            "i": 3,
+            "v": "Ñuble",
+            "n": 1346
+          },
+          {
+            "i": 4,
+            "v": "Metropolitana",
+            "n": 1218
+          },
+          {
+            "i": 5,
+            "v": "Valparaíso",
+            "n": 1212
+          },
+          {
+            "i": 6,
+            "v": "O'Higgins",
+            "n": 1092
+          },
+          {
+            "i": 7,
+            "v": "Los Lagos",
+            "n": 662
+          },
+          {
+            "i": 8,
+            "v": "Los Ríos",
+            "n": 518
+          },
+          {
+            "i": 9,
+            "v": "Coquimbo",
+            "n": 345
+          },
+          {
+            "i": 10,
+            "v": "Aysén",
+            "n": 177
+          },
+          {
+            "i": 11,
+            "v": "Magallanes",
+            "n": 92
+          },
+          {
+            "i": 12,
+            "v": "Atacama",
+            "n": 65
+          },
+          {
+            "i": 13,
+            "v": "Tarapacá",
+            "n": 27
+          },
+          {
+            "i": 14,
+            "v": "Arica y Parinacota",
+            "n": 19
+          },
+          {
+            "i": 15,
+            "v": "Antofagasta",
+            "n": 8
+          }
+        ],
+        "provincia": [
+          {
+            "i": 0,
+            "v": "Cautín",
+            "n": 2241
+          },
+          {
+            "i": 1,
+            "v": "Malleco",
+            "n": 1115
+          },
+          {
+            "i": 2,
+            "v": "Concepción",
+            "n": 1084
+          },
+          {
+            "i": 3,
+            "v": "Biobío",
+            "n": 1022
+          },
+          {
+            "i": 4,
+            "v": "Diguillín",
+            "n": 736
+          },
+          {
+            "i": 5,
+            "v": "Arauco",
+            "n": 691
+          },
+          {
+            "i": 6,
+            "v": "Talca",
+            "n": 644
+          },
+          {
+            "i": 7,
+            "v": "Linares",
+            "n": 562
+          },
+          {
+            "i": 8,
+            "v": "Cachapoal",
+            "n": 511
+          },
+          {
+            "i": 9,
+            "v": "Melipilla",
+            "n": 467
+          },
+          {
+            "i": 10,
+            "v": "Curicó",
+            "n": 360
+          },
+          {
+            "i": 11,
+            "v": "Valdivia",
+            "n": 350
+          },
+          {
+            "i": 12,
+            "v": "Punilla",
+            "n": 349
+          },
+          {
+            "i": 13,
+            "v": "Valparaíso",
+            "n": 340
+          },
+          {
+            "i": 14,
+            "v": "Cardenal Caro",
+            "n": 326
+          },
+          {
+            "i": 15,
+            "v": "Chacabuco",
+            "n": 294
+          },
+          {
+            "i": 16,
+            "v": "Marga Marga",
+            "n": 280
+          },
+          {
+            "i": 17,
+            "v": "Llanquihue",
+            "n": 280
+          },
+          {
+            "i": 18,
+            "v": "San Antonio",
+            "n": 271
+          },
+          {
+            "i": 19,
+            "v": "Chiloé",
+            "n": 257
+          },
+          {
+            "i": 20,
+            "v": "Colchagua",
+            "n": 248
+          },
+          {
+            "i": 21,
+            "v": "Itata",
+            "n": 247
+          },
+          {
+            "i": 22,
+            "v": "Quillota",
+            "n": 214
+          },
+          {
+            "i": 23,
+            "v": "Limarí",
+            "n": 181
+          },
+          {
+            "i": 24,
+            "v": "Cauquenes",
+            "n": 167
+          },
+          {
+            "i": 25,
+            "v": "Ranco",
+            "n": 162
+          },
+          {
+            "i": 26,
+            "v": "Santiago",
+            "n": 133
+          },
+          {
+            "i": 27,
+            "v": "Talagante",
+            "n": 133
+          },
+          {
+            "i": 28,
+            "v": "Osorno",
+            "n": 113
+          },
+          {
+            "i": 29,
+            "v": "Maipo",
+            "n": 109
+          },
+          {
+            "i": 30,
+            "v": "Coyhaique",
+            "n": 106
+          },
+          {
+            "i": 31,
+            "v": "Elqui",
+            "n": 105
+          },
+          {
+            "i": 32,
+            "v": "Cordillera",
+            "n": 78
+          },
+          {
+            "i": 33,
+            "v": "Sin registro",
+            "n": 74
+          },
+          {
+            "i": 34,
+            "v": "Choapa",
+            "n": 59
+          },
+          {
+            "i": 35,
+            "v": "San Felipe",
+            "n": 58
+          },
+          {
+            "i": 36,
+            "v": "Huasco",
+            "n": 46
+          },
+          {
+            "i": 37,
+            "v": "Petorca",
+            "n": 43
+          },
+          {
+            "i": 38,
+            "v": "General Carrera",
+            "n": 40
+          },
+          {
+            "i": 39,
+            "v": "Última Esperanza",
+            "n": 40
+          },
+          {
+            "i": 40,
+            "v": "Magallanes",
+            "n": 35
+          },
+          {
+            "i": 41,
+            "v": "Tamarugal",
+            "n": 27
+          },
+          {
+            "i": 42,
+            "v": "Copiapó",
+            "n": 19
+          },
+          {
+            "i": 43,
+            "v": "Aysén",
+            "n": 16
+          },
+          {
+            "i": 44,
+            "v": "Tierra del Fuego",
+            "n": 14
+          },
+          {
+            "i": 45,
+            "v": "Capitán Prat",
+            "n": 13
+          },
+          {
+            "i": 46,
+            "v": "Arica",
+            "n": 13
+          },
+          {
+            "i": 47,
+            "v": "Palena",
+            "n": 10
+          },
+          {
+            "i": 48,
+            "v": "El Loa",
+            "n": 8
+          },
+          {
+            "i": 49,
+            "v": "Parinacota",
+            "n": 6
+          },
+          {
+            "i": 50,
+            "v": "Los Andes",
+            "n": 6
+          },
+          {
+            "i": 51,
+            "v": "Antártica Chilena",
+            "n": 2
+          }
+        ],
+        "comuna": [
+          {
+            "i": 0,
+            "v": "Los Ángeles",
+            "n": 348
+          },
+          {
+            "i": 1,
+            "v": "Galvarino",
+            "n": 319
+          },
+          {
+            "i": 2,
+            "v": "Temuco",
+            "n": 299
+          },
+          {
+            "i": 3,
+            "v": "Tomé",
+            "n": 290
+          },
+          {
+            "i": 4,
+            "v": "Collipulli",
+            "n": 228
+          },
+          {
+            "i": 5,
+            "v": "Chillán",
+            "n": 213
+          },
+          {
+            "i": 6,
+            "v": "Victoria",
+            "n": 212
+          },
+          {
+            "i": 7,
+            "v": "Valparaíso",
+            "n": 204
+          },
+          {
+            "i": 8,
+            "v": "Melipilla",
+            "n": 203
+          },
+          {
+            "i": 9,
+            "v": "Lautaro",
+            "n": 197
+          },
+          {
+            "i": 10,
+            "v": "Lebu",
+            "n": 191
+          },
+          {
+            "i": 11,
+            "v": "Cholchol",
+            "n": 184
+          },
+          {
+            "i": 12,
+            "v": "Cañete",
+            "n": 181
+          },
+          {
+            "i": 13,
+            "v": "Puerto Montt",
+            "n": 171
+          },
+          {
+            "i": 14,
+            "v": "Angol",
+            "n": 169
+          },
+          {
+            "i": 15,
+            "v": "Padre las Casas",
+            "n": 162
+          },
+          {
+            "i": 16,
+            "v": "San Javier",
+            "n": 145
+          },
+          {
+            "i": 17,
+            "v": "Ovalle",
+            "n": 145
+          },
+          {
+            "i": 18,
+            "v": "Yumbel",
+            "n": 143
+          },
+          {
+            "i": 19,
+            "v": "Carahue",
+            "n": 140
+          },
+          {
+            "i": 20,
+            "v": "Nueva Imperial",
+            "n": 140
+          },
+          {
+            "i": 21,
+            "v": "Pitrufquén",
+            "n": 136
+          },
+          {
+            "i": 22,
+            "v": "Mulchén",
+            "n": 135
+          },
+          {
+            "i": 23,
+            "v": "Lampa",
+            "n": 135
+          },
+          {
+            "i": 24,
+            "v": "Coronel",
+            "n": 134
+          },
+          {
+            "i": 25,
+            "v": "Freire",
+            "n": 127
+          },
+          {
+            "i": 26,
+            "v": "San Pedro",
+            "n": 127
+          },
+          {
+            "i": 27,
+            "v": "Los Álamos",
+            "n": 126
+          },
+          {
+            "i": 28,
+            "v": "Maule",
+            "n": 125
+          },
+          {
+            "i": 29,
+            "v": "Cauquenes",
+            "n": 125
+          },
+          {
+            "i": 30,
+            "v": "Purén",
+            "n": 117
+          },
+          {
+            "i": 31,
+            "v": "San Antonio",
+            "n": 111
+          },
+          {
+            "i": 32,
+            "v": "La Unión",
+            "n": 110
+          },
+          {
+            "i": 33,
+            "v": "San Nicolás",
+            "n": 109
+          },
+          {
+            "i": 34,
+            "v": "Linares",
+            "n": 108
+          },
+          {
+            "i": 35,
+            "v": "Talca",
+            "n": 104
+          },
+          {
+            "i": 36,
+            "v": "Coyhaique",
+            "n": 103
+          },
+          {
+            "i": 37,
+            "v": "Penco",
+            "n": 102
+          },
+          {
+            "i": 38,
+            "v": "Limache",
+            "n": 101
+          },
+          {
+            "i": 39,
+            "v": "Traiguén",
+            "n": 100
+          },
+          {
+            "i": 40,
+            "v": "Quillón",
+            "n": 100
+          },
+          {
+            "i": 41,
+            "v": "Coihueco",
+            "n": 99
+          },
+          {
+            "i": 42,
+            "v": "Hualqui",
+            "n": 98
+          },
+          {
+            "i": 43,
+            "v": "Chillán Viejo",
+            "n": 97
+          },
+          {
+            "i": 44,
+            "v": "Quillota",
+            "n": 95
+          },
+          {
+            "i": 45,
+            "v": "Florida",
+            "n": 93
+          },
+          {
+            "i": 46,
+            "v": "Los Sauces",
+            "n": 91
+          },
+          {
+            "i": 47,
+            "v": "San Clemente",
+            "n": 91
+          },
+          {
+            "i": 48,
+            "v": "San Carlos",
+            "n": 90
+          },
+          {
+            "i": 49,
+            "v": "Nacimiento",
+            "n": 89
+          },
+          {
+            "i": 50,
+            "v": "Colina",
+            "n": 88
+          },
+          {
+            "i": 51,
+            "v": "Cabrero",
+            "n": 87
+          },
+          {
+            "i": 52,
+            "v": "Parral",
+            "n": 87
+          },
+          {
+            "i": 53,
+            "v": "San Pedro de la Paz",
+            "n": 87
+          },
+          {
+            "i": 54,
+            "v": "Mariquina",
+            "n": 87
+          },
+          {
+            "i": 55,
+            "v": "Lumaco",
+            "n": 84
+          },
+          {
+            "i": 56,
+            "v": "Laja",
+            "n": 81
+          },
+          {
+            "i": 57,
+            "v": "Quilpué",
+            "n": 81
+          },
+          {
+            "i": 58,
+            "v": "Río Claro",
+            "n": 81
+          },
+          {
+            "i": 59,
+            "v": "Curicó",
+            "n": 80
+          },
+          {
+            "i": 60,
+            "v": "Litueche",
+            "n": 79
+          },
+          {
+            "i": 61,
+            "v": "Pencahue",
+            "n": 76
+          },
+          {
+            "i": 62,
+            "v": "Vilcún",
+            "n": 75
+          },
+          {
+            "i": 63,
+            "v": "Villarrica",
+            "n": 73
+          },
+          {
+            "i": 64,
+            "v": "Curacaví",
+            "n": 73
+          },
+          {
+            "i": 65,
+            "v": "San Ignacio",
+            "n": 73
+          },
+          {
+            "i": 66,
+            "v": "Santo Domingo",
+            "n": 73
+          },
+          {
+            "i": 67,
+            "v": "Villa Alemana",
+            "n": 72
+          },
+          {
+            "i": 68,
+            "v": "Tiltil",
+            "n": 71
+          },
+          {
+            "i": 69,
+            "v": "Casablanca",
+            "n": 70
+          },
+          {
+            "i": 70,
+            "v": "Longaví",
+            "n": 67
+          },
+          {
+            "i": 71,
+            "v": "Sin registro",
+            "n": 67
+          },
+          {
+            "i": 72,
+            "v": "Valdivia",
+            "n": 67
+          },
+          {
+            "i": 73,
+            "v": "Las Cabras",
+            "n": 65
+          },
+          {
+            "i": 74,
+            "v": "Bulnes",
+            "n": 65
+          },
+          {
+            "i": 75,
+            "v": "Paine",
+            "n": 63
+          },
+          {
+            "i": 76,
+            "v": "San Vicente de Tagua Tagua",
+            "n": 62
+          },
+          {
+            "i": 77,
+            "v": "Molina",
+            "n": 61
+          },
+          {
+            "i": 78,
+            "v": "Marchigüe",
+            "n": 61
+          },
+          {
+            "i": 79,
+            "v": "San Rafael",
+            "n": 60
+          },
+          {
+            "i": 80,
+            "v": "Retiro",
+            "n": 60
+          },
+          {
+            "i": 81,
+            "v": "Gorbea",
+            "n": 58
+          },
+          {
+            "i": 82,
+            "v": "Arauco",
+            "n": 57
+          },
+          {
+            "i": 83,
+            "v": "Santa Juana",
+            "n": 57
+          },
+          {
+            "i": 84,
+            "v": "Castro",
+            "n": 57
+          },
+          {
+            "i": 85,
+            "v": "Concepción",
+            "n": 55
+          },
+          {
+            "i": 86,
+            "v": "Paillaco",
+            "n": 55
+          },
+          {
+            "i": 87,
+            "v": "Yerbas Buenas",
+            "n": 55
+          },
+          {
+            "i": 88,
+            "v": "Perquenco",
+            "n": 54
+          },
+          {
+            "i": 89,
+            "v": "Navidad",
+            "n": 54
+          },
+          {
+            "i": 90,
+            "v": "Talcahuano",
+            "n": 53
+          },
+          {
+            "i": 91,
+            "v": "Teno",
+            "n": 53
+          },
+          {
+            "i": 92,
+            "v": "La Estrella",
+            "n": 53
+          },
+          {
+            "i": 93,
+            "v": "Tirúa",
+            "n": 53
+          },
+          {
+            "i": 94,
+            "v": "Rengo",
+            "n": 53
+          },
+          {
+            "i": 95,
+            "v": "San Fernando",
+            "n": 53
+          },
+          {
+            "i": 96,
+            "v": "Curepto",
+            "n": 52
+          },
+          {
+            "i": 97,
+            "v": "Ránquil",
+            "n": 51
+          },
+          {
+            "i": 98,
+            "v": "Lota",
+            "n": 51
+          },
+          {
+            "i": 99,
+            "v": "Sagrada Familia",
+            "n": 50
+          },
+          {
+            "i": 100,
+            "v": "Paredones",
+            "n": 50
+          },
+          {
+            "i": 101,
+            "v": "La Serena",
+            "n": 49
+          },
+          {
+            "i": 102,
+            "v": "La Calera",
+            "n": 49
+          },
+          {
+            "i": 103,
+            "v": "Loncoche",
+            "n": 48
+          },
+          {
+            "i": 104,
+            "v": "Coelemu",
+            "n": 48
+          },
+          {
+            "i": 105,
+            "v": "El Carmen",
+            "n": 48
+          },
+          {
+            "i": 106,
+            "v": "Coltauco",
+            "n": 47
+          },
+          {
+            "i": 107,
+            "v": "Dalcahue",
+            "n": 44
+          },
+          {
+            "i": 108,
+            "v": "Los Lagos",
+            "n": 41
+          },
+          {
+            "i": 109,
+            "v": "Talagante",
+            "n": 40
+          },
+          {
+            "i": 110,
+            "v": "María Pinto",
+            "n": 40
+          },
+          {
+            "i": 111,
+            "v": "Hualañé",
+            "n": 40
+          },
+          {
+            "i": 112,
+            "v": "Pichidegua",
+            "n": 39
+          },
+          {
+            "i": 113,
+            "v": "Santa Cruz",
+            "n": 39
+          },
+          {
+            "i": 114,
+            "v": "Cunco",
+            "n": 38
+          },
+          {
+            "i": 115,
+            "v": "Puerto Saavedra",
+            "n": 38
+          },
+          {
+            "i": 116,
+            "v": "Ancud",
+            "n": 38
+          },
+          {
+            "i": 117,
+            "v": "Chonchi",
+            "n": 38
+          },
+          {
+            "i": 118,
+            "v": "Pinto",
+            "n": 37
+          },
+          {
+            "i": 119,
+            "v": "Quellón",
+            "n": 37
+          },
+          {
+            "i": 120,
+            "v": "Ercilla",
+            "n": 36
+          },
+          {
+            "i": 121,
+            "v": "Pudahuel",
+            "n": 36
+          },
+          {
+            "i": 122,
+            "v": "Quirihue",
+            "n": 36
+          },
+          {
+            "i": 123,
+            "v": "Yungay",
+            "n": 36
+          },
+          {
+            "i": 124,
+            "v": "Curanilahue",
+            "n": 36
+          },
+          {
+            "i": 125,
+            "v": "Calbuco",
+            "n": 35
+          },
+          {
+            "i": 126,
+            "v": "Portezuelo",
+            "n": 35
+          },
+          {
+            "i": 127,
+            "v": "Constitución",
+            "n": 35
+          },
+          {
+            "i": 128,
+            "v": "Chimbarongo",
+            "n": 35
+          },
+          {
+            "i": 129,
+            "v": "Panguipulli",
+            "n": 34
+          },
+          {
+            "i": 130,
+            "v": "Negrete",
+            "n": 34
+          },
+          {
+            "i": 131,
+            "v": "Mostazal",
+            "n": 33
+          },
+          {
+            "i": 132,
+            "v": "Río Bueno",
+            "n": 33
+          },
+          {
+            "i": 133,
+            "v": "Quilleco",
+            "n": 33
+          },
+          {
+            "i": 134,
+            "v": "San Juan de la Costa",
+            "n": 33
+          },
+          {
+            "i": 135,
+            "v": "Ninhue",
+            "n": 33
+          },
+          {
+            "i": 136,
+            "v": "Viña del Mar",
+            "n": 32
+          },
+          {
+            "i": 137,
+            "v": "Renaico",
+            "n": 32
+          },
+          {
+            "i": 138,
+            "v": "La Ligua",
+            "n": 32
+          },
+          {
+            "i": 139,
+            "v": "Natales",
+            "n": 31
+          },
+          {
+            "i": 140,
+            "v": "Machalí",
+            "n": 31
+          },
+          {
+            "i": 141,
+            "v": "Nogales",
+            "n": 31
+          },
+          {
+            "i": 142,
+            "v": "Padre Las Casas",
+            "n": 30
+          },
+          {
+            "i": 143,
+            "v": "Pemuco",
+            "n": 30
+          },
+          {
+            "i": 144,
+            "v": "Rancagua",
+            "n": 30
+          },
+          {
+            "i": 145,
+            "v": "Puente Alto",
+            "n": 29
+          },
+          {
+            "i": 146,
+            "v": "Pichilemu",
+            "n": 29
+          },
+          {
+            "i": 147,
+            "v": "Osorno",
+            "n": 28
+          },
+          {
+            "i": 148,
+            "v": "Máfil",
+            "n": 28
+          },
+          {
+            "i": 149,
+            "v": "Cartagena",
+            "n": 28
+          },
+          {
+            "i": 150,
+            "v": "Teodoro Schmidt",
+            "n": 27
+          },
+          {
+            "i": 151,
+            "v": "Peñaflor",
+            "n": 27
+          },
+          {
+            "i": 152,
+            "v": "San Rosendo",
+            "n": 27
+          },
+          {
+            "i": 153,
+            "v": "Melipeuco",
+            "n": 27
+          },
+          {
+            "i": 154,
+            "v": "Romeral",
+            "n": 26
+          },
+          {
+            "i": 155,
+            "v": "Villa Alegre",
+            "n": 26
+          },
+          {
+            "i": 156,
+            "v": "Buin",
+            "n": 26
+          },
+          {
+            "i": 157,
+            "v": "Monte Patria",
+            "n": 26
+          },
+          {
+            "i": 158,
+            "v": "Chanco",
+            "n": 26
+          },
+          {
+            "i": 159,
+            "v": "Olmué",
+            "n": 26
+          },
+          {
+            "i": 160,
+            "v": "Los Vilos",
+            "n": 26
+          },
+          {
+            "i": 161,
+            "v": "Ñiquén",
+            "n": 26
+          },
+          {
+            "i": 162,
+            "v": "Padre Hurtado",
+            "n": 25
+          },
+          {
+            "i": 163,
+            "v": "Toltén",
+            "n": 25
+          },
+          {
+            "i": 164,
+            "v": "Pirque",
+            "n": 25
+          },
+          {
+            "i": 165,
+            "v": "Codegua",
+            "n": 25
+          },
+          {
+            "i": 166,
+            "v": "Lolol",
+            "n": 25
+          },
+          {
+            "i": 167,
+            "v": "LEBU",
+            "n": 25
+          },
+          {
+            "i": 168,
+            "v": "Pucón",
+            "n": 24
+          },
+          {
+            "i": 169,
+            "v": "Lonquimay",
+            "n": 24
+          },
+          {
+            "i": 170,
+            "v": "Punta Arenas",
+            "n": 24
+          },
+          {
+            "i": 171,
+            "v": "Quilicura",
+            "n": 24
+          },
+          {
+            "i": 172,
+            "v": "Doñihue",
+            "n": 24
+          },
+          {
+            "i": 173,
+            "v": "San José de Maipo",
+            "n": 24
+          },
+          {
+            "i": 174,
+            "v": "Hijuelas",
+            "n": 24
+          },
+          {
+            "i": 175,
+            "v": "Algarrobo",
+            "n": 24
+          },
+          {
+            "i": 176,
+            "v": "Alhué",
+            "n": 23
+          },
+          {
+            "i": 177,
+            "v": "Vallenar",
+            "n": 23
+          },
+          {
+            "i": 178,
+            "v": "El Quisco",
+            "n": 23
+          },
+          {
+            "i": 179,
+            "v": "Pumanque",
+            "n": 23
+          },
+          {
+            "i": 180,
+            "v": "Coquimbo",
+            "n": 22
+          },
+          {
+            "i": 181,
+            "v": "El Monte",
+            "n": 22
+          },
+          {
+            "i": 182,
+            "v": "Curacautín",
+            "n": 22
+          },
+          {
+            "i": 183,
+            "v": "Rauco",
+            "n": 22
+          },
+          {
+            "i": 184,
+            "v": "Coinco",
+            "n": 21
+          },
+          {
+            "i": 185,
+            "v": "Malloa",
+            "n": 21
+          },
+          {
+            "i": 186,
+            "v": "Peralillo",
+            "n": 21
+          },
+          {
+            "i": 187,
+            "v": "Vicuña",
+            "n": 21
+          },
+          {
+            "i": 188,
+            "v": "Maullín",
+            "n": 21
+          },
+          {
+            "i": 189,
+            "v": "Salamanca",
+            "n": 21
+          },
+          {
+            "i": 190,
+            "v": "Hualpén",
+            "n": 20
+          },
+          {
+            "i": 191,
+            "v": "Vichuquén",
+            "n": 20
+          },
+          {
+            "i": 192,
+            "v": "San Pablo",
+            "n": 20
+          },
+          {
+            "i": 193,
+            "v": "Pelarco",
+            "n": 20
+          },
+          {
+            "i": 194,
+            "v": "Chillán VIejo",
+            "n": 20
+          },
+          {
+            "i": 195,
+            "v": "Chiguayante",
+            "n": 19
+          },
+          {
+            "i": 196,
+            "v": "Puerto Varas",
+            "n": 19
+          },
+          {
+            "i": 197,
+            "v": "Corral",
+            "n": 19
+          },
+          {
+            "i": 198,
+            "v": "Río Ibáñez",
+            "n": 19
+          },
+          {
+            "i": 199,
+            "v": "Lanco",
+            "n": 19
+          },
+          {
+            "i": 200,
+            "v": "Trehuaco",
+            "n": 19
+          },
+          {
+            "i": 201,
+            "v": "Contulmo",
+            "n": 18
+          },
+          {
+            "i": 202,
+            "v": "Chépica",
+            "n": 18
+          },
+          {
+            "i": 203,
+            "v": "Los Muermos",
+            "n": 17
+          },
+          {
+            "i": 204,
+            "v": "Pelluhue",
+            "n": 16
+          },
+          {
+            "i": 205,
+            "v": "Santa Bárbara",
+            "n": 16
+          },
+          {
+            "i": 206,
+            "v": "Llay-Llay",
+            "n": 16
+          },
+          {
+            "i": 207,
+            "v": "Graneros",
+            "n": 15
+          },
+          {
+            "i": 208,
+            "v": "Requínoa",
+            "n": 15
+          },
+          {
+            "i": 209,
+            "v": "Peumo",
+            "n": 15
+          },
+          {
+            "i": 210,
+            "v": "Quintero",
+            "n": 15
+          },
+          {
+            "i": 211,
+            "v": "La Cruz",
+            "n": 15
+          },
+          {
+            "i": 212,
+            "v": "Catemu",
+            "n": 15
+          },
+          {
+            "i": 213,
+            "v": "Colbún",
+            "n": 14
+          },
+          {
+            "i": 214,
+            "v": "Río Negro",
+            "n": 14
+          },
+          {
+            "i": 215,
+            "v": "Palmilla",
+            "n": 14
+          },
+          {
+            "i": 216,
+            "v": "San Felipe",
+            "n": 14
+          },
+          {
+            "i": 217,
+            "v": "San Bernardo",
+            "n": 13
+          },
+          {
+            "i": 218,
+            "v": "Cochrane",
+            "n": 13
+          },
+          {
+            "i": 219,
+            "v": "Queilén",
+            "n": 13
+          },
+          {
+            "i": 220,
+            "v": "Lago Ranco",
+            "n": 12
+          },
+          {
+            "i": 221,
+            "v": "Paihuano",
+            "n": 12
+          },
+          {
+            "i": 222,
+            "v": "Arica",
+            "n": 12
+          },
+          {
+            "i": 223,
+            "v": "El Tabo",
+            "n": 12
+          },
+          {
+            "i": 224,
+            "v": "Chile Chico",
+            "n": 12
+          },
+          {
+            "i": 225,
+            "v": "Freirina",
+            "n": 12
+          },
+          {
+            "i": 226,
+            "v": "Maipú",
+            "n": 12
+          },
+          {
+            "i": 227,
+            "v": "Tucapel",
+            "n": 11
+          },
+          {
+            "i": 228,
+            "v": "Fresia",
+            "n": 11
+          },
+          {
+            "i": 229,
+            "v": "Providencia",
+            "n": 11
+          },
+          {
+            "i": 230,
+            "v": "Panquehue",
+            "n": 11
+          },
+          {
+            "i": 231,
+            "v": "Copiapó",
+            "n": 11
+          },
+          {
+            "i": 232,
+            "v": "Illapel",
+            "n": 11
+          },
+          {
+            "i": 233,
+            "v": "Puqueldón",
+            "n": 11
+          },
+          {
+            "i": 234,
+            "v": "Isla de Maipo",
+            "n": 10
+          },
+          {
+            "i": 235,
+            "v": "Quilaco",
+            "n": 10
+          },
+          {
+            "i": 236,
+            "v": "Puchuncaví",
+            "n": 10
+          },
+          {
+            "i": 237,
+            "v": "Puerto Octay",
+            "n": 10
+          },
+          {
+            "i": 238,
+            "v": "Porvenir",
+            "n": 10
+          },
+          {
+            "i": 239,
+            "v": "Cobquecura",
+            "n": 10
+          },
+          {
+            "i": 240,
+            "v": "Nancagua",
+            "n": 10
+          },
+          {
+            "i": 241,
+            "v": "SAN CARLOS",
+            "n": 10
+          },
+          {
+            "i": 242,
+            "v": "Curaco de Vélez",
+            "n": 10
+          },
+          {
+            "i": 243,
+            "v": "Chile chico",
+            "n": 9
+          },
+          {
+            "i": 244,
+            "v": "Torres del Paine",
+            "n": 9
+          },
+          {
+            "i": 245,
+            "v": "Aysén",
+            "n": 9
+          },
+          {
+            "i": 246,
+            "v": "Pica",
+            "n": 9
+          },
+          {
+            "i": 247,
+            "v": "COIHUECO",
+            "n": 9
+          },
+          {
+            "i": 248,
+            "v": "Curarrehue",
+            "n": 9
+          },
+          {
+            "i": 249,
+            "v": "Huara",
+            "n": 9
+          },
+          {
+            "i": 250,
+            "v": "Isla De Maipo",
+            "n": 9
+          },
+          {
+            "i": 251,
+            "v": "Concón",
+            "n": 8
+          },
+          {
+            "i": 252,
+            "v": "Placilla",
+            "n": 8
+          },
+          {
+            "i": 253,
+            "v": "Licantén",
+            "n": 8
+          },
+          {
+            "i": 254,
+            "v": "San Pedro de La Paz",
+            "n": 8
+          },
+          {
+            "i": 255,
+            "v": "Tierra Amarilla",
+            "n": 8
+          },
+          {
+            "i": 256,
+            "v": "San Pedro De La Paz",
+            "n": 8
+          },
+          {
+            "i": 257,
+            "v": "Renca",
+            "n": 7
+          },
+          {
+            "i": 258,
+            "v": "Huechuraba",
+            "n": 7
+          },
+          {
+            "i": 259,
+            "v": "Quinta de Tilcoco",
+            "n": 7
+          },
+          {
+            "i": 260,
+            "v": "Cisnes",
+            "n": 7
+          },
+          {
+            "i": 261,
+            "v": "Futrono",
+            "n": 7
+          },
+          {
+            "i": 262,
+            "v": "Calera de Tango",
+            "n": 7
+          },
+          {
+            "i": 263,
+            "v": "Recoleta",
+            "n": 6
+          },
+          {
+            "i": 264,
+            "v": "Vitacura",
+            "n": 6
+          },
+          {
+            "i": 265,
+            "v": "San Gregorio",
+            "n": 6
+          },
+          {
+            "i": 266,
+            "v": "Las Condes",
+            "n": 6
+          },
+          {
+            "i": 267,
+            "v": "Calama",
+            "n": 6
+          },
+          {
+            "i": 268,
+            "v": "PEMUCO",
+            "n": 6
+          },
+          {
+            "i": 269,
+            "v": "Alto del Carmen",
+            "n": 6
+          },
+          {
+            "i": 270,
+            "v": "Lo Barnechea",
+            "n": 6
+          },
+          {
+            "i": 271,
+            "v": "Olivar",
+            "n": 6
+          },
+          {
+            "i": 272,
+            "v": "San Fabián",
+            "n": 6
+          },
+          {
+            "i": 273,
+            "v": "Purranque",
+            "n": 6
+          },
+          {
+            "i": 274,
+            "v": "Río Hurtado",
+            "n": 5
+          },
+          {
+            "i": 275,
+            "v": "Zapallar",
+            "n": 5
+          },
+          {
+            "i": 276,
+            "v": "Putre",
+            "n": 5
+          },
+          {
+            "i": 277,
+            "v": "QUIRIHUE",
+            "n": 5
+          },
+          {
+            "i": 278,
+            "v": "COELEMU",
+            "n": 5
+          },
+          {
+            "i": 279,
+            "v": "Quemchi",
+            "n": 5
+          },
+          {
+            "i": 280,
+            "v": "San Vicente",
+            "n": 5
+          },
+          {
+            "i": 281,
+            "v": "Hualaihué",
+            "n": 5
+          },
+          {
+            "i": 282,
+            "v": "Huasco",
+            "n": 5
+          },
+          {
+            "i": 283,
+            "v": "Padre las casas",
+            "n": 5
+          },
+          {
+            "i": 284,
+            "v": "Nueva imperial",
+            "n": 4
+          },
+          {
+            "i": 285,
+            "v": "Futaleufú",
+            "n": 4
+          },
+          {
+            "i": 286,
+            "v": "Río Verde",
+            "n": 4
+          },
+          {
+            "i": 287,
+            "v": "SAN IGNACIO",
+            "n": 4
+          },
+          {
+            "i": 288,
+            "v": "ARAUCO",
+            "n": 4
+          },
+          {
+            "i": 289,
+            "v": "San pedro de la paz",
+            "n": 4
+          },
+          {
+            "i": 290,
+            "v": "Quinchao",
+            "n": 4
+          },
+          {
+            "i": 291,
+            "v": "Camiña",
+            "n": 4
+          },
+          {
+            "i": 292,
+            "v": "Rinconada",
+            "n": 4
+          },
+          {
+            "i": 293,
+            "v": "Cochamó",
+            "n": 3
+          },
+          {
+            "i": 294,
+            "v": "La Florida",
+            "n": 3
+          },
+          {
+            "i": 295,
+            "v": "Lago Verde",
+            "n": 3
+          },
+          {
+            "i": 296,
+            "v": "Colchane",
+            "n": 3
+          },
+          {
+            "i": 297,
+            "v": "Papudo",
+            "n": 3
+          },
+          {
+            "i": 298,
+            "v": "Antuco",
+            "n": 3
+          },
+          {
+            "i": 299,
+            "v": "Combarbalá",
+            "n": 3
+          },
+          {
+            "i": 300,
+            "v": "Cabildo",
+            "n": 3
+          },
+          {
+            "i": 301,
+            "v": "Cabo de Hornos",
+            "n": 2
+          },
+          {
+            "i": 302,
+            "v": "La Reina",
+            "n": 2
+          },
+          {
+            "i": 303,
+            "v": "Timaukel",
+            "n": 2
+          },
+          {
+            "i": 304,
+            "v": "Primavera",
+            "n": 2
+          },
+          {
+            "i": 305,
+            "v": "Peñalolén",
+            "n": 2
+          },
+          {
+            "i": 306,
+            "v": "Punitaqui",
+            "n": 2
+          },
+          {
+            "i": 307,
+            "v": "San Miguel",
+            "n": 2
+          },
+          {
+            "i": 308,
+            "v": "EL CARMEN",
+            "n": 2
+          },
+          {
+            "i": 309,
+            "v": "TREHUACO",
+            "n": 2
+          },
+          {
+            "i": 310,
+            "v": "PINTO",
+            "n": 2
+          },
+          {
+            "i": 311,
+            "v": "BULNES",
+            "n": 2
+          },
+          {
+            "i": 312,
+            "v": "San Pedro de la paz",
+            "n": 2
+          },
+          {
+            "i": 313,
+            "v": "San Pedro de Atacama",
+            "n": 2
+          },
+          {
+            "i": 314,
+            "v": "Alto Biobío",
+            "n": 2
+          },
+          {
+            "i": 315,
+            "v": "Llanquihue",
+            "n": 2
+          },
+          {
+            "i": 316,
+            "v": "Pozo Almonte",
+            "n": 2
+          },
+          {
+            "i": 317,
+            "v": "La Pintana",
+            "n": 2
+          },
+          {
+            "i": 318,
+            "v": "CholChol",
+            "n": 2
+          },
+          {
+            "i": 319,
+            "v": "Cerrillos",
+            "n": 1
+          },
+          {
+            "i": 320,
+            "v": "La serena",
+            "n": 1
+          },
+          {
+            "i": 321,
+            "v": "CasaBlanca",
+            "n": 1
+          },
+          {
+            "i": 322,
+            "v": "PORTEZUELO",
+            "n": 1
+          },
+          {
+            "i": 323,
+            "v": "COBQUECURA",
+            "n": 1
+          },
+          {
+            "i": 324,
+            "v": "NINHUE",
+            "n": 1
+          },
+          {
+            "i": 325,
+            "v": "YUNGAY",
+            "n": 1
+          },
+          {
+            "i": 326,
+            "v": "talcahuano",
+            "n": 1
+          },
+          {
+            "i": 327,
+            "v": "LAJA",
+            "n": 1
+          },
+          {
+            "i": 328,
+            "v": "san pedro de la paz",
+            "n": 1
+          },
+          {
+            "i": 329,
+            "v": "TALCAHUANO",
+            "n": 1
+          },
+          {
+            "i": 330,
+            "v": "NACIMIENTO",
+            "n": 1
+          },
+          {
+            "i": 331,
+            "v": "CABRERO",
+            "n": 1
+          },
+          {
+            "i": 332,
+            "v": "Palena",
+            "n": 1
+          },
+          {
+            "i": 333,
+            "v": "San Juan de La Costa",
+            "n": 1
+          },
+          {
+            "i": 334,
+            "v": "Laguna Blanca",
+            "n": 1
+          },
+          {
+            "i": 335,
+            "v": "Frutillar",
+            "n": 1
+          },
+          {
+            "i": 336,
+            "v": "Villa O'Higgins",
+            "n": 1
+          },
+          {
+            "i": 337,
+            "v": "Camarones",
+            "n": 1
+          },
+          {
+            "i": 338,
+            "v": "Putaendo",
+            "n": 1
+          },
+          {
+            "i": 339,
+            "v": "San Esteban",
+            "n": 1
+          },
+          {
+            "i": 340,
+            "v": "COINCO",
+            "n": 1
+          },
+          {
+            "i": 341,
+            "v": "quinta DE TILCOCO",
+            "n": 1
+          },
+          {
+            "i": 342,
+            "v": "Villa O´Higgins",
+            "n": 1
+          },
+          {
+            "i": 343,
+            "v": "General Lagos",
+            "n": 1
+          },
+          {
+            "i": 344,
+            "v": "Canela",
+            "n": 1
+          },
+          {
+            "i": 345,
+            "v": "Santa María",
+            "n": 1
+          },
+          {
+            "i": 346,
+            "v": "Los Andes",
+            "n": 1
+          },
+          {
+            "i": 347,
+            "v": "San pedro",
+            "n": 1
+          },
+          {
+            "i": 348,
+            "v": "lolol",
+            "n": 1
+          },
+          {
+            "i": 349,
+            "v": "palmilla",
+            "n": 1
+          },
+          {
+            "i": 350,
+            "v": "Puyehue",
+            "n": 1
+          }
+        ],
+        "temporada": [
+          {
+            "i": 0,
+            "v": "2025-2026",
+            "n": 3309
+          },
+          {
+            "i": 1,
+            "v": "2024-2025",
+            "n": 3204
+          },
+          {
+            "i": 2,
+            "v": "2023-2024",
+            "n": 2838
+          },
+          {
+            "i": 3,
+            "v": "2022-2023",
+            "n": 2274
+          },
+          {
+            "i": 4,
+            "v": "2021-2022",
+            "n": 955
+          },
+          {
+            "i": 5,
+            "v": "2020-2021",
+            "n": 820
+          },
+          {
+            "i": 6,
+            "v": "2019-2020",
+            "n": 489
+          },
+          {
+            "i": 7,
+            "v": "2018-2019",
+            "n": 474
+          },
+          {
+            "i": 8,
+            "v": "2017-2018",
+            "n": 342
+          }
+        ],
+        "causa_grupo": [
+          {
+            "i": 0,
+            "v": "Negligentes",
+            "n": 8730
+          },
+          {
+            "i": 1,
+            "v": "Intencionales",
+            "n": 4484
+          },
+          {
+            "i": 2,
+            "v": "Accidentales",
+            "n": 972
+          },
+          {
+            "i": 3,
+            "v": "Indeterminadas",
+            "n": 423
+          },
+          {
+            "i": 4,
+            "v": "Naturales",
+            "n": 96
+          }
+        ],
+        "causa_general": [
+          {
+            "i": 0,
+            "v": "Incendios intencionales",
+            "n": 4484
+          },
+          {
+            "i": 1,
+            "v": "Otras quemas",
+            "n": 2490
+          },
+          {
+            "i": 2,
+            "v": "Faenas agrícolas y pecuarias",
+            "n": 1453
+          },
+          {
+            "i": 3,
+            "v": "Líneas eléctricas",
+            "n": 1248
+          },
+          {
+            "i": 4,
+            "v": "Otras causas",
+            "n": 1056
+          },
+          {
+            "i": 5,
+            "v": "Parcelaciones, edificaciones residenciales, industriales u otras en zonas rurales o de interfaz",
+            "n": 1046
+          },
+          {
+            "i": 6,
+            "v": "Faenas forestales",
+            "n": 993
+          },
+          {
+            "i": 7,
+            "v": "Actividades al aire libre",
+            "n": 495
+          },
+          {
+            "i": 8,
+            "v": "Incendios de causa indeterminada",
+            "n": 423
+          },
+          {
+            "i": 9,
+            "v": "Originados por desplazamiento de personas, vehículos o aeronaves",
+            "n": 419
+          },
+          {
+            "i": 10,
+            "v": "Actividades de control y extinción de incendios forestales",
+            "n": 272
+          },
+          {
+            "i": 11,
+            "v": "Producción y/o extracción de productos y/o derivados del bosque",
+            "n": 201
+          },
+          {
+            "i": 12,
+            "v": "Incendios naturales",
+            "n": 96
+          },
+          {
+            "i": 13,
+            "v": "Vías férreas",
+            "n": 29
+          }
+        ],
+        "causa_especifica": [
+          {
+            "i": 0,
+            "v": "No se identifica la motivación",
+            "n": 2608
+          },
+          {
+            "i": 1,
+            "v": "Quema de basuras residencial o desechos vegetales",
+            "n": 1436
+          },
+          {
+            "i": 2,
+            "v": "Quema no avisada con fines de limpieza en canales, cunetas, cercos o caminos (en predios particulares o públicos) que se propaga libre y sin control",
+            "n": 857
+          },
+          {
+            "i": 3,
+            "v": "Quema no avisada de desechos agrícolas que se propaga libre y sin control",
+            "n": 685
+          },
+          {
+            "i": 4,
+            "v": "Quema no avisada de desechos forestales que se propaga libre y sin control",
+            "n": 680
+          },
+          {
+            "i": 5,
+            "v": "Ataque incendiario (ataques dirigidos a bienes muebles o inmuebles)",
+            "n": 572
+          },
+          {
+            "i": 6,
+            "v": "Vandalismo (excluidos terrorismo y atentado incendiario)",
+            "n": 550
+          },
+          {
+            "i": 7,
+            "v": "Acciones asociadas a fumar",
+            "n": 532
+          },
+          {
+            "i": 8,
+            "v": "Generado por el uso de equipos o herramientas con fines de construcción, limpieza o montaje de estructuras",
+            "n": 507
+          },
+          {
+            "i": 9,
+            "v": "Empleo de fuentes de calor en áreas no habilitadas, como fogatas para cocinar, cocinillas, calefacción, elementos para iluminar u otros",
+            "n": 487
+          },
+          {
+            "i": 10,
+            "v": "Se investiga, pero no es posible establecer la causa",
+            "n": 411
+          },
+          {
+            "i": 11,
+            "v": "Obtención de beneficios económicos (compra de madera, presión por trabajo, robo maderero, otros)",
+            "n": 294
+          },
+          {
+            "i": 12,
+            "v": "Corte de conductor eléctrico por caída de rama o árbol (excepto por faena forestal o agrícola)",
+            "n": 286
+          },
+          {
+            "i": 13,
+            "v": "Rebrote de incendio anterior, declarado extinto",
+            "n": 272
+          },
+          {
+            "i": 14,
+            "v": "Sobrecalentamiento de estructuras asociados al sistema eléctrico (poste, transformador, uniones, aisladores, otros)",
+            "n": 256
+          },
+          {
+            "i": 15,
+            "v": "Uso de fuego por transeúntes",
+            "n": 248
+          },
+          {
+            "i": 16,
+            "v": "Partículas incandescentes generadas por roce de maquinaria o herramienta agrícola con rocas, cercos o material metálico",
+            "n": 242
+          },
+          {
+            "i": 17,
+            "v": "Incendio estructural",
+            "n": 188
+          },
+          {
+            "i": 18,
+            "v": "Combustión de la vegetación, producto del contacto o proximidad con el tendido eléctrico",
+            "n": 188
+          },
+          {
+            "i": 19,
+            "v": "Otras causas negligentes no clasificadas en faenas agrícolas y pecuarias",
+            "n": 188
+          },
+          {
+            "i": 20,
+            "v": "Otras causas eléctricas negligentes no clasificadas",
+            "n": 182
+          },
+          {
+            "i": 21,
+            "v": "Corte de conductor eléctrico por caída o fatiga de estructura de tendido eléctrico o postación",
+            "n": 181
+          },
+          {
+            "i": 22,
+            "v": "Otras actividades negligentes no clasificadas",
+            "n": 169
+          },
+          {
+            "i": 23,
+            "v": "Empleo de fuentes de calor en faena de extracción y/o confección de leña no industrial",
+            "n": 157
+          },
+          {
+            "i": 24,
+            "v": "Empleo de fuentes de calor en actividades relacionadas a parcelaciones (asados, tijerales, fogatas, otros)",
+            "n": 140
+          },
+          {
+            "i": 25,
+            "v": "Empleo de fuentes de calor en vertederos o basurales",
+            "n": 139
+          },
+          {
+            "i": 26,
+            "v": "Generado por conexión irregular de energía eléctrica",
+            "n": 124
+          },
+          {
+            "i": 27,
+            "v": "Empleo de fuentes de calor por personas en situación de calle",
+            "n": 119
+          },
+          {
+            "i": 28,
+            "v": "Conflicto territorial o patrimonial (deslindes, propiedades, apropiaciones de terreno, otros)",
+            "n": 117
+          },
+          {
+            "i": 29,
+            "v": "Conflicto entre personas (venganza, familiares, pasionales, otros)",
+            "n": 108
+          },
+          {
+            "i": 30,
+            "v": "Caída de rayo",
+            "n": 95
+          },
+          {
+            "i": 31,
+            "v": "Accidente o incendio de vehículo",
+            "n": 89
+          },
+          {
+            "i": 32,
+            "v": "Empleo de fuentes de calor por menores de edad",
+            "n": 78
+          },
+          {
+            "i": 33,
+            "v": "Cambio irregular de uso del suelo (habitacional, parcelaciones, agrícola, recreacional, otros)",
+            "n": 75
+          },
+          {
+            "i": 34,
+            "v": "Quema avisada de desechos agrícolas que se propaga libre y sin control",
+            "n": 70
+          },
+          {
+            "i": 35,
+            "v": "Provocado por persona bajo la influencia del alcohol y/o drogas",
+            "n": 69
+          },
+          {
+            "i": 36,
+            "v": "Otros incendios accidentales no clasificados en faenas agropecuarias",
+            "n": 67
+          },
+          {
+            "i": 37,
+            "v": "Contacto o corte de conductor eléctrico producto de faena forestal",
+            "n": 62
+          },
+          {
+            "i": 38,
+            "v": "Generado por vehículo (roce metálico, tubo de escape, desperfecto, otros)",
+            "n": 61
+          },
+          {
+            "i": 39,
+            "v": "Quema avisada de desechos agrícolas mal ejecutada que se propaga libre y sin control (según plan de quema y/o aviso de quemas)",
+            "n": 59
+          },
+          {
+            "i": 40,
+            "v": "Otro accidente eléctrico no clasificado",
+            "n": 55
+          },
+          {
+            "i": 41,
+            "v": "Otras causas accidentales no clasificadas",
+            "n": 50
+          },
+          {
+            "i": 42,
+            "v": "Corte de cable por crecimiento de vegetación bajo tendido eléctrico",
+            "n": 50
+          },
+          {
+            "i": 43,
+            "v": "Partículas incandescentes generadas por roce de maquinaria o herramienta forestal con rocas, cercos o material metálico",
+            "n": 46
+          },
+          {
+            "i": 44,
+            "v": "Partícula incandescente generada sin roce por vehículo, maquinaria o herramienta agrícola",
+            "n": 46
+          },
+          {
+            "i": 45,
+            "v": "Incendio de maquinaria agrícola (desperfecto, falta de mantención, otros)",
+            "n": 42
+          },
+          {
+            "i": 46,
+            "v": "Para observar operaciones de combate de incendios forestales",
+            "n": 41
+          },
+          {
+            "i": 47,
+            "v": "Fuegos artificiales, bengalas, otros artefactos pirotécnicos o globos aerostáticos",
+            "n": 41
+          },
+          {
+            "i": 48,
+            "v": "Quema avisada de desechos forestales mal ejecutada que se propaga libre y sin control (plan de quemas, aviso de quemas)",
+            "n": 38
+          },
+          {
+            "i": 49,
+            "v": "Contacto de fauna con el tendido eléctrico",
+            "n": 36
+          },
+          {
+            "i": 50,
+            "v": "Desecho de cenizas de chimenea, calefacción, cocina leña, tinajas, otros",
+            "n": 35
+          },
+          {
+            "i": 51,
+            "v": "Otras causas negligentes no clasificadas en faenas forestales",
+            "n": 35
+          },
+          {
+            "i": 52,
+            "v": "Partícula incandescente generada sin roce por vehículo, maquinaria o herramienta forestal",
+            "n": 33
+          },
+          {
+            "i": 53,
+            "v": "Empleo de fuentes de calor en zonas de faenas agropecuarias",
+            "n": 31
+          },
+          {
+            "i": 54,
+            "v": "Empleo de fuentes de calor para eliminación de fauna (roedores, reptiles, avispas, otros)",
+            "n": 30
+          },
+          {
+            "i": 55,
+            "v": "Pirómano (insano mental que disfruta del fuego)",
+            "n": 30
+          },
+          {
+            "i": 56,
+            "v": "Generado por material en combustión expulsado desde chimeneas, cocina a leña, otros",
+            "n": 26
+          },
+          {
+            "i": 57,
+            "v": "Empleo de fuentes de calor en zonas de faenas/campamentos forestales",
+            "n": 24
+          },
+          {
+            "i": 58,
+            "v": "Otros incendios accidentales no clasificados en faenas forestales",
+            "n": 24
+          },
+          {
+            "i": 59,
+            "v": "Quema de desechos industriales",
+            "n": 23
+          },
+          {
+            "i": 60,
+            "v": "Empleo de fuentes de calor para eliminar recubrimiento de conductores eléctricos",
+            "n": 23
+          },
+          {
+            "i": 61,
+            "v": "Generado por infraestructura destinada a la producción de energía (solar, eólica, otros)",
+            "n": 23
+          },
+          {
+            "i": 62,
+            "v": "Rebrote de quema forestal no avisada que se propaga libre y sin control",
+            "n": 21
+          },
+          {
+            "i": 63,
+            "v": "Incendio de maquinaria en faena forestal (desperfecto, falta de mantención, otros)",
+            "n": 21
+          },
+          {
+            "i": 64,
+            "v": "Elaboración de carbón",
+            "n": 20
+          },
+          {
+            "i": 65,
+            "v": "Ignición por combustión espontánea en combustibles orgánicos (fardos de pastos, acopios de aserrín o chips de madera)",
+            "n": 19
+          },
+          {
+            "i": 66,
+            "v": "Empleo de fuentes de calor en actividades religiosas, de peregrinación o de veneración",
+            "n": 17
+          },
+          {
+            "i": 67,
+            "v": "Empleo de fuentes de calor en faenas de extracción de productos del bosque (hongos, frutos, otros), como fogatas para cocinar, calefacción, elementos para iluminar u otros.",
+            "n": 16
+          },
+          {
+            "i": 68,
+            "v": "Contacto o corte de conductor eléctrico producto de faena agrícola o pecuaria",
+            "n": 16
+          },
+          {
+            "i": 69,
+            "v": "Maniobras militares o policiales",
+            "n": 15
+          },
+          {
+            "i": 70,
+            "v": "Encubrimiento de delitos o faltas",
+            "n": 14
+          },
+          {
+            "i": 71,
+            "v": "Contacto de material vegetal (ej. Corteza de eucalipto) o no vegetal (ej. Pizarreños), desprendido y desplazado por acción del viento, con el tendido eléctrico",
+            "n": 14
+          },
+          {
+            "i": 72,
+            "v": "La causa no es investigada",
+            "n": 12
+          },
+          {
+            "i": 73,
+            "v": "Particulas incandescentes generadas por el paso del ferrocarril (sin mantención de fajas de seguridad)",
+            "n": 11
+          },
+          {
+            "i": 74,
+            "v": "Quema avisada de desechos forestales que se propaga libre y sin control",
+            "n": 9
+          },
+          {
+            "i": 75,
+            "v": "Empleo de fuentes de calor en áreas habilitadas, como fogatas, cocinillas u otro elemento para cocinar, calefacción, iluminación u otros fines",
+            "n": 8
+          },
+          {
+            "i": 76,
+            "v": "Empleo de fuentes de calor en actividades de apicultura",
+            "n": 8
+          },
+          {
+            "i": 77,
+            "v": "Partículas incandescentes generadas por el paso del ferrocarril (con mantención de fajas de seguridad)",
+            "n": 7
+          },
+          {
+            "i": 78,
+            "v": "Rebrote de quema agrícola o pecuaria no avisada que se propaga libre y sin control",
+            "n": 7
+          },
+          {
+            "i": 79,
+            "v": "Quema avisada con fines de limpieza en canales, cunetas, cercos o caminos (en predios particulares o públicos) que se propaga libre y sin control",
+            "n": 5
+          },
+          {
+            "i": 80,
+            "v": "Contacto o corte del conductor eléctrico de línea férrea",
+            "n": 5
+          },
+          {
+            "i": 81,
+            "v": "Provocado por persona enferma (loco o demente, excluido el pirómano)",
+            "n": 5
+          },
+          {
+            "i": 82,
+            "v": "Empleo de fuentes de calor en faena de mantención o reparación de líneas férreas",
+            "n": 5
+          },
+          {
+            "i": 83,
+            "v": "Empleo de fuentes de calor para señalización en la ruta o faenas de mantención (campamentos de empresas de mantención, otras)",
+            "n": 4
+          },
+          {
+            "i": 84,
+            "v": "Explosiones",
+            "n": 3
+          },
+          {
+            "i": 85,
+            "v": "Ignición por combustión espontánea en vertederos sin tratamientos y sin reciclaje",
+            "n": 3
+          },
+          {
+            "i": 86,
+            "v": "Parcelaciones, edificaciones residenciales, industriales u otras en zonas rurales o de interfaz",
+            "n": 3
+          },
+          {
+            "i": 87,
+            "v": "Faenas mineras",
+            "n": 2
+          },
+          {
+            "i": 88,
+            "v": "Elaboración y/o cocción de ladrillos",
+            "n": 2
+          },
+          {
+            "i": 89,
+            "v": "Otras causas naturales no clasificadas",
+            "n": 1
+          },
+          {
+            "i": 90,
+            "v": "Accidente ferroviario",
+            "n": 1
+          },
+          {
+            "i": 91,
+            "v": "Extracción o producción de hongos o frutos",
+            "n": 1
+          }
+        ],
+        "causa_general_codigo": [
+          {
+            "i": 0,
+            "v": "2.1",
+            "n": 4484
+          },
+          {
+            "i": 1,
+            "v": "4.8",
+            "n": 2485
+          },
+          {
+            "i": 2,
+            "v": "4.1",
+            "n": 1920
+          },
+          {
+            "i": 3,
+            "v": "4.9",
+            "n": 1143
+          },
+          {
+            "i": 4,
+            "v": "4.2",
+            "n": 1074
+          },
+          {
+            "i": 5,
+            "v": "4.6",
+            "n": 858
+          },
+          {
+            "i": 6,
+            "v": "4.3",
+            "n": 487
+          },
+          {
+            "i": 7,
+            "v": "5.1",
+            "n": 423
+          },
+          {
+            "i": 8,
+            "v": "1.2",
+            "n": 379
+          },
+          {
+            "i": 9,
+            "v": "4.5",
+            "n": 272
+          },
+          {
+            "i": 10,
+            "v": "4.7",
+            "n": 269
+          },
+          {
+            "i": 11,
+            "v": "4.11",
+            "n": 201
+          },
+          {
+            "i": 12,
+            "v": "1.6",
+            "n": 188
+          },
+          {
+            "i": 13,
+            "v": "1.7",
+            "n": 150
+          },
+          {
+            "i": 14,
+            "v": "1.1",
+            "n": 129
+          },
+          {
+            "i": 15,
+            "v": "1.9",
+            "n": 105
+          },
+          {
+            "i": 16,
+            "v": "3.1",
+            "n": 96
+          },
+          {
+            "i": 17,
+            "v": "4.4",
+            "n": 21
+          },
+          {
+            "i": 18,
+            "v": "1.4",
+            "n": 8
+          },
+          {
+            "i": 19,
+            "v": "1.3",
+            "n": 8
+          },
+          {
+            "i": 20,
+            "v": "1.8",
+            "n": 5
+          }
+        ],
+        "causa_codigo": [
+          {
+            "i": 0,
+            "v": "2.1.1",
+            "n": 2608
+          },
+          {
+            "i": 1,
+            "v": "4.8.2",
+            "n": 1436
+          },
+          {
+            "i": 2,
+            "v": "4.8.1",
+            "n": 857
+          },
+          {
+            "i": 3,
+            "v": "4.2.1",
+            "n": 685
+          },
+          {
+            "i": 4,
+            "v": "4.1.1",
+            "n": 680
+          },
+          {
+            "i": 5,
+            "v": "2.1.3",
+            "n": 572
+          },
+          {
+            "i": 6,
+            "v": "2.1.13",
+            "n": 550
+          },
+          {
+            "i": 7,
+            "v": "4.10.4",
+            "n": 532
+          },
+          {
+            "i": 8,
+            "v": "4.6.1",
+            "n": 507
+          },
+          {
+            "i": 9,
+            "v": "4.3.1",
+            "n": 487
+          },
+          {
+            "i": 10,
+            "v": "5.1.1",
+            "n": 411
+          },
+          {
+            "i": 11,
+            "v": "2.1.5",
+            "n": 294
+          },
+          {
+            "i": 12,
+            "v": "4.9.2",
+            "n": 286
+          },
+          {
+            "i": 13,
+            "v": "4.5.1",
+            "n": 272
+          },
+          {
+            "i": 14,
+            "v": "4.9.4",
+            "n": 256
+          },
+          {
+            "i": 15,
+            "v": "4.7.3",
+            "n": 248
+          },
+          {
+            "i": 16,
+            "v": "1.2.2",
+            "n": 242
+          },
+          {
+            "i": 17,
+            "v": "1.6.1",
+            "n": 188
+          },
+          {
+            "i": 18,
+            "v": "4.9.1",
+            "n": 188
+          },
+          {
+            "i": 19,
+            "v": "4.2.8",
+            "n": 188
+          },
+          {
+            "i": 20,
+            "v": "4.9.5",
+            "n": 182
+          },
+          {
+            "i": 21,
+            "v": "4.9.3",
+            "n": 181
+          },
+          {
+            "i": 22,
+            "v": "4.10.12",
+            "n": 169
+          },
+          {
+            "i": 23,
+            "v": "4.11.3",
+            "n": 157
+          },
+          {
+            "i": 24,
+            "v": "4.6.5",
+            "n": 140
+          },
+          {
+            "i": 25,
+            "v": "4.8.5",
+            "n": 139
+          },
+          {
+            "i": 26,
+            "v": "4.6.2",
+            "n": 124
+          },
+          {
+            "i": 27,
+            "v": "4.10.11",
+            "n": 119
+          },
+          {
+            "i": 28,
+            "v": "2.1.4",
+            "n": 117
+          },
+          {
+            "i": 29,
+            "v": "2.1.2",
+            "n": 108
+          },
+          {
+            "i": 30,
+            "v": "3.1.1",
+            "n": 95
+          },
+          {
+            "i": 31,
+            "v": "1.7.1",
+            "n": 89
+          },
+          {
+            "i": 32,
+            "v": "4.10.5",
+            "n": 78
+          },
+          {
+            "i": 33,
+            "v": "2.1.9",
+            "n": 75
+          },
+          {
+            "i": 34,
+            "v": "1.2.1",
+            "n": 70
+          },
+          {
+            "i": 35,
+            "v": "2.1.12",
+            "n": 69
+          },
+          {
+            "i": 36,
+            "v": "1.2.3",
+            "n": 67
+          },
+          {
+            "i": 37,
+            "v": "4.1.3",
+            "n": 62
+          },
+          {
+            "i": 38,
+            "v": "1.7.3",
+            "n": 61
+          },
+          {
+            "i": 39,
+            "v": "4.2.6",
+            "n": 59
+          },
+          {
+            "i": 40,
+            "v": "1.9.3",
+            "n": 55
+          },
+          {
+            "i": 41,
+            "v": "1.10.1",
+            "n": 50
+          },
+          {
+            "i": 42,
+            "v": "4.9.6",
+            "n": 50
+          },
+          {
+            "i": 43,
+            "v": "1.1.2",
+            "n": 46
+          },
+          {
+            "i": 44,
+            "v": "4.2.4",
+            "n": 46
+          },
+          {
+            "i": 45,
+            "v": "4.2.2",
+            "n": 42
+          },
+          {
+            "i": 46,
+            "v": "2.1.6",
+            "n": 41
+          },
+          {
+            "i": 47,
+            "v": "4.10.6",
+            "n": 41
+          },
+          {
+            "i": 48,
+            "v": "4.1.6",
+            "n": 38
+          },
+          {
+            "i": 49,
+            "v": "1.9.1",
+            "n": 36
+          },
+          {
+            "i": 50,
+            "v": "4.6.6",
+            "n": 35
+          },
+          {
+            "i": 51,
+            "v": "4.1.8",
+            "n": 35
+          },
+          {
+            "i": 52,
+            "v": "4.1.4",
+            "n": 33
+          },
+          {
+            "i": 53,
+            "v": "4.2.7",
+            "n": 31
+          },
+          {
+            "i": 54,
+            "v": "4.8.4",
+            "n": 30
+          },
+          {
+            "i": 55,
+            "v": "2.1.10",
+            "n": 30
+          },
+          {
+            "i": 56,
+            "v": "4.6.4",
+            "n": 26
+          },
+          {
+            "i": 57,
+            "v": "4.1.7",
+            "n": 24
+          },
+          {
+            "i": 58,
+            "v": "1.1.3",
+            "n": 24
+          },
+          {
+            "i": 59,
+            "v": "4.8.3",
+            "n": 23
+          },
+          {
+            "i": 60,
+            "v": "4.10.10",
+            "n": 23
+          },
+          {
+            "i": 61,
+            "v": "4.6.3",
+            "n": 23
+          },
+          {
+            "i": 62,
+            "v": "4.1.5",
+            "n": 21
+          },
+          {
+            "i": 63,
+            "v": "4.1.2",
+            "n": 21
+          },
+          {
+            "i": 64,
+            "v": "4.11.1",
+            "n": 20
+          },
+          {
+            "i": 65,
+            "v": "4.10.8",
+            "n": 19
+          },
+          {
+            "i": 66,
+            "v": "4.7.1",
+            "n": 17
+          },
+          {
+            "i": 67,
+            "v": "4.11.2",
+            "n": 16
+          },
+          {
+            "i": 68,
+            "v": "4.2.3",
+            "n": 16
+          },
+          {
+            "i": 69,
+            "v": "4.10.1",
+            "n": 15
+          },
+          {
+            "i": 70,
+            "v": "2.1.7",
+            "n": 14
+          },
+          {
+            "i": 71,
+            "v": "1.9.2",
+            "n": 14
+          },
+          {
+            "i": 72,
+            "v": "5.1.2",
+            "n": 12
+          },
+          {
+            "i": 73,
+            "v": "4.4.1",
+            "n": 11
+          },
+          {
+            "i": 74,
+            "v": "1.1.1",
+            "n": 9
+          },
+          {
+            "i": 75,
+            "v": "1.3.1",
+            "n": 8
+          },
+          {
+            "i": 76,
+            "v": "4.11.4",
+            "n": 8
+          },
+          {
+            "i": 77,
+            "v": "1.4.2",
+            "n": 7
+          },
+          {
+            "i": 78,
+            "v": "4.2.5",
+            "n": 7
+          },
+          {
+            "i": 79,
+            "v": "1.8.1",
+            "n": 5
+          },
+          {
+            "i": 80,
+            "v": "4.4.3",
+            "n": 5
+          },
+          {
+            "i": 81,
+            "v": "2.1.11",
+            "n": 5
+          },
+          {
+            "i": 82,
+            "v": "4.4.2",
+            "n": 5
+          },
+          {
+            "i": 83,
+            "v": "4.7.2",
+            "n": 4
+          },
+          {
+            "i": 84,
+            "v": "4.10.3",
+            "n": 3
+          },
+          {
+            "i": 85,
+            "v": "4.10.9",
+            "n": 3
+          },
+          {
+            "i": 86,
+            "v": "4.6",
+            "n": 3
+          },
+          {
+            "i": 87,
+            "v": "4.10.2",
+            "n": 2
+          },
+          {
+            "i": 88,
+            "v": "4.10.7",
+            "n": 2
+          },
+          {
+            "i": 89,
+            "v": "3.1.3",
+            "n": 1
+          },
+          {
+            "i": 90,
+            "v": "1.4.1",
+            "n": 1
+          },
+          {
+            "i": 91,
+            "v": "2.1.8",
+            "n": 1
+          }
+        ],
+        "jefe_brigada": [
+          {
+            "i": 0,
+            "v": "5.1",
+            "n": 2376
+          },
+          {
+            "i": 1,
+            "v": "2.1",
+            "n": 1865
+          },
+          {
+            "i": 2,
+            "v": "4.1.2",
+            "n": 1555
+          },
+          {
+            "i": 3,
+            "v": "4.8",
+            "n": 719
+          },
+          {
+            "i": 4,
+            "v": "Sin información",
+            "n": 664
+          },
+          {
+            "i": 5,
+            "v": "1.7.1",
+            "n": 591
+          },
+          {
+            "i": 6,
+            "v": "1.9",
+            "n": 342
+          },
+          {
+            "i": 7,
+            "v": "4.9",
+            "n": 333
+          },
+          {
+            "i": 8,
+            "v": "4.7",
+            "n": 331
+          },
+          {
+            "i": 9,
+            "v": "4.10",
+            "n": 314
+          },
+          {
+            "i": 10,
+            "v": "4.2",
+            "n": 309
+          },
+          {
+            "i": 11,
+            "v": "4.1",
+            "n": 307
+          },
+          {
+            "i": 12,
+            "v": "1.7",
+            "n": 294
+          },
+          {
+            "i": 13,
+            "v": "4.6",
+            "n": 275
+          },
+          {
+            "i": 14,
+            "v": "Sin estimar",
+            "n": 231
+          },
+          {
+            "i": 15,
+            "v": "Sin causa",
+            "n": 219
+          },
+          {
+            "i": 16,
+            "v": "2.1.11",
+            "n": 210
+          },
+          {
+            "i": 17,
+            "v": "4:01:02",
+            "n": 178
+          },
+          {
+            "i": 18,
+            "v": "4.3",
+            "n": 116
+          },
+          {
+            "i": 19,
+            "v": "1.2",
+            "n": 107
+          },
+          {
+            "i": 20,
+            "v": "1.10",
+            "n": 91
+          },
+          {
+            "i": 21,
+            "v": "3.1",
+            "n": 80
+          },
+          {
+            "i": 22,
+            "v": "1.8.1",
+            "n": 73
+          },
+          {
+            "i": 23,
+            "v": "1.6",
+            "n": 69
+          },
+          {
+            "i": 24,
+            "v": "4.1.1",
+            "n": 61
+          },
+          {
+            "i": 25,
+            "v": "2.1.8",
+            "n": 60
+          },
+          {
+            "i": 26,
+            "v": "1.1",
+            "n": 58
+          },
+          {
+            "i": 27,
+            "v": "1.8",
+            "n": 53
+          },
+          {
+            "i": 28,
+            "v": "1.2.2",
+            "n": 50
+          },
+          {
+            "i": 29,
+            "v": "1.1.10",
+            "n": 49
+          },
+          {
+            "i": 30,
+            "v": "1.9.4",
+            "n": 49
+          },
+          {
+            "i": 31,
+            "v": "4.5",
+            "n": 48
+          },
+          {
+            "i": 32,
+            "v": "Sin determinar",
+            "n": 42
+          },
+          {
+            "i": 33,
+            "v": "1.3",
+            "n": 42
+          },
+          {
+            "i": 34,
+            "v": "2:01:08",
+            "n": 40
+          },
+          {
+            "i": 35,
+            "v": "2.1. 11",
+            "n": 39
+          },
+          {
+            "i": 36,
+            "v": "1.2.5",
+            "n": 36
+          },
+          {
+            "i": 37,
+            "v": "Sin Información",
+            "n": 36
+          },
+          {
+            "i": 38,
+            "v": "1.10.5",
+            "n": 31
+          },
+          {
+            "i": 39,
+            "v": "2.1.1",
+            "n": 30
+          },
+          {
+            "i": 40,
+            "v": "1.4.1",
+            "n": 30
+          },
+          {
+            "i": 41,
+            "v": "1.4.5",
+            "n": 25
+          },
+          {
+            "i": 42,
+            "v": "1.9.3",
+            "n": 25
+          },
+          {
+            "i": 43,
+            "v": "1.9.2",
+            "n": 24
+          },
+          {
+            "i": 44,
+            "v": "1.1.2",
+            "n": 21
+          },
+          {
+            "i": 45,
+            "v": "1.6.3",
+            "n": 21
+          },
+          {
+            "i": 46,
+            "v": "4.11",
+            "n": 21
+          },
+          {
+            "i": 47,
+            "v": "Sin Estimar",
+            "n": 20
+          },
+          {
+            "i": 48,
+            "v": "1.8.5",
+            "n": 18
+          },
+          {
+            "i": 49,
+            "v": "1.10.4",
+            "n": 18
+          },
+          {
+            "i": 50,
+            "v": "1.9.1",
+            "n": 16
+          },
+          {
+            "i": 51,
+            "v": "02.01.11",
+            "n": 15
+          },
+          {
+            "i": 52,
+            "v": "Accidentales",
+            "n": 12
+          },
+          {
+            "i": 53,
+            "v": "1.6.1",
+            "n": 11
+          },
+          {
+            "i": 54,
+            "v": "1.2.4",
+            "n": 11
+          },
+          {
+            "i": 55,
+            "v": "1.1.19",
+            "n": 11
+          },
+          {
+            "i": 56,
+            "v": "1:07:01",
+            "n": 11
+          },
+          {
+            "i": 57,
+            "v": "2:01:11",
+            "n": 11
+          },
+          {
+            "i": 58,
+            "v": "1.7.3",
+            "n": 10
+          },
+          {
+            "i": 59,
+            "v": "2.1.2",
+            "n": 9
+          },
+          {
+            "i": 60,
+            "v": "1.1.14",
+            "n": 9
+          },
+          {
+            "i": 61,
+            "v": "1.7. 1",
+            "n": 9
+          },
+          {
+            "i": 62,
+            "v": "2:01:03",
+            "n": 9
+          },
+          {
+            "i": 63,
+            "v": "Negligentes",
+            "n": 9
+          },
+          {
+            "i": 64,
+            "v": "1.5",
+            "n": 9
+          },
+          {
+            "i": 65,
+            "v": "2.1.6",
+            "n": 8
+          },
+          {
+            "i": 66,
+            "v": "1.9. 4",
+            "n": 8
+          },
+          {
+            "i": 67,
+            "v": "01.01.02",
+            "n": 8
+          },
+          {
+            "i": 68,
+            "v": "4.2.1",
+            "n": 8
+          },
+          {
+            "i": 69,
+            "v": "1.10.6",
+            "n": 7
+          },
+          {
+            "i": 70,
+            "v": "1.4.2",
+            "n": 7
+          },
+          {
+            "i": 71,
+            "v": "1:02:02",
+            "n": 7
+          },
+          {
+            "i": 72,
+            "v": "4.4",
+            "n": 7
+          },
+          {
+            "i": 73,
+            "v": "1.4",
+            "n": 7
+          },
+          {
+            "i": 74,
+            "v": "1.1.21",
+            "n": 6
+          },
+          {
+            "i": 75,
+            "v": "2.1.4",
+            "n": 6
+          },
+          {
+            "i": 76,
+            "v": "1.2.8",
+            "n": 5
+          },
+          {
+            "i": 77,
+            "v": "--",
+            "n": 5
+          },
+          {
+            "i": 78,
+            "v": "01.07.01",
+            "n": 5
+          },
+          {
+            "i": 79,
+            "v": "01.02.02",
+            "n": 5
+          },
+          {
+            "i": 80,
+            "v": "04.01.01",
+            "n": 5
+          },
+          {
+            "i": 81,
+            "v": "1:08:01",
+            "n": 5
+          },
+          {
+            "i": 82,
+            "v": "1:06:01",
+            "n": 5
+          },
+          {
+            "i": 83,
+            "v": "1.8.3",
+            "n": 4
+          },
+          {
+            "i": 84,
+            "v": "1.7.2",
+            "n": 4
+          },
+          {
+            "i": 85,
+            "v": "1.2.6",
+            "n": 4
+          },
+          {
+            "i": 86,
+            "v": "s/d",
+            "n": 4
+          },
+          {
+            "i": 87,
+            "v": "04.01.02",
+            "n": 4
+          },
+          {
+            "i": 88,
+            "v": "1:01:10",
+            "n": 4
+          },
+          {
+            "i": 89,
+            "v": "2.1.5",
+            "n": 3
+          },
+          {
+            "i": 90,
+            "v": "1.4.4",
+            "n": 3
+          },
+          {
+            "i": 91,
+            "v": "1.1.6",
+            "n": 3
+          },
+          {
+            "i": 92,
+            "v": "1.8.14",
+            "n": 3
+          },
+          {
+            "i": 93,
+            "v": "1.8.2",
+            "n": 3
+          },
+          {
+            "i": 94,
+            "v": "1.1.9",
+            "n": 3
+          },
+          {
+            "i": 95,
+            "v": "1.2.1",
+            "n": 3
+          },
+          {
+            "i": 96,
+            "v": "1.1.18",
+            "n": 3
+          },
+          {
+            "i": 97,
+            "v": "2.1.3",
+            "n": 3
+          },
+          {
+            "i": 98,
+            "v": "1.8.4",
+            "n": 3
+          },
+          {
+            "i": 99,
+            "v": "1.8.9",
+            "n": 3
+          },
+          {
+            "i": 100,
+            "v": "1.7.2001",
+            "n": 3
+          },
+          {
+            "i": 101,
+            "v": "02.01.08",
+            "n": 3
+          },
+          {
+            "i": 102,
+            "v": "1.4.6",
+            "n": 2
+          },
+          {
+            "i": 103,
+            "v": "1.1.1",
+            "n": 2
+          },
+          {
+            "i": 104,
+            "v": "1.8.13",
+            "n": 2
+          },
+          {
+            "i": 105,
+            "v": "1.1.23",
+            "n": 2
+          },
+          {
+            "i": 106,
+            "v": "3.1.1",
+            "n": 2
+          },
+          {
+            "i": 107,
+            "v": "1.10.1",
+            "n": 2
+          },
+          {
+            "i": 108,
+            "v": "1.2.9",
+            "n": 2
+          },
+          {
+            "i": 109,
+            "v": "1.1.8",
+            "n": 2
+          },
+          {
+            "i": 110,
+            "v": "1.4.3",
+            "n": 2
+          },
+          {
+            "i": 111,
+            "v": "1.1.4",
+            "n": 2
+          },
+          {
+            "i": 112,
+            "v": "1.3.3",
+            "n": 2
+          },
+          {
+            "i": 113,
+            "v": "1.1.12",
+            "n": 2
+          },
+          {
+            "i": 114,
+            "v": "1.4. 1",
+            "n": 2
+          },
+          {
+            "i": 115,
+            "v": "4.1. 2",
+            "n": 2
+          },
+          {
+            "i": 116,
+            "v": "1.1.20",
+            "n": 2
+          },
+          {
+            "i": 117,
+            "v": "01.06.01",
+            "n": 2
+          },
+          {
+            "i": 118,
+            "v": "01.06.03",
+            "n": 2
+          },
+          {
+            "i": 119,
+            "v": "01.09.04",
+            "n": 2
+          },
+          {
+            "i": 120,
+            "v": "01.09.03",
+            "n": 2
+          },
+          {
+            "i": 121,
+            "v": "01.09.01",
+            "n": 2
+          },
+          {
+            "i": 122,
+            "v": "01.02.01",
+            "n": 2
+          },
+          {
+            "i": 123,
+            "v": "01.02.04",
+            "n": 2
+          },
+          {
+            "i": 124,
+            "v": "1:01:02",
+            "n": 2
+          },
+          {
+            "i": 125,
+            "v": "1:02:05",
+            "n": 2
+          },
+          {
+            "i": 126,
+            "v": "2:01:01",
+            "n": 2
+          },
+          {
+            "i": 127,
+            "v": "1.7'1",
+            "n": 1
+          },
+          {
+            "i": 128,
+            "v": "1.1.11",
+            "n": 1
+          },
+          {
+            "i": 129,
+            "v": "1.3.1",
+            "n": 1
+          },
+          {
+            "i": 130,
+            "v": "1.10.8",
+            "n": 1
+          },
+          {
+            "i": 131,
+            "v": "1.2.10",
+            "n": 1
+          },
+          {
+            "i": 132,
+            "v": "1.2.3",
+            "n": 1
+          },
+          {
+            "i": 133,
+            "v": "1.1.3",
+            "n": 1
+          },
+          {
+            "i": 134,
+            "v": "1.3.4",
+            "n": 1
+          },
+          {
+            "i": 135,
+            "v": "1.5.1",
+            "n": 1
+          },
+          {
+            "i": 136,
+            "v": "2.1.",
+            "n": 1
+          },
+          {
+            "i": 137,
+            "v": "40545",
+            "n": 1
+          },
+          {
+            "i": 138,
+            "v": "1.8. 1",
+            "n": 1
+          },
+          {
+            "i": 139,
+            "v": "1.9. 3",
+            "n": 1
+          },
+          {
+            "i": 140,
+            "v": "1.4. 6",
+            "n": 1
+          },
+          {
+            "i": 141,
+            "v": "2.1. 5",
+            "n": 1
+          },
+          {
+            "i": 142,
+            "v": "1.6. 3",
+            "n": 1
+          },
+          {
+            "i": 143,
+            "v": "1.1. 6",
+            "n": 1
+          },
+          {
+            "i": 144,
+            "v": "1.1. 2",
+            "n": 1
+          },
+          {
+            "i": 145,
+            "v": "1.5.4",
+            "n": 1
+          },
+          {
+            "i": 146,
+            "v": "1.10.2",
+            "n": 1
+          },
+          {
+            "i": 147,
+            "v": "2.1.7",
+            "n": 1
+          },
+          {
+            "i": 148,
+            "v": "3.1.3",
+            "n": 1
+          },
+          {
+            "i": 149,
+            "v": "1.7.4",
+            "n": 1
+          },
+          {
+            "i": 150,
+            "v": "1.8.7",
+            "n": 1
+          },
+          {
+            "i": 151,
+            "v": "01.08.01",
+            "n": 1
+          },
+          {
+            "i": 152,
+            "v": "02.01.05",
+            "n": 1
+          },
+          {
+            "i": 153,
+            "v": "01.09.02",
+            "n": 1
+          },
+          {
+            "i": 154,
+            "v": "01.01.20",
+            "n": 1
+          },
+          {
+            "i": 155,
+            "v": "01.03.02",
+            "n": 1
+          },
+          {
+            "i": 156,
+            "v": "01.06.04",
+            "n": 1
+          },
+          {
+            "i": 157,
+            "v": "01.10.04",
+            "n": 1
+          },
+          {
+            "i": 158,
+            "v": "01.01.22",
+            "n": 1
+          },
+          {
+            "i": 159,
+            "v": "01.10.05",
+            "n": 1
+          },
+          {
+            "i": 160,
+            "v": "01.07.03",
+            "n": 1
+          },
+          {
+            "i": 161,
+            "v": "02.01.03",
+            "n": 1
+          },
+          {
+            "i": 162,
+            "v": "01.02.05",
+            "n": 1
+          },
+          {
+            "i": 163,
+            "v": "01.01.06",
+            "n": 1
+          },
+          {
+            "i": 164,
+            "v": "01.01.10",
+            "n": 1
+          },
+          {
+            "i": 165,
+            "v": "01.01.19",
+            "n": 1
+          },
+          {
+            "i": 166,
+            "v": "01.04.01",
+            "n": 1
+          },
+          {
+            "i": 167,
+            "v": "01.02.07",
+            "n": 1
+          },
+          {
+            "i": 168,
+            "v": "4.1.3",
+            "n": 1
+          },
+          {
+            "i": 169,
+            "v": "4.1.4",
+            "n": 1
+          },
+          {
+            "i": 170,
+            "v": "4.1.5",
+            "n": 1
+          },
+          {
+            "i": 171,
+            "v": "4.1.6",
+            "n": 1
+          },
+          {
+            "i": 172,
+            "v": "1:09:04",
+            "n": 1
+          },
+          {
+            "i": 173,
+            "v": "1:09:03",
+            "n": 1
+          },
+          {
+            "i": 174,
+            "v": "1:03:03",
+            "n": 1
+          },
+          {
+            "i": 175,
+            "v": "1:01:14",
+            "n": 1
+          },
+          {
+            "i": 176,
+            "v": "2:01:02",
+            "n": 1
+          },
+          {
+            "i": 177,
+            "v": "1:02:08",
+            "n": 1
+          },
+          {
+            "i": 178,
+            "v": "2:01:04",
+            "n": 1
+          },
+          {
+            "i": 179,
+            "v": "1:02:01",
+            "n": 1
+          },
+          {
+            "i": 180,
+            "v": "1:10:05",
+            "n": 1
+          },
+          {
+            "i": 181,
+            "v": "1:02:04",
+            "n": 1
+          },
+          {
+            "i": 182,
+            "v": "2:01:06",
+            "n": 1
+          },
+          {
+            "i": 183,
+            "v": "1:10:04",
+            "n": 1
+          },
+          {
+            "i": 184,
+            "v": "1:09:01",
+            "n": 1
+          },
+          {
+            "i": 185,
+            "v": "1:01:19",
+            "n": 1
+          },
+          {
+            "i": 186,
+            "v": "2:01:05",
+            "n": 1
+          },
+          {
+            "i": 187,
+            "v": "1:08:03",
+            "n": 1
+          },
+          {
+            "i": 188,
+            "v": "3:01:08",
+            "n": 1
+          },
+          {
+            "i": 189,
+            "v": "1:08:12",
+            "n": 1
+          },
+          {
+            "i": 190,
+            "v": "1:01:18",
+            "n": 1
+          },
+          {
+            "i": 191,
+            "v": "1:04:05",
+            "n": 1
+          },
+          {
+            "i": 192,
+            "v": "01.01.14",
+            "n": 1
+          },
+          {
+            "i": 193,
+            "v": "1.1.22",
+            "n": 1
+          },
+          {
+            "i": 194,
+            "v": "1.1.04",
+            "n": 1
+          },
+          {
+            "i": 195,
+            "v": "1.0.4",
+            "n": 1
+          },
+          {
+            "i": 196,
+            "v": "1.0.7",
+            "n": 1
+          },
+          {
+            "i": 197,
+            "v": "1814",
+            "n": 1
+          },
+          {
+            "i": 198,
+            "v": "Período sin brigada",
+            "n": 1
+          },
+          {
+            "i": 199,
+            "v": "Período sin brigadas",
+            "n": 1
+          },
+          {
+            "i": 200,
+            "v": "Líneas eléctricas",
+            "n": 1
+          },
+          {
+            "i": 201,
+            "v": "Negligente",
+            "n": 1
+          }
+        ],
+        "investigado_por": [
+          {
+            "i": 0,
+            "v": "UAD",
+            "n": 8137
+          },
+          {
+            "i": 1,
+            "v": "UAD.7",
+            "n": 376
+          },
+          {
+            "i": 2,
+            "v": "UAD.86A",
+            "n": 337
+          },
+          {
+            "i": 3,
+            "v": "UAD.84A",
+            "n": 333
+          },
+          {
+            "i": 4,
+            "v": "UAD.9B",
+            "n": 326
+          },
+          {
+            "i": 5,
+            "v": "UAD.83B",
+            "n": 317
+          },
+          {
+            "i": 6,
+            "v": "UAD.5B",
+            "n": 313
+          },
+          {
+            "i": 7,
+            "v": "UAD.9C",
+            "n": 304
+          },
+          {
+            "i": 8,
+            "v": "UAD.83A",
+            "n": 295
+          },
+          {
+            "i": 9,
+            "v": "UAD.9D",
+            "n": 284
+          },
+          {
+            "i": 10,
+            "v": "UAD.13B",
+            "n": 263
+          },
+          {
+            "i": 11,
+            "v": "UAD.9A",
+            "n": 258
+          },
+          {
+            "i": 12,
+            "v": "UAD.16B",
+            "n": 186
+          },
+          {
+            "i": 13,
+            "v": "UAD.6A",
+            "n": 183
+          },
+          {
+            "i": 14,
+            "v": "UAD.13A",
+            "n": 177
+          },
+          {
+            "i": 15,
+            "v": "UAD.4A",
+            "n": 162
+          },
+          {
+            "i": 16,
+            "v": "UAD.16A",
+            "n": 154
+          },
+          {
+            "i": 17,
+            "v": "UAD.16D",
+            "n": 152
+          },
+          {
+            "i": 18,
+            "v": "UAD.16C",
+            "n": 148
+          },
+          {
+            "i": 19,
+            "v": "UAD.6C",
+            "n": 136
+          },
+          {
+            "i": 20,
+            "v": "UAD.5C",
+            "n": 120
+          },
+          {
+            "i": 21,
+            "v": "UAD.10C",
+            "n": 117
+          },
+          {
+            "i": 22,
+            "v": "UAD.14A",
+            "n": 115
+          },
+          {
+            "i": 23,
+            "v": "UAD.10A",
+            "n": 115
+          },
+          {
+            "i": 24,
+            "v": "UAD.13C",
+            "n": 110
+          },
+          {
+            "i": 25,
+            "v": "UAD.6B",
+            "n": 110
+          },
+          {
+            "i": 26,
+            "v": "UAD.9E",
+            "n": 106
+          },
+          {
+            "i": 27,
+            "v": "UAD.73",
+            "n": 86
+          },
+          {
+            "i": 28,
+            "v": "UAD.5A",
+            "n": 83
+          },
+          {
+            "i": 29,
+            "v": "UAD.74",
+            "n": 81
+          },
+          {
+            "i": 30,
+            "v": "UAD.10B",
+            "n": 69
+          },
+          {
+            "i": 31,
+            "v": "BRIDECA",
+            "n": 55
+          },
+          {
+            "i": 32,
+            "v": "UAD.78",
+            "n": 50
+          },
+          {
+            "i": 33,
+            "v": "UAD.11A",
+            "n": 49
+          },
+          {
+            "i": 34,
+            "v": "UAD.3A",
+            "n": 44
+          },
+          {
+            "i": 35,
+            "v": "UAD.76",
+            "n": 41
+          },
+          {
+            "i": 36,
+            "v": "UIS.75",
+            "n": 33
+          },
+          {
+            "i": 37,
+            "v": "UAD.141",
+            "n": 32
+          },
+          {
+            "i": 38,
+            "v": "UAD.Cautín",
+            "n": 31
+          },
+          {
+            "i": 39,
+            "v": "UAD.71",
+            "n": 31
+          },
+          {
+            "i": 40,
+            "v": "UAD.Malleco",
+            "n": 30
+          },
+          {
+            "i": 41,
+            "v": "UAD.77",
+            "n": 29
+          },
+          {
+            "i": 42,
+            "v": "UAD.72",
+            "n": 26
+          },
+          {
+            "i": 43,
+            "v": "UAD 3",
+            "n": 21
+          },
+          {
+            "i": 44,
+            "v": "UAD.143",
+            "n": 20
+          },
+          {
+            "i": 45,
+            "v": "UAD 2",
+            "n": 18
+          },
+          {
+            "i": 46,
+            "v": "UAD.1A",
+            "n": 17
+          },
+          {
+            "i": 47,
+            "v": "UAD.5D",
+            "n": 17
+          },
+          {
+            "i": 48,
+            "v": "UAD.147",
+            "n": 17
+          },
+          {
+            "i": 49,
+            "v": "UAD.0A",
+            "n": 16
+          },
+          {
+            "i": 50,
+            "v": "UAD1",
+            "n": 16
+          },
+          {
+            "i": 51,
+            "v": "UAD.15A",
+            "n": 14
+          },
+          {
+            "i": 52,
+            "v": "UAD.144",
+            "n": 14
+          },
+          {
+            "i": 53,
+            "v": "UAD.149",
+            "n": 14
+          },
+          {
+            "i": 54,
+            "v": "UAD.11B",
+            "n": 13
+          },
+          {
+            "i": 55,
+            "v": "UAD.9F",
+            "n": 12
+          },
+          {
+            "i": 56,
+            "v": "UAD.10D",
+            "n": 12
+          },
+          {
+            "i": 57,
+            "v": "UAD 4",
+            "n": 11
+          },
+          {
+            "i": 58,
+            "v": "UAD13A",
+            "n": 9
+          },
+          {
+            "i": 59,
+            "v": "UIS.71",
+            "n": 7
+          },
+          {
+            "i": 60,
+            "v": "UAD.9H",
+            "n": 6
+          },
+          {
+            "i": 61,
+            "v": "UAD.9M",
+            "n": 6
+          },
+          {
+            "i": 62,
+            "v": "UAD 124-UAD 125",
+            "n": 6
+          },
+          {
+            "i": 63,
+            "v": "UAD.9X",
+            "n": 5
+          },
+          {
+            "i": 64,
+            "v": "UAD.2A",
+            "n": 3
+          },
+          {
+            "i": 65,
+            "v": "UAD multiequipo",
+            "n": 3
+          },
+          {
+            "i": 66,
+            "v": "UAD.146",
+            "n": 3
+          },
+          {
+            "i": 67,
+            "v": "UAD.13AB",
+            "n": 2
+          },
+          {
+            "i": 68,
+            "v": "UAD.12A",
+            "n": 2
+          },
+          {
+            "i": 69,
+            "v": "UAD.5A.UAD.5B",
+            "n": 2
+          },
+          {
+            "i": 70,
+            "v": "UAD.5D.UAD.5B",
+            "n": 2
+          },
+          {
+            "i": 71,
+            "v": "UAD.140",
+            "n": 2
+          },
+          {
+            "i": 72,
+            "v": "UAD 121-UAD 122",
+            "n": 2
+          },
+          {
+            "i": 73,
+            "v": "UAD.Araucania",
+            "n": 1
+          },
+          {
+            "i": 74,
+            "v": "UAD.8A",
+            "n": 1
+          },
+          {
+            "i": 75,
+            "v": "UAD.5C.UAD.5A",
+            "n": 1
+          },
+          {
+            "i": 76,
+            "v": "UIS.754",
+            "n": 1
+          },
+          {
+            "i": 77,
+            "v": "UAD.83",
+            "n": 1
+          },
+          {
+            "i": 78,
+            "v": "UAD83B",
+            "n": 1
+          },
+          {
+            "i": 79,
+            "v": "UAD.86A-UAD.83A",
+            "n": 1
+          },
+          {
+            "i": 80,
+            "v": "UAD 122-UAD 123",
+            "n": 1
+          },
+          {
+            "i": 81,
+            "v": "UAD 122-UAD 127",
+            "n": 1
+          }
+        ],
+        "mes_investigacion": [
+          {
+            "i": 0,
+            "v": "Enero",
+            "n": 2871
+          },
+          {
+            "i": 1,
+            "v": "Febrero",
+            "n": 2632
+          },
+          {
+            "i": 2,
+            "v": "Marzo",
+            "n": 2470
+          },
+          {
+            "i": 3,
+            "v": "Diciembre",
+            "n": 1733
+          },
+          {
+            "i": 4,
+            "v": "Abril",
+            "n": 1696
+          },
+          {
+            "i": 5,
+            "v": "Noviembre",
+            "n": 1156
+          },
+          {
+            "i": 6,
+            "v": "Mayo",
+            "n": 892
+          },
+          {
+            "i": 7,
+            "v": "Octubre",
+            "n": 486
+          },
+          {
+            "i": 8,
+            "v": "Junio",
+            "n": 444
+          },
+          {
+            "i": 9,
+            "v": "Septiembre",
+            "n": 144
+          },
+          {
+            "i": 10,
+            "v": "Agosto",
+            "n": 75
+          },
+          {
+            "i": 11,
+            "v": "Julio",
+            "n": 71
+          },
+          {
+            "i": 12,
+            "v": "Abril-Mayo",
+            "n": 1
+          }
+        ]
+      },
+      "archivo": "incendios.geojson",
+      "features": 14705,
+      "vertices": 14705,
+      "bytes": 7970573,
+      "bbox": [
+        -74.95261,
+        -55.22347,
+        -68.01064,
+        -17.92029
+      ],
+      "segundos": 15.6
+    },
+    "oecv": {
+      "titulo": "OECV — Obras de Eliminación de Combustible Vegetal",
+      "formato": "geojson",
+      "geometria": "LineString",
+      "carga": "inmediata",
+      "leidos": 1863,
+      "vertices_origen": 222770,
+      "longitud_km": 4789.8,
+      "km_por_region": {
+        "Antofagasta": 2.2,
+        "Atacama": 28.7,
+        "Aysén": 46.0,
+        "Biobío": 601.0,
+        "Coquimbo": 64.4,
+        "La Araucanía": 694.4,
+        "Los Lagos": 260.5,
+        "Los Ríos": 223.3,
+        "Magallanes": 7.4,
+        "Maule": 496.1,
+        "Metropolitana": 877.6,
+        "O'Higgins": 836.5,
+        "Tarapacá": 94.2,
+        "Valparaíso": 163.0,
+        "Ñuble": 394.5
+      },
+      "filtros": [
+        "region",
+        "tipo",
+        "inst"
+      ],
+      "dominios": {
+        "region": [
+          {
+            "v": "La Araucanía",
+            "n": 690
+          },
+          {
+            "v": "Biobío",
+            "n": 379
+          },
+          {
+            "v": "O'Higgins",
+            "n": 237
+          },
+          {
+            "v": "Valparaíso",
+            "n": 154
+          },
+          {
+            "v": "Metropolitana",
+            "n": 99
+          },
+          {
+            "v": "Ñuble",
+            "n": 92
+          },
+          {
+            "v": "Maule",
+            "n": 60
+          },
+          {
+            "v": "Los Ríos",
+            "n": 40
+          },
+          {
+            "v": "Aysén",
+            "n": 24
+          },
+          {
+            "v": "Atacama",
+            "n": 19
+          },
+          {
+            "v": "Los Lagos",
+            "n": 18
+          },
+          {
+            "v": "Coquimbo",
+            "n": 17
+          },
+          {
+            "v": "Magallanes",
+            "n": 15
+          },
+          {
+            "v": "Tarapacá",
+            "n": 11
+          },
+          {
+            "v": "Antofagasta",
+            "n": 8
+          }
+        ],
+        "tipo": [
+          {
+            "v": "Privado",
+            "n": 1158
+          },
+          {
+            "v": "Fiscal",
+            "n": 494
+          },
+          {
+            "v": "Sin determinar",
+            "n": 211
+          }
+        ],
+        "inst": [
+          {
+            "v": "Municipio",
+            "n": 709
+          },
+          {
+            "v": "CONAF",
+            "n": 678
+          },
+          {
+            "v": "MOP",
+            "n": 417
+          },
+          {
+            "v": "Empresa",
+            "n": 30
+          },
+          {
+            "v": "Empresa eléctrica",
+            "n": 18
+          },
+          {
+            "v": "Particular",
+            "n": 11
+          }
+        ]
+      },
+      "archivo": "oecv.geojson",
+      "features": 1863,
+      "vertices": 24719,
+      "bytes": 930046,
+      "bbox": [
+        -73.80723,
+        -54.93846,
+        -67.59344,
+        -19.31068
+      ],
+      "segundos": 1.8
+    },
+    "oecv_verificado": {
+      "titulo": "OECV verificado en terreno",
+      "formato": "geojson",
+      "geometria": "LineString",
+      "carga": "inmediata",
+      "leidos": 92,
+      "ilegibles": [
+        "13.- Los Ríos/Verificado/PEE (CONAF)/DICIEMBRE 2025/25-12-14_IF.kmz",
+        "13.- Los Ríos/Verificado/PEE (CONAF)/NOVIEMBRE 2025/25-11-14_IF.kmz",
+        "5.- Coquimbo/Verificado/25-11-04_CONAF_PEE.kmz"
+      ],
+      "longitud_km": 1471.8,
+      "km_por_region": {
+        "Aysén": 46.0,
+        "Coquimbo": 19.0,
+        "Los Ríos": 23.7,
+        "Maule": 538.8,
+        "Metropolitana": 90.6,
+        "Valparaíso": 753.7
+      },
+      "filtros": [
+        "region"
+      ],
+      "dominios": {
+        "region": [
+          {
+            "v": "Valparaíso",
+            "n": 822
+          },
+          {
+            "v": "Maule",
+            "n": 166
+          },
+          {
+            "v": "Los Ríos",
+            "n": 47
+          },
+          {
+            "v": "Metropolitana",
+            "n": 44
+          },
+          {
+            "v": "Aysén",
+            "n": 24
+          },
+          {
+            "v": "Coquimbo",
+            "n": 11
+          }
+        ],
+        "inst": [
+          {
+            "v": "MOP",
+            "n": 556
+          },
+          {
+            "v": "CONAF",
+            "n": 541
+          },
+          {
+            "v": "Privado",
+            "n": 14
+          },
+          {
+            "v": "Municipio",
+            "n": 2
+          }
+        ]
+      },
+      "archivo": "oecv_verificado.geojson",
+      "features": 1114,
+      "vertices": 73909,
+      "bytes": 1895780,
+      "bbox": [
+        -73.52372,
+        -47.24827,
+        -70.51471,
+        -29.91048
+      ],
+      "segundos": 1.1
+    },
+    "puntos_standby": {
+      "titulo": "Puntos stand-by",
+      "formato": "geojson",
+      "geometria": "Point",
+      "carga": "inmediata",
+      "por_fuente": {
+        "Aysén": 24,
+        "Los Lagos": 50,
+        "O'Higgins": 11,
+        "Biobío": 62,
+        "La Araucanía": 51,
+        "Metropolitana": 21,
+        "Valparaíso": 108
+      },
+      "descartados": 0,
+      "filtros": [
+        "region"
+      ],
+      "dominios": {
+        "region": [
+          {
+            "v": "Valparaíso",
+            "n": 108
+          },
+          {
+            "v": "Biobío",
+            "n": 62
+          },
+          {
+            "v": "La Araucanía",
+            "n": 51
+          },
+          {
+            "v": "Los Lagos",
+            "n": 50
+          },
+          {
+            "v": "Aysén",
+            "n": 24
+          },
+          {
+            "v": "Metropolitana",
+            "n": 21
+          },
+          {
+            "v": "O'Higgins",
+            "n": 11
+          }
+        ]
+      },
+      "archivo": "puntos_standby.geojson",
+      "features": 327,
+      "vertices": 327,
+      "bytes": 54824,
+      "bbox": [
+        -73.87069,
+        -47.28723,
+        -70.37911,
+        -32.43278
+      ],
+      "segundos": 0.0
+    },
+    "redvial": {
+      "titulo": "Red vial MOP 2024",
+      "carga": "demanda",
+      "leidos": 13964,
+      "vertices_origen": 2191840,
+      "filtros": [
+        "region",
+        "clasificacion",
+        "carpeta"
+      ],
+      "dominios": {
+        "region": [
+          {
+            "v": "La Araucanía",
+            "n": 1775
+          },
+          {
+            "v": "O'Higgins",
+            "n": 1558
+          },
+          {
+            "v": "Valparaíso",
+            "n": 1483
+          },
+          {
+            "v": "Los Lagos",
+            "n": 1473
+          },
+          {
+            "v": "Maule",
+            "n": 1433
+          },
+          {
+            "v": "Biobío",
+            "n": 1020
+          },
+          {
+            "v": "Ñuble",
+            "n": 867
+          },
+          {
+            "v": "Los Ríos",
+            "n": 819
+          },
+          {
+            "v": "Metropolitana",
+            "n": 775
+          },
+          {
+            "v": "Coquimbo",
+            "n": 761
+          },
+          {
+            "v": "Atacama",
+            "n": 698
+          },
+          {
+            "v": "Aysén",
+            "n": 318
+          },
+          {
+            "v": "Tarapacá",
+            "n": 290
+          },
+          {
+            "v": "Antofagasta",
+            "n": 290
+          },
+          {
+            "v": "Arica y Parinacota",
+            "n": 250
+          },
+          {
+            "v": "Magallanes",
+            "n": 154
+          }
+        ],
+        "clasificacion": [
+          {
+            "v": "Camino Regional Comunal",
+            "n": 5722
+          },
+          {
+            "v": "Camino Regional de Acceso",
+            "n": 2189
+          },
+          {
+            "v": "Sin Información",
+            "n": 1623
+          },
+          {
+            "v": "Camino Regional Comunal (En Proceso de Enrolamiento)",
+            "n": 1293
+          },
+          {
+            "v": "Camino Regional de Acceso (En Proceso de Enrolamiento)",
+            "n": 1139
+          },
+          {
+            "v": "Camino Regional Principal",
+            "n": 705
+          },
+          {
+            "v": "Camino Regional Provincial",
+            "n": 639
+          },
+          {
+            "v": "Camino Nacional",
+            "n": 182
+          },
+          {
+            "v": "Camino Nacional Longitudinal",
+            "n": 158
+          },
+          {
+            "v": "Camino Nacional con Carácter de Internacional",
+            "n": 121
+          },
+          {
+            "v": "Camino Regional Comunal (Conexión Vial Urbana)",
+            "n": 99
+          },
+          {
+            "v": "Camino Regional Principal (Conexión Vial Urbana)",
+            "n": 31
+          },
+          {
+            "v": "Camino Regional Provincial (En Proceso de Enrolamiento)",
+            "n": 22
+          },
+          {
+            "v": "Camino Regional Principal (En Proceso de Enrolamiento)",
+            "n": 15
+          },
+          {
+            "v": "Camino Nacional Longitudinal (En Proceso de Enrolamiento)",
+            "n": 8
+          },
+          {
+            "v": "Camino Nacional (Conexión Vial Urbana)",
+            "n": 7
+          },
+          {
+            "v": "Camino Regional de Acceso (Conexión Vial Urbana)",
+            "n": 6
+          },
+          {
+            "v": "Camino Regional Provincial (Conexión Vial Urbana)",
+            "n": 3
+          },
+          {
+            "v": "Camino Nacional (En Proceso de Enrolamiento)",
+            "n": 1
+          },
+          {
+            "v": "Camino Privado",
+            "n": 1
+          }
+        ],
+        "carpeta": [
+          {
+            "v": "Ripio",
+            "n": 4916
+          },
+          {
+            "v": "Pavimento Básico",
+            "n": 3826
+          },
+          {
+            "v": "Pavimento",
+            "n": 2438
+          },
+          {
+            "v": "Suelo Natural",
+            "n": 1577
+          },
+          {
+            "v": "Grava Tratada",
+            "n": 634
+          },
+          {
+            "v": "Pavimento Doble Calzada",
+            "n": 382
+          },
+          {
+            "v": "Sin Información",
+            "n": 191
+          }
+        ]
+      },
+      "formato": "pmtiles",
+      "archivo": "redvial.pmtiles",
+      "capa_mvt": "redvial",
+      "minzoom": 4,
+      "maxzoom": 13,
+      "bytes": 18801957,
+      "features": 13964,
+      "segundos": 27.3
+    },
+    "rutas": {
+      "titulo": "Rutas de despliegue territorial 25-26",
+      "carga": "demanda",
+      "leidos": 5278,
+      "vertices_origen": 3843489,
+      "por_archivo": {
+        "Antofagasta": 5,
+        "Arica": 31,
+        "Tarapacá": 24,
+        "Valparaíso": 311,
+        "Metropolitana": 189,
+        "O'Higgins": 463,
+        "Los Ríos": 142,
+        "Aysén": 95,
+        "Magallanes": 58,
+        "CORMA": 1277,
+        "La Araucanía": 480,
+        "Biobío": 382,
+        "Maule": 1288,
+        "Ñuble": 330,
+        "Los Lagos": 203
+      },
+      "filtros": [
+        "region",
+        "clasificacion",
+        "carpeta",
+        "origen"
+      ],
+      "dominios": {
+        "region": [
+          {
+            "v": "Maule",
+            "n": 1455
+          },
+          {
+            "v": "La Araucanía",
+            "n": 1005
+          },
+          {
+            "v": "Biobío",
+            "n": 768
+          },
+          {
+            "v": "Ñuble",
+            "n": 474
+          },
+          {
+            "v": "O'Higgins",
+            "n": 465
+          },
+          {
+            "v": "Valparaíso",
+            "n": 305
+          },
+          {
+            "v": "Los Lagos",
+            "n": 208
+          },
+          {
+            "v": "Metropolitana",
+            "n": 198
+          },
+          {
+            "v": "Los Ríos",
+            "n": 187
+          },
+          {
+            "v": "Aysén",
+            "n": 95
+          },
+          {
+            "v": "Magallanes",
+            "n": 58
+          },
+          {
+            "v": "Arica y Parinacota",
+            "n": 31
+          },
+          {
+            "v": "Tarapacá",
+            "n": 24
+          },
+          {
+            "v": "Antofagasta",
+            "n": 5
+          }
+        ],
+        "clasificacion": [
+          {
+            "v": "Camino Regional Comunal",
+            "n": 2127
+          },
+          {
+            "v": "Sin Información",
+            "n": 994
+          },
+          {
+            "v": "Camino Regional Principal",
+            "n": 488
+          },
+          {
+            "v": "Camino Regional de Acceso",
+            "n": 435
+          },
+          {
+            "v": "Camino Regional Provincial",
+            "n": 387
+          },
+          {
+            "v": "Camino Regional Comunal (En Proceso de Enrolamiento)",
+            "n": 336
+          },
+          {
+            "v": "Camino Regional de Acceso (En Proceso de Enrolamiento)",
+            "n": 163
+          },
+          {
+            "v": "Camino Nacional",
+            "n": 125
+          },
+          {
+            "v": "Camino Nacional Longitudinal",
+            "n": 98
+          },
+          {
+            "v": "Camino Nacional con Carácter de Internacional",
+            "n": 57
+          },
+          {
+            "v": "Camino Regional Comunal (Conexión Vial Urbana)",
+            "n": 34
+          },
+          {
+            "v": "Camino Regional Principal (Conexión Vial Urbana)",
+            "n": 13
+          },
+          {
+            "v": "Camino Regional Provincial (En Proceso de Enrolamiento)",
+            "n": 12
+          },
+          {
+            "v": "Camino Regional Principal (En Proceso de Enrolamiento)",
+            "n": 7
+          },
+          {
+            "v": "Camino Regional de Acceso (Conexión Vial Urbana)",
+            "n": 1
+          },
+          {
+            "v": "Camino Nacional Longitudinal (En Proceso de Enrolamiento)",
+            "n": 1
+          }
+        ],
+        "carpeta": [
+          {
+            "v": "Ripio",
+            "n": 1892
+          },
+          {
+            "v": "Pavimento Básico",
+            "n": 1350
+          },
+          {
+            "v": "Pavimento",
+            "n": 1315
+          },
+          {
+            "v": "Suelo Natural",
+            "n": 319
+          },
+          {
+            "v": "Pavimento Doble Calzada",
+            "n": 220
+          },
+          {
+            "v": "Grava Tratada",
+            "n": 95
+          },
+          {
+            "v": "Sin Información",
+            "n": 87
+          }
+        ],
+        "origen": [
+          {
+            "v": "CONAF",
+            "n": 4001
+          },
+          {
+            "v": "CORMA",
+            "n": 1277
+          }
+        ]
+      },
+      "formato": "pmtiles",
+      "archivo": "rutas.pmtiles",
+      "capa_mvt": "rutas",
+      "minzoom": 4,
+      "maxzoom": 13,
+      "bytes": 7051850,
+      "features": 5278,
+      "segundos": 44.7
+    }
+  },
+  "kpis": "kpis.json"
+}

@@ -112,6 +112,18 @@ def main() -> int:
         f"tippecanoe={tv or 'no disponible (modo degradado)'}",
         flush=True,
     )
+    # El aviso dejo de ser informativo el dia que frontend/public/data/ paso a
+    # estar versionado: sin tippecanoe esta corrida escribe rutas.geojson y
+    # redvial.geojson en lugar de los .pmtiles y lo anota en el manifest, asi que
+    # commitearla cambia el formato publicado y el componente con el que el visor
+    # dibuja las capas viales.
+    if not tv:
+        for linea in (
+            "  ⚠ sin tippecanoe: rutas y redvial saldran como GeoJSON simplificado.",
+            "    NO COMMITEES esta salida: frontend/public/data/ esta versionado y lo",
+            "    produce GitHub Actions. Para trabajar en local, `npm run datos`.",
+        ):
+            print(linea, file=sys.stderr, flush=True)
 
     t0 = time.time()
     resultados: dict[str, dict] = {}

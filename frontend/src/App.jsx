@@ -258,8 +258,11 @@ export default function App() {
     capaBase.current = L.tileLayer(cfg.url, {
       attribution: cfg.attribution,
       maxZoom: cfg.maxZoom,
-      // Solo lo declara Sentinel-2: por encima de su resolucion nativa Leaflet
-      // estira la ultima tesela real en vez de pedir detalle inventado.
+      // Por encima de la resolucion nativa de la capa, Leaflet estira la ultima
+      // tesela real en vez de pedir detalle inventado. Lo declaran cuatro de
+      // las siete capas, y el valor esta MEDIDO contra /tilemap, no leido del
+      // `maxLOD` del proveedor, que mintio en 5 de 7 servicios: ver el
+      // comentario sobre los zooms en config.js.
       maxNativeZoom: cfg.maxNativeZoom,
     }).addTo(map)
     capaBase.current.bringToBack()
@@ -331,10 +334,12 @@ export default function App() {
   }, [map])
 
   // Fecha de captura de la imagen satelital bajo el centro de la vista. Solo se
-  // consulta con ese mapa base: con Claro y Calles la pregunta no aplica.
+  // consulta con ese mapa base: sobre un mapa dibujado --Claro, Oscuro, Calles,
+  // Topografico, Relieve-- la pregunta no aplica, porque no hay una pasada de
+  // satelite que fechar.
   // Cada mapa base declara en config.js como se sabe su fecha. Solo el de Esri
-  // se consulta a un servicio; el de Sentinel-2 la trae escrita, y los de calle
-  // no tienen ninguna que mostrar.
+  // se consulta a un servicio; el de Sentinel-2 la trae escrita, y los mapas
+  // dibujados no tienen ninguna que mostrar.
   const fuenteFecha = BASEMAPS[base]?.fecha ?? null
   const fechaEsri = useFechaImagen(map, fuenteFecha?.tipo === 'esri')
   const imagen =

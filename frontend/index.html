@@ -20,9 +20,13 @@
          en modo no-CORS. Un preconnect anonimo abre la conexion en OTRO pool de
          sockets, no se reutiliza para esas peticiones y obliga al navegador a
          abrir una segunda: el apreton se pagaria dos veces en vez de cero.
-         El host esta acoplado a BASEMAPS.Claro en src/config.js. -->
-    <link rel="preconnect" href="https://basemaps.cartocdn.com" />
-    <link rel="dns-prefetch" href="https://basemaps.cartocdn.com" />
+         El host esta acoplado a BASEMAPS.Claro en src/config.js.
+         Desde la migracion de CARTO a Esri este mismo host sirve CINCO de los
+         siete mapas base (Claro, Oscuro, Topografico, Relieve y Satelital), asi
+         que el apreton que se ahorra aqui ya no lo cobra solo el fondo por
+         omision: lo aprovecha tambien cualquier cambio de capa posterior. -->
+    <link rel="preconnect" href="https://server.arcgisonline.com" />
+    <link rel="dns-prefetch" href="https://server.arcgisonline.com" />
 
     <!-- Colapsa las N variantes ?lat=&lon=&z=&capas=&base=&region= que
          src/urlState.js escribe en cada moveend: cada vista compartida es una

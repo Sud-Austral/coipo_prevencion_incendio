@@ -62,8 +62,103 @@ export const MIN_MAPA = 520
  */
 export const DIACRITICOS = new RegExp('[\u0300-\u036f]', 'g')
 
+// ---------------------------------------------------------------------------
+// LAS CLAVES DE ESTE OBJETO SON UN CONTRATO PUBLICO. No se renombran.
+//
+// Cada clave es TRES cosas a la vez: la etiqueta visible del selector (que
+// PanelLateral pinta con Object.keys), el valor de `?base=` que urlState escribe
+// en cada moveend, y el literal contra el que App.jsx y mapaPNG.js comparan.
+// Renombrar una clave ya publicada cambia el significado de todo enlace
+// compartido: quien guardo `?base=Claro` acabaria en otro mapa base, o en el de
+// respaldo. Se cambia la URL de la capa; la clave se queda.
+//
+// Anadir una clave nueva es libre; retirarla, no: `BASEMAPS[base] ?? .Claro`
+// degrada en silencio y el enlace viejo deja de decir lo que decia.
+//
+// -- Sobre el proveedor -------------------------------------------------------
+// El fondo claro vivia en basemaps.cartocdn.com hasta que CARTO cerro el acceso
+// anonimo (2026-08). NO devolvio un 4xx: sigue respondiendo 200 OK con un PNG
+// valido, pero le estampa «API KEY REQUIRED / carto.com/basemaps/apikey» DENTRO
+// DE LOS PIXELES. Un sitio estatico servido por Pages no puede guardar un
+// secreto --ni siquiera una clave restringida por dominio, que igual viaja en el
+// bundle--, asi que la salida fue un proveedor sin clave.
+//
+// El servicio nuevo tampoco es eterno. Como el fallo de CARTO no lo detecta
+// ningun codigo HTTP, aqui quedan las tres sondas que si lo detectan:
+//
+//   1. TEXTO EN LA IMAGEN. Bajar una tesela sobre la zona del dato y ABRIRLA.
+//      Mirar los pixeles, no el status.
+//        curl -so t.jpg "https://server.arcgisonline.com/ArcGIS/rest/services/\
+//        Canvas/World_Light_Gray_Base/MapServer/tile/11/1254/612"
+//   2. NIVEL AGOTADO. La AUTORIDAD es el endpoint /tilemap, no `tileInfo`:
+//        .../MapServer/tilemap/{z}/{y}/{x}/8/8
+//      devuelve {"data":[1,0,...]} con un bit por tesela del bloque, 1 = existe.
+//      Pasado el cache real, la tesela sigue llegando con 200 OK y un JPEG gris
+//      de 2.521 B que dice «Map data not yet available», el mismo byte a byte
+//      en Arica, Valdivia y Patagonia: sin maxNativeZoom se cambia la marca de
+//      agua de CARTO por un cartel gris en ingles, que es peor.
+//      NO se mide por el tamano del archivo. Una tesela pequena puede ser dato
+//      legitimo: World_Topo_Map devuelve 2.419 B de crema en blanco sobre el
+//      secano a z18 --que es el mapa diciendo correctamente «aqui no hay
+//      nada»--, y confundir eso con agotamiento cuesta tres zooms de detalle
+//      real. /tilemap distingue las dos cosas; el peso del PNG no.
+//   3. TOKEN. MapServer?f=json responde {"error":{"code":499}}, o aparecen
+//      "tokenServicesUrl" / "licenseInfo" donde antes no habia nada.
+//
+// -- Sobre los zooms ----------------------------------------------------------
+// maxNativeZoom NO sale de `MapServer?f=json`: ese `maxLOD` describe la rejilla,
+// no lo que hay cacheado sobre Chile, y mintio en 5 de los 7 servicios que se
+// evaluaron (Light Gray declara 23 y se agota en 16; Terrain_Base declara 13 y
+// se agota en 9). La autoridad es /tilemap, medido en seis puntos --Arica,
+// Valparaiso, Nuble, Biobio, Araucania y Punta Arenas--, que dieron el MISMO
+// techo en los seis:
+//
+//     Canvas/World_Light_Gray_Base   declara 23 -> real 16
+//     Canvas/World_Dark_Gray_Base    declara 23 -> real 16
+//     World_Shaded_Relief            declara 13 -> real 13
+//     World_Topo_Map                 declara 23 -> real 19  (sin techo)
+//     World_Street_Map               declara 23 -> real 19  (no se usa)
+//     NatGeo_World_Map               declara 16 -> real 12  (descartada)
+//     World_Terrain_Base             declara 13 -> real  9  (descartada)
+//
+// Con maxNativeZoom, Leaflet estira la ultima tesela real; sin el, el visor
+// ensena el cartel gris de Esri en ingles.
+//
+// -- Sobre el contraste -------------------------------------------------------
+// El mapa base es telon de fondo, no el mensaje. Cada capa de abajo lleva
+// medido cuantas de las 13 clases de la simbologia de este visor (las 5 causas
+// Okabe-Ito, la triada oficial OECV, rutas, red vial, stand-by y verificado)
+// quedan por debajo de 3:1 --el umbral de WCAG 1.4.11 para graficos-- contra el
+// tono DOMINANTE de esa capa sobre la zona del dato (Nuble, Biobio y Araucania
+// a z9/z11/z13). La referencia es CARTO light_all, el fondo que habia hasta
+// ahora: 5 de 13. Ese es el liston, no el cero.
+//
+// La medicion se rehace bajando teselas y componiendo encima los colores reales
+// de COLOR_CAUSA y COLOR_OECV. NO se hereda de otro visor: la misma capa que es
+// un telon excelente para una paleta es el peor posible para otra.
+// ---------------------------------------------------------------------------
 export const BASEMAPS = {
+  // ORDEN DEL SELECTOR, y no es casual: primero las que igualan el contraste de
+  // CARTO (Claro, Calles, Topografico), luego las dos que lo empeoran a
+  // sabiendas (Relieve, Oscuro) y al final la imagen. Se ordena por lo fiable
+  // que es cada una como telon, que es lo que le sirve a quien elige, y no por
+  // genero cartografico.
+
   // Fondo neutro y claro: es el unico que deja leer ~15.000 puntos superpuestos.
+  // POR OMISION, y el unico que lo es.
+  //
+  // CONTRASTE 5/13 bajo 3:1 (tono dominante #f0f0f0, 99% del area). Es
+  // EXACTAMENTE el mismo numero y el mismo tono que CARTO light_all: la
+  // migracion no le costo legibilidad a nadie.
+  //
+  // LO QUE SI SE PERDIO: los toponimos. CARTO light_all los traia incrustados;
+  // Esri los sirve aparte, en Canvas/World_Light_Gray_Reference. Se decidio
+  // dejar el fondo MUDO y no superponer ese overlay, porque el silencio es
+  // justamente la virtud de esta capa y el overlay costaria dos peticiones de
+  // tesela por celda en el fondo que ve todo el mundo al entrar. Quien necesita
+  // nombres tiene «Topografico» a un clic, que ademas los trae mejores para el
+  // campo. Si algun dia se reconsidera, el servicio es ese y su cobertura es la
+  // misma que la de esta capa (z16 en /tilemap).
   //
   // Host SIN {s}: el reparto por subdominios (a/b/c/d) era una tecnica de
   // HTTP/1.1 para saltarse el limite de 6 conexiones por host. Sobre HTTP/2 una
@@ -73,23 +168,105 @@ export const BASEMAPS = {
   // ACOPLADO a dos sitios: al <link rel="preconnect"> de index.html (que
   // precalienta este host exacto) y al patron con comodin de TILES en
   // scripts/verify-banner.mjs y scripts/verify-panel.mjs, que bloquean la red
-  // con '*basemaps.cartocdn.com*'. No lo reescribas con hosts literales.
+  // con '*server.arcgisonline.com*'. No lo reescribas con hosts literales.
+  //
+  // OJO con el orden de la ruta: Esri sirve {z}/{y}/{x}, FILA ANTES QUE COLUMNA,
+  // al reves que la plantilla {z}/{x}/{y} de OSM. Invertirlos no da error: da un
+  // mapa de otro sitio del planeta, con 200 y sin ningun sintoma.
   Claro: {
-    url: 'https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; OpenStreetMap &middot; &copy; CARTO',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    // copyrightText literal del servicio, con el «(c)» pasado a la entidad que
+    // usa el resto del archivo: Leaflet la pinta como © y mapaPNG.js ya la
+    // traduce al volcarla al lienzo.
+    attribution:
+      'Esri, HERE, Garmin, &copy; OpenStreetMap contributors, and the GIS user community',
     maxZoom: 19,
+    maxNativeZoom: 16,
   },
   Calles: {
     url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     attribution: '&copy; OpenStreetMap',
     maxZoom: 19,
   },
-  // Permite ver el combustible vegetal junto a las fajas OECV.
+  // Toponimia rural, hidrografia, curvas de nivel y areas protegidas. No duplica
+  // a Calles: OSM cubre bien lo urbano y se vacia en el secano y la
+  // precordillera, que es justo donde estan las fajas OECV y los puntos
+  // stand-by. Aqui se lee el nombre del estero o del fundo con el que la gente
+  // de la region se ubica, y es ademas la respuesta a la mudez de «Claro».
   //
-  // `fecha` declara COMO se sabe de cuando es la imagen, para que la etiqueta
-  // del mapa no tenga que conocer cada proveedor: 'esri' se consulta al vuelo
-  // por punto y zoom (ver src/hooks/useFechaImagen.js), 'fijo' es una fecha
-  // conocida de antemano, y sin `fecha` no se muestra nada.
+  // CONTRASTE 5/13 bajo 3:1 (dominante #f0f0f0, 79% del area): paridad exacta
+  // con CARTO pese a las manchas verdes de vegetacion, porque son locales y el
+  // crema sigue mandando. Comprobado componiendo la simbologia encima, no
+  // deducido del estilo de la capa.
+  //
+  // SIN maxNativeZoom, a proposito y contra la primera impresion: sobre el
+  // secano de Nuble y Biobio devuelve a z17-19 una tesela crema casi vacia, que
+  // por peso (2.419 B) parece agotamiento y NO lo es --/tilemap responde 1 en
+  // los seis puntos de control hasta z19--. Es el mapa diciendo «aqui no hay
+  // nada mas que dibujar», que es cierto: no hay calle ni curva de nivel en ese
+  // potrero. Ponerle techo regalaria tres zooms de detalle real en las ciudades.
+  'Topográfico': {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+    // ATRIBUCION ACORTADA, y es una decision, no un descuido. El copyrightText
+    // de este servicio son 232 caracteres con 17 proveedores; a 11 px de fuente
+    // mide ~1.560 px, casi el triple de los 520 px de MIN_MAPA. Se nombran los
+    // que aportan el dato de Chile y se enlaza al servicio, donde la lista
+    // integra es publica y siempre esta al dia:
+    //   .../World_Topo_Map/MapServer?f=json  ->  campo copyrightText
+    attribution:
+      'Sources: Esri, HERE, Garmin, GEBCO, USGS, FAO, NPS, IGN, &copy; OpenStreetMap contributors y otros (<a href="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer?f=pjson">lista completa</a>)',
+    maxZoom: 19,
+  },
+  // Solo la forma del terreno, sin un solo rotulo. Responde lo que no responde
+  // ninguna otra capa: por donde sube la ladera y donde esta la quebrada. La
+  // pendiente gobierna como avanza el fuego y si una brigada llega.
+  //
+  // CONTRASTE 9/13 bajo 3:1, PEOR que CARTO (5/13), y el porque importa: su
+  // tono dominante #d0d0d0 solo cubre el 45% del area porque el sombreado es
+  // pardo-CALIDO y variado, y ese pardo se come la familia naranja/amarilla de
+  // la paleta -- Negligentes #E69F00 cae a 1,46, OECV «Sin determinar» #F9A825
+  // a 1,28, OECV Privado #EF6C00 a 2,00. Los azules y verdes aguantan.
+  //
+  // Entra igualmente porque quien la elige quiere leer el TERRENO y acepta el
+  // intercambio a sabiendas. NUNCA por omision: eso lo garantiza el literal
+  // 'Claro' de App.jsx, no este comentario.
+  Relieve: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}',
+    // copyrightText LITERAL del servicio, tal cual, incluido el «Copyright:»
+    // pegado. Es lo unico que Esri publica como atribucion de esta capa: su
+    // `description` NO nombra GTOPO30, SRTM ni NED --solo declara resoluciones
+    // (30 m en EE.UU., 90 m entre 60°N y 56°S, 1 km mas al sur)--, asi que citar
+    // esas fuentes seria atribuir lo que el proveedor no dice. Para Chile eso
+    // significa 90 m hasta Tierra del Fuego y 1 km al sur de 56°S, o sea el
+    // extremo de Magallanes.
+    attribution: 'Copyright:(c) 2014 Esri',
+    maxZoom: 19,
+    // 13 es el dato REAL segun /tilemap en los seis puntos de control, y
+    // coincide con el maxLOD declarado: la excepcion, no la regla, en este
+    // proveedor. Estirar no duele: el sombreado es informacion de baja
+    // frecuencia y ampliarlo no inventa una ladera.
+    maxNativeZoom: 13,
+  },
+  // El mismo lienzo neutro de «Claro» en oscuro, para proyectar en sala y para
+  // quien trabaja con el tema oscuro del sistema.
+  //
+  // CONTRASTE 10/13 bajo 3:1 contra su dominante #505050 (98% del area): el
+  // PEOR de los siete, y el doble de malo que el fondo por omision. Solo tres
+  // clases lo superan -- Negligentes 3,58, OECV «Sin determinar» 4,09, Red vial
+  // 3,01 --. Stand-by #6A1B9A se desploma a 1,16, que es tanto como decir que
+  // desaparece; OECV Fiscal 1,57, Rutas 1,69, Accidentales 1,55.
+  //
+  // Se deja como opcion DELIBERADA y jamas por omision, con el numero escrito
+  // aqui para que la proxima revision no tenga que volver a medirlo ni pueda
+  // promoverla por descuido. Si algun dia se quiere un fondo oscuro usable, lo
+  // que hay que cambiar es la PALETA para ese fondo, no el fondo.
+  Oscuro: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    attribution:
+      'Esri, HERE, Garmin, &copy; OpenStreetMap contributors, and the GIS user community',
+    maxZoom: 19,
+    maxNativeZoom: 16,
+  },
   Satelital: {
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     attribution: 'Esri, Maxar, Earthstar Geographics',
