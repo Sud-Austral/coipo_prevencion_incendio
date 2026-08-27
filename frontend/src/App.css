@@ -861,8 +861,8 @@ select {
   position: fixed;
   /* Por debajo de .abrir y .abrir-kpi (999), de los controles de Leaflet
      (.leaflet-top/.leaflet-bottom, 1000) y de los dos cajones (1000), que deben
-     taparlo al abrirse. La atribucion de OpenStreetMap/CARTO es obligacion de
-     licencia y no puede quedar cubierta por esto. */
+     taparlo al abrirse. La atribucion de OpenStreetMap, Esri y EOX es
+     obligacion de licencia y no puede quedar cubierta por esto. */
   z-index: 998;
   /* Los controles del borde inferior tampoco se pueden tapar. Alto REAL medido
      sobre leaflet.css con la fuente de 13 px que fija index.css, no estimado:

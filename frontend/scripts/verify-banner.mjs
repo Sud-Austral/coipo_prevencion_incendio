@@ -90,7 +90,6 @@ const BASE = '/coipo_prevencion_incendio/'
 // captura que consulta src/hooks/useFechaImagen.js. Sin bloquearlo, la
 // verificacion saldria a internet de verdad.
 const TILES = [
-  '*basemaps.cartocdn.com*',
   '*tile.openstreetmap.org*',
   '*server.arcgisonline.com*',
   '*services.arcgisonline.com*',

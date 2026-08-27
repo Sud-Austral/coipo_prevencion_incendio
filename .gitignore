@@ -15,10 +15,15 @@ ETL/_build/
 ETL/_report.json
 ETL/*.log
 
-# Datos derivados: los genera `python ETL/run.py` y los publica GitHub Actions.
-# No se commitean para no meter diffs de archivos de datos en el historial.
-frontend/public/data/
-!frontend/public/data/.gitkeep
+# frontend/public/data/ SI se versiona: son las capas que produce el ETL y hacen
+# falta fuera del visor (QGIS, pandas, un informe). Quien las commitea es el
+# workflow de GitHub Actions, no una persona.
+#
+# NO COMMITEES UNA CORRIDA LOCAL DEL ETL EN WINDOWS. tippecanoe no existe alli y
+# ETL/tiles.py cae en modo degradado: emite rutas.geojson y redvial.geojson en
+# lugar de los .pmtiles y lo anota en el manifest, asi que un commit de esa
+# salida cambia el formato publicado y el componente con el que el visor dibuja
+# las capas viales. Para trabajar en local: `npm run datos`.
 
 # Editores
 .vscode/*

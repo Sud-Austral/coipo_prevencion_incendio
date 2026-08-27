@@ -23,10 +23,15 @@
  *   CAPTURAS   lo unico que juzga si esto se lee. Las aserciones no ven que dos
  *              rotulos se pisen ni que un naranjo vibre sobre fondo oscuro.
  *
- * DOS MODOS DE DATOS. frontend/public/data esta en .gitignore y el job de
- * verificacion hace sparse-checkout de `frontend` sin correr el ETL, asi que en
- * CI no hay capas. Con datos reales se afirman las cifras de produccion; con el
- * fixture, cifras calculadas a mano sobre 12 features. El modo se elige solo.
+ * DOS MODOS DE DATOS. Con datos reales se afirman las cifras de produccion;
+ * con el fixture, cifras calculadas a mano sobre 12 features.
+ *
+ * El modo se elige SOLO por si existe public/data/manifest.json, y eso basta en
+ * local. En CI NO basta y por eso el workflow pasa `--datos ficticios` a mano:
+ * desde que las salidas del ETL se versionan en el repo, el sparse-checkout de
+ * `frontend` podria arrastrar las capas de produccion al runner y este script
+ * se pondria a afirmar cifras reales contra un fixture de 12 incendios --rojo
+ * sin que nadie hubiera roto nada--. El flag explicito lo deja fuera de duda.
  */
 import { spawn, spawnSync } from 'node:child_process'
 import { createReadStream, existsSync, readFileSync } from 'node:fs'
@@ -65,8 +70,9 @@ const CAJON = [1165, 768, 390] // anchos donde el panel derecho es cajon
 // segundo sirve las teselas satelitales y el primero la metadata de fecha de
 // captura que consulta src/hooks/useFechaImagen.js. Sin bloquearlo, la
 // verificacion saldria a internet de verdad.
+// Un solo patron cubre CINCO mapas base: tras la migracion de CARTO a Esri,
+// server.arcgisonline.com sirve Claro, Oscuro, Topografico, Relieve y Satelital.
 const TILES = [
-  '*basemaps.cartocdn.com*',
   '*tile.openstreetmap.org*',
   '*server.arcgisonline.com*',
   '*services.arcgisonline.com*',

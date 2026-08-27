@@ -1,0 +1,178 @@
+{
+  "oecv": {
+    "km_planificados": 4898.595,
+    "km_reportados": 3860.288,
+    "avance_pct": 78.8,
+    "por_region": {
+      "Antofagasta": {
+        "Planificado": 2.1,
+        "CONAF": 0.0,
+        "MOP": 0.6,
+        "Municipio": 0.8,
+        "Empresa": 0.0,
+        "Particular": 0.0,
+        "Eléctricas": 0.8,
+        "FNDR": 0.0,
+        "reportado": 0.0
+      },
+      "Arica y Parinacota": {
+        "Planificado": 0.0,
+        "FNDR": 0.0
+      },
+      "Atacama": {
+        "Planificado": 28.7,
+        "CONAF": 0.0,
+        "MOP": 28.7,
+        "Municipio": 0.0,
+        "Empresa": 0.0,
+        "Particular": 0.0,
+        "Eléctricas": 0.0,
+        "FNDR": 0.0,
+        "reportado": 0.0
+      },
+      "Aysén": {
+        "Planificado": 46.0,
+        "CONAF": 5.4,
+        "MOP": 39.8,
+        "Municipio": 0.9,
+        "Empresa": 0.0,
+        "Particular": 0.0,
+        "Eléctricas": 0.0,
+        "FNDR": 0.0,
+        "reportado": 46.0
+      },
+      "Biobío": {
+        "Planificado": 731.595,
+        "CONAF": 183.345,
+        "MOP": 548.15,
+        "Municipio": 0.1,
+        "Empresa": 0.0,
+        "Particular": 0.0,
+        "Eléctricas": 0.0,
+        "FNDR": 0.0,
+        "reportado": 734.545
+      },
+      "Coquimbo": {
+        "Planificado": 42.6,
+        "CONAF": 10.6,
+        "MOP": 28.0,
+        "Municipio": 0.0,
+        "Empresa": 0.0,
+        "Particular": 0.0,
+        "Eléctricas": 4.0,
+        "FNDR": 0.0,
+        "reportado": 42.9898
+      },
+      "La Araucanía": {
+        "Planificado": 695.1,
+        "CONAF": 60.0,
+        "MOP": 115.0,
+        "Municipio": 520.1,
+        "Empresa": 0.0,
+        "Particular": 0.0,
+        "Eléctricas": 0.0,
+        "FNDR": 0.0,
+        "reportado": 435.06
+      },
+      "Los Lagos": {
+        "Planificado": 317.8,
+        "CONAF": 1.8,
+        "MOP": 316.0,
+        "Municipio": 0.0,
+        "Empresa": 0.0,
+        "Particular": 0.0,
+        "Eléctricas": 0.0,
+        "FNDR": 0.0,
+        "reportado": 261.9
+      },
+      "Los Ríos": {
+        "Planificado": 223.1,
+        "CONAF": 12.7,
+        "MOP": 210.4,
+        "Municipio": 0.0,
+        "Empresa": 0.0,
+        "Particular": 0.0,
+        "Eléctricas": 0.0,
+        "FNDR": 0.0,
+        "reportado": 244.528
+      },
+      "Magallanes": {
+        "Planificado": 52.4,
+        "CONAF": 6.8,
+        "MOP": 45.0,
+        "Municipio": 0.6,
+        "Empresa": 0.0,
+        "Particular": 0.0,
+        "Eléctricas": 0.0,
+        "FNDR": 0.0,
+        "reportado": 40.983
+      },
+      "Maule": {
+        "Planificado": 422.2,
+        "CONAF": 33.7,
+        "MOP": 388.4,
+        "Municipio": 0.0,
+        "Empresa": 0.0,
+        "Particular": 0.0,
+        "Eléctricas": 0.0,
+        "FNDR": 0.0,
+        "reportado": 457.28
+      },
+      "Metropolitana": {
+        "Planificado": 878.8,
+        "CONAF": 26.1,
+        "MOP": 825.6,
+        "Municipio": 0.0,
+        "Empresa": 0.0,
+        "Particular": 0.0,
+        "Eléctricas": 27.1,
+        "FNDR": 0.0,
+        "reportado": 380.776
+      },
+      "O´Higgins": {
+        "Planificado": 836.8,
+        "CONAF": 109.8,
+        "MOP": 727.0,
+        "Municipio": 0.0,
+        "Empresa": 0.0,
+        "Particular": 0.0,
+        "Eléctricas": 0.0,
+        "FNDR": 0.0,
+        "reportado": 745.126
+      },
+      "Tarapacá": {
+        "Planificado": 24.0,
+        "CONAF": 0.0,
+        "MOP": 24.0,
+        "Municipio": 0.0,
+        "Empresa": 0.0,
+        "Particular": 0.0,
+        "Eléctricas": 0.0,
+        "FNDR": 0.0,
+        "reportado": 23.0
+      },
+      "Valparaíso": {
+        "Planificado": 203.0,
+        "CONAF": 86.5,
+        "MOP": 96.5,
+        "Municipio": 0.0,
+        "Empresa": 0.0,
+        "Particular": 20.0,
+        "Eléctricas": 0.0,
+        "FNDR": 0.0,
+        "reportado": 203.9
+      },
+      "Ñuble": {
+        "Planificado": 394.4,
+        "CONAF": 65.8,
+        "MOP": 237.7,
+        "Municipio": 25.1,
+        "Empresa": 25.0,
+        "Particular": 20.2,
+        "Eléctricas": 20.6,
+        "FNDR": 0.0,
+        "reportado": 244.2
+      }
+    }
+  }
+}

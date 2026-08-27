@@ -10,6 +10,8 @@ on:
       - '.github/workflows/deploy.yml'
   workflow_dispatch: # botón manual en la pestaña Actions
 
+# Por omision para todos los jobs. El job `build` los amplia a contents: write
+# porque commitea las capas del ETL; los demas siguen en solo lectura.
 permissions:
   contents: read
   pages: write
@@ -22,6 +24,13 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # contents: write para poder commitear frontend/public/data. Declarar el
+    # bloque aqui REEMPLAZA el del workflow, asi que hay que repetir los otros
+    # dos: configure-pages y upload-pages-artifact corren en este mismo job.
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -66,9 +75,10 @@ jobs:
       - name: ETL
         run: python ETL/run.py -v
 
-      # Deja las capas descargables desde la página del run, para no tener que
-      # reejecutar el ETL en local solo para trabajar en el frontend.
-      # El atajo diario es `npm run datos`, que las baja del sitio publicado.
+      # Redundante con el commit de más abajo en el caso feliz, y se conserva a
+      # propósito: es el único canal que sobrevive cuando una corrida genera las
+      # capas pero falla o se cancela antes de commitearlas.
+      # El atajo diario sigue siendo `npm run datos`, que las baja de Pages.
       - name: Publicar las capas como artefacto
         uses: actions/upload-artifact@v4
         with:
@@ -76,6 +86,34 @@ jobs:
           path: frontend/public/data
           retention-days: 30
           if-no-files-found: error
+
+      # Las capas se versionan en main. Es el unico productor valido: en Windows
+      # no hay tippecanoe y ETL/tiles.py cae en modo degradado (GeoJSON en vez de
+      # PMTiles), asi que un commit hecho a mano desde un portatil cambiaria el
+      # formato publicado.
+      #
+      # Va DESPUES del ETL, que ya corrio verify.py y habria hecho fallar el job:
+      # no se commitea una capa que no valida.
+      #
+      # ESTO NO REALIMENTA EL WORKFLOW. GitHub no dispara ejecuciones con pushes
+      # firmados por GITHUB_TOKEN, que es el que usa actions/checkout. El
+      # [skip ci] del mensaje es el cinturon sobre los tirantes.
+      #
+      # Tampoco hay carrera con un push humano: `concurrency: group: pages` con
+      # cancel-in-progress cancela ESTA corrida en cuanto entra otra, mucho antes
+      # de llegar aqui. Si aun asi el push fuera rechazado, el job debe caerse a
+      # la vista y no reintentar a ciegas sobre una punta que no conoce.
+      - name: Versionar las capas generadas
+        run: |
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add frontend/public/data
+          if git diff --cached --quiet; then
+            echo "capas sin cambios: no hay nada que commitear"
+            exit 0
+          fi
+          git commit -m "datos: capas del ETL $(date -u +%F) [skip ci]"
+          git push origin "HEAD:${{ github.ref_name }}"
 
       - name: Node
         uses: actions/setup-node@v4
@@ -109,19 +147,28 @@ jobs:
   # tiene por qué pagar los ~545 MB de INSUMO_INCENDIO ni la compilación de
   # tippecanoe.
   #
-  # Por eso mismo aquí NO hay capas, y verify:panel cae solo a su modo de datos
-  # ficticios: un fixture de 12 incendios con cifras calculadas a mano. En local,
-  # donde sí existe frontend/public/data, afirma las cifras de producción.
+  # Por eso mismo aquí verify:panel corre contra datos FICTICIOS: un fixture de
+  # 12 incendios con cifras calculadas a mano. En local, donde el visor trabaja
+  # con las capas de verdad, afirma las cifras de producción.
   verificar-visual:
     runs-on: ubuntu-latest
     steps:
       # sparse-checkout sí compensa aquí, al revés que en `build`: se salta
-      # INSUMO_INCENDIO entero y baja menos de 1 MB.
+      # INSUMO_INCENDIO entero. La exclusión de public/data no es cosmética:
+      # desde que las capas se versionan, `sparse-checkout: frontend` a secas se
+      # traería los ~35 MB de datos y este job dejaría de bajar menos de 1 MB.
+      # Excluir necesita apagar el modo cono, que es el que no admite negaciones.
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
           filter: blob:none
-          sparse-checkout: frontend
+          sparse-checkout-cone-mode: false
+          # Patrones anclados con barra inicial y final, que es la forma
+          # inequivoca en la semantica tipo .gitignore del modo NO cono: sin la
+          # barra, `frontend` casaria cualquier componente con ese nombre.
+          sparse-checkout: |
+            /frontend/
+            !/frontend/public/data/
 
       - uses: actions/setup-node@v4
         with:
@@ -143,13 +190,16 @@ jobs:
       # son dos superficies independientes y saber que fallaron las dos, o solo
       # una, ahorra una vuelta entera.
       #
-      # Aquí NO hay capas (este job hace sparse-checkout de `frontend` y no corre
-      # el ETL), así que verify:panel cae solo a su modo de datos ficticios: un
-      # fixture de 12 incendios con cifras calculadas a mano, una capa servida
-      # por teselas y una región escrita con acento agudo, para ejercitar los
-      # tres caminos que en producción se rompen en silencio.
+      # `--datos ficticios` va EXPLÍCITO y no se deja al descubrimiento
+      # automático del script (que mira si existe public/data/manifest.json).
+      # Con las capas ya versionadas, un fallo o un cambio en la exclusión del
+      # sparse-checkout de arriba las metería en el runner y el script pasaría a
+      # afirmar cifras de producción contra un fixture de 12 incendios: rojo sin
+      # que nadie hubiera roto nada. El fixture ejercita a propósito una capa
+      # servida por teselas y una región con acento agudo, que son dos de los
+      # caminos que en producción se rompen en silencio.
       - if: always()
-        run: npm run verify:panel
+        run: npm run verify:panel -- --datos ficticios
         working-directory: frontend
 
       # if: always() porque cuando falla es justo cuando hacen falta las capturas.
