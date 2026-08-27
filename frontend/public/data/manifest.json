@@ -1,5 +1,5 @@
 {
-  "generado": "2026-08-25T12:47:42+0000",
+  "generado": "2026-08-27T10:25:59+0000",
   "simplify_m": 25.0,
   "precision": 5,
   "tippecanoe": "tippecanoe v2.78.0",
@@ -5792,7 +5792,7 @@
         -68.01064,
         -17.92029
       ],
-      "segundos": 15.6
+      "segundos": 16.0
     },
     "oecv": {
       "titulo": "OECV — Obras de Eliminación de Combustible Vegetal",
@@ -6019,7 +6019,7 @@
         -70.51471,
         -29.91048
       ],
-      "segundos": 1.1
+      "segundos": 0.9
     },
     "puntos_standby": {
       "titulo": "Puntos stand-by",
@@ -6280,7 +6280,7 @@
       "maxzoom": 13,
       "bytes": 18801957,
       "features": 13964,
-      "segundos": 27.3
+      "segundos": 30.9
     },
     "rutas": {
       "titulo": "Rutas de despliegue territorial 25-26",
@@ -6483,7 +6483,7 @@
       "maxzoom": 13,
       "bytes": 7051850,
       "features": 5278,
-      "segundos": 44.7
+      "segundos": 41.8
     }
   },
   "kpis": "kpis.json"
