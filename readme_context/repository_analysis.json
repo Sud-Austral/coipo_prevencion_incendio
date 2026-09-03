@@ -1,0 +1,2662 @@
+{
+  "repository": "target",
+  "generated_at": "2026-09-03T13:42:41.313783",
+  "analysis": {
+    "ETL/build_puntos.py": {
+      "python": {
+        "imports": [
+          {
+            "value": "__future__",
+            "line": 14
+          },
+          {
+            "value": "cfg",
+            "line": 16
+          },
+          {
+            "value": "geo",
+            "line": 17
+          },
+          {
+            "value": "gj_io",
+            "line": 18
+          },
+          {
+            "value": "kml_reader",
+            "line": 19
+          },
+          {
+            "value": "shp_reader",
+            "line": 20
+          }
+        ],
+        "functions": [
+          {
+            "name": "_explotar",
+            "line": 74
+          },
+          {
+            "name": "build",
+            "line": 81
+          }
+        ],
+        "classes": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "ETL/kml_reader.py": {
+      "python": {
+        "imports": [
+          {
+            "value": "__future__",
+            "line": 10
+          },
+          {
+            "value": "re",
+            "line": 12
+          },
+          {
+            "value": "zipfile",
+            "line": 13
+          },
+          {
+            "value": "pathlib",
+            "line": 14
+          },
+          {
+            "value": "xml.etree",
+            "line": 15
+          },
+          {
+            "value": "sys",
+            "line": 141
+          }
+        ],
+        "functions": [
+          {
+            "name": "_sin_ns",
+            "line": 18
+          },
+          {
+            "name": "_coords",
+            "line": 23
+          },
+          {
+            "name": "_geom_de",
+            "line": 38
+          },
+          {
+            "name": "read_kml_bytes",
+            "line": 81
+          },
+          {
+            "name": "read_kml",
+            "line": 120
+          },
+          {
+            "name": "read_kmz",
+            "line": 124
+          },
+          {
+            "name": "read_kml_o_kmz",
+            "line": 135
+          },
+          {
+            "name": "_recorrer",
+            "line": 90
+          }
+        ],
+        "classes": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "ETL/build_oecv.py": {
+      "python": {
+        "imports": [
+          {
+            "value": "__future__",
+            "line": 13
+          },
+          {
+            "value": "re",
+            "line": 15
+          },
+          {
+            "value": "cfg",
+            "line": 17
+          },
+          {
+            "value": "geo",
+            "line": 18
+          },
+          {
+            "value": "gj_io",
+            "line": 19
+          },
+          {
+            "value": "shp_reader",
+            "line": 20
+          }
+        ],
+        "functions": [
+          {
+            "name": "grupo_de_folderpath",
+            "line": 36
+          },
+          {
+            "name": "build",
+            "line": 65
+          }
+        ],
+        "classes": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "ETL/run.py": {
+      "python": {
+        "imports": [
+          {
+            "value": "__future__",
+            "line": 14
+          },
+          {
+            "value": "argparse",
+            "line": 16
+          },
+          {
+            "value": "concurrent.futures",
+            "line": 17
+          },
+          {
+            "value": "importlib",
+            "line": 18
+          },
+          {
+            "value": "os",
+            "line": 19
+          },
+          {
+            "value": "sys",
+            "line": 20
+          },
+          {
+            "value": "time",
+            "line": 21
+          },
+          {
+            "value": "traceback",
+            "line": 22
+          },
+          {
+            "value": "pathlib",
+            "line": 23
+          },
+          {
+            "value": "cfg",
+            "line": 27
+          },
+          {
+            "value": "gj_io",
+            "line": 28
+          },
+          {
+            "value": "tiles",
+            "line": 107
+          },
+          {
+            "value": "verify",
+            "line": 190
+          }
+        ],
+        "functions": [
+          {
+            "name": "_ejecutar",
+            "line": 53
+          },
+          {
+            "name": "main",
+            "line": 66
+          }
+        ],
+        "classes": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "ETL/tiles.py": {
+      "python": {
+        "imports": [
+          {
+            "value": "__future__",
+            "line": 17
+          },
+          {
+            "value": "shutil",
+            "line": 19
+          },
+          {
+            "value": "subprocess",
+            "line": 20
+          },
+          {
+            "value": "pathlib",
+            "line": 21
+          },
+          {
+            "value": "cfg",
+            "line": 23
+          },
+          {
+            "value": "geo",
+            "line": 24
+          },
+          {
+            "value": "gj_io",
+            "line": 25
+          }
+        ],
+        "functions": [
+          {
+            "name": "tippecanoe_disponible",
+            "line": 33
+          },
+          {
+            "name": "version_tippecanoe",
+            "line": 37
+          },
+          {
+            "name": "teselar",
+            "line": 49
+          },
+          {
+            "name": "degradado",
+            "line": 82
+          },
+          {
+            "name": "emitir_para_tippecanoe",
+            "line": 102
+          },
+          {
+            "name": "construir_capa_vial",
+            "line": 120
+          }
+        ],
+        "classes": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "ETL/verify.py": {
+      "python": {
+        "imports": [
+          {
+            "value": "__future__",
+            "line": 12
+          },
+          {
+            "value": "argparse",
+            "line": 14
+          },
+          {
+            "value": "json",
+            "line": 15
+          },
+          {
+            "value": "struct",
+            "line": 16
+          },
+          {
+            "value": "sys",
+            "line": 17
+          },
+          {
+            "value": "pathlib",
+            "line": 18
+          },
+          {
+            "value": "geo",
+            "line": 175
+          },
+          {
+            "value": "shapely.geometry",
+            "line": 207
+          },
+          {
+            "value": "shapely.strtree",
+            "line": 208
+          }
+        ],
+        "functions": [
+          {
+            "name": "_coords",
+            "line": 43
+          },
+          {
+            "name": "_leer_header_pmtiles",
+            "line": 60
+          },
+          {
+            "name": "verificar",
+            "line": 77
+          },
+          {
+            "name": "_cruce_espacial",
+            "line": 200
+          },
+          {
+            "name": "main",
+            "line": 249
+          },
+          {
+            "name": "__init__",
+            "line": 33
+          },
+          {
+            "name": "check",
+            "line": 36
+          },
+          {
+            "name": "_walk",
+            "line": 47
+          }
+        ],
+        "classes": [
+          {
+            "name": "Res",
+            "line": 32
+          }
+        ],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "ETL/shp_reader.py": {
+      "python": {
+        "imports": [
+          {
+            "value": "__future__",
+            "line": 16
+          },
+          {
+            "value": "struct",
+            "line": 18
+          },
+          {
+            "value": "dataclasses",
+            "line": 19
+          },
+          {
+            "value": "pathlib",
+            "line": 20
+          },
+          {
+            "value": "typing",
+            "line": 21
+          },
+          {
+            "value": "re",
+            "line": 308
+          },
+          {
+            "value": "sys",
+            "line": 394
+          }
+        ],
+        "functions": [
+          {
+            "name": "read_shp_header",
+            "line": 100
+          },
+          {
+            "name": "_puntos",
+            "line": 116
+          },
+          {
+            "name": "_partes",
+            "line": 122
+          },
+          {
+            "name": "iter_shapes",
+            "line": 144
+          },
+          {
+            "name": "read_cpg",
+            "line": 211
+          },
+          {
+            "name": "_castear",
+            "line": 227
+          },
+          {
+            "name": "read_dbf",
+            "line": 253
+          },
+          {
+            "name": "read_prj_epsg",
+            "line": 296
+          },
+          {
+            "name": "read_shapefile",
+            "line": 349
+          },
+          {
+            "name": "n",
+            "line": 77
+          },
+          {
+            "name": "geom_name",
+            "line": 81
+          },
+          {
+            "name": "__iter__",
+            "line": 84
+          }
+        ],
+        "classes": [
+          {
+            "name": "Field",
+            "line": 55
+          },
+          {
+            "name": "Shapefile",
+            "line": 65
+          }
+        ],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "ETL/build_incendios.py": {
+      "python": {
+        "imports": [
+          {
+            "value": "__future__",
+            "line": 22
+          },
+          {
+            "value": "re",
+            "line": 24
+          },
+          {
+            "value": "unicodedata",
+            "line": 25
+          },
+          {
+            "value": "pandas",
+            "line": 27
+          },
+          {
+            "value": "cfg",
+            "line": 29
+          },
+          {
+            "value": "geo",
+            "line": 30
+          },
+          {
+            "value": "gj_io",
+            "line": 31
+          },
+          {
+            "value": "datetime",
+            "line": 134
+          },
+          {
+            "value": "datetime",
+            "line": 155
+          }
+        ],
+        "functions": [
+          {
+            "name": "norm_txt",
+            "line": 75
+          },
+          {
+            "name": "es_nulo",
+            "line": 84
+          },
+          {
+            "name": "parse_coord",
+            "line": 89
+          },
+          {
+            "name": "fmt_codigo",
+            "line": 111
+          },
+          {
+            "name": "norm_fecha",
+            "line": 124
+          },
+          {
+            "name": "norm_hora",
+            "line": 153
+          },
+          {
+            "name": "norm_mes",
+            "line": 170
+          },
+          {
+            "name": "_col",
+            "line": 180
+          },
+          {
+            "name": "build",
+            "line": 194
+          },
+          {
+            "name": "k",
+            "line": 182
+          }
+        ],
+        "classes": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "ETL/build_verificado.py": {
+      "python": {
+        "imports": [
+          {
+            "value": "__future__",
+            "line": 29
+          },
+          {
+            "value": "re",
+            "line": 31
+          },
+          {
+            "value": "cfg",
+            "line": 33
+          },
+          {
+            "value": "geo",
+            "line": 34
+          },
+          {
+            "value": "gj_io",
+            "line": 35
+          },
+          {
+            "value": "kml_reader",
+            "line": 36
+          },
+          {
+            "value": "shp_reader",
+            "line": 37
+          }
+        ],
+        "functions": [
+          {
+            "name": "_inst_de",
+            "line": 52
+          },
+          {
+            "name": "_region_de",
+            "line": 61
+          },
+          {
+            "name": "_lineas",
+            "line": 66
+          },
+          {
+            "name": "build",
+            "line": 80
+          }
+        ],
+        "classes": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "ETL/build_rutas.py": {
+      "python": {
+        "imports": [
+          {
+            "value": "__future__",
+            "line": 33
+          },
+          {
+            "value": "re",
+            "line": 35
+          },
+          {
+            "value": "cfg",
+            "line": 37
+          },
+          {
+            "value": "geo",
+            "line": 38
+          },
+          {
+            "value": "gj_io",
+            "line": 39
+          },
+          {
+            "value": "shp_reader",
+            "line": 40
+          },
+          {
+            "value": "tiles",
+            "line": 41
+          }
+        ],
+        "functions": [
+          {
+            "name": "_num",
+            "line": 87
+          },
+          {
+            "name": "_norm_clasificacion",
+            "line": 98
+          },
+          {
+            "name": "build",
+            "line": 105
+          }
+        ],
+        "classes": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "ETL/build_kpis.py": {
+      "python": {
+        "imports": [
+          {
+            "value": "__future__",
+            "line": 12
+          },
+          {
+            "value": "pandas",
+            "line": 14
+          },
+          {
+            "value": "cfg",
+            "line": 16
+          },
+          {
+            "value": "geo",
+            "line": 17
+          },
+          {
+            "value": "gj_io",
+            "line": 18
+          }
+        ],
+        "functions": [
+          {
+            "name": "_fila_cabecera",
+            "line": 25
+          },
+          {
+            "name": "_num",
+            "line": 35
+          },
+          {
+            "name": "build",
+            "line": 44
+          }
+        ],
+        "classes": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "ETL/geo.py": {
+      "python": {
+        "imports": [
+          {
+            "value": "__future__",
+            "line": 14
+          },
+          {
+            "value": "pyproj",
+            "line": 16
+          },
+          {
+            "value": "shapely.geometry",
+            "line": 17
+          },
+          {
+            "value": "pyproj",
+            "line": 176
+          }
+        ],
+        "functions": [
+          {
+            "name": "tx",
+            "line": 27
+          },
+          {
+            "name": "_map_coords",
+            "line": 40
+          },
+          {
+            "name": "to_wgs84",
+            "line": 49
+          },
+          {
+            "name": "round_coords",
+            "line": 62
+          },
+          {
+            "name": "count_vertices",
+            "line": 74
+          },
+          {
+            "name": "bbox_of",
+            "line": 92
+          },
+          {
+            "name": "bbox_union",
+            "line": 112
+          },
+          {
+            "name": "simplify_m",
+            "line": 130
+          },
+          {
+            "name": "length_m",
+            "line": 147
+          },
+          {
+            "name": "length_geod_km",
+            "line": 160
+          },
+          {
+            "name": "huso_epsg_por_x",
+            "line": 214
+          },
+          {
+            "name": "huso_por_region",
+            "line": 226
+          },
+          {
+            "name": "en_chile",
+            "line": 245
+          },
+          {
+            "name": "utm_valido",
+            "line": 267
+          },
+          {
+            "name": "bbox_en_chile",
+            "line": 286
+          },
+          {
+            "name": "_clave",
+            "line": 341
+          },
+          {
+            "name": "canon_region",
+            "line": 351
+          },
+          {
+            "name": "slug",
+            "line": 361
+          },
+          {
+            "name": "_p",
+            "line": 55
+          },
+          {
+            "name": "_walk",
+            "line": 78
+          },
+          {
+            "name": "_walk",
+            "line": 96
+          },
+          {
+            "name": "_walk",
+            "line": 271
+          }
+        ],
+        "classes": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "ETL/build_redvial.py": {
+      "python": {
+        "imports": [
+          {
+            "value": "__future__",
+            "line": 17
+          },
+          {
+            "value": "gc",
+            "line": 19
+          },
+          {
+            "value": "json",
+            "line": 20
+          },
+          {
+            "value": "re",
+            "line": 21
+          },
+          {
+            "value": "cfg",
+            "line": 23
+          },
+          {
+            "value": "geo",
+            "line": 24
+          },
+          {
+            "value": "gj_io",
+            "line": 25
+          },
+          {
+            "value": "shp_reader",
+            "line": 26
+          },
+          {
+            "value": "tiles",
+            "line": 27
+          }
+        ],
+        "functions": [
+          {
+            "name": "_norm_clasificacion",
+            "line": 43
+          },
+          {
+            "name": "_norm_concesionada",
+            "line": 49
+          },
+          {
+            "name": "build",
+            "line": 57
+          }
+        ],
+        "classes": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "ETL/gj_io.py": {
+      "python": {
+        "imports": [
+          {
+            "value": "__future__",
+            "line": 8
+          },
+          {
+            "value": "json",
+            "line": 10
+          },
+          {
+            "value": "os",
+            "line": 11
+          },
+          {
+            "value": "pathlib",
+            "line": 12
+          },
+          {
+            "value": "geo",
+            "line": 14
+          },
+          {
+            "value": "collections",
+            "line": 74
+          },
+          {
+            "value": "collections",
+            "line": 100
+          }
+        ],
+        "functions": [
+          {
+            "name": "feature",
+            "line": 17
+          },
+          {
+            "name": "_escribir_atomico",
+            "line": 29
+          },
+          {
+            "name": "write_geojson",
+            "line": 39
+          },
+          {
+            "name": "write_json",
+            "line": 61
+          },
+          {
+            "name": "dominios",
+            "line": 67
+          },
+          {
+            "name": "codificar",
+            "line": 87
+          },
+          {
+            "name": "humano",
+            "line": 128
+          }
+        ],
+        "classes": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "ETL/cfg.py": {
+      "python": {
+        "imports": [
+          {
+            "value": "__future__",
+            "line": 7
+          },
+          {
+            "value": "dataclasses",
+            "line": 9
+          },
+          {
+            "value": "pathlib",
+            "line": 10
+          }
+        ],
+        "functions": [
+          {
+            "name": "log",
+            "line": 36
+          },
+          {
+            "name": "__post_init__",
+            "line": 28
+          }
+        ],
+        "classes": [
+          {
+            "name": "Cfg",
+            "line": 16
+          }
+        ],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "analisis/construir_notebook.py": {
+      "python": {
+        "imports": [
+          {
+            "value": "sys",
+            "line": 17
+          },
+          {
+            "value": "pathlib",
+            "line": 18
+          },
+          {
+            "value": "nbformat",
+            "line": 20
+          }
+        ],
+        "functions": [],
+        "classes": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "analisis/leer_capas.py": {
+      "python": {
+        "imports": [
+          {
+            "value": "__future__",
+            "line": 158
+          },
+          {
+            "value": "argparse",
+            "line": 160
+          },
+          {
+            "value": "ast",
+            "line": 161
+          },
+          {
+            "value": "hashlib",
+            "line": 162
+          },
+          {
+            "value": "json",
+            "line": 163
+          },
+          {
+            "value": "os",
+            "line": 164
+          },
+          {
+            "value": "re",
+            "line": 165
+          },
+          {
+            "value": "struct",
+            "line": 166
+          },
+          {
+            "value": "sys",
+            "line": 167
+          },
+          {
+            "value": "unicodedata",
+            "line": 168
+          },
+          {
+            "value": "warnings",
+            "line": 169
+          },
+          {
+            "value": "pathlib",
+            "line": 170
+          },
+          {
+            "value": "numpy",
+            "line": 172
+          },
+          {
+            "value": "pandas",
+            "line": 173
+          },
+          {
+            "value": "pyproj",
+            "line": 1315
+          }
+        ],
+        "functions": [
+          {
+            "name": "raiz_repo",
+            "line": 248
+          },
+          {
+            "name": "ruta_datos",
+            "line": 269
+          },
+          {
+            "name": "_leer_json",
+            "line": 284
+          },
+          {
+            "name": "clave",
+            "line": 303
+          },
+          {
+            "name": "es_centinela",
+            "line": 312
+          },
+          {
+            "name": "norm_region",
+            "line": 318
+          },
+          {
+            "name": "es",
+            "line": 330
+          },
+          {
+            "name": "_literal_del_modulo",
+            "line": 342
+          },
+          {
+            "name": "esquema_del_etl",
+            "line": 364
+          },
+          {
+            "name": "huella",
+            "line": 379
+          },
+          {
+            "name": "archivos_huerfanos",
+            "line": 407
+          },
+          {
+            "name": "exigir_contrato",
+            "line": 421
+          },
+          {
+            "name": "leer_manifest",
+            "line": 486
+          },
+          {
+            "name": "tabla",
+            "line": 498
+          },
+          {
+            "name": "dominios",
+            "line": 504
+          },
+          {
+            "name": "_abrir_capa",
+            "line": 513
+          },
+          {
+            "name": "_coords_punto",
+            "line": 545
+          },
+          {
+            "name": "_revisar_geometria",
+            "line": 555
+          },
+          {
+            "name": "_categorica",
+            "line": 566
+          },
+          {
+            "name": "_entero",
+            "line": 576
+          },
+          {
+            "name": "cargar",
+            "line": 581
+          },
+          {
+            "name": "_auditar_fechas",
+            "line": 736
+          },
+          {
+            "name": "_canon_comuna",
+            "line": 771
+          },
+          {
+            "name": "_verificar_incendios",
+            "line": 810
+          },
+          {
+            "name": "cargar_lineas",
+            "line": 865
+          },
+          {
+            "name": "cargar_puntos",
+            "line": 922
+          },
+          {
+            "name": "cargar_kpis",
+            "line": 952
+          },
+          {
+            "name": "_aplanar",
+            "line": 998
+          },
+          {
+            "name": "_contar_vertices",
+            "line": 1014
+          },
+          {
+            "name": "_header_pmtiles",
+            "line": 1022
+          },
+          {
+            "name": "meta_teselas",
+            "line": 1040
+          },
+          {
+            "name": "agrupar",
+            "line": 1067
+          },
+          {
+            "name": "fragmentacion",
+            "line": 1106
+          },
+          {
+            "name": "colisiones_entre_campos",
+            "line": 1135
+          },
+          {
+            "name": "pares_etiqueta_codigo",
+            "line": 1152
+          },
+          {
+            "name": "duplicados_coordenada",
+            "line": 1164
+          },
+          {
+            "name": "verificar_advertencias",
+            "line": 1210
+          },
+          {
+            "name": "paleta_del_visor",
+            "line": 1233
+          },
+          {
+            "name": "color_otros",
+            "line": 1297
+          },
+          {
+            "name": "proyectar",
+            "line": 1313
+          },
+          {
+            "name": "aspecto_por_latitud",
+            "line": 1321
+          },
+          {
+            "name": "orden_dibujo",
+            "line": 1332
+          },
+          {
+            "name": "reconciliar",
+            "line": 1352
+          },
+          {
+            "name": "resumen",
+            "line": 1436
+          },
+          {
+            "name": "main",
+            "line": 1494
+          },
+          {
+            "name": "_walk",
+            "line": 1001
+          },
+          {
+            "name": "chk",
+            "line": 1363
+          }
+        ],
+        "classes": [
+          {
+            "name": "ContratoDesfasado",
+            "line": 227
+          },
+          {
+            "name": "DatosAusentes",
+            "line": 231
+          },
+          {
+            "name": "PaletaIncompleta",
+            "line": 235
+          }
+        ],
+        "routes": [],
+        "env_vars": [
+          {
+            "value": "COIPO_RAIZ",
+            "line": 254,
+            "file": "analisis/leer_capas.py"
+          }
+        ]
+      }
+    },
+    "frontend/vite.config.js": {
+      "javascript": {
+        "imports": [
+          {
+            "value": "vite",
+            "line": 1
+          },
+          {
+            "value": "@vitejs/plugin-react",
+            "line": 2
+          }
+        ],
+        "exports": [
+          {
+            "value": "defineConfig",
+            "line": 8
+          }
+        ],
+        "components": [],
+        "api_calls": [],
+        "routes": [],
+        "env_vars": [
+          {
+            "value": "BASE_URL",
+            "line": 7,
+            "file": "frontend/vite.config.js"
+          }
+        ]
+      }
+    },
+    "frontend/src/urlState.js": {
+      "javascript": {
+        "imports": [],
+        "exports": [
+          {
+            "value": "leerURL",
+            "line": 7
+          },
+          {
+            "value": "escribirURL",
+            "line": 45
+          },
+          {
+            "value": "flush",
+            "line": 79
+          }
+        ],
+        "components": [],
+        "api_calls": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "frontend/src/indicadores.js": {
+      "javascript": {
+        "imports": [],
+        "exports": [
+          {
+            "value": "normRegion",
+            "line": 18
+          },
+          {
+            "value": "GRUPOS_EVITABLES",
+            "line": 27
+          },
+          {
+            "value": "CAUSA_ELECTRICA",
+            "line": 28
+          },
+          {
+            "value": "INST_ELECTRICA",
+            "line": 29
+          },
+          {
+            "value": "RE_QUEMA",
+            "line": 50
+          },
+          {
+            "value": "agruparQuemas",
+            "line": 60
+          },
+          {
+            "value": "resumenIncendios",
+            "line": 97
+          },
+          {
+            "value": "resumenDesdeManifest",
+            "line": 246
+          },
+          {
+            "value": "cruceCoberturaPresion",
+            "line": 298
+          },
+          {
+            "value": "avanceOECV",
+            "line": 366
+          },
+          {
+            "value": "riesgoElectrico",
+            "line": 422
+          },
+          {
+            "value": "coberturaStandby",
+            "line": 454
+          },
+          {
+            "value": "topConOtras",
+            "line": 493
+          },
+          {
+            "value": "ambito",
+            "line": 513
+          }
+        ],
+        "components": [
+          {
+            "value": "GRUPOS_EVITABLES",
+            "line": 27
+          },
+          {
+            "value": "CAUSA_ELECTRICA",
+            "line": 28
+          },
+          {
+            "value": "INST_ELECTRICA",
+            "line": 29
+          },
+          {
+            "value": "RE_CONTACTO_TENDIDO",
+            "line": 34
+          },
+          {
+            "value": "RE_QUEMA",
+            "line": 50
+          },
+          {
+            "value": "TG",
+            "line": 99
+          },
+          {
+            "value": "TCG",
+            "line": 100
+          },
+          {
+            "value": "TCE",
+            "line": 101
+          },
+          {
+            "value": "TR",
+            "line": 102
+          },
+          {
+            "value": "TT",
+            "line": 103
+          },
+          {
+            "value": "S",
+            "line": 146
+          },
+          {
+            "value": "L",
+            "line": 435
+          }
+        ],
+        "api_calls": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "frontend/src/informe.js": {
+      "javascript": {
+        "imports": [],
+        "exports": [
+          {
+            "value": "escapar",
+            "line": 24
+          },
+          {
+            "value": "CLAVES_PALETA",
+            "line": 33
+          },
+          {
+            "value": "paletaClara",
+            "line": 70
+          },
+          {
+            "value": "construirInforme",
+            "line": 173
+          }
+        ],
+        "components": [
+          {
+            "value": "CLAVES_PALETA",
+            "line": 33
+          },
+          {
+            "value": "PALETA_MINIMA",
+            "line": 49
+          },
+          {
+            "value": "ESTILO",
+            "line": 105
+          }
+        ],
+        "api_calls": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "frontend/src/App.jsx": {
+      "javascript": {
+        "imports": [
+          {
+            "value": "react",
+            "line": 1
+          },
+          {
+            "value": "leaflet",
+            "line": 2
+          },
+          {
+            "value": "./config",
+            "line": 3
+          },
+          {
+            "value": "./hooks/useDatos",
+            "line": 24
+          },
+          {
+            "value": "./hooks/useFechaImagen",
+            "line": 25
+          },
+          {
+            "value": "./fichas",
+            "line": 26
+          },
+          {
+            "value": "./components/Banner",
+            "line": 27
+          },
+          {
+            "value": "./components/CartelContexto",
+            "line": 28
+          },
+          {
+            "value": "./components/EtiquetaImagen",
+            "line": 29
+          },
+          {
+            "value": "./components/ModalFicha",
+            "line": 30
+          },
+          {
+            "value": "./components/CapaLineas",
+            "line": 31
+          },
+          {
+            "value": "./components/CapaPuntos",
+            "line": 32
+          },
+          {
+            "value": "./components/CapaTiles",
+            "line": 33
+          },
+          {
+            "value": "./components/PanelLateral",
+            "line": 34
+          },
+          {
+            "value": "./components/PanelIndicadores",
+            "line": 35
+          },
+          {
+            "value": "./components/Tirador",
+            "line": 36
+          },
+          {
+            "value": "./components/SeccionDescargas",
+            "line": 37
+          },
+          {
+            "value": "./components/graficos",
+            "line": 38
+          },
+          {
+            "value": "./urlState",
+            "line": 39
+          },
+          {
+            "value": "./preferencias",
+            "line": 40
+          },
+          {
+            "value": "./App.css",
+            "line": 41
+          }
+        ],
+        "exports": [
+          {
+            "value": "App",
+            "line": 112
+          }
+        ],
+        "components": [
+          {
+            "value": "App",
+            "line": 112
+          }
+        ],
+        "api_calls": [],
+        "routes": [],
+        "env_vars": [
+          {
+            "value": "DEV",
+            "line": 871,
+            "file": "frontend/src/App.jsx"
+          }
+        ]
+      }
+    },
+    "frontend/src/mapaPNG.js": {
+      "javascript": {
+        "imports": [
+          {
+            "value": "./config",
+            "line": 19
+          }
+        ],
+        "exports": [
+          {
+            "value": "async",
+            "line": 64
+          },
+          {
+            "value": "lienzoAPng",
+            "line": 175
+          }
+        ],
+        "components": [
+          {
+            "value": "TESELA",
+            "line": 21
+          },
+          {
+            "value": "ALTO_LINEA",
+            "line": 162
+          }
+        ],
+        "api_calls": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "frontend/src/descargas.js": {
+      "javascript": {
+        "imports": [
+          {
+            "value": "./config",
+            "line": 7
+          }
+        ],
+        "exports": [
+          {
+            "value": "slug",
+            "line": 13
+          },
+          {
+            "value": "hoy",
+            "line": 24
+          },
+          {
+            "value": "ambitoSlug",
+            "line": 31
+          },
+          {
+            "value": "nombreArchivo",
+            "line": 36
+          },
+          {
+            "value": "guardar",
+            "line": 42
+          },
+          {
+            "value": "csvIncendios",
+            "line": 104
+          },
+          {
+            "value": "csvOECV",
+            "line": 184
+          },
+          {
+            "value": "csvVerificado",
+            "line": 194
+          },
+          {
+            "value": "csvStandby",
+            "line": 204
+          },
+          {
+            "value": "geojsonDe",
+            "line": 252
+          },
+          {
+            "value": "urlPublicada",
+            "line": 283
+          }
+        ],
+        "components": [
+          {
+            "value": "SEP",
+            "line": 66
+          },
+          {
+            "value": "BOM",
+            "line": 69
+          }
+        ],
+        "api_calls": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "frontend/src/config.js": {
+      "javascript": {
+        "imports": [],
+        "exports": [
+          {
+            "value": "DATA",
+            "line": 5
+          },
+          {
+            "value": "VISTA_INICIAL",
+            "line": 7
+          },
+          {
+            "value": "LIMITES",
+            "line": 8
+          },
+          {
+            "value": "CORTE_KPI",
+            "line": 25
+          },
+          {
+            "value": "CORTE_PANEL",
+            "line": 27
+          },
+          {
+            "value": "MIN_PANEL",
+            "line": 29
+          },
+          {
+            "value": "MAX_PANEL",
+            "line": 30
+          },
+          {
+            "value": "ANCHO_PANEL",
+            "line": 31
+          },
+          {
+            "value": "ANCHO_KPI",
+            "line": 42
+          },
+          {
+            "value": "MAX_KPI",
+            "line": 43
+          },
+          {
+            "value": "MIN_MAPA",
+            "line": 51
+          },
+          {
+            "value": "DIACRITICOS",
+            "line": 63
+          },
+          {
+            "value": "BASEMAPS",
+            "line": 140
+          },
+          {
+            "value": "COLOR_OECV",
+            "line": 313
+          },
+          {
+            "value": "COLOR_CAUSA",
+            "line": 321
+          },
+          {
+            "value": "COLOR_CAUSA_OTRA",
+            "line": 328
+          },
+          {
+            "value": "COLOR_RUTA",
+            "line": 330
+          },
+          {
+            "value": "COLOR_REDVIAL",
+            "line": 331
+          },
+          {
+            "value": "COLOR_STANDBY",
+            "line": 332
+          },
+          {
+            "value": "COLOR_VERIFICADO",
+            "line": 335
+          },
+          {
+            "value": "radioPorZoom",
+            "line": 337
+          },
+          {
+            "value": "CAPAS",
+            "line": 347
+          },
+          {
+            "value": "FILTROS",
+            "line": 405
+          },
+          {
+            "value": "fmt",
+            "line": 422
+          },
+          {
+            "value": "fmt1",
+            "line": 423
+          },
+          {
+            "value": "fechaLarga",
+            "line": 434
+          },
+          {
+            "value": "NO_ACTIVOS",
+            "line": 455
+          },
+          {
+            "value": "temporadasIncendios",
+            "line": 465
+          },
+          {
+            "value": "AVISO_CIVICO",
+            "line": 480
+          },
+          {
+            "value": "CONTACTO",
+            "line": 492
+          }
+        ],
+        "components": [
+          {
+            "value": "DATA",
+            "line": 5
+          },
+          {
+            "value": "VISTA_INICIAL",
+            "line": 7
+          },
+          {
+            "value": "LIMITES",
+            "line": 8
+          },
+          {
+            "value": "CORTE_KPI",
+            "line": 25
+          },
+          {
+            "value": "CORTE_PANEL",
+            "line": 27
+          },
+          {
+            "value": "MIN_PANEL",
+            "line": 29
+          },
+          {
+            "value": "MAX_PANEL",
+            "line": 30
+          },
+          {
+            "value": "ANCHO_PANEL",
+            "line": 31
+          },
+          {
+            "value": "ANCHO_KPI",
+            "line": 42
+          },
+          {
+            "value": "MAX_KPI",
+            "line": 43
+          },
+          {
+            "value": "MIN_MAPA",
+            "line": 51
+          },
+          {
+            "value": "DIACRITICOS",
+            "line": 63
+          },
+          {
+            "value": "BASEMAPS",
+            "line": 140
+          },
+          {
+            "value": "COLOR_OECV",
+            "line": 313
+          },
+          {
+            "value": "COLOR_CAUSA",
+            "line": 321
+          },
+          {
+            "value": "COLOR_CAUSA_OTRA",
+            "line": 328
+          },
+          {
+            "value": "COLOR_RUTA",
+            "line": 330
+          },
+          {
+            "value": "COLOR_REDVIAL",
+            "line": 331
+          },
+          {
+            "value": "COLOR_STANDBY",
+            "line": 332
+          },
+          {
+            "value": "COLOR_VERIFICADO",
+            "line": 335
+          },
+          {
+            "value": "CAPAS",
+            "line": 347
+          },
+          {
+            "value": "FILTROS",
+            "line": 405
+          },
+          {
+            "value": "NO_ACTIVOS",
+            "line": 455
+          },
+          {
+            "value": "AVISO_CIVICO",
+            "line": 480
+          },
+          {
+            "value": "CONTACTO",
+            "line": 492
+          }
+        ],
+        "api_calls": [],
+        "routes": [],
+        "env_vars": [
+          {
+            "value": "BASE_URL",
+            "line": 5,
+            "file": "frontend/src/config.js"
+          }
+        ]
+      }
+    },
+    "frontend/src/preferencias.js": {
+      "javascript": {
+        "imports": [
+          {
+            "value": "./config",
+            "line": 27
+          }
+        ],
+        "exports": [
+          {
+            "value": "POR_OMISION",
+            "line": 31
+          },
+          {
+            "value": "leerDisposicion",
+            "line": 56
+          },
+          {
+            "value": "guardarDisposicion",
+            "line": 83
+          }
+        ],
+        "components": [
+          {
+            "value": "CLAVE",
+            "line": 29
+          },
+          {
+            "value": "POR_OMISION",
+            "line": 31
+          }
+        ],
+        "api_calls": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "frontend/src/main.jsx": {
+      "javascript": {
+        "imports": [
+          {
+            "value": "react",
+            "line": 1
+          },
+          {
+            "value": "react-dom/client",
+            "line": 2
+          },
+          {
+            "value": "./App.jsx",
+            "line": 4
+          }
+        ],
+        "exports": [],
+        "components": [],
+        "api_calls": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "frontend/src/fichas.js": {
+      "javascript": {
+        "imports": [
+          {
+            "value": "./config",
+            "line": 1
+          }
+        ],
+        "exports": [
+          {
+            "value": "fichaIncendio",
+            "line": 56
+          },
+          {
+            "value": "fichaOECV",
+            "line": 106
+          },
+          {
+            "value": "fichaVerificado",
+            "line": 122
+          },
+          {
+            "value": "fichaRuta",
+            "line": 136
+          },
+          {
+            "value": "fichaStandBy",
+            "line": 157
+          }
+        ],
+        "components": [
+          {
+            "value": "HUSO",
+            "line": 5
+          }
+        ],
+        "api_calls": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "frontend/src/hooks/useDatos.js": {
+      "javascript": {
+        "imports": [
+          {
+            "value": "react",
+            "line": 1
+          },
+          {
+            "value": "../config",
+            "line": 2
+          }
+        ],
+        "exports": [
+          {
+            "value": "useManifest",
+            "line": 9
+          },
+          {
+            "value": "useGeoJSON",
+            "line": 34
+          },
+          {
+            "value": "useKpis",
+            "line": 93
+          }
+        ],
+        "components": [],
+        "api_calls": [
+          {
+            "method": "FETCH",
+            "target": "${DATA}/manifest.json",
+            "line": 15,
+            "file": "frontend/src/hooks/useDatos.js"
+          },
+          {
+            "method": "FETCH",
+            "target": "${DATA}/${archivo}",
+            "line": 54,
+            "file": "frontend/src/hooks/useDatos.js"
+          },
+          {
+            "method": "FETCH",
+            "target": "${DATA}/kpis.json",
+            "line": 97,
+            "file": "frontend/src/hooks/useDatos.js"
+          }
+        ],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "frontend/src/hooks/useFechaImagen.js": {
+      "javascript": {
+        "imports": [
+          {
+            "value": "react",
+            "line": 1
+          }
+        ],
+        "exports": [
+          {
+            "value": "useFechaImagen",
+            "line": 52
+          }
+        ],
+        "components": [
+          {
+            "value": "SERVICIO",
+            "line": 29
+          }
+        ],
+        "api_calls": [
+          {
+            "method": "FETCH",
+            "target": "${SERVICIO}?${q}",
+            "line": 80,
+            "file": "frontend/src/hooks/useFechaImagen.js"
+          }
+        ],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "frontend/src/components/SeccionDescargas.jsx": {
+      "javascript": {
+        "imports": [
+          {
+            "value": "react",
+            "line": 1
+          },
+          {
+            "value": "../config",
+            "line": 2
+          },
+          {
+            "value": "../descargas",
+            "line": 15
+          },
+          {
+            "value": "../mapaPNG",
+            "line": 26
+          },
+          {
+            "value": "../informe",
+            "line": 27
+          },
+          {
+            "value": "../indicadores",
+            "line": 28
+          },
+          {
+            "value": "../urlState",
+            "line": 29
+          },
+          {
+            "value": "./PanelIndicadores",
+            "line": 30
+          }
+        ],
+        "exports": [
+          {
+            "value": "SeccionDescargas",
+            "line": 60
+          }
+        ],
+        "components": [
+          {
+            "value": "EXPORTABLES",
+            "line": 37
+          },
+          {
+            "value": "SeccionDescargas",
+            "line": 60
+          }
+        ],
+        "api_calls": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "frontend/src/components/ModalFicha.jsx": {
+      "javascript": {
+        "imports": [
+          {
+            "value": "react",
+            "line": 1
+          }
+        ],
+        "exports": [
+          {
+            "value": "ModalFicha",
+            "line": 14
+          }
+        ],
+        "components": [
+          {
+            "value": "ModalFicha",
+            "line": 14
+          }
+        ],
+        "api_calls": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "frontend/src/components/PanelLateral.jsx": {
+      "javascript": {
+        "imports": [
+          {
+            "value": "react",
+            "line": 1
+          },
+          {
+            "value": "../urlState",
+            "line": 2
+          },
+          {
+            "value": "../config",
+            "line": 3
+          }
+        ],
+        "exports": [
+          {
+            "value": "PanelLateral",
+            "line": 112
+          }
+        ],
+        "components": [
+          {
+            "value": "Chip",
+            "line": 38
+          },
+          {
+            "value": "FechaImagen",
+            "line": 50
+          },
+          {
+            "value": "PanelLateral",
+            "line": 112
+          }
+        ],
+        "api_calls": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "frontend/src/components/Tirador.jsx": {
+      "javascript": {
+        "imports": [
+          {
+            "value": "react",
+            "line": 1
+          }
+        ],
+        "exports": [
+          {
+            "value": "Tirador",
+            "line": 24
+          }
+        ],
+        "components": [
+          {
+            "value": "PASO",
+            "line": 3
+          },
+          {
+            "value": "PASO_GRANDE",
+            "line": 4
+          },
+          {
+            "value": "Tirador",
+            "line": 24
+          }
+        ],
+        "api_calls": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "frontend/src/components/graficos.jsx": {
+      "javascript": {
+        "imports": [
+          {
+            "value": "../config",
+            "line": 30
+          }
+        ],
+        "exports": [
+          {
+            "value": "IconoIndicadores",
+            "line": 41
+          },
+          {
+            "value": "Cifra",
+            "line": 55
+          },
+          {
+            "value": "BarraFila",
+            "line": 76
+          },
+          {
+            "value": "Medidor",
+            "line": 111
+          },
+          {
+            "value": "Columnas",
+            "line": 127
+          },
+          {
+            "value": "Mancuerna",
+            "line": 204
+          },
+          {
+            "value": "LeyendaMancuerna",
+            "line": 325
+          },
+          {
+            "value": "Lineas",
+            "line": 356
+          },
+          {
+            "value": "LeyendaLineas",
+            "line": 415
+          },
+          {
+            "value": "TablaKpi",
+            "line": 435
+          },
+          {
+            "value": "CapaApagada",
+            "line": 473
+          }
+        ],
+        "components": [
+          {
+            "value": "W",
+            "line": 32
+          },
+          {
+            "value": "IconoIndicadores",
+            "line": 41
+          },
+          {
+            "value": "Cifra",
+            "line": 55
+          },
+          {
+            "value": "BarraFila",
+            "line": 76
+          },
+          {
+            "value": "Medidor",
+            "line": 111
+          },
+          {
+            "value": "Columnas",
+            "line": 127
+          },
+          {
+            "value": "EJE",
+            "line": 129
+          },
+          {
+            "value": "TECHO",
+            "line": 130
+          },
+          {
+            "value": "H",
+            "line": 131
+          },
+          {
+            "value": "Mancuerna",
+            "line": 204
+          },
+          {
+            "value": "FILA",
+            "line": 212
+          },
+          {
+            "value": "CABEZA",
+            "line": 213
+          },
+          {
+            "value": "X0",
+            "line": 214
+          },
+          {
+            "value": "X1",
+            "line": 215
+          },
+          {
+            "value": "H",
+            "line": 216
+          },
+          {
+            "value": "LeyendaMancuerna",
+            "line": 325
+          },
+          {
+            "value": "Lineas",
+            "line": 356
+          },
+          {
+            "value": "EJE",
+            "line": 358
+          },
+          {
+            "value": "X1",
+            "line": 359
+          },
+          {
+            "value": "H",
+            "line": 360
+          },
+          {
+            "value": "LeyendaLineas",
+            "line": 415
+          },
+          {
+            "value": "TablaKpi",
+            "line": 435
+          },
+          {
+            "value": "CapaApagada",
+            "line": 473
+          }
+        ],
+        "api_calls": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "frontend/src/components/PanelIndicadores.jsx": {
+      "javascript": {
+        "imports": [
+          {
+            "value": "react",
+            "line": 1
+          },
+          {
+            "value": "../config",
+            "line": 2
+          },
+          {
+            "value": "../indicadores",
+            "line": 3
+          },
+          {
+            "value": "./graficos",
+            "line": 14
+          }
+        ],
+        "exports": [
+          {
+            "value": "PanelIndicadores",
+            "line": 37
+          }
+        ],
+        "components": [
+          {
+            "value": "SERIES_CAUSA",
+            "line": 32
+          },
+          {
+            "value": "PanelIndicadores",
+            "line": 37
+          }
+        ],
+        "api_calls": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "frontend/src/components/CapaPuntos.jsx": {
+      "javascript": {
+        "imports": [
+          {
+            "value": "react",
+            "line": 1
+          },
+          {
+            "value": "leaflet",
+            "line": 2
+          },
+          {
+            "value": "../config",
+            "line": 3
+          }
+        ],
+        "exports": [
+          {
+            "value": "CapaPuntos",
+            "line": 17
+          }
+        ],
+        "components": [
+          {
+            "value": "CapaPuntos",
+            "line": 17
+          }
+        ],
+        "api_calls": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "frontend/src/components/EtiquetaImagen.jsx": {
+      "javascript": {
+        "imports": [
+          {
+            "value": "react",
+            "line": 1
+          },
+          {
+            "value": "leaflet",
+            "line": 2
+          },
+          {
+            "value": "../config",
+            "line": 3
+          }
+        ],
+        "exports": [
+          {
+            "value": "EtiquetaImagen",
+            "line": 19
+          }
+        ],
+        "components": [
+          {
+            "value": "EtiquetaImagen",
+            "line": 19
+          }
+        ],
+        "api_calls": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "frontend/src/components/CapaTiles.jsx": {
+      "javascript": {
+        "imports": [
+          {
+            "value": "react",
+            "line": 1
+          },
+          {
+            "value": "pmtiles",
+            "line": 2
+          },
+          {
+            "value": "protomaps-leaflet",
+            "line": 3
+          },
+          {
+            "value": "../config",
+            "line": 4
+          }
+        ],
+        "exports": [
+          {
+            "value": "CapaTiles",
+            "line": 19
+          }
+        ],
+        "components": [
+          {
+            "value": "CapaTiles",
+            "line": 19
+          }
+        ],
+        "api_calls": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "frontend/src/components/CartelContexto.jsx": {
+      "javascript": {
+        "imports": [
+          {
+            "value": "../config",
+            "line": 1
+          }
+        ],
+        "exports": [
+          {
+            "value": "CartelContexto",
+            "line": 26
+          }
+        ],
+        "components": [
+          {
+            "value": "CartelContexto",
+            "line": 26
+          }
+        ],
+        "api_calls": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "frontend/src/components/CapaLineas.jsx": {
+      "javascript": {
+        "imports": [
+          {
+            "value": "react",
+            "line": 1
+          },
+          {
+            "value": "leaflet",
+            "line": 2
+          }
+        ],
+        "exports": [
+          {
+            "value": "CapaLineas",
+            "line": 17
+          }
+        ],
+        "components": [
+          {
+            "value": "CapaLineas",
+            "line": 17
+          }
+        ],
+        "api_calls": [],
+        "routes": [],
+        "env_vars": []
+      }
+    },
+    "frontend/src/components/Banner.jsx": {
+      "javascript": {
+        "imports": [
+          {
+            "value": "../assets/banner-conaf-incendios.jpg",
+            "line": 1
+          }
+        ],
+        "exports": [
+          {
+            "value": "Banner",
+            "line": 51
+          }
+        ],
+        "components": [
+          {
+            "value": "Banner",
+            "line": 51
+          }
+        ],
+        "api_calls": [],
+        "routes": [],
+        "env_vars": []
+      }
+    }
+  }
+}
