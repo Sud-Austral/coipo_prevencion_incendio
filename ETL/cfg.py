@@ -6,8 +6,22 @@ durante el desarrollo sin importar run.py (y sin ciclos de import).
 
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass
 from pathlib import Path
+
+# La consola de Windows es cp1252 y todo el ETL imprime '▶', '✔', '⚠' y '✘'. Sin
+# esto `python ETL/run.py` muere con UnicodeEncodeError en su PRIMER print, antes
+# de leer un solo insumo. Medido el 2026-09-10: reventaba en la linea de cabecera
+# de run.py y en la de verify.py. Va aqui porque cfg lo importa todo el ETL,
+# incluidos los procesos hijo (spawn vuelve a importar el modulo).
+#
+# stderr TAMBIEN: el aviso de "sin tippecanoe" -el mas importante que emite el
+# ETL, el que dice que no se commitee la salida- va por ahi, y sin reconfigurar
+# salia como el literal '⚠' en vez del simbolo.
+for _flujo in (sys.stdout, sys.stderr):
+    if hasattr(_flujo, "reconfigure"):
+        _flujo.reconfigure(encoding="utf-8")
 
 RAIZ = Path(__file__).resolve().parent.parent
 
