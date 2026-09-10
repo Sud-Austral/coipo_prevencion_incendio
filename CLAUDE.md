@@ -78,8 +78,8 @@ commit hecho desde un portátil cambia el formato publicado.
 ```bash
 # --- ETL -------------------------------------------------------------------
 python ETL/run.py -v                       # 6 capas en paralelo + manifest + verify
-python ETL/verify.py                       # 39 comprobaciones sobre lo publicado (~1,6 s)
-python ETL/verify.py --negativas           # 12 mutaciones, cada una debe ponerse roja (~19 s)
+python ETL/verify.py                       # comprobaciones sobre lo publicado (~1,6 s)
+python ETL/verify.py --negativas           # 14 mutaciones, cada una debe ponerse roja (~19 s)
 
 # --- frontend --------------------------------------------------------------
 cd frontend
@@ -90,8 +90,20 @@ npm run lint                               # oxlint. Verde en el estado base (0 
 npm run build                              # ~1,3 s
 npm run verify:banner                      # ~5 s, necesita Chrome
 npm run verify:panel                       # ~1 min, necesita Chrome
+npm run verify:priorizacion                # ~40 s, necesita Chrome
+npm run verify:priorizacion -- --negativas # ~2 min, PARCHEA CapaPuntos.jsx y restaura
 npm run verify:mutantes                    # ~2 min, PARCHEA el repo y restaura
 ```
+
+- **LOS ARNESES NO CONSTRUYEN: sirven `dist/` tal como esté.** Medido el 2026-09-10 (a
+  base de perder un rato): tras editar `App.css` el arnés del banner seguía midiendo el
+  artefacto anterior y daba un rojo que no correspondía al código en el editor. **`npm run
+  build` antes de cada `verify:*`**, siempre.
+
+- **`python ETL/run.py --layers X` REESCRIBE el manifest sólo con X.** No lo fusiona con lo
+  que ya había: las otras capas desaparecen del contrato y el visor deja de verlas. Para
+  regenerar una sola capa sin romper `frontend/public/data/`, se emite a otro sitio con
+  `--out` y se copia sólo el `.geojson`, fusionando el manifest a mano.
 
 **Trampas que cuestan tiempo si no las sabes:**
 
@@ -194,11 +206,18 @@ con código de salida 0.
 
 ## 5. Reglas de los datos que no se pueden romper
 
-- **Un solo renderer de canvas para todas las capas vectoriales**, declarado en las
-  opciones del mapa y no en cada componente. Leaflet engancha los eventos de ratón al
-  `<canvas>`: con un canvas por capa **sólo la de encima recibe los clics**, y cuál queda
-  encima lo decide el orden en que terminan de descargarse los archivos.
-  `DECISIONES.md` §H — **y hoy no lo vigila ninguna aserción.**
+- **Un solo renderer de canvas para todas las capas vectoriales.** Leaflet engancha los
+  eventos de ratón al `<canvas>`: con un canvas por capa **sólo la de encima recibe los
+  clics**, y cuál queda encima lo decide el orden en que terminan de descargarse los
+  archivos. La regla completa es **ninguna capa vectorial declara `renderer` NI `pane`**:
+  `_getPaneRenderer` crea uno nuevo para cualquier pane que no sea `overlayPane`, con
+  precedencia sobre el compartido, así que un `pane` propio reintroduce el fallo sin
+  escribir la palabra `renderer`. `DECISIONES.md` §H — **lo vigila C1 de
+  `verify-priorizacion.mjs`, con su control negativo.**
+- **La normalización comunal de la vista de priorización NO toca el dato.** No existe
+  ningún `puntaje_normalizado`: vive en una función pura de `src/escalas.js` y sólo la lee
+  el callback de estilo. Y reparte **por rango**, no por min-max — el min-max lineal deja
+  el 68 % de Mulchén en los dos escalones más bajos. `DECISIONES.md` §P.
 - **El huso UTM de los incendios no viene declarado y cambia por fila.** Se prueban ambos y
   se elige el que cae en la franja de longitudes de la región de la propia fila. La regla
   `X < 500000` manda Calama 470 km mar adentro. `DECISIONES.md` §A.
@@ -240,11 +259,27 @@ encontró un `ValueError` real en `_cruce_espacial` a los cinco minutos de exist
 
 Comprobadas una a una el 2026-09-10:
 
-1. **`INSUMO_INCENDIO/` son ~832 MB versionados en un repositorio público**, incluida
-   `BBDD INVESTIGACIÓN UAD CONSOLIDADA COMPLETA.xlsx`, 70 PDFs de actas de reunión y 16
-   `.docx` que suelen consignar asistentes. `insumos/MANIFIESTO.yaml` ya lo marca como la
-   revisión jurídica pendiente n.º 1 y nadie la ha cerrado. **Estado: ABIERTA. La decide
-   Luis.** No reescribas la historia de git por tu cuenta.
+1. **Borrar la carga inerte no cierra la cuestión jurídica, y conviene no confundirlas.**
+   El 2026-09-10 se borraron de `INSUMO_INCENDIO/` **241 archivos y 492,1 MB** que ningún
+   paso del pipeline abría: los 70 PDF, los 16 `.docx`, las fotos, los `.rar` (ya extraídos,
+   y el ETL lee el `.shp` desempaquetado), los `.xml`/`.qmd` de metadatos y los índices
+   `.sbn`/`.sbx`/`.qix` de ArcGIS. Comprobado ejecutando el ETL completo después: mismas
+   14.705 / 1.863 / 1.114 / 327 / 5.278 / 13.964 features y los mismos KPIs. El directorio
+   pasó de 832 MB a **340 MB** y de 775 a **534 archivos**.
+
+   **Pero `.git` sigue pesando 718 MB y la historia conserva todos los blobs.** Un clon no
+   adelgaza, y **las 9 actas de reunión siguen siendo recuperables por cualquiera** con un
+   `git log`. Si lo que preocupaba era la exposición en un repositorio público, el borrado
+   **no la resuelve**: eso exige hacer el repo privado o reescribir la historia, y lo
+   segundo es peligroso con ramas ya publicadas (`uat`, `imgbot`). `mejoras.md` §D1 tiene
+   las opciones. **Estado: ABIERTA. La decide Luis.**
+
+   Lo que sí está comprobado: **la capa publicada no expone nombres de personas.**
+   `jefe_brigada` e `investigado_por` viajan como códigos contra las tablas del manifest
+   (`'5.1'`, `'4.1.2'`, `'UAD.86A'`), no como nombres.
+
+   Para recuperar cualquier archivo borrado: `git checkout HEAD -- <ruta>`.
+
 2. **La decisión §H de `DECISIONES.md` —el renderer compartido— no tiene vigilante.** Es el
    fallo que sólo aparece con varias capas encendidas y que **se ve idéntico en una
    captura**. Escribir esa aserción y su mutante es la primera prioridad de `mejoras.md`.

@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "datos": "node scripts/descargar-datos.mjs",
     "verify:banner": "node scripts/verify-banner.mjs",
+    "verify:priorizacion": "node scripts/verify-priorizacion.mjs",
     "verify:panel": "node scripts/verify-panel.mjs",
     "verify:mutantes": "node scripts/mutaciones.mjs"
   },

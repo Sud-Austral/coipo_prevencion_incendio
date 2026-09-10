@@ -213,6 +213,65 @@ def verificar(data: Path, muestra: int = 500, res: Res | None = None) -> bool:
         "; ".join(f"{k}: {v}" for k, v in intrusos.items()) if intrusos else "",
     )
 
+    # --- priorizacion: cada mancha dentro del bbox declarado de SU comuna ---
+    # bbox_comuna es lo que usa el visor para encuadrar al elegir comuna. Si una
+    # mancha se sale, el encuadre deja fuera parte de lo que dice mostrar.
+    prio = data / "priorizacion.geojson"
+    meta_prio = capas.get("priorizacion", {})
+    if prio.exists() and meta_prio.get("bbox_comuna"):
+        cajas = meta_prio["bbox_comuna"]
+        gj = json.loads(prio.read_text(encoding="utf-8"))
+        malas = []
+        for f in gj["features"]:
+            p = f["properties"]
+            caja = cajas.get(p.get("comuna"))
+            if caja is None:
+                malas.append(f"{p.get('mancha_id')}: comuna sin bbox")
+                continue
+            cs = _coords(f["geometry"])
+            if (
+                min(c[0] for c in cs) < caja[0]
+                or min(c[1] for c in cs) < caja[1]
+                or max(c[0] for c in cs) > caja[2]
+                or max(c[1] for c in cs) > caja[3]
+            ):
+                malas.append(str(p.get("mancha_id")))
+        r.check(
+            not malas,
+            "D14",
+            "priorizacion: cada mancha dentro del bbox de su comuna",
+            f"{len(malas)} fuera: {malas[:3]}" if malas else "",
+        )
+
+    # --- infraestructura: cada punto dentro del bbox de la comuna que declara ---
+    # Cruza las DOS capas nuevas, asi que caza de una vez tres fallos distintos:
+    # un huso UTM mal leido (el punto se va ~700 km), un nombre de comuna que no
+    # cruza entre capas, y una comuna publicada en una capa y no en la otra.
+    # El margen es 0,01 grados (~1,1 km): el contorno comunal del que salen las
+    # manchas viene simplificado a 25 m, asi que 0,01 deja 40x de holgura y
+    # sigue siendo 70 veces menor que el error de huso que debe detectar.
+    infra = data / "infra_puntos.geojson"
+    if infra.exists() and meta_prio.get("bbox_comuna"):
+        cajas = meta_prio["bbox_comuna"]
+        m = 0.01
+        gj = json.loads(infra.read_text(encoding="utf-8"))
+        malos = []
+        for f in gj["features"]:
+            p = f["properties"]
+            caja = cajas.get(p.get("comuna"))
+            if caja is None:
+                malos.append(f"{p.get('nombre')}: comuna '{p.get('comuna')}' no esta en priorizacion")
+                continue
+            lon, lat = f["geometry"]["coordinates"]
+            if not (caja[0] - m <= lon <= caja[2] + m and caja[1] - m <= lat <= caja[3] + m):
+                malos.append(f"{p.get('familia')}/{p.get('nombre')} en {p.get('comuna')}")
+        r.check(
+            not malos,
+            "D15",
+            "infra_puntos: cada punto dentro del bbox de su comuna",
+            f"{len(malos)} fuera: {malos[:3]}" if malos else "",
+        )
+
     # --- cruce espacial: los incendios deben caer sobre la red vial ---
     inc = data / "incendios.geojson"
     if inc.exists() and lineas_para_cruce:
@@ -374,6 +433,25 @@ def _mutaciones(data: Path) -> list[tuple[str, str, str, object]]:
 
         _mut_json(p, desplazar)
 
+    def mancha_fuera_de_su_bbox(p: Path):
+        # Basta desplazar una mancha un poco: D14 no tiene margen a proposito,
+        # porque bbox_comuna se calcula DE estas mismas manchas y encerrarlas es
+        # su unica razon de existir.
+        def mover(d):
+            g = d["features"][0]["geometry"]
+            g["coordinates"] = [[[x + 1.0, y] for x, y in anillo] for anillo in g["coordinates"]]
+
+        _mut_json(p, mover)
+
+    def punto_con_huso_equivocado(p: Path):
+        # El defecto que D15 existe para cazar: leer un archivo con el huso de su
+        # vecino. Entre 18S y 19S son ~6 grados de longitud, muy por encima del
+        # margen de 0,01 y aun asi dentro de Chile, asi que D9 NO lo detecta.
+        def desplazar(d):
+            d["features"][0]["geometry"]["coordinates"][0] -= 6.0
+
+        _mut_json(p, desplazar)
+
     return [
         ("D1", "borrar el archivo de una capa", arch_geo, borrar_archivo),
         ("D2", "corromper el magic 'PMTiles' del header", arch_pm, magic_corrupto),
@@ -387,6 +465,8 @@ def _mutaciones(data: Path) -> list[tuple[str, str, str, object]]:
         ("D10", "borrar un campo de filtro de los 200 primeros", arch_geo, sin_campo_de_filtro),
         ("D11", "colar una región sin canonizar en el manifest", "manifest.json", region_sin_canonizar),
         ("D13", "invertir el huso: desplazar la longitud 5° al oeste", "incendios.geojson", huso_invertido),
+        ("D14", "sacar una mancha 1° al este de su comuna", "priorizacion.geojson", mancha_fuera_de_su_bbox),
+        ("D15", "leer un punto con el huso vecino: 6° al oeste", "infra_puntos.geojson", punto_con_huso_equivocado),
     ]
 
 

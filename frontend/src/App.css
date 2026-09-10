@@ -103,6 +103,57 @@
   max-width: none;
 }
 
+/* ---------- pestañas de vista ---------- */
+
+.pestanas {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  /* Alto FIJO, no automatico: --alto-banner lo suma para colocar los seis
+     elementos flotantes que van bajo la cabecera. Si dependiera de la fuente,
+     esos calculos se desviarian y el boton ☰ volveria a pisar la barra. */
+  height: var(--alto-pestanas);
+  box-sizing: border-box;
+  /* NUNCA --verde-institucional: A1 y A2 de verify-banner buscan donde termina
+     la banda verde barriendo los pixeles del PNG, no midiendo el DOM. Una barra
+     verde pegada bajo la imagen alargaria esa banda y las pondria rojas. */
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  /* .banner lleva line-height:0 para que el <img> no arrastre el hueco de la
+     linea base; aqui hay texto y hay que devolverselo. */
+  line-height: 1.45;
+  padding: 0 8px;
+}
+
+.pestana {
+  appearance: none;
+  background: none;
+  border: 0;
+  /* El subrayado de 2px se reserva SIEMPRE, transparente en las inactivas: si
+     solo lo tuviera la activa, cambiar de pestaña movería el texto 2 px. */
+  border-bottom: 2px solid transparent;
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  padding: 0 14px;
+  white-space: nowrap;
+}
+
+.pestana:hover {
+  color: var(--text-h);
+}
+
+.pestana.activa {
+  border-bottom-color: var(--accent);
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.pestana:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
 /* ---------- paneles laterales ---------- */
 
 /* Los dos paneles comparten el idioma de columna-de-secciones, asi que los
@@ -460,6 +511,114 @@ select {
   display: inline-block;
 }
 
+/* ---------- priorización ---------- */
+
+/* Texto de apoyo del panel: explica una decisión, no rotula un dato. */
+.pista {
+  font-size: 11.5px;
+  color: var(--text-2);
+  margin: 6px 0 0;
+  line-height: 1.4;
+}
+
+.leyenda-rango {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
+  font-size: 11px;
+}
+
+.normalizar {
+  width: 100%;
+  margin: 10px 0 0;
+  padding: 8px;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--accent);
+  background: var(--bg);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.normalizar:hover {
+  background: var(--accent-bg);
+}
+
+/* Activo = invertido, no solo un borde: el estado de la escala tiene que
+   verse desde el otro lado de la sala, porque de él depende cómo se lee
+   TODO el mapa. */
+.normalizar.activo {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* Distintivo del modo relativo. Va junto al título de la leyenda para que sea
+   imposible mirar la rampa sin ver que es relativa. */
+.distintivo {
+  margin-left: 6px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+}
+
+/* Rampa en escalones y no un degradado: los escalones son los que de verdad
+   se usan al pintar, así que la leyenda enseña lo que hay. */
+.rampa {
+  display: flex;
+  height: 14px;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+
+.rampa span {
+  flex: 1;
+}
+
+.rampa-extremos {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+  margin-top: 3px;
+}
+
+/* ---------- iconos de infraestructura ---------- */
+
+/* El divIcon trae fondo y borde propios de Leaflet; se quitan para que solo se
+   vea el disco. */
+.icono-infra {
+  background: none;
+  border: 0;
+}
+
+.pin {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  /* El aro blanco es lo que separa el icono del área que tiene debajo: las
+     clases van de crema a granate y sin él los glifos oscuros se pierden en
+     unos fondos y los claros en otros. */
+  box-shadow: 0 0 0 1.5px #fff, 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.pin svg {
+  width: 14px;
+  height: 14px;
+  fill: #fff;
+  display: block;
+}
+
 .kpi {
   font-size: 12px;
   padding: 2px 0;
@@ -778,7 +937,7 @@ select {
   pointer-events: none;
   display: none;
   place-items: center;
-  top: calc(max(var(--alto-minimo-banner), 100vw / var(--razon-banner)));
+  top: calc(var(--alto-banner));
   bottom: 0;
   left: var(--pista-panel, 320px);
   right: var(--pista-kpi, var(--ancho-kpi));
@@ -820,7 +979,7 @@ select {
 .descargando {
   position: fixed;
   z-index: 998;
-  top: calc(max(var(--alto-minimo-banner), 100vw / var(--razon-banner)) + 80px);
+  top: calc(var(--alto-banner) + 80px);
   left: 50%;
   transform: translateX(-50%);
   max-width: calc(100vw - 32px);
@@ -1084,7 +1243,7 @@ select {
      aparecen tambien a 1920, donde la banda mide 112,08 px.
      Bajo el banner y no encima: con top:10px el boton ocupaba y=10..46 y la
      marca del asset se pinta de x=40,3 a x=207,8, asi que se solapaban. */
-  top: calc(max(var(--alto-minimo-banner), 100vw / var(--razon-banner)) + 10px);
+  top: calc(var(--alto-banner) + 10px);
   width: 36px;
   height: 36px;
   background: var(--bg);
@@ -1160,7 +1319,7 @@ select {
 .tirador {
   position: fixed;
   z-index: 998;
-  top: calc(max(var(--alto-minimo-banner), 100vw / var(--razon-banner)));
+  top: calc(var(--alto-banner));
   bottom: 0;
   left: calc(var(--pista-panel, 320px) - 4px);
   width: 9px;
@@ -1333,7 +1492,7 @@ select {
        exacta porque su media query corta en 900, por debajo del cruce de
        1164,83 px. Esta llega hasta 1200, donde la banda ya mide 70,05 px, asi
        que se reproduce la formula del banner. */
-    inset: calc(max(var(--alto-minimo-banner), 100vw / var(--razon-banner))) 0 0 auto;
+    inset: calc(var(--alto-banner)) 0 0 auto;
     width: var(--ancho-kpi);
     overflow: hidden;
     /* Cerrada, la funda ocupa 320 px sobre el mapa: sin esto se comeria los
@@ -1612,7 +1771,7 @@ a:focus-visible {
      comprueba este choque»: no lo comprobaba, y estaba ocurriendo.
      102 px es donde termina la barra medida (170 - 68 de banda); +10 de aire. */
   .descargando {
-    top: calc(max(var(--alto-minimo-banner), 100vw / var(--razon-banner)) + 112px);
+    top: calc(var(--alto-banner) + 112px);
   }
 
   /* Los <select> de filtro miden ~29 px de alto: son el control que mas se usa

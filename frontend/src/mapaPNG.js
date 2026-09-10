@@ -16,7 +16,8 @@
 // Asi el coste --volver a bajar las teselas de la vista -- lo paga solo quien
 // pulsa el boton de descargar, que es exactamente cuando importa.
 
-import { BASEMAPS } from './config'
+import { BASEMAPS, COLOR_FAMILIA } from './config'
+import { GLIFOS } from './iconos'
 
 const TESELA = 256
 
@@ -123,6 +124,50 @@ export async function capturarMapa(map, base = 'Claro') {
     } catch {
       /* un lienzo contaminado no debe tumbar la captura entera */
     }
+  }
+
+  // ---- marcadores con icono ----
+  // Los marcadores de infraestructura NO son figuras del canvas: son nodos del
+  // DOM en markerPane, asi que el bucle de arriba no los ve y salian invisibles
+  // en el PNG y en el informe. Peor todavia: la asercion B20 seguia en verde,
+  // porque busca las tintas de causa de la capa de incendios, que si se pintan
+  // en canvas. Un falso verde garantizado.
+  //
+  // Se redibujan con Path2D sobre los MISMOS paths de iconos.js en vez de
+  // rasterizar el nodo: serializar HTML a imagen exige foreignObject, que
+  // contamina el lienzo en varios navegadores y tumbaria toda la exportacion.
+  for (const el of cont.querySelectorAll('.leaflet-marker-icon')) {
+    const pin = el.matches('.pin') ? el : el.querySelector('.pin')
+    if (!pin) continue
+    const r = el.getBoundingClientRect()
+    if (!r.width || !r.height) continue
+    const cx = r.left - caja.left + r.width / 2
+    const cy = r.top - caja.top + r.height / 2
+    const radio = r.width / 2
+
+    ctx.save()
+    // Disco del color de la familia, con el mismo aro blanco que en pantalla:
+    // sin el, los glifos se pierden sobre las areas mas oscuras.
+    ctx.beginPath()
+    ctx.arc(cx, cy, radio, 0, Math.PI * 2)
+    ctx.fillStyle = COLOR_FAMILIA[pin.dataset.familia] ?? '#4B5563'
+    ctx.fill()
+    ctx.lineWidth = 1.5
+    ctx.strokeStyle = '#fff'
+    ctx.stroke()
+
+    const glifo = GLIFOS[pin.dataset.familia]
+    if (glifo) {
+      // El glifo se dibuja en un viewBox de 24 y en pantalla ocupa 14 de los
+      // 22 px del disco; se conserva esa proporcion sea cual sea el tamaño.
+      const lado = r.width * (14 / 22)
+      const k = lado / 24
+      ctx.translate(cx - lado / 2, cy - lado / 2)
+      ctx.scale(k, k)
+      ctx.fillStyle = '#fff'
+      ctx.fill(new Path2D(glifo))
+    }
+    ctx.restore()
   }
 
   // ---- atribucion ----

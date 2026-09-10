@@ -166,11 +166,35 @@ archivos**: incendios son 3,9 MB, siempre llega el último, y dejaba mudas a las
 **Decisión.** El renderer se declara **una vez en las opciones del mapa**, no en cada
 componente, y todas las capas vectoriales lo comparten.
 
-**Qué lo vigila.** **Nada, hoy.** Es la decisión peor protegida del repo: un canvas por
-capa **se ve idéntico en una captura** y pasa cualquier prueba de una sola capa. El fallo
-sólo aparece usando la app con varias capas encendidas, que es como se usa siempre.
-**Estado: ABIERTA.** Escribir la aserción y su mutante está en `mejoras.md` como la
-primera prioridad.
+**La regla escrita se quedaba corta, y se amplía (2026-09-10).** No basta con «ningún
+componente declara `renderer`»: `Map.getRenderer` evalúa
+`layer.options.renderer || this._getPaneRenderer(layer.options.pane) || this.options.renderer`,
+y `_getPaneRenderer` **crea un renderer nuevo para cualquier pane que no sea
+`overlayPane`**, con precedencia sobre el compartido. O sea que declarar un `pane` propio
+reintroduce el defecto sin haber escrito la palabra `renderer`. La regla correcta es:
+**ninguna capa vectorial declara `renderer` NI `pane`.** Comprobado en el fuente de
+Leaflet 1.9.4 de `node_modules`.
+
+Esto no afecta a los marcadores con icono de la vista de priorización: un `L.Marker` no es
+un `Path`, nunca llama a `getRenderer()`, y su icono se registra con
+`addInteractiveTarget`. Son **dos caminos de eventos disjuntos** —el canvas lleva
+`_leaflet_disable_events` y `Map._handleDOMEvent` descarta lo que venga de él—, así que el
+pane de marcadores no compite por ser el `target`. Ver `CapaIconos.jsx`.
+
+**Qué lo vigila.** **La aserción C1 de `frontend/scripts/verify-priorizacion.mjs`, con su
+control negativo.** Enciende OECV + stand-by + incendios, barre una rejilla de 15×10 clics
+sobre el mapa y exige que respondan **dos capas distintas por lo menos**. Medido en el
+estado sano: 2 capas (26 aciertos de incendios, 1 de stand-by).
+
+**El mutante que proponía `mejoras.md` NO reproducía el defecto, y se corrigió.** Decía
+«quitar `renderer` de las opciones del mapa en `src/App.jsx`»; ejecutado, C1 seguía verde,
+porque sin esa opción Leaflet cae en `_getPaneRenderer('overlayPane')`, que **cachea un
+renderer por pane** y las capas lo siguen compartiendo. El mutante real da un
+`renderer: L.canvas()` propio a `CapaPuntos.jsx`, que es lo que hacía el código que causó
+el fallo; con él C1 baja a **0 capas respondiendo**. Sin haber corrido el control negativo,
+esta aserción habría quedado en verde sin probar nada.
+
+**Estado: CERRADA.**
 
 ---
 
@@ -349,6 +373,59 @@ región, bajo un encabezado que nombra la temporada en curso, se leen como incen
 encabezado **no anuncia una sola temporada**: la capa cubre las nueve investigadas, y
 `temporadasIncendios()` lee el rango de los `dominios` del manifest. **Ninguna temporada
 está hardcodeada**: una nueva aparece sola.
+
+---
+
+## P. La normalización comunal reparte por rango, y no es un min-max (2026-09-10)
+
+**Lo que se pidió.** Un botón que, con una comuna elegida, recalcule la escala de colores
+entre el **mínimo y el máximo de esa comuna**, para poder responder «cuáles son las áreas
+más prioritarias *dentro de esta comuna*» y no sólo «comparadas con todo Chile». Con la
+escala del modelo, Mulchén se ve casi entera de un color pese a tener diferencias internas
+reales.
+
+**Por qué el min-max lineal no sirve, medido antes de elegir.** Normalizando Mulchén entre
+su mínimo (0,1361) y su máximo (0,5555), el reparto en diez escalones queda
+`[21, 54, 10, 3, 0, 4, 10, 3, 2, 3]`: **75 de sus 110 manchas (68 %) siguen amontonadas en
+los dos escalones más bajos** y la mediana normalizada cae en 0,145. El problema no es que
+la escala sea nacional, es que la distribución es muy asimétrica —332 de las 572 manchas
+del país caen entre 0,136 y 0,272—, y reescalar los extremos no la endereza. Coyhaique es
+peor: tiene **2 manchas en 0,0000 exacto** que tiran del mínimo y dejan el 15 % de la
+comuna repartido en 7 milésimas de rampa.
+
+**Decisión.** El color se reparte por la **posición dentro del ranking de la comuna**
+(ocho escalones por cuantiles, anclados en el mínimo y el máximo comunales, que son los dos
+extremos que se pidieron). Medido: el escalón más cargado baja de **54 a 15** manchas en
+Mulchén, de **122 a 45** en Coyhaique y de **46 a 30** en Los Ángeles.
+
+**El precio, y dónde se declara.** El color pasa a indicar **posición relativa, no
+magnitud**: dos manchas contiguas en el ranking se ven igual de separadas difieran 0,001 o
+0,15. Eso lo dice la leyenda con esas palabras. Con `K = 1` la misma función degenera en el
+min-max lineal, por si alguna vez se quiere ofrecer también esa lectura.
+
+**El dato original no se toca.** No existe ningún `puntaje_normalizado`, ni en el GeoJSON
+ni en memoria: la normalización vive en una función pura de `src/escalas.js` y sólo la
+consume el callback de estilo. Materializarla en el ETL habría creado un campo **que caduca
+cada vez que entre una comuna nueva** —exactamente el defecto que el autor del modelo evitó
+al rechazar los quintiles— y que además se exportaría y acabaría leído como si fuera el
+puntaje.
+
+**Por qué es opt-in y nunca el modo por omisión.** `priorizacion.py` calcula en escala
+**absoluta** a propósito: *«Un hexagono da el mismo puntaje se corran tres comunas o las
+346 del pais»*, y usa cortes fijos porque *«con quintiles, anadir comunas recolocaria a
+todas las demas»*. La lectura relativa no puede desplazar a esa; convive con ella y se
+anuncia. El botón **no existe sin una comuna elegida**, y elegir «Todas» devuelve la escala
+del modelo sola: así el modo relativo nunca puede quedar activo sobre una vista
+multicomunal, que es donde comparar colores entre comunas engañaría de verdad.
+
+**Cómo se distinguen las dos lecturas.** Familia cromática distinta (secuencial naranja la
+del modelo, morada la relativa), distintivo `RELATIVO` junto al título, extremos rotulados
+con el **valor absoluto** y nunca con 0-100, y el **contorno de cada mancha conserva el
+color de su clase absoluta** mientras el relleno usa la rampa comunal.
+
+**Qué lo vigila.** C4, C4b, C5 y C6 de `verify-priorizacion.mjs`: que normalizar use más
+colores, que ninguno acapare el mapa, que la leyenda rotule mínimo y máximo absolutos sin
+hablar de porcentajes, y que cambiar de comuna recalcule los anclajes.
 
 ---
 

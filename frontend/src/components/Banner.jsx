@@ -1,4 +1,5 @@
 import banner from '../assets/banner-conaf-incendios.jpg'
+import Pestanas from './Pestanas'
 
 /**
  * Cabecera institucional CONAF / Unidad de Informacion y Analisis / Gerencia de
@@ -48,7 +49,7 @@ import banner from '../assets/banner-conaf-incendios.jpg'
  * y el §4 del MISMO documento prescribe lo contrario para preparar un asset.
  * Si el banner vuelve a cambiar, rehaz el reencodeado: no es un paso del build.
  */
-export default function Banner() {
+export default function Banner({ vista, onVista }) {
   return (
     <header className="banner">
       <img
@@ -60,6 +61,10 @@ export default function Banner() {
         decoding="async"
         draggable={false}
       />
+      {/* Las pestanas van AQUI DENTRO y no como hermanas en la rejilla: A7 y B2
+          miden |mapa.top - banner.alto| <= 1, y dentro del <header> las dos
+          medidas crecen juntas. Ver el comentario de Pestanas.jsx. */}
+      {onVista && <Pestanas vista={vista} onVista={onVista} />}
     </header>
   )
 }

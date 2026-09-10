@@ -5,6 +5,8 @@ import {
   CAPAS,
   COLOR_CAUSA,
   COLOR_CAUSA_OTRA,
+  COLOR_CLASE,
+  COLOR_FAMILIA,
   COLOR_OECV,
   COLOR_REDVIAL,
   COLOR_RUTA,
@@ -18,12 +20,25 @@ import {
   MAX_PANEL,
   MIN_MAPA,
   MIN_PANEL,
+  VISTAS,
   VISTA_INICIAL,
   fmt,
 } from './config'
 import { useGeoJSON, useKpis, useManifest } from './hooks/useDatos'
 import { useFechaImagen } from './hooks/useFechaImagen'
-import { fichaIncendio, fichaOECV, fichaRuta, fichaStandBy, fichaVerificado } from './fichas'
+import {
+  fichaIncendio,
+  fichaMancha,
+  fichaOECV,
+  fichaPunto,
+  fichaRuta,
+  fichaStandBy,
+  fichaVerificado,
+} from './fichas'
+import { colorDeMancha, contextoEscala, rangoComunal } from './escalas'
+import CapaIconos from './components/CapaIconos'
+import CapaPoligonos from './components/CapaPoligonos'
+import PanelPriorizacion from './components/PanelPriorizacion'
 import Banner from './components/Banner'
 import CartelContexto from './components/CartelContexto'
 import EtiquetaImagen from './components/EtiquetaImagen'
@@ -118,6 +133,12 @@ export default function App() {
   const capaBase = useRef(null)
 
   const [base, setBase] = useState(inicial.base ?? 'Claro')
+  // Vista activa. El mapa NO se remonta al cambiar: solo cambian las capas que
+  // se montan y el panel izquierdo, para que el encuadre sobreviva al cambio de
+  // pestaña. Un valor desconocido en ?vista= cae a 'incendios'.
+  const [vista, setVista] = useState(
+    VISTAS.some((v) => v.id === inicial.vista) ? inicial.vista : 'incendios',
+  )
   const [capasActivas, setCapasActivas] = useState(
     inicial.capas ?? CAPAS.filter((c) => c.porDefecto).map((c) => c.id),
   )
@@ -287,6 +308,7 @@ export default function App() {
       capas: capasActivas,
       filtros,
       base,
+      vista,
     })
     // Se EMPUJA solo lo que el usuario reconoce como "hice algo": capas,
     // filtros y mapa base, que son las tres cosas de las que depende este
@@ -311,7 +333,7 @@ export default function App() {
     }
     map.on('moveend', sync)
     return () => map.off('moveend', sync)
-  }, [map, capasActivas, filtros, base])
+  }, [map, capasActivas, filtros, base, vista])
 
   // Atras y Adelante reponen el estado en vez de sacar del sitio.
   useEffect(() => {
@@ -327,6 +349,7 @@ export default function App() {
       setCapasActivas(e.capas ?? CAPAS.filter((c) => c.porDefecto).map((c) => c.id))
       setFiltros(e.filtros ?? {})
       setBase(e.base ?? 'Claro')
+      setVista(VISTAS.some((v) => v.id === e.vista) ? e.vista : 'incendios')
       if (e.center) map.setView(e.center, e.zoom ?? map.getZoom(), { animate: false })
     }
     window.addEventListener('popstate', alVolver)
@@ -363,6 +386,11 @@ export default function App() {
     esGeoJSON(capaMeta('redvial')) ? capaMeta('redvial')?.archivo : null,
     activa('redvial'),
   )
+  // Las dos capas de priorizacion se descargan al entrar en SU pestaña y no
+  // antes: quien solo mira incendios no paga 875 KiB que no va a ver.
+  const enPriorizacion = vista === 'priorizacion'
+  const prioriz = useGeoJSON(capaMeta('priorizacion')?.archivo, enPriorizacion)
+  const infraPuntos = useGeoJSON(capaMeta('infra_puntos')?.archivo, enPriorizacion)
 
   const cargando = {
     incendios: incendios.cargando,
@@ -371,6 +399,8 @@ export default function App() {
     puntos_standby: standby.cargando,
     rutas: rutas.cargando,
     redvial: redvial.cargando,
+    priorizacion: prioriz.cargando,
+    infra_puntos: infraPuntos.cargando,
   }
 
   // useGeoJSON siempre devolvio `error` y NADIE lo consumia. El resultado era el
@@ -387,6 +417,8 @@ export default function App() {
     puntos_standby: standby.error,
     rutas: rutas.error,
     redvial: redvial.error,
+    priorizacion: prioriz.error,
+    infra_puntos: infraPuntos.error,
   }
   const reintentos = {
     incendios: incendios.reintentar,
@@ -395,6 +427,8 @@ export default function App() {
     puntos_standby: standby.reintentar,
     rutas: rutas.reintentar,
     redvial: redvial.reintentar,
+    priorizacion: prioriz.reintentar,
+    infra_puntos: infraPuntos.reintentar,
   }
 
   // Aviso de descarga. Los dos unicos avisos de carga que existian
@@ -453,6 +487,72 @@ export default function App() {
   const pasaOECV = useMemo(() => pasaPorCampos(['region', 'tipo', 'inst']), [pasaPorCampos])
   const pasaVerificado = useMemo(() => pasaPorCampos(['region']), [pasaPorCampos])
   const pasaVial = useMemo(() => pasaPorCampos(['region', 'carpeta']), [pasaPorCampos])
+
+  // ---------- priorizacion ----------
+  // La comuna viaja dentro de `filtros` y no en un estado aparte: asi urlState
+  // la serializa sola como ?comuna=, sin tocar nada mas.
+  const comunaPrior = filtros.comuna ?? ''
+  const [modoEscala, setModoEscala] = useState('absoluta')
+  const [familiasActivas, setFamiliasActivas] = useState(null)
+  // Los iconos estan filtrados por zoom, no ausentes: el panel tiene que
+  // decirlo o parecera que la capa no cargo.
+  const [iconosLejos, setIconosLejos] = useState(false)
+
+  // Las familias salen del manifest, no de una lista escrita a mano. `null`
+  // significa "aun no llego el manifest"; en cuanto llega, todas encendidas.
+  const familias = useMemo(() => {
+    const doms = capaMeta('infra_puntos')?.dominios
+    if (!doms?.familia) return []
+    const etiquetas = new Map((doms.grupo ?? []).map((g) => [g.v, g.v]))
+    return doms.familia.map((f) => ({
+      v: f.v,
+      n: f.n,
+      // El nombre legible sale del propio dato (`grupo`), emparejado por orden
+      // de frecuencia con `familia`: las dos listas las emite el mismo ETL.
+      etiqueta: etiquetas.get(f.v) ?? (doms.grupo ?? [])[doms.familia.indexOf(f)]?.v ?? f.v,
+    }))
+  }, [capaMeta])
+
+  useEffect(() => {
+    if (familiasActivas === null && familias.length) {
+      setFamiliasActivas(familias.map((f) => f.v))
+    }
+  }, [familias, familiasActivas])
+
+  // Sin comuna no hay contraste comunal que mostrar, asi que el modo relativo
+  // se apaga solo. Es lo que impide que una escala relativa quede activa sobre
+  // una vista multicomunal, que es donde comparar colores entre comunas engaña.
+  useEffect(() => {
+    if (!comunaPrior && modoEscala !== 'absoluta') setModoEscala('absoluta')
+  }, [comunaPrior, modoEscala])
+
+  // Los anclajes se recalculan al cambiar de comuna o de modo. NO se guarda
+  // nada en las properties: `ctx` es el unico portador de la normalizacion.
+  const ctxEscala = useMemo(
+    () => contextoEscala(prioriz.data?.features, comunaPrior, modoEscala),
+    [prioriz.data, comunaPrior, modoEscala],
+  )
+
+  // El estilo se pasa ya construido a la capa, que no sabe de escalas: cambiar
+  // de comuna repinta 572 poligonos sin reconstruir ninguno.
+  const estiloMancha = useCallback(
+    (p) => ({
+      fillColor: colorDeMancha(p, ctxEscala),
+      // El CONTORNO conserva siempre el color absoluto de la clase, tambien en
+      // modo relativo: doble codificacion sin coste de espacio, y la lectura
+      // del modelo no desaparece nunca del mapa.
+      color: COLOR_CLASE[p.clase] ?? '#888',
+      weight: 0.6,
+      opacity: 0.9,
+      fillOpacity: 0.65,
+    }),
+    [ctxEscala],
+  )
+
+  const pasaMancha = useMemo(
+    () => (comunaPrior ? (p) => p.comuna === comunaPrior : null),
+    [comunaPrior],
+  )
 
   /**
    * Encuadra el mapa en una region (o en el pais entero con region vacia).
@@ -582,6 +682,76 @@ export default function App() {
       abrirFicha(conCoord(fichaRuta(p, etiqueta, COLOR_REDVIAL), ll)),
     [abrirFicha],
   )
+  const selMancha = useCallback(
+    (p, ll) =>
+      abrirFicha(
+        conCoord(
+          fichaMancha(
+            p,
+            // La posicion en su comuna solo se calcula cuando esa comuna esta
+            // seleccionada: fuera de ese contexto «la 3.ª de 110» no dice nada.
+            comunaPrior === p.comuna ? rangoComunal(prioriz.data?.features, p) : null,
+            colorDeMancha(p, ctxEscala),
+          ),
+          ll,
+        ),
+      ),
+    [abrirFicha, comunaPrior, prioriz.data, ctxEscala],
+  )
+  const selPunto = useCallback(
+    (p, ll) => abrirFicha(conCoord(fichaPunto(p, COLOR_FAMILIA[p.familia] ?? '#4B5563'), ll)),
+    [abrirFicha],
+  )
+
+  /** Encuadra el mapa en el bbox que el ETL calculo para esa comuna. */
+  const encuadrarComuna = useCallback(
+    (comuna) => {
+      const caja = capaMeta('priorizacion')?.bbox_comuna?.[comuna]
+      if (!map || !caja) return
+      map.fitBounds(
+        [
+          [caja[1], caja[0]],
+          [caja[3], caja[2]],
+        ],
+        { padding: [24, 24] },
+      )
+    },
+    [map, capaMeta],
+  )
+
+  // Al elegir comuna se encuadra sola, y al entrar en la pestaña se encuadra al
+  // conjunto. Sin esto la vista abre en el encuadre nacional heredado de la
+  // pestaña de incendios y las areas priorizadas -- que cubren tres comunas --
+  // se ven como dos motas, que es como se veia en la primera captura.
+  //
+  // El bbox de la capa NO sirve para el caso de una comuna: Biobio y Aysen
+  // estan a ~1.000 km, asi que encuadrar las tres juntas es encuadrar medio
+  // pais. Por eso el ETL publica ademas un bbox por comuna.
+  const encuadradoPrior = useRef(false)
+  useEffect(() => {
+    if (!enPriorizacion) {
+      encuadradoPrior.current = false
+      return
+    }
+    if (comunaPrior) {
+      encuadrarComuna(comunaPrior)
+      encuadradoPrior.current = true
+      return
+    }
+    // Solo la PRIMERA vez que se entra sin comuna: si se reencuadrara en cada
+    // render, el usuario no podria alejar ni desplazar el mapa.
+    if (encuadradoPrior.current || !map) return
+    const b = capaMeta('priorizacion')?.bbox
+    if (!b) return
+    map.fitBounds(
+      [
+        [b[1], b[0]],
+        [b[3], b[2]],
+      ],
+      { padding: [24, 24] },
+    )
+    encuadradoPrior.current = true
+  }, [enPriorizacion, comunaPrior, encuadrarComuna, map, capaMeta])
 
   // Ruta de teclado hacia las fichas.
   //
@@ -898,10 +1068,13 @@ export default function App() {
   // data-regimen lo publica JS para que la verificacion pueda comprobar que
   // coincide con el numero de pistas que resuelve el CSS: los cortes viven en
   // los dos sitios y esa duplicacion es la que B12 vigila.
+  // En priorizacion la pista de indicadores no existe, asi que la rejilla se
+  // queda en dos columnas por la misma via que usa el plegado manual.
+  const kpiActivo = kpiVisible && !enPriorizacion
   const clases = [
     'app',
     panelVisible ? '' : 'sin-panel',
-    kpiVisible ? '' : 'sin-kpi',
+    kpiActivo ? '' : 'sin-kpi',
     redimensionando ? 'redimensionando' : '',
   ]
     .filter(Boolean)
@@ -920,10 +1093,10 @@ export default function App() {
         // La variable en linea SOLO cuando cada panel se ve: plegar es cosa de
         // las clases .sin-panel/.sin-kpi, y un estilo en linea les ganaria.
         ...(panelVisible && { '--pista-panel': `${anchoPanel}px` }),
-        ...(kpiVisible && { '--pista-kpi': `${anchoKpi}px` }),
+        ...(kpiActivo && { '--pista-kpi': `${anchoKpi}px` }),
       }}
     >
-      <Banner />
+      <Banner vista={vista} onVista={setVista} />
 
       {/* aria-expanded y aria-controls, que .abrir-kpi ya tenia y este no. */}
       <button
@@ -937,6 +1110,33 @@ export default function App() {
         ☰
       </button>
 
+      {enPriorizacion ? (
+        <PanelPriorizacion
+          manifest={manifest}
+          comuna={comunaPrior}
+          onComuna={(v) => setFiltro('comuna', v)}
+          onModo={setModoEscala}
+          ctx={ctxEscala}
+          familias={familias}
+          familiasActivas={familiasActivas ?? []}
+          onFamilia={(f) =>
+            setFamiliasActivas((a) =>
+              a.includes(f) ? a.filter((x) => x !== f) : [...a, f],
+            )
+          }
+          cuentaAreas={cuentas.priorizacion}
+          cuentaPuntos={cuentas.infra_puntos}
+          iconosLejos={iconosLejos}
+          cargando={cargando.priorizacion}
+          error={errores.priorizacion}
+          onReintentar={() => reintentos.priorizacion?.()}
+          onEncuadrar={encuadrarComuna}
+          map={map}
+          base={base}
+          abierto={panelVisible}
+          onCerrar={cerrarPanel}
+        />
+      ) : (
       <PanelLateral
         manifest={manifest}
         capasActivas={capasActivas}
@@ -977,6 +1177,7 @@ export default function App() {
           propsIndicadores={propsIndicadores}
         />
       </PanelLateral>
+      )}
 
       {/* Hermano del panel y no hijo suyo: .panel scrollea, y dentro quedaba
           recortado por su overflow y se iba con el scroll. Ver .tirador en
@@ -999,7 +1200,12 @@ export default function App() {
       <main
         className="mapa"
         ref={contenedor}
-        aria-label="Mapa de incendios forestales ya investigados"
+        id="vista-activa"
+        aria-label={
+          vista === 'priorizacion'
+            ? 'Mapa de áreas de priorización territorial'
+            : 'Mapa de incendios forestales ya investigados'
+        }
         aria-describedby="mapa-ayuda"
       />
 
@@ -1029,7 +1235,10 @@ export default function App() {
           Los dos botones de navegacion tambien lo descartan, porque con los
           paneles anclados (>1200 px) abrirlos no cambia nada visible y el
           cartel se quedaria en pantalla como si el boton no funcionara. */}
-      {cartelVisible && (
+      {/* El cartel explica la capa de incendios («cada punto es un incendio que
+          ya ocurrio…»), asi que en la vista de priorizacion describiria algo
+          que no esta en pantalla. */}
+      {cartelVisible && !enPriorizacion && (
         <CartelContexto
           manifest={manifest}
           capasActivas={capasActivas}
@@ -1047,36 +1256,73 @@ export default function App() {
 
       {/* DESPUES de .mapa a proposito: la rejilla coloca por orden del DOM y
           esta es la tercera columna. Los Capa* de abajo devuelven null y no
-          ocupan celda, y ModalFicha es un <dialog> que vive en la top layer. */}
-      <div className="funda-kpi">
-        <PanelIndicadores {...propsIndicadores} abierto={kpiVisible} onCerrar={cerrarKpi} />
-      </div>
+          ocupan celda, y ModalFicha es un <dialog> que vive en la top layer.
+          Los indicadores hablan SOLO de incendios investigados --causas,
+          superficie quemada, temporadas--, asi que en la vista de priorizacion
+          la pista entera se colapsa en vez de mostrar cifras de la otra
+          pestaña junto a un mapa que no las ilustra. */}
+      {!enPriorizacion && (
+        <>
+          <div className="funda-kpi">
+            <PanelIndicadores {...propsIndicadores} abierto={kpiVisible} onCerrar={cerrarKpi} />
+          </div>
 
-      {/* El gemelo derecho del tirador. Mismo componente con la geometria
-          espejada; solo existe anclado (>1200 px): en cajon el ancho es fijo. */}
-      <Tirador
-        lado="der"
-        objetivo="panel-indicadores"
-        etiqueta="Ancho del panel de indicadores"
-        ancho={anchoKpi}
-        min={ANCHO_KPI}
-        max={maxKpi}
-        reposo={ANCHO_KPI}
-        onAncho={cambiarAnchoKpi}
-        onArrastre={setRedimensionando}
-      />
+          {/* El gemelo derecho del tirador. Mismo componente con la geometria
+              espejada; solo existe anclado (>1200 px): en cajon el ancho es fijo. */}
+          <Tirador
+            lado="der"
+            objetivo="panel-indicadores"
+            etiqueta="Ancho del panel de indicadores"
+            ancho={anchoKpi}
+            min={ANCHO_KPI}
+            max={maxKpi}
+            reposo={ANCHO_KPI}
+            onAncho={cambiarAnchoKpi}
+            onArrastre={setRedimensionando}
+          />
 
-      <button
-        ref={btnKpi}
-        className="abrir-kpi"
-        onClick={() => mostrarKpi(true)}
-        aria-label="Abrir indicadores"
-        aria-expanded={kpiVisible}
-        aria-controls="panel-indicadores"
-      >
-        <IconoIndicadores />
-      </button>
+          <button
+            ref={btnKpi}
+            className="abrir-kpi"
+            onClick={() => mostrarKpi(true)}
+            aria-label="Abrir indicadores"
+            aria-expanded={kpiVisible}
+            aria-controls="panel-indicadores"
+          >
+            <IconoIndicadores />
+          </button>
+        </>
+      )}
 
+      {/* Las areas van las PRIMERAS del arbol y ademas la capa hace
+          bringToBack() al montar: el orden del JSX no basta porque en canvas
+          manda el orden en que terminan de descargarse los archivos. Ver la
+          regla 2 de CapaPoligonos.jsx. */}
+      {enPriorizacion && (
+        <>
+          <CapaPoligonos
+            map={map}
+            data={prioriz.data}
+            visible
+            pasa={pasaMancha}
+            estilo={estiloMancha}
+            onSeleccion={selMancha}
+            onCuenta={setCuenta('priorizacion')}
+          />
+          <CapaIconos
+            map={map}
+            data={infraPuntos.data}
+            familiasActivas={familiasActivas ?? []}
+            pasa={pasaMancha}
+            onSeleccion={selPunto}
+            onCuenta={setCuenta('infra_puntos')}
+            onLejos={setIconosLejos}
+          />
+        </>
+      )}
+
+      {!enPriorizacion && (
+        <>
       {/* Red vial primero: es contexto y debe quedar bajo el resto. */}
       {metaRedvial &&
         (esGeoJSON(metaRedvial) ? (
@@ -1174,6 +1420,8 @@ export default function App() {
         onSeleccion={selIncendio}
         onCuenta={setCuenta('incendios')}
       />
+        </>
+      )}
 
       <EtiquetaImagen map={map} info={imagen} />
 

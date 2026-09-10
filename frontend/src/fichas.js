@@ -167,3 +167,89 @@ export function fichaStandBy(p, color) {
     color,
   )
 }
+
+const pct = (v) => (typeof v === 'number' ? `${(v * 100).toFixed(1)} %` : null)
+
+/**
+ * Area priorizada.
+ *
+ * `puntaje_medio` VA SIEMPRE ACOMPANADO de su rango min-max, porque solo enganya
+ * cuando aparece solo: la mancha COYHAIQU-MUYBAJ-01 tiene medio 0,113 y maximo
+ * 0,200 repartidos sobre 561.027 ha. Los tres campos viajan juntos en el
+ * GeoJSON precisamente para poder mostrarlos juntos.
+ *
+ * La clase del modelo se rotula «(escala del modelo)» y no desaparece nunca,
+ * tampoco en modo normalizado: es el ancla que impide leer el color relativo de
+ * una comuna como si fuera una magnitud comparable con otra.
+ */
+export function fichaMancha(p, rango, color) {
+  return ficha(
+    'Área priorizada',
+    `${p.comuna} · ${p.clase}`,
+    [
+      fila('Comuna', p.comuna),
+      fila('Clase (escala del modelo)', p.clase),
+      fila('Puntaje medio', typeof p.puntaje_medio === 'number' ? p.puntaje_medio.toFixed(4) : null),
+      fila(
+        'Rango interno',
+        typeof p.puntaje_min === 'number'
+          ? `${p.puntaje_min.toFixed(4)} – ${p.puntaje_max.toFixed(4)}`
+          : null,
+      ),
+      // Solo con una comuna seleccionada: fuera de ese contexto, «la 3.ª de 110»
+      // no significa nada.
+      rango ? fila('Posición en su comuna', `${rango.pos}.ª de ${rango.total}`) : null,
+      fila('Superficie', typeof p.area_ha === 'number' ? `${fmt.format(Math.round(p.area_ha))} ha` : null),
+      // area_ha NO es n_hexagonos x 100: 135 de las 572 manchas no cuadran,
+      // porque el modelo las recorta al limite comunal despues de contar.
+      fila('Hexágonos', typeof p.n_hexagonos === 'number' ? fmt.format(p.n_hexagonos) : null),
+      fila('Componente dominante', p.componente_dominante),
+      fila('Riesgo', pct(p.sub_riesgo)),
+      fila('Interfaz', pct(p.sub_interfaz)),
+      fila('Infraestructura', pct(p.sub_infra)),
+      fila('Preparadas', pct(p.sub_preparadas)),
+      fila('Elementos dentro', typeof p.n_elementos === 'number' ? fmt.format(p.n_elementos) : null),
+      fila('Identificador', p.mancha_id),
+    ],
+    color,
+  )
+}
+
+/**
+ * Elemento de infraestructura critica.
+ *
+ * NUNCA se muestran `descriptio` ni `drawOrder` de las unidades penitenciarias:
+ * el primero trae un bloque HTML completo de Google Earth y el segundo un
+ * '**********' por desbordamiento del dBase. Por eso el ETL no los publica.
+ */
+export function fichaPunto(p, color) {
+  return ficha(
+    p.grupo || 'Infraestructura crítica',
+    p.nombre || p.grupo,
+    [
+      fila('Tipo', p.tipo),
+      fila('Comuna', p.comuna),
+      fila('Dirección', p.direccion),
+      fila('Matrícula', typeof p.matricula === 'number' ? fmt.format(p.matricula) : null),
+      // El codigo de dependencia del MINEDUC viaja sin traducir a proposito: el
+      // .dbf no trae diccionario y el .qmd tampoco, asi que rotularlo
+      // «Municipal» seria una etiqueta plausible y sin respaldo en el dato.
+      fila('Dependencia (código MINEDUC)', p.dependencia_cod),
+      fila('Complejidad', p.complejidad),
+      fila('Detalle', p.detalle),
+      fila('Ámbito', p.ambito),
+      fila('Beneficiarios', typeof p.beneficiarios === 'number' ? fmt.format(p.beneficiarios) : null),
+      fila('Arranques', typeof p.arranques === 'number' ? fmt.format(p.arranques) : null),
+      fila('Tensión', p.tension_kv ? `${p.tension_kv} kV` : null),
+      fila('Propiedad', p.propiedad),
+      fila('Operador', p.operador),
+      fila('Tecnología', p.tecnologia),
+      fila('Altura', typeof p.altura_m === 'number' ? `${fmt1.format(p.altura_m)} m` : null),
+      fila('Código OACI', p.codigo_oaci),
+      fila('Uso', p.uso),
+      fila('Alumnos', p.alumnos),
+      fila('Comunidad escolar', p.comunidad_escolar),
+    ],
+    color,
+  )
+}

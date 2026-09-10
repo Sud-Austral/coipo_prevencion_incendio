@@ -29,6 +29,10 @@ RAIZ = Path(__file__).resolve().parent.parent
 @dataclass
 class Cfg:
     insumo: Path = RAIZ / "INSUMO_INCENDIO"
+    # Segunda raiz de insumos, separada de la primera a proposito: son otro
+    # origen (el modelo de priorizacion de 3 comunas, no las 16 regiones) y
+    # apuntar --insumo alla romperia las seis capas que salen de INSUMO_INCENDIO.
+    insumo_prior: Path = RAIZ / "INSUMO_PRIORIZACION"
     out: Path = RAIZ / "frontend" / "public" / "data"
     build: Path = RAIZ / "ETL" / "_build"
     simplify: float = 25.0          # tolerancia DP para las capas viales (modo degradado)
@@ -41,6 +45,7 @@ class Cfg:
 
     def __post_init__(self):
         self.insumo = Path(self.insumo)
+        self.insumo_prior = Path(self.insumo_prior)
         self.out = Path(self.out)
         self.build = Path(self.build)
         self.out.mkdir(parents=True, exist_ok=True)

@@ -37,7 +37,9 @@ TAREAS = [
     ("oecv", "build_oecv", 25, False),
     ("verificado", "build_verificado", 15, False),
     ("puntos", "build_puntos", 10, False),
+    ("infra_puntos", "build_infra_puntos", 8, False),
     ("kpis", "build_kpis", 5, False),
+    ("prioriz", "build_priorizacion", 3, False),  # el calculo ya viene hecho: solo valida
 ]
 
 CLAVE_MANIFEST = {
@@ -47,6 +49,8 @@ CLAVE_MANIFEST = {
     "puntos": "puntos_standby",
     "rutas": "rutas",
     "redvial": "redvial",
+    "prioriz": "priorizacion",
+    "infra_puntos": "infra_puntos",
 }
 
 

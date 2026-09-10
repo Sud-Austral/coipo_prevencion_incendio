@@ -6484,6 +6484,335 @@
       "bytes": 7051850,
       "features": 5278,
       "segundos": 32.3
+    },
+    "infra_puntos": {
+      "titulo": "Infraestructura crítica",
+      "formato": "geojson",
+      "geometria": "Point",
+      "carga": "inmediata",
+      "por_familia": {
+        "antenas": 287,
+        "escuelas_prep": 8,
+        "educacion": 199,
+        "aeropuerto": 4,
+        "salud": 99,
+        "ssr": 71,
+        "subestaciones": 26,
+        "penitenciaria": 2
+      },
+      "fuera_de_comuna": 11,
+      "descartados": 0,
+      "filtros": [
+        "comuna",
+        "familia"
+      ],
+      "dominios": {
+        "comuna": [
+          {
+            "v": "Los Angeles",
+            "n": 448
+          },
+          {
+            "v": "Coyhaique",
+            "n": 161
+          },
+          {
+            "v": "Mulchen",
+            "n": 87
+          }
+        ],
+        "familia": [
+          {
+            "v": "antenas",
+            "n": 287
+          },
+          {
+            "v": "educacion",
+            "n": 199
+          },
+          {
+            "v": "salud",
+            "n": 99
+          },
+          {
+            "v": "ssr",
+            "n": 71
+          },
+          {
+            "v": "subestaciones",
+            "n": 26
+          },
+          {
+            "v": "escuelas_prep",
+            "n": 8
+          },
+          {
+            "v": "aeropuerto",
+            "n": 4
+          },
+          {
+            "v": "penitenciaria",
+            "n": 2
+          }
+        ],
+        "grupo": [
+          {
+            "v": "Antenas de telecomunicaciones",
+            "n": 287
+          },
+          {
+            "v": "Establecimientos educacionales",
+            "n": 199
+          },
+          {
+            "v": "Servicios de salud",
+            "n": 99
+          },
+          {
+            "v": "Servicios sanitarios rurales",
+            "n": 71
+          },
+          {
+            "v": "Subestaciones eléctricas",
+            "n": 26
+          },
+          {
+            "v": "Escuelas preparadas",
+            "n": 8
+          },
+          {
+            "v": "Red aeroportuaria",
+            "n": 4
+          },
+          {
+            "v": "Unidades penitenciarias",
+            "n": 2
+          }
+        ],
+        "tipo": [
+          {
+            "v": "Torre Auto Soportada",
+            "n": 144
+          },
+          {
+            "v": "Monoposte",
+            "n": 74
+          },
+          {
+            "v": "MENOR",
+            "n": 55
+          },
+          {
+            "v": "Torre Ventada",
+            "n": 46
+          },
+          {
+            "v": "Atención Primaria de Salud (APS)",
+            "n": 46
+          },
+          {
+            "v": "Centros de Salud y Clínicas Privadas",
+            "n": 16
+          },
+          {
+            "v": "Servicios de Apoyo Diagnóstico y Terapéutico",
+            "n": 14
+          },
+          {
+            "v": "MEDIANO",
+            "n": 12
+          },
+          {
+            "v": "DEDICADO",
+            "n": 11
+          },
+          {
+            "v": "Azotea",
+            "n": 9
+          },
+          {
+            "v": "Programas y Dispositivos Especiales",
+            "n": 8
+          },
+          {
+            "v": "Servicios de Urgencia de Atención Primaria",
+            "n": 8
+          },
+          {
+            "v": "Sin Info",
+            "n": 7
+          },
+          {
+            "v": "ZONAL",
+            "n": 6
+          },
+          {
+            "v": "Muy Alto",
+            "n": 5
+          },
+          {
+            "v": "Hospitales y Unidades de Hospitalización",
+            "n": 4
+          },
+          {
+            "v": "NO APLICA",
+            "n": 4
+          },
+          {
+            "v": "MAYOR",
+            "n": 4
+          },
+          {
+            "v": "NACIONAL",
+            "n": 4
+          },
+          {
+            "v": "Cielo Raso",
+            "n": 3
+          },
+          {
+            "v": "Poste de Concreto",
+            "n": 3
+          },
+          {
+            "v": "Alto",
+            "n": 3
+          },
+          {
+            "v": "Centros Especializados y de Diagnóstico",
+            "n": 3
+          },
+          {
+            "v": "Secundaria",
+            "n": 2
+          },
+          {
+            "v": "Primaria",
+            "n": 1
+          },
+          {
+            "v": "Muro",
+            "n": 1
+          },
+          {
+            "v": "Pequeño Aeródromo",
+            "n": 1
+          },
+          {
+            "v": "S/I",
+            "n": 1
+          }
+        ]
+      },
+      "archivo": "infra_puntos.geojson",
+      "features": 696,
+      "vertices": 696,
+      "bytes": 209478,
+      "bbox": [
+        -72.65027,
+        -45.91639,
+        -71.68694,
+        -37.20347
+      ],
+      "segundos": 0.2
+    },
+    "priorizacion": {
+      "titulo": "Áreas de priorización",
+      "formato": "geojson",
+      "geometria": "Polygon",
+      "carga": "inmediata",
+      "por_comuna": {
+        "Los Angeles": 174,
+        "Mulchen": 110,
+        "Coyhaique": 288
+      },
+      "bbox_comuna": {
+        "Coyhaique": [
+          -72.93157,
+          -46.13838,
+          -71.31985,
+          -44.83149
+        ],
+        "Los Angeles": [
+          -72.68413,
+          -37.66309,
+          -72.03999,
+          -37.17862
+        ],
+        "Mulchen": [
+          -72.53104,
+          -38.18867,
+          -71.61277,
+          -37.55687
+        ]
+      },
+      "filtros": [
+        "comuna",
+        "clase"
+      ],
+      "dominios": {
+        "comuna": [
+          {
+            "v": "Coyhaique",
+            "n": 288
+          },
+          {
+            "v": "Los Angeles",
+            "n": 174
+          },
+          {
+            "v": "Mulchen",
+            "n": 110
+          }
+        ],
+        "clase": [
+          {
+            "v": "Baja",
+            "n": 220
+          },
+          {
+            "v": "Muy Baja",
+            "n": 156
+          },
+          {
+            "v": "Media",
+            "n": 138
+          },
+          {
+            "v": "Alta",
+            "n": 55
+          },
+          {
+            "v": "Muy Alta",
+            "n": 3
+          }
+        ],
+        "componente_dominante": [
+          {
+            "v": "riesgo",
+            "n": 561
+          },
+          {
+            "v": "interfaz",
+            "n": 8
+          },
+          {
+            "v": "infra",
+            "n": 3
+          }
+        ]
+      },
+      "archivo": "priorizacion.geojson",
+      "features": 572,
+      "vertices": 21589,
+      "bytes": 685122,
+      "bbox": [
+        -72.93157,
+        -46.13838,
+        -71.31985,
+        -37.17862
+      ],
+      "segundos": 0.2
     }
   },
   "kpis": "kpis.json"

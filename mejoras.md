@@ -30,12 +30,25 @@ Estado a **2026-09-10**. El repo de referencia es
 
 ### Prioridad alta
 
-- **La aserción del renderer compartido, y su mutante.** `DECISIONES.md` §H documenta el
-  fallo —con un canvas por capa sólo la de encima recibe los clics— y **hoy no lo vigila
-  nada**. Es el peor caso posible: se ve idéntico en una captura, pasa cualquier prueba de
-  una sola capa, y sólo aparece usando la app como se usa siempre. Hay que encender dos
-  capas superpuestas, pinchar sobre una figura de la de abajo y exigir que se abra su
-  ficha; el mutante es quitar `renderer` de las opciones del mapa en `src/App.jsx`.
+- ~~**La aserción del renderer compartido, y su mutante.**~~ **HECHO el 2026-09-10.** Es
+  **C1** de `frontend/scripts/verify-priorizacion.mjs`, con su control negativo
+  (`npm run verify:priorizacion -- --negativas`). Enciende OECV + stand-by + incendios,
+  barre una rejilla de 15×10 clics y exige que respondan dos capas distintas.
+
+  **Dos correcciones a lo que decía esta ficha**, las dos medidas ejecutándolas:
+
+  1. **El mutante propuesto aquí no reproducía el defecto.** Quitar `renderer` de las
+     opciones del mapa deja C1 en VERDE, porque sin esa opción `Map.getRenderer` cae en
+     `_getPaneRenderer('overlayPane')`, que **cachea un renderer por pane** y las capas lo
+     siguen compartiendo. El mutante que sí lo reproduce da un `renderer: L.canvas()` propio
+     a `CapaPuntos.jsx`; con él C1 baja a 0 capas respondiendo. Si se hubiera dado por buena
+     la aserción sin correr el negativo, habría quedado en verde sin probar nada.
+  2. **La prueba no puede ser «dos capas superpuestas» cualesquiera.** Tienen que ser dos
+     capas de CANVAS: las áreas de priorización y sus iconos no valen, porque los marcadores
+     viven en el pane de marcadores y son otro camino de eventos.
+
+  De paso, la regla de `DECISIONES.md` §H se amplió: no basta con no declarar `renderer`,
+  tampoco se puede declarar `pane` propio en una capa vectorial.
 - **Llevar `python ETL/verify.py --negativas` al job `build` del CI.** Ya existe y corre en
   ~19 s, pero el workflow sólo ejecuta la pasada normal a través de `run.py`. Ojo: D12 y
   D13 sí se pueden verificar en CI, porque allí tippecanoe puebla `ETL/_build/`.
@@ -102,21 +115,38 @@ Estado a **2026-09-10**. El repo de referencia es
 
 ## 4. Dificultades, con tres formas de resolver cada una
 
-### D1. `INSUMO_INCENDIO/`: 832 MB y datos personales en un repositorio público
+### D1. La carga inerte ya se borró; la cuestión jurídica sigue abierta
 
-El repositorio figura como público y versiona la `BBDD INVESTIGACIÓN UAD CONSOLIDADA
-COMPLETA.xlsx`, 70 PDFs de actas de reunión y 16 `.docx` que suelen consignar asistentes.
-`insumos/MANIFIESTO.yaml` lo marca como la revisión jurídica pendiente n.º 1.
+**Hecho el 2026-09-10.** Se borraron de `INSUMO_INCENDIO/` **241 archivos, 492,1 MB**, todo
+lo que ningún paso del pipeline abre: 70 PDF (329,8 MB), 16 `.docx` (81,0 MB), 40 fotos
+(76,4 MB), 2 `.rar` (ya extraídos, y el ETL lee el `.shp` desempaquetado), 14 `.xml` y 12
+`.qmd` de metadatos, y los índices `.sbn`/`.sbx`/`.qix` de ArcGIS.
+
+Verificado ejecutando el ETL completo después del borrado: **mismas 14.705 / 1.863 / 1.114 /
+327 / 5.278 / 13.964 features, mismos dominios y mismos KPIs**. El directorio pasó de
+832 MB a 340 MB, y de 775 a 534 archivos.
+
+**Lo que el borrado NO resolvió.** `.git` sigue en 718 MB: la historia conserva los blobs,
+así que un clon no adelgaza y **las 9 actas de reunión (8 PDF y `Acta Reunión.docx`) siguen
+siendo recuperables por cualquiera** que clone el repositorio público. Si la preocupación
+era la exposición, sigue intacta.
+
+**Lo que sí está comprobado:** la capa publicada **no expone nombres**. `jefe_brigada` e
+`investigado_por` viajan como códigos (`'5.1'`, `'UAD.86A'`) contra las tablas del manifest.
+Y **nadie ha abierto ninguna acta** para comprobar si consignan asistentes: eso sigue siendo
+una duda, no un hallazgo.
 
 | | Pros | Contras |
 |---|---|---|
-| **A. Hacer el repo privado y publicar sólo Pages** | Inmediato, reversible, no toca la historia | Pierde la ventaja de que cualquiera clone y trabaje con las capas |
-| **B. Sacar `INSUMO_INCENDIO/` a almacenamiento aparte y reescribir la historia** | Deja el repo limpio y ligero de verdad | Reescribir historia con ramas publicadas (`uat`, `imgbot`) **resucita lo purgado al fusionar**; es la operación más peligrosa de la lista |
-| **C. Dejarlo y documentarlo** | Coste cero | No resuelve nada; el riesgo sigue |
+| **A. Dejarlo así** | Coste cero; el árbol de trabajo ya está limpio | Las actas siguen en la historia de un repo público |
+| **B. Hacer el repo privado y publicar sólo Pages** | Inmediato y reversible; cierra la exposición sin tocar la historia | Pierde que cualquiera clone y trabaje con las capas |
+| **C. Reescribir la historia para purgar los blobs** | Lo único que adelgaza el clon y borra de verdad | Con ramas publicadas (`uat`, `imgbot`), fusionar la cadena reescrita con la vieja **resucita lo purgado**; la operación más peligrosa de la lista |
 
-**Recomendación práctica: A ahora, B sólo con decisión institucional escrita.** El coste de
-A es bajo y reversible; B es irreversible y ninguna de sus ventajas es urgente. **Esto lo
-decide Luis, no el código.**
+**Recomendación: B si preocupan las actas, C sólo con decisión institucional escrita.** Antes
+de cualquiera de las dos, conviene abrir las 9 actas y comprobar si de verdad consignan
+datos personales — puede que la respuesta sea que no y no haya nada que decidir.
+
+Para recuperar cualquier archivo borrado: `git checkout HEAD -- <ruta>`.
 
 ### D2. El cruce espacial no corre en Windows
 
@@ -183,9 +213,13 @@ Esto es **mejor** que en el repo de referencia. Antes de "alinear", comprobar la
 
 ## Orden sugerido de ejecución
 
-1. La aserción del renderer compartido y su mutante (§1, alta) — es la brecha con más
-   consecuencias y la única que no vigila nada.
+1. ~~La aserción del renderer compartido y su mutante~~ — **hecha el 2026-09-10** (C1 de
+   `verify-priorizacion.mjs`). Ver §1 para las dos correcciones que salieron al escribirla.
 2. `verify.py --negativas` al job `build` del CI (§1, alta) — barato y ya está escrito.
+   Nota: ahora son **15 aserciones y 14 mutaciones**, con D14 y D15 nuevas.
+3. **Llevar `npm run verify:priorizacion` al job `verificar-visual`.** Existe y corre en
+   ~40 s, pero el workflow todavía no lo invoca, así que hoy sólo protege a quien lo
+   ejecuta a mano — que es justo lo que se le reprochaba a la brecha que cierra.
 3. Que `tiles.py` guarde el intermedio en modo degradado (§4 D2, recomendación B).
 4. El vigilante de dominios que caza el corrimiento del `.dbf` (§2, alta).
 5. Los mutantes que faltan: B4, B8, A10 (§1, media).

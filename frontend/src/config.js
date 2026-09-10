@@ -336,6 +336,65 @@ export const COLOR_VERIFICADO = '#00838F'
 
 export const radioPorZoom = (z) => (z < 7 ? 2.5 : z < 10 ? 3.5 : 5)
 
+// ---------- priorizacion territorial ----------
+
+// LAS CLAVES SON CONTRATO PUBLICO, igual que las de BASEMAPS: son el valor de
+// ?vista= en la URL. Anadir una vista es libre; renombrar o retirar una ya
+// publicada cambia el significado de todo enlace compartido.
+export const VISTAS = [
+  { id: 'incendios', etiqueta: 'Incendios' },
+  { id: 'priorizacion', etiqueta: 'Priorización' },
+]
+
+// Las cinco clases de menor a mayor prioridad. El ORDEN importa y no se puede
+// sacar de `dominios`, que viene ordenado por frecuencia: la leyenda tiene que
+// leerse de menos a mas.
+export const ORDEN_CLASE = ['Muy Baja', 'Baja', 'Media', 'Alta', 'Muy Alta']
+
+// Secuencial OrRd de 5 clases, la misma paleta con la que el autor del modelo
+// publica sus mapas (notebook priorizacion_ejecutado2, celda 26). No se
+// reinventa aqui: que el visor y el informe del modelo se vean igual es lo que
+// permite comparar uno con otro.
+// No choca con la triada OECV del Memo N 3045/2025 en pantalla porque viven en
+// pestañas distintas y nunca coinciden.
+export const COLOR_CLASE = {
+  'Muy Baja': '#FEF0D9',
+  Baja: '#FDCC8A',
+  Media: '#FC8D59',
+  Alta: '#D7301F',
+  'Muy Alta': '#7F0000',
+}
+
+// Los cuatro cortes del modelo, en escala absoluta. Se muestran en la leyenda
+// porque un color sin su rango numerico no dice de que esta hablando.
+export const CORTES_CLASE = [0.2, 0.35, 0.5, 0.65]
+
+// Rampa del modo normalizado. Es una familia cromatica DISTINTA de la
+// categorica a proposito: las dos lecturas no se pueden confundir de un
+// vistazo, y quien vea morado sabe que esta mirando contraste interno de una
+// comuna y no la clase del modelo.
+export const RAMPA_NORMALIZADA = ['#F2F0F7', '#DADAEB', '#BCBDDC', '#9E9AC8', '#807DBA', '#6A51A3', '#4A1486']
+
+// Por debajo de este zoom los iconos de infraestructura no se dibujan.
+// MEDIDO mirando la captura: con las tres comunas encuadradas --Biobio y Aysen
+// estan a ~1.000 km-- los 696 iconos colapsan en dos cumulos que no dejan ver
+// NINGUNA de las 572 areas priorizadas, que es justo lo que la pestaña viene a
+// mostrar. A 9 cabe una comuna entera en pantalla y los iconos ya se separan.
+export const ZOOM_ICONOS = 9
+
+// Un color por familia de infraestructura. Se evitan a proposito los tres de
+// COLOR_OECV y los cinco de COLOR_CAUSA.
+export const COLOR_FAMILIA = {
+  educacion: '#1F6FEB',
+  escuelas_prep: '#0E7490',
+  salud: '#DC2626',
+  ssr: '#0891B2',
+  antenas: '#7C3AED',
+  subestaciones: '#CA8A04',
+  aeropuerto: '#4B5563',
+  penitenciaria: '#9D174D',
+}
+
 // Definicion de las capas: orden del panel, clave en el manifest y estilo.
 //
 // `descripcion` traduce la etiqueta para quien no trabaja en el programa. Las

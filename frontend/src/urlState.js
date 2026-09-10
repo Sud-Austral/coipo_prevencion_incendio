@@ -18,9 +18,10 @@ export function leerURL() {
   if (capas !== null) estado.capas = capas ? capas.split(',') : []
 
   if (q.get('base')) estado.base = q.get('base')
+  if (q.get('vista')) estado.vista = q.get('vista')
 
   for (const [k, v] of q.entries()) {
-    if (['lat', 'lon', 'z', 'capas', 'base'].includes(k)) continue
+    if (['lat', 'lon', 'z', 'capas', 'base', 'vista'].includes(k)) continue
     if (v) estado.filtros[k] = v
   }
   return estado
@@ -42,8 +43,8 @@ let empujar = false
  *   como "hice algo" --capas, filtros, mapa base--; el paneo sigue siendo
  *   replace, o cada arrastre del mapa llenaria el historial de basura.
  */
-export function escribirURL({ center, zoom, capas, filtros, base }, { push = false } = {}) {
-  ultimo = { center, zoom, capas, filtros, base }
+export function escribirURL({ center, zoom, capas, filtros, base, vista }, { push = false } = {}) {
+  ultimo = { center, zoom, capas, filtros, base, vista }
   empujar ||= push
   // Se agrupa: moveend dispara muchas veces durante un paneo.
   clearTimeout(pendiente)
@@ -54,7 +55,7 @@ function aplicar() {
   clearTimeout(pendiente)
   pendiente = null
   if (!ultimo) return
-  const { center, zoom, capas, filtros, base } = ultimo
+  const { center, zoom, capas, filtros, base, vista } = ultimo
   const q = new URLSearchParams()
   if (center) {
     q.set('lat', center[0].toFixed(4))
@@ -63,6 +64,9 @@ function aplicar() {
   if (zoom != null) q.set('z', String(zoom))
   if (capas) q.set('capas', capas.join(','))
   if (base) q.set('base', base)
+  // Solo se escribe la vista que NO es la de partida: asi los enlaces que ya
+  // circulan --todos sin ?vista=-- siguen abriendo lo mismo que abrian.
+  if (vista && vista !== 'incendios') q.set('vista', vista)
   for (const [k, v] of Object.entries(filtros ?? {})) if (v) q.set(k, v)
 
   const url = `${window.location.pathname}?${q.toString()}`

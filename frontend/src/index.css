@@ -57,6 +57,19 @@
      enlaces. No lo "unifiques". */
   --razon-banner: 17.1299; /* 3032 / 177 */
   --alto-minimo-banner: 68px; /* piso; cruza con la proporcion natural en 1164,83 px */
+  /* Alto fijo y no automatico: seis reglas de App.css posicionan elementos
+     flotantes justo debajo de la cabecera, y necesitan saber cuanto mide sin
+     poder medir el DOM. Con alto automatico dependeria de la fuente del
+     sistema y esos seis calculos se desviarian en cada equipo. */
+  --alto-pestanas: 38px;
+  /* Alto TOTAL de la cabecera: la imagen (proporcion natural con piso) mas la
+     barra de pestañas que vive dentro de ella. Existe porque esa formula
+     estaba copiada en seis reglas y al añadir las pestañas las seis se
+     quedaron cortas a la vez: el boton ☰ acabo pisando la barra y la asercion
+     A7 lo caso en 768 y 390 px. */
+  --alto-banner: calc(
+    max(var(--alto-minimo-banner), 100vw / var(--razon-banner)) + var(--alto-pestanas)
+  );
   --verde-institucional: #064928; /* campo principal del asset; 10,55:1 con blanco (AAA) */
 
   font: 15px/1.45 var(--sans);
