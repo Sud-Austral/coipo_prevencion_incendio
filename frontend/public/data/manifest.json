@@ -1,5 +1,5 @@
 {
-  "generado": "2026-09-10T15:55:39+0000",
+  "generado": "2026-09-14T22:37:55+0000",
   "simplify_m": 25.0,
   "precision": 5,
   "tippecanoe": "tippecanoe v2.78.0",
@@ -76,8 +76,8 @@
           "Llanquihue",
           "San Antonio",
           "Chiloé",
-          "Colchagua",
           "Itata",
+          "Colchagua",
           "Quillota",
           "Limarí",
           "Cauquenes",
@@ -89,7 +89,6 @@
           "Coyhaique",
           "Elqui",
           "Cordillera",
-          "Sin registro",
           "Choapa",
           "San Felipe",
           "Huasco",
@@ -100,8 +99,8 @@
           "Tamarugal",
           "Copiapó",
           "Aysén",
-          "Tierra del Fuego",
           "Capitán Prat",
+          "Tierra del Fuego",
           "Arica",
           "Palena",
           "El Loa",
@@ -126,45 +125,45 @@
           "Puerto Montt",
           "Angol",
           "Padre las Casas",
-          "San Javier",
           "Ovalle",
+          "San Javier",
           "Yumbel",
           "Carahue",
           "Nueva Imperial",
           "Pitrufquén",
           "Mulchén",
-          "Lampa",
           "Coronel",
+          "Lampa",
           "Freire",
-          "San Pedro",
           "Los Álamos",
+          "San Pedro",
           "Maule",
           "Cauquenes",
+          "Chillán Viejo",
           "Purén",
+          "Coihueco",
           "San Antonio",
           "La Unión",
-          "San Nicolás",
           "Linares",
-          "Talca",
+          "San Nicolás",
           "Coyhaique",
+          "Talca",
           "Penco",
           "Limache",
+          "San Carlos",
           "Traiguén",
           "Quillón",
-          "Coihueco",
           "Hualqui",
-          "Chillán Viejo",
           "Quillota",
           "Florida",
           "Los Sauces",
           "San Clemente",
-          "San Carlos",
           "Nacimiento",
-          "Colina",
           "Cabrero",
+          "Colina",
           "Parral",
-          "San Pedro de la Paz",
           "Mariquina",
+          "San Pedro de la Paz",
           "Lumaco",
           "Laja",
           "Quilpué",
@@ -172,36 +171,36 @@
           "Curicó",
           "Litueche",
           "Pencahue",
+          "San Ignacio",
           "Vilcún",
           "Villarrica",
           "Curacaví",
-          "San Ignacio",
           "Santo Domingo",
           "Villa Alemana",
           "Tiltil",
           "Casablanca",
           "Longaví",
-          "Sin registro",
-          "Valdivia",
-          "Las Cabras",
-          "Bulnes",
-          "Paine",
           "San Vicente de Tagua Tagua",
+          "Valdivia",
+          "Bulnes",
+          "Las Cabras",
+          "Paine",
           "Molina",
           "Marchigüe",
           "San Rafael",
           "Retiro",
           "Gorbea",
-          "Arauco",
           "Santa Juana",
+          "Arauco",
+          "Paillaco",
           "Castro",
           "Concepción",
-          "Paillaco",
           "Yerbas Buenas",
+          "Coelemu",
           "Perquenco",
+          "Teno",
           "Navidad",
           "Talcahuano",
-          "Teno",
           "La Estrella",
           "Tirúa",
           "Rengo",
@@ -211,15 +210,17 @@
           "Lota",
           "Sagrada Familia",
           "Paredones",
+          "El Carmen",
           "La Serena",
           "La Calera",
           "Loncoche",
-          "Coelemu",
-          "El Carmen",
           "Coltauco",
           "Dalcahue",
+          "Quirihue",
+          "Sin registro",
           "Los Lagos",
           "Talagante",
+          "Pinto",
           "María Pinto",
           "Hualañé",
           "Pichidegua",
@@ -228,24 +229,23 @@
           "Puerto Saavedra",
           "Ancud",
           "Chonchi",
-          "Pinto",
+          "Pudahuel",
+          "Portezuelo",
+          "Yungay",
           "Quellón",
           "Ercilla",
-          "Pudahuel",
-          "Quirihue",
-          "Yungay",
+          "Pemuco",
           "Curanilahue",
           "Calbuco",
-          "Portezuelo",
           "Constitución",
           "Chimbarongo",
           "Panguipulli",
+          "Ninhue",
           "Negrete",
           "Mostazal",
           "Río Bueno",
           "Quilleco",
           "San Juan de la Costa",
-          "Ninhue",
           "Viña del Mar",
           "Renaico",
           "La Ligua",
@@ -253,45 +253,44 @@
           "Machalí",
           "Nogales",
           "Padre Las Casas",
-          "Pemuco",
+          "Pichilemu",
           "Rancagua",
           "Puente Alto",
-          "Pichilemu",
-          "Osorno",
           "Máfil",
+          "Osorno",
           "Cartagena",
           "Teodoro Schmidt",
+          "Alhué",
           "Peñaflor",
           "San Rosendo",
           "Melipeuco",
-          "Romeral",
           "Villa Alegre",
+          "Ñiquén",
+          "Romeral",
           "Buin",
           "Monte Patria",
           "Chanco",
           "Olmué",
           "Los Vilos",
-          "Ñiquén",
           "Padre Hurtado",
           "Toltén",
+          "Punta Arenas",
           "Pirque",
           "Codegua",
           "Lolol",
           "LEBU",
           "Pucón",
           "Lonquimay",
-          "Punta Arenas",
           "Quilicura",
           "Doñihue",
           "San José de Maipo",
           "Hijuelas",
           "Algarrobo",
-          "Alhué",
           "Vallenar",
+          "El Monte",
           "El Quisco",
           "Pumanque",
           "Coquimbo",
-          "El Monte",
           "Curacautín",
           "Rauco",
           "Coinco",
@@ -299,18 +298,17 @@
           "Peralillo",
           "Vicuña",
           "Maullín",
+          "Trehuaco",
           "Salamanca",
           "Hualpén",
           "Vichuquén",
           "San Pablo",
           "Pelarco",
-          "Chillán VIejo",
           "Chiguayante",
           "Puerto Varas",
           "Corral",
           "Río Ibáñez",
           "Lanco",
-          "Trehuaco",
           "Contulmo",
           "Chépica",
           "Los Muermos",
@@ -320,11 +318,11 @@
           "Graneros",
           "Requínoa",
           "Peumo",
+          "Río Negro",
           "Quintero",
           "La Cruz",
           "Catemu",
           "Colbún",
-          "Río Negro",
           "Palmilla",
           "San Felipe",
           "San Bernardo",
@@ -343,21 +341,19 @@
           "Panquehue",
           "Copiapó",
           "Illapel",
+          "Cobquecura",
           "Puqueldón",
           "Isla de Maipo",
           "Quilaco",
           "Puchuncaví",
           "Puerto Octay",
           "Porvenir",
-          "Cobquecura",
           "Nancagua",
-          "SAN CARLOS",
           "Curaco de Vélez",
           "Chile chico",
           "Torres del Paine",
           "Aysén",
           "Pica",
-          "COIHUECO",
           "Curarrehue",
           "Huara",
           "Isla De Maipo",
@@ -378,7 +374,6 @@
           "San Gregorio",
           "Las Condes",
           "Calama",
-          "PEMUCO",
           "Alto del Carmen",
           "Lo Barnechea",
           "Olivar",
@@ -387,17 +382,13 @@
           "Río Hurtado",
           "Zapallar",
           "Putre",
-          "QUIRIHUE",
-          "COELEMU",
           "Quemchi",
-          "San Vicente",
           "Hualaihué",
           "Huasco",
           "Padre las casas",
           "Nueva imperial",
           "Futaleufú",
           "Río Verde",
-          "SAN IGNACIO",
           "ARAUCO",
           "San pedro de la paz",
           "Quinchao",
@@ -418,46 +409,35 @@
           "Peñalolén",
           "Punitaqui",
           "San Miguel",
-          "EL CARMEN",
-          "TREHUACO",
-          "PINTO",
-          "BULNES",
           "San Pedro de la paz",
           "San Pedro de Atacama",
           "Alto Biobío",
           "Llanquihue",
+          "Villa O'Higgins",
           "Pozo Almonte",
           "La Pintana",
           "CholChol",
           "Cerrillos",
           "La serena",
           "CasaBlanca",
-          "PORTEZUELO",
-          "COBQUECURA",
-          "NINHUE",
-          "YUNGAY",
           "talcahuano",
           "LAJA",
           "san pedro de la paz",
           "TALCAHUANO",
-          "NACIMIENTO",
           "CABRERO",
           "Palena",
           "San Juan de La Costa",
           "Laguna Blanca",
           "Frutillar",
-          "Villa O'Higgins",
           "Camarones",
           "Putaendo",
           "San Esteban",
           "COINCO",
           "quinta DE TILCOCO",
-          "Villa O´Higgins",
           "General Lagos",
           "Canela",
           "Santa María",
           "Los Andes",
-          "San pedro",
           "lolol",
           "palmilla",
           "Puyehue"
@@ -593,9 +573,10 @@
         "causa_general_codigo": [
           "2.1",
           "4.8",
-          "4.1",
           "4.9",
           "4.2",
+          "4.10",
+          "4.1",
           "4.6",
           "4.3",
           "5.1",
@@ -605,9 +586,10 @@
           "4.11",
           "1.6",
           "1.7",
-          "1.1",
           "1.9",
           "3.1",
+          "1.1",
+          "1.10",
           "4.4",
           "1.4",
           "1.3",
@@ -737,8 +719,8 @@
           "1.1",
           "1.8",
           "1.2.2",
-          "1.1.10",
           "1.9.4",
+          "1.1.10",
           "4.5",
           "Sin determinar",
           "1.3",
@@ -1098,7 +1080,7 @@
           {
             "i": 0,
             "v": "Cautín",
-            "n": 2241
+            "n": 2242
           },
           {
             "i": 1,
@@ -1108,17 +1090,17 @@
           {
             "i": 2,
             "v": "Concepción",
-            "n": 1084
+            "n": 1085
           },
           {
             "i": 3,
             "v": "Biobío",
-            "n": 1022
+            "n": 1021
           },
           {
             "i": 4,
             "v": "Diguillín",
-            "n": 736
+            "n": 741
           },
           {
             "i": 5,
@@ -1128,37 +1110,37 @@
           {
             "i": 6,
             "v": "Talca",
-            "n": 644
+            "n": 643
           },
           {
             "i": 7,
             "v": "Linares",
-            "n": 562
+            "n": 563
           },
           {
             "i": 8,
             "v": "Cachapoal",
-            "n": 511
+            "n": 516
           },
           {
             "i": 9,
             "v": "Melipilla",
-            "n": 467
+            "n": 469
           },
           {
             "i": 10,
             "v": "Curicó",
-            "n": 360
+            "n": 362
           },
           {
             "i": 11,
             "v": "Valdivia",
-            "n": 350
+            "n": 354
           },
           {
             "i": 12,
             "v": "Punilla",
-            "n": 349
+            "n": 354
           },
           {
             "i": 13,
@@ -1197,13 +1179,13 @@
           },
           {
             "i": 20,
-            "v": "Colchagua",
-            "n": 248
+            "v": "Itata",
+            "n": 251
           },
           {
             "i": 21,
-            "v": "Itata",
-            "n": 247
+            "v": "Colchagua",
+            "n": 248
           },
           {
             "i": 22,
@@ -1218,7 +1200,7 @@
           {
             "i": 24,
             "v": "Cauquenes",
-            "n": 167
+            "n": 166
           },
           {
             "i": 25,
@@ -1228,17 +1210,17 @@
           {
             "i": 26,
             "v": "Santiago",
-            "n": 133
+            "n": 134
           },
           {
             "i": 27,
             "v": "Talagante",
-            "n": 133
+            "n": 134
           },
           {
             "i": 28,
             "v": "Osorno",
-            "n": 113
+            "n": 114
           },
           {
             "i": 29,
@@ -1262,58 +1244,58 @@
           },
           {
             "i": 33,
-            "v": "Sin registro",
-            "n": 74
-          },
-          {
-            "i": 34,
             "v": "Choapa",
             "n": 59
           },
           {
-            "i": 35,
+            "i": 34,
             "v": "San Felipe",
             "n": 58
           },
           {
-            "i": 36,
+            "i": 35,
             "v": "Huasco",
             "n": 46
           },
           {
-            "i": 37,
+            "i": 36,
             "v": "Petorca",
             "n": 43
           },
           {
-            "i": 38,
+            "i": 37,
             "v": "General Carrera",
             "n": 40
           },
           {
-            "i": 39,
+            "i": 38,
             "v": "Última Esperanza",
             "n": 40
           },
           {
-            "i": 40,
+            "i": 39,
             "v": "Magallanes",
-            "n": 35
+            "n": 36
           },
           {
-            "i": 41,
+            "i": 40,
             "v": "Tamarugal",
             "n": 27
           },
           {
-            "i": 42,
+            "i": 41,
             "v": "Copiapó",
             "n": 19
           },
           {
-            "i": 43,
+            "i": 42,
             "v": "Aysén",
             "n": 16
+          },
+          {
+            "i": 43,
+            "v": "Capitán Prat",
+            "n": 15
           },
           {
             "i": 44,
@@ -1322,36 +1304,31 @@
           },
           {
             "i": 45,
-            "v": "Capitán Prat",
-            "n": 13
-          },
-          {
-            "i": 46,
             "v": "Arica",
             "n": 13
           },
           {
-            "i": 47,
+            "i": 46,
             "v": "Palena",
             "n": 10
           },
           {
-            "i": 48,
+            "i": 47,
             "v": "El Loa",
             "n": 8
           },
           {
-            "i": 49,
+            "i": 48,
             "v": "Parinacota",
             "n": 6
           },
           {
-            "i": 50,
+            "i": 49,
             "v": "Los Andes",
             "n": 6
           },
           {
-            "i": 51,
+            "i": 50,
             "v": "Antártica Chilena",
             "n": 2
           }
@@ -1360,7 +1337,7 @@
           {
             "i": 0,
             "v": "Los Ángeles",
-            "n": 348
+            "n": 343
           },
           {
             "i": 1,
@@ -1385,7 +1362,7 @@
           {
             "i": 5,
             "v": "Chillán",
-            "n": 213
+            "n": 216
           },
           {
             "i": 6,
@@ -1439,18 +1416,18 @@
           },
           {
             "i": 16,
-            "v": "San Javier",
-            "n": 145
-          },
-          {
-            "i": 17,
             "v": "Ovalle",
             "n": 145
           },
           {
+            "i": 17,
+            "v": "San Javier",
+            "n": 144
+          },
+          {
             "i": 18,
             "v": "Yumbel",
-            "n": 143
+            "n": 141
           },
           {
             "i": 19,
@@ -1465,21 +1442,21 @@
           {
             "i": 21,
             "v": "Pitrufquén",
-            "n": 136
+            "n": 137
           },
           {
             "i": 22,
             "v": "Mulchén",
-            "n": 135
+            "n": 136
           },
           {
             "i": 23,
-            "v": "Lampa",
-            "n": 135
+            "v": "Coronel",
+            "n": 134
           },
           {
             "i": 24,
-            "v": "Coronel",
+            "v": "Lampa",
             "n": 134
           },
           {
@@ -1489,12 +1466,12 @@
           },
           {
             "i": 26,
-            "v": "San Pedro",
-            "n": 127
+            "v": "Los Álamos",
+            "n": 126
           },
           {
             "i": 27,
-            "v": "Los Álamos",
+            "v": "San Pedro",
             "n": 126
           },
           {
@@ -1505,131 +1482,131 @@
           {
             "i": 29,
             "v": "Cauquenes",
-            "n": 125
+            "n": 124
           },
           {
             "i": 30,
+            "v": "Chillán Viejo",
+            "n": 118
+          },
+          {
+            "i": 31,
             "v": "Purén",
             "n": 117
           },
           {
-            "i": 31,
+            "i": 32,
+            "v": "Coihueco",
+            "n": 111
+          },
+          {
+            "i": 33,
             "v": "San Antonio",
             "n": 111
           },
           {
-            "i": 32,
+            "i": 34,
             "v": "La Unión",
             "n": 110
           },
           {
-            "i": 33,
+            "i": 35,
+            "v": "Linares",
+            "n": 109
+          },
+          {
+            "i": 36,
             "v": "San Nicolás",
             "n": 109
           },
           {
-            "i": 34,
-            "v": "Linares",
-            "n": 108
-          },
-          {
-            "i": 35,
-            "v": "Talca",
-            "n": 104
-          },
-          {
-            "i": 36,
+            "i": 37,
             "v": "Coyhaique",
             "n": 103
           },
           {
-            "i": 37,
+            "i": 38,
+            "v": "Talca",
+            "n": 102
+          },
+          {
+            "i": 39,
             "v": "Penco",
             "n": 102
           },
           {
-            "i": 38,
+            "i": 40,
             "v": "Limache",
             "n": 101
           },
           {
-            "i": 39,
+            "i": 41,
+            "v": "San Carlos",
+            "n": 101
+          },
+          {
+            "i": 42,
             "v": "Traiguén",
             "n": 100
           },
           {
-            "i": 40,
+            "i": 43,
             "v": "Quillón",
             "n": 100
           },
           {
-            "i": 41,
-            "v": "Coihueco",
-            "n": 99
-          },
-          {
-            "i": 42,
+            "i": 44,
             "v": "Hualqui",
             "n": 98
           },
           {
-            "i": 43,
-            "v": "Chillán Viejo",
-            "n": 97
-          },
-          {
-            "i": 44,
+            "i": 45,
             "v": "Quillota",
             "n": 95
           },
           {
-            "i": 45,
+            "i": 46,
             "v": "Florida",
             "n": 93
           },
           {
-            "i": 46,
+            "i": 47,
             "v": "Los Sauces",
             "n": 91
           },
           {
-            "i": 47,
+            "i": 48,
             "v": "San Clemente",
             "n": 91
           },
           {
-            "i": 48,
-            "v": "San Carlos",
-            "n": 90
-          },
-          {
             "i": 49,
             "v": "Nacimiento",
-            "n": 89
+            "n": 91
           },
           {
             "i": 50,
-            "v": "Colina",
-            "n": 88
+            "v": "Cabrero",
+            "n": 89
           },
           {
             "i": 51,
-            "v": "Cabrero",
-            "n": 87
+            "v": "Colina",
+            "n": 89
           },
           {
             "i": 52,
             "v": "Parral",
-            "n": 87
+            "n": 88
           },
           {
             "i": 53,
-            "v": "San Pedro de la Paz",
-            "n": 87
+            "v": "Mariquina",
+            "n": 88
           },
           {
             "i": 54,
-            "v": "Mariquina",
+            "v": "San Pedro de la Paz",
             "n": 87
           },
           {
@@ -1640,7 +1617,7 @@
           {
             "i": 56,
             "v": "Laja",
-            "n": 81
+            "n": 83
           },
           {
             "i": 57,
@@ -1660,31 +1637,31 @@
           {
             "i": 60,
             "v": "Litueche",
-            "n": 79
+            "n": 78
           },
           {
             "i": 61,
             "v": "Pencahue",
-            "n": 76
+            "n": 77
           },
           {
             "i": 62,
+            "v": "San Ignacio",
+            "n": 77
+          },
+          {
+            "i": 63,
             "v": "Vilcún",
             "n": 75
           },
           {
-            "i": 63,
+            "i": 64,
             "v": "Villarrica",
             "n": 73
           },
           {
-            "i": 64,
-            "v": "Curacaví",
-            "n": 73
-          },
-          {
             "i": 65,
-            "v": "San Ignacio",
+            "v": "Curacaví",
             "n": 73
           },
           {
@@ -1714,7 +1691,7 @@
           },
           {
             "i": 71,
-            "v": "Sin registro",
+            "v": "San Vicente de Tagua Tagua",
             "n": 67
           },
           {
@@ -1724,12 +1701,12 @@
           },
           {
             "i": 73,
-            "v": "Las Cabras",
-            "n": 65
+            "v": "Bulnes",
+            "n": 67
           },
           {
             "i": 74,
-            "v": "Bulnes",
+            "v": "Las Cabras",
             "n": 65
           },
           {
@@ -1739,32 +1716,32 @@
           },
           {
             "i": 76,
-            "v": "San Vicente de Tagua Tagua",
+            "v": "Molina",
             "n": 62
           },
           {
             "i": 77,
-            "v": "Molina",
-            "n": 61
-          },
-          {
-            "i": 78,
             "v": "Marchigüe",
             "n": 61
           },
           {
-            "i": 79,
+            "i": 78,
             "v": "San Rafael",
             "n": 60
           },
           {
-            "i": 80,
+            "i": 79,
             "v": "Retiro",
-            "n": 60
+            "n": 59
+          },
+          {
+            "i": 80,
+            "v": "Gorbea",
+            "n": 58
           },
           {
             "i": 81,
-            "v": "Gorbea",
+            "v": "Santa Juana",
             "n": 58
           },
           {
@@ -1774,7 +1751,7 @@
           },
           {
             "i": 83,
-            "v": "Santa Juana",
+            "v": "Paillaco",
             "n": 57
           },
           {
@@ -1789,12 +1766,12 @@
           },
           {
             "i": 86,
-            "v": "Paillaco",
+            "v": "Yerbas Buenas",
             "n": 55
           },
           {
             "i": 87,
-            "v": "Yerbas Buenas",
+            "v": "Coelemu",
             "n": 55
           },
           {
@@ -1804,17 +1781,17 @@
           },
           {
             "i": 89,
-            "v": "Navidad",
+            "v": "Teno",
             "n": 54
           },
           {
             "i": 90,
-            "v": "Talcahuano",
-            "n": 53
+            "v": "Navidad",
+            "n": 54
           },
           {
             "i": 91,
-            "v": "Teno",
+            "v": "Talcahuano",
             "n": 53
           },
           {
@@ -1864,242 +1841,242 @@
           },
           {
             "i": 101,
+            "v": "El Carmen",
+            "n": 50
+          },
+          {
+            "i": 102,
             "v": "La Serena",
             "n": 49
           },
           {
-            "i": 102,
+            "i": 103,
             "v": "La Calera",
             "n": 49
           },
           {
-            "i": 103,
+            "i": 104,
             "v": "Loncoche",
             "n": 48
           },
           {
-            "i": 104,
-            "v": "Coelemu",
-            "n": 48
-          },
-          {
             "i": 105,
-            "v": "El Carmen",
-            "n": 48
-          },
-          {
-            "i": 106,
             "v": "Coltauco",
             "n": 47
           },
           {
-            "i": 107,
+            "i": 106,
             "v": "Dalcahue",
             "n": 44
           },
           {
+            "i": 107,
+            "v": "Quirihue",
+            "n": 42
+          },
+          {
             "i": 108,
-            "v": "Los Lagos",
+            "v": "Sin registro",
             "n": 41
           },
           {
             "i": 109,
+            "v": "Los Lagos",
+            "n": 41
+          },
+          {
+            "i": 110,
             "v": "Talagante",
             "n": 40
           },
           {
-            "i": 110,
-            "v": "María Pinto",
-            "n": 40
-          },
-          {
             "i": 111,
-            "v": "Hualañé",
+            "v": "Pinto",
             "n": 40
           },
           {
             "i": 112,
+            "v": "María Pinto",
+            "n": 40
+          },
+          {
+            "i": 113,
+            "v": "Hualañé",
+            "n": 40
+          },
+          {
+            "i": 114,
             "v": "Pichidegua",
             "n": 39
           },
           {
-            "i": 113,
+            "i": 115,
             "v": "Santa Cruz",
             "n": 39
           },
           {
-            "i": 114,
+            "i": 116,
             "v": "Cunco",
             "n": 38
           },
           {
-            "i": 115,
+            "i": 117,
             "v": "Puerto Saavedra",
             "n": 38
           },
           {
-            "i": 116,
+            "i": 118,
             "v": "Ancud",
             "n": 38
           },
           {
-            "i": 117,
+            "i": 119,
             "v": "Chonchi",
             "n": 38
           },
           {
-            "i": 118,
-            "v": "Pinto",
+            "i": 120,
+            "v": "Pudahuel",
             "n": 37
           },
           {
-            "i": 119,
+            "i": 121,
+            "v": "Portezuelo",
+            "n": 37
+          },
+          {
+            "i": 122,
+            "v": "Yungay",
+            "n": 37
+          },
+          {
+            "i": 123,
             "v": "Quellón",
             "n": 37
           },
           {
-            "i": 120,
+            "i": 124,
             "v": "Ercilla",
             "n": 36
           },
           {
-            "i": 121,
-            "v": "Pudahuel",
+            "i": 125,
+            "v": "Pemuco",
             "n": 36
           },
           {
-            "i": 122,
-            "v": "Quirihue",
-            "n": 36
-          },
-          {
-            "i": 123,
-            "v": "Yungay",
-            "n": 36
-          },
-          {
-            "i": 124,
+            "i": 126,
             "v": "Curanilahue",
             "n": 36
           },
           {
-            "i": 125,
+            "i": 127,
             "v": "Calbuco",
             "n": 35
           },
           {
-            "i": 126,
-            "v": "Portezuelo",
-            "n": 35
-          },
-          {
-            "i": 127,
+            "i": 128,
             "v": "Constitución",
             "n": 35
           },
           {
-            "i": 128,
+            "i": 129,
             "v": "Chimbarongo",
             "n": 35
           },
           {
-            "i": 129,
+            "i": 130,
             "v": "Panguipulli",
             "n": 34
           },
           {
-            "i": 130,
+            "i": 131,
+            "v": "Ninhue",
+            "n": 34
+          },
+          {
+            "i": 132,
             "v": "Negrete",
             "n": 34
           },
           {
-            "i": 131,
+            "i": 133,
             "v": "Mostazal",
             "n": 33
           },
           {
-            "i": 132,
+            "i": 134,
             "v": "Río Bueno",
             "n": 33
           },
           {
-            "i": 133,
+            "i": 135,
             "v": "Quilleco",
             "n": 33
           },
           {
-            "i": 134,
+            "i": 136,
             "v": "San Juan de la Costa",
             "n": 33
           },
           {
-            "i": 135,
-            "v": "Ninhue",
-            "n": 33
-          },
-          {
-            "i": 136,
+            "i": 137,
             "v": "Viña del Mar",
             "n": 32
           },
           {
-            "i": 137,
+            "i": 138,
             "v": "Renaico",
             "n": 32
           },
           {
-            "i": 138,
+            "i": 139,
             "v": "La Ligua",
             "n": 32
           },
           {
-            "i": 139,
+            "i": 140,
             "v": "Natales",
             "n": 31
           },
           {
-            "i": 140,
+            "i": 141,
             "v": "Machalí",
             "n": 31
           },
           {
-            "i": 141,
+            "i": 142,
             "v": "Nogales",
             "n": 31
           },
           {
-            "i": 142,
+            "i": 143,
             "v": "Padre Las Casas",
             "n": 30
           },
           {
-            "i": 143,
-            "v": "Pemuco",
-            "n": 30
-          },
-          {
             "i": 144,
-            "v": "Rancagua",
+            "v": "Pichilemu",
             "n": 30
           },
           {
             "i": 145,
+            "v": "Rancagua",
+            "n": 30
+          },
+          {
+            "i": 146,
             "v": "Puente Alto",
             "n": 29
           },
           {
-            "i": 146,
-            "v": "Pichilemu",
+            "i": 147,
+            "v": "Máfil",
             "n": 29
           },
           {
-            "i": 147,
-            "v": "Osorno",
-            "n": 28
-          },
-          {
             "i": 148,
-            "v": "Máfil",
+            "v": "Osorno",
             "n": 28
           },
           {
@@ -2114,133 +2091,133 @@
           },
           {
             "i": 151,
-            "v": "Peñaflor",
+            "v": "Alhué",
             "n": 27
           },
           {
             "i": 152,
-            "v": "San Rosendo",
+            "v": "Peñaflor",
             "n": 27
           },
           {
             "i": 153,
-            "v": "Melipeuco",
+            "v": "San Rosendo",
             "n": 27
           },
           {
             "i": 154,
-            "v": "Romeral",
-            "n": 26
+            "v": "Melipeuco",
+            "n": 27
           },
           {
             "i": 155,
             "v": "Villa Alegre",
-            "n": 26
+            "n": 27
           },
           {
             "i": 156,
-            "v": "Buin",
-            "n": 26
+            "v": "Ñiquén",
+            "n": 27
           },
           {
             "i": 157,
-            "v": "Monte Patria",
+            "v": "Romeral",
             "n": 26
           },
           {
             "i": 158,
-            "v": "Chanco",
+            "v": "Buin",
             "n": 26
           },
           {
             "i": 159,
-            "v": "Olmué",
+            "v": "Monte Patria",
             "n": 26
           },
           {
             "i": 160,
-            "v": "Los Vilos",
+            "v": "Chanco",
             "n": 26
           },
           {
             "i": 161,
-            "v": "Ñiquén",
+            "v": "Olmué",
             "n": 26
           },
           {
             "i": 162,
+            "v": "Los Vilos",
+            "n": 26
+          },
+          {
+            "i": 163,
             "v": "Padre Hurtado",
             "n": 25
           },
           {
-            "i": 163,
+            "i": 164,
             "v": "Toltén",
             "n": 25
           },
           {
-            "i": 164,
-            "v": "Pirque",
-            "n": 25
-          },
-          {
             "i": 165,
-            "v": "Codegua",
+            "v": "Punta Arenas",
             "n": 25
           },
           {
             "i": 166,
-            "v": "Lolol",
+            "v": "Pirque",
             "n": 25
           },
           {
             "i": 167,
-            "v": "LEBU",
+            "v": "Codegua",
             "n": 25
           },
           {
             "i": 168,
+            "v": "Lolol",
+            "n": 25
+          },
+          {
+            "i": 169,
+            "v": "LEBU",
+            "n": 25
+          },
+          {
+            "i": 170,
             "v": "Pucón",
             "n": 24
           },
           {
-            "i": 169,
+            "i": 171,
             "v": "Lonquimay",
             "n": 24
           },
           {
-            "i": 170,
-            "v": "Punta Arenas",
-            "n": 24
-          },
-          {
-            "i": 171,
+            "i": 172,
             "v": "Quilicura",
             "n": 24
           },
           {
-            "i": 172,
+            "i": 173,
             "v": "Doñihue",
             "n": 24
           },
           {
-            "i": 173,
+            "i": 174,
             "v": "San José de Maipo",
             "n": 24
           },
           {
-            "i": 174,
+            "i": 175,
             "v": "Hijuelas",
             "n": 24
           },
           {
-            "i": 175,
+            "i": 176,
             "v": "Algarrobo",
             "n": 24
-          },
-          {
-            "i": 176,
-            "v": "Alhué",
-            "n": 23
           },
           {
             "i": 177,
@@ -2249,22 +2226,22 @@
           },
           {
             "i": 178,
-            "v": "El Quisco",
+            "v": "El Monte",
             "n": 23
           },
           {
             "i": 179,
-            "v": "Pumanque",
+            "v": "El Quisco",
             "n": 23
           },
           {
             "i": 180,
-            "v": "Coquimbo",
-            "n": 22
+            "v": "Pumanque",
+            "n": 23
           },
           {
             "i": 181,
-            "v": "El Monte",
+            "v": "Coquimbo",
             "n": 22
           },
           {
@@ -2304,32 +2281,32 @@
           },
           {
             "i": 189,
-            "v": "Salamanca",
+            "v": "Trehuaco",
             "n": 21
           },
           {
             "i": 190,
+            "v": "Salamanca",
+            "n": 21
+          },
+          {
+            "i": 191,
             "v": "Hualpén",
             "n": 20
           },
           {
-            "i": 191,
+            "i": 192,
             "v": "Vichuquén",
             "n": 20
           },
           {
-            "i": 192,
+            "i": 193,
             "v": "San Pablo",
             "n": 20
           },
           {
-            "i": 193,
-            "v": "Pelarco",
-            "n": 20
-          },
-          {
             "i": 194,
-            "v": "Chillán VIejo",
+            "v": "Pelarco",
             "n": 20
           },
           {
@@ -2359,52 +2336,52 @@
           },
           {
             "i": 200,
-            "v": "Trehuaco",
-            "n": 19
-          },
-          {
-            "i": 201,
             "v": "Contulmo",
             "n": 18
           },
           {
-            "i": 202,
+            "i": 201,
             "v": "Chépica",
             "n": 18
           },
           {
-            "i": 203,
+            "i": 202,
             "v": "Los Muermos",
             "n": 17
           },
           {
-            "i": 204,
+            "i": 203,
             "v": "Pelluhue",
             "n": 16
           },
           {
-            "i": 205,
+            "i": 204,
             "v": "Santa Bárbara",
             "n": 16
           },
           {
-            "i": 206,
+            "i": 205,
             "v": "Llay-Llay",
             "n": 16
           },
           {
-            "i": 207,
+            "i": 206,
             "v": "Graneros",
             "n": 15
           },
           {
-            "i": 208,
+            "i": 207,
             "v": "Requínoa",
             "n": 15
           },
           {
-            "i": 209,
+            "i": 208,
             "v": "Peumo",
+            "n": 15
+          },
+          {
+            "i": 209,
+            "v": "Río Negro",
             "n": 15
           },
           {
@@ -2429,97 +2406,97 @@
           },
           {
             "i": 214,
-            "v": "Río Negro",
-            "n": 14
-          },
-          {
-            "i": 215,
             "v": "Palmilla",
             "n": 14
           },
           {
-            "i": 216,
+            "i": 215,
             "v": "San Felipe",
             "n": 14
           },
           {
-            "i": 217,
+            "i": 216,
             "v": "San Bernardo",
             "n": 13
           },
           {
-            "i": 218,
+            "i": 217,
             "v": "Cochrane",
             "n": 13
           },
           {
-            "i": 219,
+            "i": 218,
             "v": "Queilén",
             "n": 13
           },
           {
-            "i": 220,
+            "i": 219,
             "v": "Lago Ranco",
             "n": 12
           },
           {
-            "i": 221,
+            "i": 220,
             "v": "Paihuano",
             "n": 12
           },
           {
-            "i": 222,
+            "i": 221,
             "v": "Arica",
             "n": 12
           },
           {
-            "i": 223,
+            "i": 222,
             "v": "El Tabo",
             "n": 12
           },
           {
-            "i": 224,
+            "i": 223,
             "v": "Chile Chico",
             "n": 12
           },
           {
-            "i": 225,
+            "i": 224,
             "v": "Freirina",
             "n": 12
           },
           {
-            "i": 226,
+            "i": 225,
             "v": "Maipú",
             "n": 12
           },
           {
-            "i": 227,
+            "i": 226,
             "v": "Tucapel",
             "n": 11
           },
           {
-            "i": 228,
+            "i": 227,
             "v": "Fresia",
             "n": 11
           },
           {
-            "i": 229,
+            "i": 228,
             "v": "Providencia",
             "n": 11
           },
           {
-            "i": 230,
+            "i": 229,
             "v": "Panquehue",
             "n": 11
           },
           {
-            "i": 231,
+            "i": 230,
             "v": "Copiapó",
             "n": 11
           },
           {
-            "i": 232,
+            "i": 231,
             "v": "Illapel",
+            "n": 11
+          },
+          {
+            "i": 232,
+            "v": "Cobquecura",
             "n": 11
           },
           {
@@ -2554,561 +2531,466 @@
           },
           {
             "i": 239,
-            "v": "Cobquecura",
-            "n": 10
-          },
-          {
-            "i": 240,
             "v": "Nancagua",
             "n": 10
           },
           {
-            "i": 241,
-            "v": "SAN CARLOS",
-            "n": 10
-          },
-          {
-            "i": 242,
+            "i": 240,
             "v": "Curaco de Vélez",
             "n": 10
           },
           {
-            "i": 243,
+            "i": 241,
             "v": "Chile chico",
             "n": 9
           },
           {
-            "i": 244,
+            "i": 242,
             "v": "Torres del Paine",
             "n": 9
           },
           {
-            "i": 245,
+            "i": 243,
             "v": "Aysén",
             "n": 9
           },
           {
-            "i": 246,
+            "i": 244,
             "v": "Pica",
             "n": 9
           },
           {
-            "i": 247,
-            "v": "COIHUECO",
-            "n": 9
-          },
-          {
-            "i": 248,
+            "i": 245,
             "v": "Curarrehue",
             "n": 9
           },
           {
-            "i": 249,
+            "i": 246,
             "v": "Huara",
             "n": 9
           },
           {
-            "i": 250,
+            "i": 247,
             "v": "Isla De Maipo",
             "n": 9
           },
           {
-            "i": 251,
+            "i": 248,
             "v": "Concón",
             "n": 8
           },
           {
-            "i": 252,
+            "i": 249,
             "v": "Placilla",
             "n": 8
           },
           {
-            "i": 253,
+            "i": 250,
             "v": "Licantén",
             "n": 8
           },
           {
-            "i": 254,
+            "i": 251,
             "v": "San Pedro de La Paz",
             "n": 8
           },
           {
-            "i": 255,
+            "i": 252,
             "v": "Tierra Amarilla",
             "n": 8
           },
           {
-            "i": 256,
+            "i": 253,
             "v": "San Pedro De La Paz",
             "n": 8
           },
           {
-            "i": 257,
+            "i": 254,
             "v": "Renca",
             "n": 7
           },
           {
-            "i": 258,
+            "i": 255,
             "v": "Huechuraba",
             "n": 7
           },
           {
-            "i": 259,
+            "i": 256,
             "v": "Quinta de Tilcoco",
             "n": 7
           },
           {
-            "i": 260,
+            "i": 257,
             "v": "Cisnes",
             "n": 7
           },
           {
-            "i": 261,
+            "i": 258,
             "v": "Futrono",
             "n": 7
           },
           {
-            "i": 262,
+            "i": 259,
             "v": "Calera de Tango",
             "n": 7
           },
           {
-            "i": 263,
+            "i": 260,
             "v": "Recoleta",
             "n": 6
           },
           {
-            "i": 264,
+            "i": 261,
             "v": "Vitacura",
             "n": 6
           },
           {
-            "i": 265,
+            "i": 262,
             "v": "San Gregorio",
             "n": 6
           },
           {
-            "i": 266,
+            "i": 263,
             "v": "Las Condes",
             "n": 6
           },
           {
-            "i": 267,
+            "i": 264,
             "v": "Calama",
             "n": 6
           },
           {
-            "i": 268,
-            "v": "PEMUCO",
-            "n": 6
-          },
-          {
-            "i": 269,
+            "i": 265,
             "v": "Alto del Carmen",
             "n": 6
           },
           {
-            "i": 270,
+            "i": 266,
             "v": "Lo Barnechea",
             "n": 6
           },
           {
-            "i": 271,
+            "i": 267,
             "v": "Olivar",
             "n": 6
           },
           {
-            "i": 272,
+            "i": 268,
             "v": "San Fabián",
             "n": 6
           },
           {
-            "i": 273,
+            "i": 269,
             "v": "Purranque",
             "n": 6
           },
           {
-            "i": 274,
+            "i": 270,
             "v": "Río Hurtado",
             "n": 5
           },
           {
-            "i": 275,
+            "i": 271,
             "v": "Zapallar",
             "n": 5
           },
           {
-            "i": 276,
+            "i": 272,
             "v": "Putre",
             "n": 5
           },
           {
-            "i": 277,
-            "v": "QUIRIHUE",
-            "n": 5
-          },
-          {
-            "i": 278,
-            "v": "COELEMU",
-            "n": 5
-          },
-          {
-            "i": 279,
+            "i": 273,
             "v": "Quemchi",
             "n": 5
           },
           {
-            "i": 280,
-            "v": "San Vicente",
-            "n": 5
-          },
-          {
-            "i": 281,
+            "i": 274,
             "v": "Hualaihué",
             "n": 5
           },
           {
-            "i": 282,
+            "i": 275,
             "v": "Huasco",
             "n": 5
           },
           {
-            "i": 283,
+            "i": 276,
             "v": "Padre las casas",
             "n": 5
           },
           {
-            "i": 284,
+            "i": 277,
             "v": "Nueva imperial",
             "n": 4
           },
           {
-            "i": 285,
+            "i": 278,
             "v": "Futaleufú",
             "n": 4
           },
           {
-            "i": 286,
+            "i": 279,
             "v": "Río Verde",
             "n": 4
           },
           {
-            "i": 287,
-            "v": "SAN IGNACIO",
-            "n": 4
-          },
-          {
-            "i": 288,
+            "i": 280,
             "v": "ARAUCO",
             "n": 4
           },
           {
-            "i": 289,
+            "i": 281,
             "v": "San pedro de la paz",
             "n": 4
           },
           {
-            "i": 290,
+            "i": 282,
             "v": "Quinchao",
             "n": 4
           },
           {
-            "i": 291,
+            "i": 283,
             "v": "Camiña",
             "n": 4
           },
           {
-            "i": 292,
+            "i": 284,
             "v": "Rinconada",
             "n": 4
           },
           {
-            "i": 293,
+            "i": 285,
             "v": "Cochamó",
             "n": 3
           },
           {
-            "i": 294,
+            "i": 286,
             "v": "La Florida",
             "n": 3
           },
           {
-            "i": 295,
+            "i": 287,
             "v": "Lago Verde",
             "n": 3
           },
           {
-            "i": 296,
+            "i": 288,
             "v": "Colchane",
             "n": 3
           },
           {
-            "i": 297,
+            "i": 289,
             "v": "Papudo",
             "n": 3
           },
           {
-            "i": 298,
+            "i": 290,
             "v": "Antuco",
             "n": 3
           },
           {
-            "i": 299,
+            "i": 291,
             "v": "Combarbalá",
             "n": 3
           },
           {
-            "i": 300,
+            "i": 292,
             "v": "Cabildo",
             "n": 3
           },
           {
-            "i": 301,
+            "i": 293,
             "v": "Cabo de Hornos",
             "n": 2
           },
           {
-            "i": 302,
+            "i": 294,
             "v": "La Reina",
             "n": 2
           },
           {
-            "i": 303,
+            "i": 295,
             "v": "Timaukel",
             "n": 2
           },
           {
-            "i": 304,
+            "i": 296,
             "v": "Primavera",
             "n": 2
           },
           {
-            "i": 305,
+            "i": 297,
             "v": "Peñalolén",
             "n": 2
           },
           {
-            "i": 306,
+            "i": 298,
             "v": "Punitaqui",
             "n": 2
           },
           {
-            "i": 307,
+            "i": 299,
             "v": "San Miguel",
             "n": 2
           },
           {
-            "i": 308,
-            "v": "EL CARMEN",
-            "n": 2
-          },
-          {
-            "i": 309,
-            "v": "TREHUACO",
-            "n": 2
-          },
-          {
-            "i": 310,
-            "v": "PINTO",
-            "n": 2
-          },
-          {
-            "i": 311,
-            "v": "BULNES",
-            "n": 2
-          },
-          {
-            "i": 312,
+            "i": 300,
             "v": "San Pedro de la paz",
             "n": 2
           },
           {
-            "i": 313,
+            "i": 301,
             "v": "San Pedro de Atacama",
             "n": 2
           },
           {
-            "i": 314,
+            "i": 302,
             "v": "Alto Biobío",
             "n": 2
           },
           {
-            "i": 315,
+            "i": 303,
             "v": "Llanquihue",
             "n": 2
           },
           {
-            "i": 316,
+            "i": 304,
+            "v": "Villa O'Higgins",
+            "n": 2
+          },
+          {
+            "i": 305,
             "v": "Pozo Almonte",
             "n": 2
           },
           {
-            "i": 317,
+            "i": 306,
             "v": "La Pintana",
             "n": 2
           },
           {
-            "i": 318,
+            "i": 307,
             "v": "CholChol",
             "n": 2
           },
           {
-            "i": 319,
+            "i": 308,
             "v": "Cerrillos",
             "n": 1
           },
           {
-            "i": 320,
+            "i": 309,
             "v": "La serena",
             "n": 1
           },
           {
-            "i": 321,
+            "i": 310,
             "v": "CasaBlanca",
             "n": 1
           },
           {
-            "i": 322,
-            "v": "PORTEZUELO",
-            "n": 1
-          },
-          {
-            "i": 323,
-            "v": "COBQUECURA",
-            "n": 1
-          },
-          {
-            "i": 324,
-            "v": "NINHUE",
-            "n": 1
-          },
-          {
-            "i": 325,
-            "v": "YUNGAY",
-            "n": 1
-          },
-          {
-            "i": 326,
+            "i": 311,
             "v": "talcahuano",
             "n": 1
           },
           {
-            "i": 327,
+            "i": 312,
             "v": "LAJA",
             "n": 1
           },
           {
-            "i": 328,
+            "i": 313,
             "v": "san pedro de la paz",
             "n": 1
           },
           {
-            "i": 329,
+            "i": 314,
             "v": "TALCAHUANO",
             "n": 1
           },
           {
-            "i": 330,
-            "v": "NACIMIENTO",
-            "n": 1
-          },
-          {
-            "i": 331,
+            "i": 315,
             "v": "CABRERO",
             "n": 1
           },
           {
-            "i": 332,
+            "i": 316,
             "v": "Palena",
             "n": 1
           },
           {
-            "i": 333,
+            "i": 317,
             "v": "San Juan de La Costa",
             "n": 1
           },
           {
-            "i": 334,
+            "i": 318,
             "v": "Laguna Blanca",
             "n": 1
           },
           {
-            "i": 335,
+            "i": 319,
             "v": "Frutillar",
             "n": 1
           },
           {
-            "i": 336,
-            "v": "Villa O'Higgins",
-            "n": 1
-          },
-          {
-            "i": 337,
+            "i": 320,
             "v": "Camarones",
             "n": 1
           },
           {
-            "i": 338,
+            "i": 321,
             "v": "Putaendo",
             "n": 1
           },
           {
-            "i": 339,
+            "i": 322,
             "v": "San Esteban",
             "n": 1
           },
           {
-            "i": 340,
+            "i": 323,
             "v": "COINCO",
             "n": 1
           },
           {
-            "i": 341,
+            "i": 324,
             "v": "quinta DE TILCOCO",
             "n": 1
           },
           {
-            "i": 342,
-            "v": "Villa O´Higgins",
-            "n": 1
-          },
-          {
-            "i": 343,
+            "i": 325,
             "v": "General Lagos",
             "n": 1
           },
           {
-            "i": 344,
+            "i": 326,
             "v": "Canela",
             "n": 1
           },
           {
-            "i": 345,
+            "i": 327,
             "v": "Santa María",
             "n": 1
           },
           {
-            "i": 346,
+            "i": 328,
             "v": "Los Andes",
             "n": 1
           },
           {
-            "i": 347,
-            "v": "San pedro",
-            "n": 1
-          },
-          {
-            "i": 348,
+            "i": 329,
             "v": "lolol",
             "n": 1
           },
           {
-            "i": 349,
+            "i": 330,
             "v": "palmilla",
             "n": 1
           },
           {
-            "i": 350,
+            "i": 331,
             "v": "Puyehue",
             "n": 1
           }
@@ -3734,68 +3616,68 @@
           },
           {
             "i": 2,
-            "v": "4.1",
-            "n": 1920
-          },
-          {
-            "i": 3,
             "v": "4.9",
             "n": 1143
           },
           {
-            "i": 4,
+            "i": 3,
             "v": "4.2",
             "n": 1074
           },
           {
+            "i": 4,
+            "v": "4.10",
+            "n": 1006
+          },
+          {
             "i": 5,
+            "v": "4.1",
+            "n": 914
+          },
+          {
+            "i": 6,
             "v": "4.6",
             "n": 858
           },
           {
-            "i": 6,
+            "i": 7,
             "v": "4.3",
             "n": 487
           },
           {
-            "i": 7,
+            "i": 8,
             "v": "5.1",
             "n": 423
           },
           {
-            "i": 8,
+            "i": 9,
             "v": "1.2",
             "n": 379
           },
           {
-            "i": 9,
+            "i": 10,
             "v": "4.5",
             "n": 272
           },
           {
-            "i": 10,
+            "i": 11,
             "v": "4.7",
             "n": 269
           },
           {
-            "i": 11,
+            "i": 12,
             "v": "4.11",
             "n": 201
           },
           {
-            "i": 12,
+            "i": 13,
             "v": "1.6",
             "n": 188
           },
           {
-            "i": 13,
+            "i": 14,
             "v": "1.7",
             "n": 150
-          },
-          {
-            "i": 14,
-            "v": "1.1",
-            "n": 129
           },
           {
             "i": 15,
@@ -3809,21 +3691,31 @@
           },
           {
             "i": 17,
+            "v": "1.1",
+            "n": 79
+          },
+          {
+            "i": 18,
+            "v": "1.10",
+            "n": 50
+          },
+          {
+            "i": 19,
             "v": "4.4",
             "n": 21
           },
           {
-            "i": 18,
+            "i": 20,
             "v": "1.4",
             "n": 8
           },
           {
-            "i": 19,
+            "i": 21,
             "v": "1.3",
             "n": 8
           },
           {
-            "i": 20,
+            "i": 22,
             "v": "1.8",
             "n": 5
           }
@@ -4304,7 +4196,7 @@
           {
             "i": 2,
             "v": "4.1.2",
-            "n": 1555
+            "n": 1552
           },
           {
             "i": 3,
@@ -4314,12 +4206,12 @@
           {
             "i": 4,
             "v": "Sin información",
-            "n": 664
+            "n": 666
           },
           {
             "i": 5,
             "v": "1.7.1",
-            "n": 591
+            "n": 592
           },
           {
             "i": 6,
@@ -4374,7 +4266,7 @@
           {
             "i": 16,
             "v": "2.1.11",
-            "n": 210
+            "n": 213
           },
           {
             "i": 17,
@@ -4419,7 +4311,7 @@
           {
             "i": 25,
             "v": "2.1.8",
-            "n": 60
+            "n": 61
           },
           {
             "i": 26,
@@ -4438,12 +4330,12 @@
           },
           {
             "i": 29,
-            "v": "1.1.10",
-            "n": 49
+            "v": "1.9.4",
+            "n": 50
           },
           {
             "i": 30,
-            "v": "1.9.4",
+            "v": "1.1.10",
             "n": 49
           },
           {
@@ -5743,7 +5635,7 @@
           {
             "i": 5,
             "v": "Noviembre",
-            "n": 1156
+            "n": 1155
           },
           {
             "i": 6,
@@ -5753,7 +5645,7 @@
           {
             "i": 7,
             "v": "Octubre",
-            "n": 486
+            "n": 487
           },
           {
             "i": 8,
@@ -5785,14 +5677,14 @@
       "archivo": "incendios.geojson",
       "features": 14705,
       "vertices": 14705,
-      "bytes": 7970573,
+      "bytes": 7971405,
       "bbox": [
         -74.95261,
         -55.22347,
         -68.01064,
         -17.92029
       ],
-      "segundos": 13.7
+      "segundos": 16.1
     },
     "oecv": {
       "titulo": "OECV — Obras de Eliminación de Combustible Vegetal",
@@ -5938,7 +5830,7 @@
         -67.59344,
         -19.31068
       ],
-      "segundos": 1.5
+      "segundos": 1.9
     },
     "oecv_verificado": {
       "titulo": "OECV verificado en terreno",
@@ -6019,7 +5911,7 @@
         -70.51471,
         -29.91048
       ],
-      "segundos": 0.8
+      "segundos": 1.1
     },
     "puntos_standby": {
       "titulo": "Puntos stand-by",
@@ -6312,7 +6204,7 @@
         -71.68694,
         -37.20347
       ],
-      "segundos": 0.1
+      "segundos": 0.2
     },
     "priorizacion": {
       "titulo": "Áreas de priorización",
@@ -6410,7 +6302,7 @@
         -71.31985,
         -37.17862
       ],
-      "segundos": 0.1
+      "segundos": 0.2
     },
     "redvial": {
       "titulo": "Red vial MOP 2024",
@@ -6609,7 +6501,7 @@
       "maxzoom": 13,
       "bytes": 18801957,
       "features": 13964,
-      "segundos": 37.9
+      "segundos": 28.0
     },
     "rutas": {
       "titulo": "Rutas de despliegue territorial 25-26",
@@ -6812,7 +6704,7 @@
       "maxzoom": 13,
       "bytes": 7051850,
       "features": 5278,
-      "segundos": 38.5
+      "segundos": 44.5
     }
   },
   "derivados": {
