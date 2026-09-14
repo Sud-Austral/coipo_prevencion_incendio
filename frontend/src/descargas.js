@@ -227,6 +227,95 @@ export function csvStandby(features, pasa) {
   }
 }
 
+/**
+ * Areas de priorizacion.
+ *
+ * `puntaje_medio` sale ACOMPAÑADO de `puntaje_min` y `puntaje_max`, igual que en
+ * la ficha y por la misma razon: solo enganya cuando aparece solo. La mancha
+ * COYHAIQU-MUYBAJ-01 tiene medio 0,113 y maximo 0,200 sobre 561.027 ha.
+ *
+ * NO se exporta ninguna columna normalizada. La normalizacion es una lectura
+ * visual de la comuna que se este mirando; en un archivo que va a circular
+ * suelto, una columna asi se leeria como si fuera el puntaje y caducaria en
+ * cuanto cambiara el conjunto de comunas.
+ */
+export function csvPriorizacion(features, pasa) {
+  const filas = []
+  for (const f of features ?? []) {
+    const p = f.properties
+    if (pasa && !pasa(p)) continue
+    filas.push([
+      p.comuna,
+      p.mancha_id,
+      p.clase,
+      num(p.puntaje_medio),
+      num(p.puntaje_min),
+      num(p.puntaje_max),
+      num(p.n_hexagonos),
+      num(p.area_ha),
+      num(p.sub_riesgo),
+      num(p.sub_interfaz),
+      num(p.sub_infra),
+      num(p.sub_preparadas),
+      p.componente_dominante,
+      num(p.n_elementos),
+    ])
+  }
+  return {
+    texto: armarCSV(
+      [
+        'comuna', 'mancha_id', 'clase', 'puntaje_medio', 'puntaje_min', 'puntaje_max',
+        'n_hexagonos', 'area_ha', 'sub_riesgo', 'sub_interfaz', 'sub_infra',
+        'sub_preparadas', 'componente_dominante', 'n_elementos',
+      ],
+      filas,
+    ),
+    n: filas.length,
+  }
+}
+
+/** Infraestructura critica. `dependencia_cod` va SIN traducir, como en la
+ *  ficha: el .dbf del MINEDUC no trae diccionario y rotularlo seria inventar. */
+export function csvInfraPuntos(features, pasa) {
+  const filas = []
+  for (const f of features ?? []) {
+    const p = f.properties
+    if (pasa && !pasa(p)) continue
+    const [lon, lat] = coords(f.geometry)
+    filas.push([
+      p.comuna,
+      p.familia,
+      p.grupo,
+      p.nombre,
+      p.tipo,
+      p.direccion,
+      num(p.matricula),
+      num(p.dependencia_cod),
+      p.complejidad,
+      p.detalle,
+      p.ambito,
+      num(p.beneficiarios),
+      p.tension_kv,
+      p.propiedad,
+      p.operador,
+      p.codigo_oaci,
+      num(red6(lon)),
+      num(red6(lat)),
+    ])
+  }
+  return {
+    texto: armarCSV(
+      [
+        'comuna', 'familia', 'grupo', 'nombre', 'tipo', 'direccion', 'matricula',
+        'dependencia_cod', 'complejidad', 'detalle', 'ambito', 'beneficiarios',
+        'tension_kv', 'propiedad', 'operador', 'codigo_oaci', 'lon', 'lat',
+      ],
+      filas,
+    ),
+    n: filas.length,
+  }
+}
+
 // ---------------------------------------------------------------------------
 // GeoJSON
 // ---------------------------------------------------------------------------

@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Rutas relativas, igual que index.html: la pagina se sirve bajo
+         /coipo_prevencion_incendio/ y una barra inicial pediria los iconos a la
+         raiz del dominio. -->
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon-180.png" />
+    <meta name="theme-color" content="#0f1115" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Incendios forestales investigados por las UAD cuya causa general es líneas eléctricas: concentración histórica, subcausa, comunas y hora de inicio, por región."
+    />
+    <title>Incendios por líneas eléctricas — CONAF</title>
+    <!-- SIN <link rel="preconnect">, a proposito. El de index.html ya es uno de
+         los tres valores acoplados al `base` (CLAUDE.md §4); repetirlo aqui
+         seria un cuarto sitio que cambiar a la vez y que nada vigila. -->
+  </head>
+  <body>
+    <div id="app" data-estado="cargando">
+      <header id="cabecera">
+        <div class="cabecera-texto">
+          <h1 id="titulo">Incendios por líneas eléctricas</h1>
+          <p id="bajada">
+            Incendios forestales investigados por las UAD cuya causa general es líneas eléctricas.
+          </p>
+          <!-- El texto lo pone main.js desde NO_ACTIVOS de src/config.js: una
+               sola copia canonica para todas las superficies. -->
+          <p id="aviso-activos" class="aviso-activos"></p>
+        </div>
+        <a class="volver" href="./">Ir al visor de prevención</a>
+      </header>
+
+      <div id="escenario">
+        <div id="map" role="region" aria-label="Mapa de incendios por líneas eléctricas"></div>
+
+        <div id="cargando" class="velo">Cargando los incendios…</div>
+        <div id="error" class="velo velo-error" role="alert" hidden>
+          <div>
+            <h2>No se pudo mostrar la vista</h2>
+            <p class="motivo"></p>
+            <p>
+              <a href="./">Volver al visor de prevención</a>
+            </p>
+          </div>
+        </div>
+
+        <aside id="panel-izq" class="lateral" aria-label="Controles, horario y comunas">
+          <section class="panel">
+            <h2><label for="region">Ámbito</label></h2>
+            <select id="region">
+              <option value="">Todo el país</option>
+            </select>
+          </section>
+
+          <section class="panel">
+            <h2>Capas</h2>
+            <label class="fila-capa">
+              <input type="checkbox" id="toggle-heat" checked />
+              <span class="muestra muestra-calor" aria-hidden="true"></span>
+              Concentración histórica (calor)
+            </label>
+            <label class="fila-capa">
+              <input type="checkbox" id="toggle-points" checked />
+              <span class="muestra muestra-puntos" aria-hidden="true"></span>
+              Incendios (color = subcausa)
+            </label>
+            <label class="fila-capa">
+              <input type="checkbox" id="toggle-comunas" />
+              <span class="muestra muestra-comunas" aria-hidden="true"></span>
+              Comunas (n.º de incendios)
+            </label>
+
+            <div class="divisor"></div>
+            <h2><label for="heat-intensity">Intensidad del calor</label></h2>
+            <input type="range" id="heat-intensity" min="1" max="3" step="1" value="2" />
+            <div class="escala-rango" aria-hidden="true">
+              <span>Sutil</span><span>Media</span><span>Máxima</span>
+            </div>
+            <div class="rampa-calor" aria-hidden="true"></div>
+            <div class="escala-rango" aria-hidden="true"><span>Menor</span><span>Mayor</span></div>
+            <p class="nota">
+              Concentración histórica de incendios, <strong>no es riesgo</strong>: dice dónde se
+              juntaron los incendios ya investigados, no dónde va a haber otro. La escala se
+              reajusta al acercar o alejar.
+            </p>
+
+            <div class="divisor"></div>
+            <h2><label for="base">Mapa base</label></h2>
+            <select id="base"></select>
+            <p id="base-nota" class="nota" hidden></p>
+          </section>
+
+          <section class="panel">
+            <h2>Hora de inicio</h2>
+            <div id="hourly-chart" role="img" aria-label="Incendios por hora de inicio"></div>
+            <div id="hourly-labels" aria-hidden="true"></div>
+            <div id="window-callout" class="callout"></div>
+          </section>
+
+          <section class="panel">
+            <h2>Comunas con más incendios</h2>
+            <div id="rank-list"></div>
+            <p class="nota">Toca una comuna para acercar el mapa.</p>
+          </section>
+        </aside>
+
+        <aside id="panel-der" class="lateral" aria-label="Resumen y leyenda">
+          <section class="panel">
+            <h2 id="titulo-resumen">Resumen · Todo el país</h2>
+            <div class="stat-big" id="stat-total">—</div>
+            <div class="stat-label" id="stat-total-label">incendios con coordenadas</div>
+            <div class="stat-big" id="stat-comunas">—</div>
+            <div class="stat-label">comunas con incendios</div>
+            <div class="stat-big" id="stat-ha">—</div>
+            <div class="stat-label">hectáreas quemadas (acumulado)</div>
+            <p id="aviso-sin-coord" class="aviso-sin-coord"></p>
+          </section>
+
+          <section class="panel">
+            <h2>Subcausa · Causa investigada 2023</h2>
+            <div id="leyenda"></div>
+          </section>
+
+          <p id="pie" class="pie"></p>
+        </aside>
+      </div>
+    </div>
+    <noscript>
+      <p>
+        Esta vista necesita JavaScript para dibujar el mapa y calcular las cifras. Actívalo en tu
+        navegador y vuelve a cargar la página.
+      </p>
+    </noscript>
+    <script type="module" src="/src/electrico/main.js"></script>
+  </body>
+</html>

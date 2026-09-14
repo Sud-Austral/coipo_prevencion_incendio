@@ -46,7 +46,15 @@ try {
   process.exit(1)
 }
 
-const archivos = ['manifest.json', 'kpis.json', ...Object.values(manifest.capas).map((c) => c.archivo)]
+// `derivados` (bbdd_uad_completa, lineas_electricas) viven en una clave aparte
+// de `capas` para que el visor no duplique filtros. Sin esta linea el
+// manifest bajado declara archivos que no llegan a public/data.
+const archivos = [
+  'manifest.json',
+  'kpis.json',
+  ...Object.values(manifest.capas).map((c) => c.archivo),
+  ...Object.values(manifest.derivados ?? {}).map((c) => c.archivo),
+]
 
 let total = 0
 for (const a of [...new Set(archivos)]) {

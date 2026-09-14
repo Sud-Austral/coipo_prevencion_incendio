@@ -35,20 +35,21 @@ Estado a **2026-09-10**. El repo de referencia es
   (`npm run verify:priorizacion -- --negativas`). Enciende OECV + stand-by + incendios,
   barre una rejilla de 15×10 clics y exige que respondan dos capas distintas.
 
-  **Dos correcciones a lo que decía esta ficha**, las dos medidas ejecutándolas:
+  **Dos cosas que salieron al escribirla**, medidas ejecutándolas:
 
-  1. **El mutante propuesto aquí no reproducía el defecto.** Quitar `renderer` de las
-     opciones del mapa deja C1 en VERDE, porque sin esa opción `Map.getRenderer` cae en
-     `_getPaneRenderer('overlayPane')`, que **cachea un renderer por pane** y las capas lo
-     siguen compartiendo. El mutante que sí lo reproduce da un `renderer: L.canvas()` propio
-     a `CapaPuntos.jsx`; con él C1 baja a 0 capas respondiendo. Si se hubiera dado por buena
-     la aserción sin correr el negativo, habría quedado en verde sin probar nada.
+  1. **El mutante que proponía esta ficha SÍ reproduce el defecto**, pero no sólo ese.
+     Quitar `renderer` de las opciones del mapa pone C1 roja; también la pone roja un
+     renderer compartido sin `tolerance: 8`. El mutante que aísla §H es un canvas propio
+     por capa **conservando la tolerancia** (sólo contesta la capa de encima). Una versión
+     anterior de esta nota decía que el mutante propuesto «dejaba C1 en verde»: **era
+     falso**, lo que se vio verde fue una C1 que no podía detectar nada.
   2. **La prueba no puede ser «dos capas superpuestas» cualesquiera.** Tienen que ser dos
      capas de CANVAS: las áreas de priorización y sus iconos no valen, porque los marcadores
      viven en el pane de marcadores y son otro camino de eventos.
 
   De paso, la regla de `DECISIONES.md` §H se amplió: no basta con no declarar `renderer`,
-  tampoco se puede declarar `pane` propio en una capa vectorial.
+  tampoco se puede declarar `pane` propio en una capa vectorial. **Eso último está leído en
+  el fuente de Leaflet, no comprobado con un mutante**, y C1 no lo cazaría tal como está.
 - **Llevar `python ETL/verify.py --negativas` al job `build` del CI.** Ya existe y corre en
   ~19 s, pero el workflow sólo ejecuta la pasada normal a través de `run.py`. Ojo: D12 y
   D13 sí se pueden verificar en CI, porque allí tippecanoe puebla `ETL/_build/`.
@@ -217,9 +218,20 @@ Esto es **mejor** que en el repo de referencia. Antes de "alinear", comprobar la
    `verify-priorizacion.mjs`). Ver §1 para las dos correcciones que salieron al escribirla.
 2. `verify.py --negativas` al job `build` del CI (§1, alta) — barato y ya está escrito.
    Nota: ahora son **15 aserciones y 14 mutaciones**, con D14 y D15 nuevas.
-3. **Llevar `npm run verify:priorizacion` al job `verificar-visual`.** Existe y corre en
-   ~40 s, pero el workflow todavía no lo invoca, así que hoy sólo protege a quien lo
-   ejecuta a mano — que es justo lo que se le reprochaba a la brecha que cierra.
+3. ~~**Llevar `npm run verify:priorizacion` al CI.**~~ **HECHO el 2026-09-10**, pero al job
+   **`build`** y no a `verificar-visual`: C1–C10 afirman cifras de las capas reales y
+   `verificar-visual` excluye `/frontend/public/data/` a propósito. En `build` los datos
+   acaban de generarse. Va tras `npm run build` (el arnés sirve `dist/`, no lo construye) y
+   antes de subir el artefacto de Pages, así que una vista rota no se despliega. Sin
+   `--negativas`: tres mutaciones con un build cada una son ~4 min, y §D4 ya decidió que
+   los mutantes de frontend no corren en cada push.
+4. ~~**Exportar las dos capas nuevas como GeoJSON/CSV.**~~ **HECHO el 2026-09-10.** No se
+   tocó `SeccionDescargas`, que vive dentro de `PanelLateral` y esa vista no lo monta: los
+   cuatro botones están en `PanelPriorizacion` y reutilizan `geojsonDe`, `armarCSV`,
+   `guardar` y `nombreArchivo`, más dos funciones nuevas (`csvPriorizacion`,
+   `csvInfraPuntos`) con el molde de `csvStandby`. Lo descargado respeta la comuna del
+   mapa, y eso lo vigila **C11** con su mutante. No se exporta ninguna columna
+   normalizada: caducaría en cuanto cambiara el conjunto de comunas (ver `DECISIONES.md` §P).
 3. Que `tiles.py` guarde el intermedio en modo degradado (§4 D2, recomendación B).
 4. El vigilante de dominios que caza el corrimiento del `.dbf` (§2, alta).
 5. Los mutantes que faltan: B4, B8, A10 (§1, media).

@@ -494,6 +494,11 @@ export default function App() {
   const comunaPrior = filtros.comuna ?? ''
   const [modoEscala, setModoEscala] = useState('absoluta')
   const [familiasActivas, setFamiliasActivas] = useState(null)
+  // Opacidad del relleno de las manchas. Arranca en 0,65 --el valor con el que
+  // se diseño la simbologia-- porque es el punto donde ya se leen las calles y
+  // los rios del mapa base sin perder la clase de cada mancha. El control lo
+  // baja para inspeccionar el territorio de debajo y lo sube para presentar.
+  const [opacidad, setOpacidad] = useState(0.65)
   // Los iconos estan filtrados por zoom, no ausentes: el panel tiene que
   // decirlo o parecera que la capa no cargo.
   const [iconosLejos, setIconosLejos] = useState(false)
@@ -533,8 +538,11 @@ export default function App() {
     [prioriz.data, comunaPrior, modoEscala],
   )
 
-  // El estilo se pasa ya construido a la capa, que no sabe de escalas: cambiar
-  // de comuna repinta 572 poligonos sin reconstruir ninguno.
+  // El estilo se pasa ya construido a la capa, que no sabe de escalas ni de
+  // opacidad: cambiar de comuna o mover el slider repinta 572 poligonos sin
+  // reconstruir ninguno. Es la UNICA definicion del estilo de una mancha --
+  // antes el valor de arranque estaba tambien en CapaPoligonos y las dos copias
+  // podian divergir.
   const estiloMancha = useCallback(
     (p) => ({
       fillColor: colorDeMancha(p, ctxEscala),
@@ -543,10 +551,14 @@ export default function App() {
       // del modelo no desaparece nunca del mapa.
       color: COLOR_CLASE[p.clase] ?? '#888',
       weight: 0.6,
-      opacity: 0.9,
-      fillOpacity: 0.65,
+      fillOpacity: opacidad,
+      // El borde acompaña al relleno pero mas marcado, para que al bajar la
+      // opacidad se siga viendo DONDE estan las manchas mientras se lee el
+      // mapa base de debajo. En 0 desaparecen las dos: «completamente
+      // transparente» tiene que serlo de verdad, o el control miente.
+      opacity: Math.min(1, opacidad * 1.4),
     }),
-    [ctxEscala],
+    [ctxEscala, opacidad],
   )
 
   const pasaMancha = useMemo(
@@ -1116,6 +1128,8 @@ export default function App() {
           comuna={comunaPrior}
           onComuna={(v) => setFiltro('comuna', v)}
           onModo={setModoEscala}
+          opacidad={opacidad}
+          onOpacidad={setOpacidad}
           ctx={ctxEscala}
           familias={familias}
           familiasActivas={familiasActivas ?? []}
@@ -1131,8 +1145,13 @@ export default function App() {
           error={errores.priorizacion}
           onReintentar={() => reintentos.priorizacion?.()}
           onEncuadrar={encuadrarComuna}
+          datosAreas={prioriz.data}
+          datosPuntos={infraPuntos.data}
           map={map}
           base={base}
+          onBase={setBase}
+          basemaps={BASEMAPS}
+          imagen={imagen}
           abierto={panelVisible}
           onCerrar={cerrarPanel}
         />

@@ -172,8 +172,10 @@ componente declara `renderer`»: `Map.getRenderer` evalúa
 y `_getPaneRenderer` **crea un renderer nuevo para cualquier pane que no sea
 `overlayPane`**, con precedencia sobre el compartido. O sea que declarar un `pane` propio
 reintroduce el defecto sin haber escrito la palabra `renderer`. La regla correcta es:
-**ninguna capa vectorial declara `renderer` NI `pane`.** Comprobado en el fuente de
-Leaflet 1.9.4 de `node_modules`.
+**ninguna capa vectorial declara `renderer` NI `pane`.** Lo del `pane` está **leído en
+el fuente** de Leaflet 1.9.4 de `node_modules` (por un subagente), **no comprobado con un
+mutante**. Y C1 no lo cazaría tal como está: en su estado sano sólo contestan incendios y
+stand-by, que son las dos `CapaPuntos` y compartirían el mismo pane mutado.
 
 Esto no afecta a los marcadores con icono de la vista de priorización: un `L.Marker` no es
 un `Path`, nunca llama a `getRenderer()`, y su icono se registra con
@@ -186,13 +188,21 @@ control negativo.** Enciende OECV + stand-by + incendios, barre una rejilla de 1
 sobre el mapa y exige que respondan **dos capas distintas por lo menos**. Medido en el
 estado sano: 2 capas (26 aciertos de incendios, 1 de stand-by).
 
-**El mutante que proponía `mejoras.md` NO reproducía el defecto, y se corrigió.** Decía
-«quitar `renderer` de las opciones del mapa en `src/App.jsx`»; ejecutado, C1 seguía verde,
-porque sin esa opción Leaflet cae en `_getPaneRenderer('overlayPane')`, que **cachea un
-renderer por pane** y las capas lo siguen compartiendo. El mutante real da un
-`renderer: L.canvas()` propio a `CapaPuntos.jsx`, que es lo que hacía el código que causó
-el fallo; con él C1 baja a **0 capas respondiendo**. Sin haber corrido el control negativo,
-esta aserción habría quedado en verde sin probar nada.
+**Alcance de C1, medido con tres mutantes (2026-09-14).** Una primera versión de este
+párrafo afirmaba que el mutante de `mejoras.md` no reproducía el defecto «ejecutado». **Era
+falso**: lo que se había visto verde era una C1 anterior que no podía detectar nada. Contra
+la C1 válida:
+
+| Mutante | C1 | Qué capa contesta |
+|---|---|---|
+| `renderer` quitado de las opciones del mapa (el de `mejoras.md`) | **roja** | sólo incendios (7) |
+| renderer compartido pero **sin** `tolerance: 8` | **roja** | sólo incendios (7) |
+| canvas **propio por capa**, con `tolerance: 8` intacta | **roja** | sólo stand-by (9) |
+
+Así que C1 **sí** vigila §H —el tercer caso es el síntoma exacto: sólo contesta la capa de
+encima—, pero **también** se pone roja si se pierde la tolerancia, que es otro defecto. Los
+dos primeros mutantes mezclan ambos y no dicen cuál cazaron. El control negativo del arnés
+usa el tercero.
 
 **Estado: CERRADA.**
 

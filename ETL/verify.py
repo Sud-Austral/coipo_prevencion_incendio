@@ -9,10 +9,23 @@ Lo llama run.py al final. Tambien corre suelto:
     python ETL/verify.py --data frontend/public/data --muestra 500
     python ETL/verify.py --negativas
 
-Las aserciones van numeradas D1..D13 para poder referirse a una sola. Ese numero
+Las aserciones van numeradas D1..D18 para poder referirse a una sola. Ese numero
 es lo que exige --negativas: cada mutacion reintroduce un defecto concreto y
 comprueba que se ponga roja LA asercion que lo vigila, no cualquier otra. Una
 asercion que no se ha visto roja no esta probando nada.
+
+    D1        el archivo declarado existe (capas y derivados)
+    D2-D4     PMTiles: magic, zooms del manifest, bbox dentro de Chile
+    D5-D9     GeoJSON (capas y derivados): FeatureCollection, n de features,
+              sin NaN, sin geometrias vacias, dentro de Chile
+    D10       campos de filtro presentes (solo capas)
+    D11       regiones canonizadas en los dominios
+    D12, D13  cruce espacial incendios <-> red vial (necesitan ETL/_build/)
+    D14, D15  priorizacion e infra_puntos dentro del bbox de su comuna
+    D16       incendios: causa_general_codigo es el prefijo de causa_codigo y
+              cada codigo general lleva una sola etiqueta (el defecto 4.1/4.10)
+    D17       derivado bbdd_uad_completa == incendios decodificado, fila a fila
+    D18       derivado lineas_electricas == filtro de la BBDD completa
 """
 
 from __future__ import annotations
@@ -40,6 +53,41 @@ CHILE = (-76.0, -56.0, -66.0, -17.0)  # minlon, minlat, maxlon, maxlat
 # Capas de red vial. Son la unica referencia valida del cruce espacial: los
 # incendios ocurren junto a caminos. OECV queda fuera a proposito.
 CAPAS_VIALES = ("rutas", "redvial")
+
+# Cabecera del Excel -> campo de incendios.geojson. DUPLICADO A PROPOSITO del dict
+# `c` y PROP_DE_CAMPO de ETL/build_incendios.py: si D17 importara el mapa del ETL
+# comprobaria que el mapa es igual a si mismo, y un campo cruzado ('Provincia' ->
+# comuna) saldria en verde. El orden es el de la hoja 'Hoja 1' (medido el
+# 2026-09-14).
+CABECERA_A_CAMPO = {
+    "ID": "id",
+    "Región": "region",
+    "Provincia": "provincia",
+    "Comuna": "comuna",
+    "Temporada": "temporada",
+    "N° Incendio": "n_incendio",
+    "Nombre": "nombre",
+    "Causa investigada 2023": "causa_codigo",
+    "Nombre causa específica 2023": "causa_especifica",
+    "Causa general 2023": "causa_general",
+    "Código causa general 2023": "causa_general_codigo",
+    "Grupo causas 2023": "causa_grupo",
+    "X": "utm_x",
+    "Y": "utm_y",
+    "Superficie": "superficie_ha",
+    "jefe brigada****": "jefe_brigada",
+    "Mes investigación": "mes_investigacion",
+    "Investigado por": "investigado_por",
+    "Inicio R20": "inicio_r20",
+    "Hora R20": "hora_r20",
+    "Fecha de inicio investigación": "inv_inicio",
+    "Fecha finalización investigación": "inv_fin",
+    "Informe": "informe",
+}
+EXTRA_DERIVADOS = ["lat", "lon", "utm_epsg"]
+# Tambien duplicado del ETL, por lo mismo: D18 no puede leer del manifest el filtro
+# que esta verificando.
+CAUSA_ELECTRICA = "Líneas eléctricas"
 
 OK = "✔"
 NO = "✘"
@@ -107,12 +155,21 @@ def verificar(data: Path, muestra: int = 500, res: Res | None = None) -> bool:
         return False
     manifest = json.loads(man_path.read_text(encoding="utf-8"))
     capas = manifest["capas"]
+    derivados = manifest.get("derivados") or {}
 
     print("\n── verificación ─────────────────────────────────────────────")
 
     lineas_para_cruce = []
+    # GeoJSON ya parseados en esta corrida, por nombre de archivo. D16-D18 releen
+    # incendios (7,6 MiB) y la BBDD completa (11,9 MiB); parsearlos dos veces
+    # alarga --negativas, que llama a verificar() una vez por mutacion.
+    parseados: dict[str, dict] = {}
 
-    for nombre, meta in capas.items():
+    # Los derivados pasan por los mismos D1 y D5-D9 que las capas: un archivo que
+    # la pagina de lineas electricas descarga no puede quedar sin mirar solo por
+    # vivir en otra clave del manifest.
+    recorrido = [(n, m, False) for n, m in capas.items()] + [(n, m, True) for n, m in derivados.items()]
+    for nombre, meta, es_derivado in recorrido:
         archivo = data / meta["archivo"]
         if not r.check(archivo.exists(), "D1", f"{nombre}: existe {meta['archivo']}"):
             continue
@@ -149,6 +206,7 @@ def verificar(data: Path, muestra: int = 500, res: Res | None = None) -> bool:
             continue
 
         gj = json.loads(archivo.read_text(encoding="utf-8"))
+        parseados[meta["archivo"]] = gj
         r.check(gj.get("type") == "FeatureCollection", "D5", f"{nombre}: FeatureCollection")
         n = len(gj["features"])
         r.check(
@@ -187,6 +245,9 @@ def verificar(data: Path, muestra: int = 500, res: Res | None = None) -> bool:
         r.check(vacias == 0, "D8", f"{nombre}: sin geometrías vacías", f"{vacias}" if vacias else "")
         r.check(fuera == 0, "D9", f"{nombre}: todas dentro de Chile", f"{fuera} fuera" if fuera else "")
 
+        # Un derivado no declara filtros: D10 saldria en verde sin mirar nada.
+        if es_derivado:
+            continue
         campos_esperados = set(meta.get("filtros", []))
         presentes = set()
         for f in gj["features"][:200]:
@@ -272,6 +333,12 @@ def verificar(data: Path, muestra: int = 500, res: Res | None = None) -> bool:
             f"{len(malos)} fuera: {malos[:3]}" if malos else "",
         )
 
+    # --- D16-D18: codigo de causa general y derivados de incendios ---
+    # Como D14 y D15, solo exigen algo cuando la capa de la que dependen esta en
+    # el manifest. Una corrida `--layers oecv` no tiene derivados que verificar.
+    if "incendios" in capas:
+        _causas_y_derivados(r, data, capas["incendios"], derivados, parseados)
+
     # --- cruce espacial: los incendios deben caer sobre la red vial ---
     inc = data / "incendios.geojson"
     if inc.exists() and lineas_para_cruce:
@@ -282,6 +349,229 @@ def verificar(data: Path, muestra: int = 500, res: Res | None = None) -> bool:
     print("─────────────────────────────────────────────────────────────")
     print(f"{OK if r.fallos == 0 else NO} {'todo correcto' if r.fallos == 0 else f'{r.fallos} comprobaciones fallidas'}\n")
     return r.fallos == 0
+
+
+def _leer_gj(data: Path, archivo, parseados: dict) -> dict | None:
+    """GeoJSON ya parseado en esta corrida o leido ahora. None si falta o no parsea.
+
+    Nunca lanza: una mutacion que deja el archivo roto tiene que acabar en rojo,
+    no matando al verificador.
+    """
+    if not isinstance(archivo, str):
+        return None
+    if archivo in parseados:
+        return parseados[archivo]
+    p = data / archivo
+    if not p.exists():
+        return None
+    try:
+        gj = json.loads(p.read_text(encoding="utf-8"))
+    except ValueError:
+        return None
+    parseados[archivo] = gj
+    return gj
+
+
+def _features(gj) -> list:
+    fs = gj.get("features") if isinstance(gj, dict) else None
+    return [f for f in fs if isinstance(f, dict)] if isinstance(fs, list) else []
+
+
+def _decodificar(props, tablas: dict) -> dict:
+    """Props de incendios con los indices resueltos contra manifest.tablas."""
+    out = dict(props) if isinstance(props, dict) else {}
+    for campo, tabla in tablas.items():
+        if campo in out:
+            i = out[campo]
+            ok = isinstance(i, int) and 0 <= i < len(tabla)
+            out[campo] = tabla[i] if ok else f"<indice invalido {i!r}>"
+    return out
+
+
+def _canon(obj) -> str:
+    """Serializacion estable para comparar 'byte a byte' props y geometria."""
+    return json.dumps(obj, ensure_ascii=False, separators=(",", ":"))
+
+
+def _cuentas_sin_coord(meta: dict) -> tuple[list, list]:
+    """(ids sin coordenadas, problemas de coherencia interna del bloque)."""
+    sc = meta.get("sin_coordenadas") if isinstance(meta.get("sin_coordenadas"), dict) else {}
+    ids = sc.get("ids") if isinstance(sc.get("ids"), list) else []
+    n = sc.get("n")
+    por_region = sc.get("por_region") if isinstance(sc.get("por_region"), dict) else {}
+    problemas = []
+    if not isinstance(n, int):
+        problemas.append("sin_coordenadas.n no es entero")
+        return ids, problemas
+    if len(ids) != n:
+        problemas.append(f"{len(ids)} ids vs n={n}")
+    if sum(v for v in por_region.values() if isinstance(v, int)) != n:
+        problemas.append(f"por_region suma {sum(v for v in por_region.values() if isinstance(v, int))} vs n={n}")
+    feats = meta.get("features")
+    if not isinstance(feats, int) or feats + n != meta.get("leidos"):
+        problemas.append(f"features {meta.get('features')} + sin coordenadas {n} != leidos {meta.get('leidos')}")
+    return ids, problemas
+
+
+def _causas_y_derivados(r: Res, data: Path, inc_meta: dict, derivados: dict, parseados: dict) -> None:
+    """D16, D17 y D18. Todas cruzan dos fuentes: nunca un archivo contra si mismo."""
+    tablas = inc_meta.get("tablas") or {}
+    inc_feats = _features(_leer_gj(data, inc_meta.get("archivo"), parseados))
+    inc_dec = [_decodificar(f.get("properties"), tablas) for f in inc_feats]
+
+    # --- D16: el codigo general es el prefijo de la causa investigada ---------
+    # El defecto que vigila: 'Codigo causa general 2023' llega como float y 4.10
+    # es el mismo numero que 4.1. Publicado hasta el 2026-09-14: 'Otras causas'
+    # (1.006 features) bajo el 4.1 de 'Faenas forestales' (914), y 50 mas bajo 1.1;
+    # sobre esos datos esta asercion da 1.056 filas en rojo. Se comprueba contra
+    # causa_codigo, que es texto en el Excel y conserva el '4.10'.
+    malos, sin_causa = [], 0
+    etiquetas: dict[str, set] = {}
+    for p in inc_dec:
+        ci, cg = p.get("causa_codigo"), p.get("causa_general_codigo")
+        if cg is not None and p.get("causa_general") is not None:
+            etiquetas.setdefault(str(cg), set()).add(p["causa_general"])
+        if ci is None:
+            # Sin causa investigada no hay contra que comprobar el codigo; se
+            # cuenta y se dice (medido el 2026-09-14: 0 filas).
+            sin_causa += 1
+            continue
+        if cg is None or not (str(ci) == str(cg) or str(ci).startswith(f"{cg}.")):
+            malos.append(f"id {p.get('id')}: {cg!r} vs {ci!r}")
+    nota = f" · {sin_causa} sin causa_codigo" if sin_causa else ""
+    r.check(
+        bool(inc_dec) and not malos,
+        "D16",
+        f"incendios: causa_general_codigo es prefijo de causa_codigo ({len(inc_dec)} filas)",
+        (f"{len(malos)} no: {malos[:3]}" if malos else ("no se pudo leer incendios" if not inc_dec else "")) + nota,
+    )
+    dobles = {k: sorted(v) for k, v in etiquetas.items() if len(v) > 1}
+    r.check(
+        bool(inc_dec) and not dobles,
+        "D16",
+        f"incendios: cada código general lleva una sola etiqueta ({len(etiquetas)} códigos)",
+        f"{dobles}" if dobles else "",
+    )
+
+    # --- D17: la BBDD completa es incendios decodificado, fila a fila ---------
+    esperadas = list(CABECERA_A_CAMPO) + EXTRA_DERIVADOS
+    bb_meta = derivados.get("bbdd_uad_completa")
+    bb_feats: list | None = None
+    if r.check(isinstance(bb_meta, dict), "D17", "derivados.bbdd_uad_completa declarado en el manifest"):
+        cols = bb_meta.get("columnas") if isinstance(bb_meta.get("columnas"), list) else []
+        r.check(
+            cols == list(CABECERA_A_CAMPO) and bb_meta.get("extra") == EXTRA_DERIVADOS,
+            "D17",
+            f"bbdd_uad_completa: {len(cols)} columnas = las {len(CABECERA_A_CAMPO)} de la Hoja 1, en orden",
+            ""
+            if cols == list(CABECERA_A_CAMPO) and bb_meta.get("extra") == EXTRA_DERIVADOS
+            else f"faltan {[c for c in CABECERA_A_CAMPO if c not in cols]} · "
+            f"sobran {[c for c in cols if c not in CABECERA_A_CAMPO]} · extra {bb_meta.get('extra')}",
+        )
+        bb_gj = _leer_gj(data, bb_meta.get("archivo"), parseados)
+        bb_feats = _features(bb_gj) if bb_gj is not None else None
+
+    if bb_feats is None:
+        r.check(False, "D17", "bbdd_uad_completa: legible", "falta el archivo o no parsea")
+    else:
+        claves_malas = [
+            f"#{i}: faltan {[k for k in esperadas if k not in p]} sobran {[k for k in p if k not in esperadas]}"
+            for i, p in enumerate((f.get("properties") or {}) for f in bb_feats)
+            if list(p) != esperadas
+        ]
+        r.check(
+            not claves_malas,
+            "D17",
+            "bbdd_uad_completa: cada feature trae exactamente las 23 columnas + lat/lon/utm_epsg",
+            f"{len(claves_malas)} features: {claves_malas[:2]}" if claves_malas else "",
+        )
+
+        difs = []
+        if len(bb_feats) != len(inc_feats):
+            difs.append(f"{len(bb_feats)} features vs {len(inc_feats)} en incendios")
+        for i, (fb, fi, pi) in enumerate(zip(bb_feats, inc_feats, inc_dec)):
+            pb = fb.get("properties") or {}
+            g = fb.get("geometry")
+            if _canon(g) != _canon(fi.get("geometry")):
+                difs.append(f"#{i} geometría {g} vs {fi.get('geometry')}")
+            cs = g.get("coordinates") if isinstance(g, dict) else None
+            if not (isinstance(cs, list) and len(cs) == 2 and pb.get("lon") == cs[0] and pb.get("lat") == cs[1]):
+                difs.append(f"#{i} lat/lon {pb.get('lat')},{pb.get('lon')} vs geometría {cs}")
+            if pb.get("utm_epsg") != pi.get("utm_epsg"):
+                difs.append(f"#{i} utm_epsg {pb.get('utm_epsg')!r} vs {pi.get('utm_epsg')!r}")
+            # null en la BBDD == clave ausente en incendios (gj_io.feature las
+            # descarta), por eso .get() en los dos lados.
+            for cab, campo in CABECERA_A_CAMPO.items():
+                if pb.get(cab) != pi.get(campo):
+                    difs.append(f"#{i} ID {pb.get('ID')} {cab!r}: {pb.get(cab)!r} vs {campo}={pi.get(campo)!r}")
+            if len(difs) > 50:
+                break
+        r.check(
+            bool(inc_feats) and not difs,
+            "D17",
+            f"bbdd_uad_completa: {len(bb_feats)} features idénticas a incendios decodificado",
+            f"{len(difs)}{'+' if len(difs) > 50 else ''} diferencias: {difs[:3]}" if difs else "",
+        )
+
+        sin_ids, problemas = _cuentas_sin_coord(bb_meta)
+        if bb_meta.get("leidos") != inc_meta.get("leidos"):
+            problemas.append(f"leidos {bb_meta.get('leidos')} vs incendios {inc_meta.get('leidos')}")
+        if len(sin_ids) != inc_meta.get("descartados"):
+            problemas.append(f"{len(sin_ids)} sin coordenadas vs {inc_meta.get('descartados')} descartados de incendios")
+        cruzados = {(f.get("properties") or {}).get("ID") for f in bb_feats} & set(sin_ids)
+        if cruzados:
+            problemas.append(f"ids a la vez con y sin coordenadas: {sorted(cruzados, key=str)[:3]}")
+        r.check(not problemas, "D17", "bbdd_uad_completa: sin_coordenadas cuadra con incendios", "; ".join(problemas))
+
+    # --- D18: lineas electricas == filtro literal de la BBDD completa ---------
+    li_meta = derivados.get("lineas_electricas")
+    if not r.check(isinstance(li_meta, dict), "D18", "derivados.lineas_electricas declarado en el manifest"):
+        return
+    filtro = {"campo": "Causa general 2023", "valor": CAUSA_ELECTRICA}
+    r.check(
+        li_meta.get("filtro") == filtro,
+        "D18",
+        f"lineas_electricas: filtro {filtro}",
+        "" if li_meta.get("filtro") == filtro else f"declara {li_meta.get('filtro')}",
+    )
+    li_gj = _leer_gj(data, li_meta.get("archivo"), parseados)
+    if li_gj is None or bb_feats is None:
+        r.check(False, "D18", "lineas_electricas: legible y con BBDD completa contra la que cruzar",
+                "falta lineas_electricas" if li_gj is None else "falta la BBDD completa")
+        return
+    li_feats = _features(li_gj)
+    r.check(len(li_feats) > 0, "D18", f"lineas_electricas: {len(li_feats)} features > 0")
+
+    esperados = [(f.get("properties") or {}).get("ID") for f in bb_feats
+                 if (f.get("properties") or {}).get("Causa general 2023") == CAUSA_ELECTRICA]
+    ids = [(f.get("properties") or {}).get("ID") for f in li_feats]
+    r.check(
+        ids == esperados,
+        "D18",
+        f"lineas_electricas: sus ID son los de la BBDD con causa {CAUSA_ELECTRICA!r}",
+        "" if ids == esperados else
+        f"{len(ids)} vs {len(esperados)} · sobran {[i for i in ids if i not in set(esperados)][:3]} · "
+        f"faltan {[i for i in esperados if i not in set(ids)][:3]}",
+    )
+    por_id = {(f.get("properties") or {}).get("ID"): f for f in bb_feats}
+    distintas = [
+        (f.get("properties") or {}).get("ID")
+        for f in li_feats
+        if (b := por_id.get((f.get("properties") or {}).get("ID"))) is None
+        or _canon(f.get("properties")) != _canon(b.get("properties"))
+        or _canon(f.get("geometry")) != _canon(b.get("geometry"))
+    ]
+    r.check(
+        not distintas,
+        "D18",
+        "lineas_electricas: propiedades y geometría idénticas a la BBDD completa",
+        f"{len(distintas)} distintas: ID {distintas[:3]}" if distintas else "",
+    )
+    sin_ids, problemas = _cuentas_sin_coord(li_meta)
+    fuera_bbdd = sorted(set(sin_ids) - set((bb_meta.get("sin_coordenadas") or {}).get("ids") or []), key=str)
+    if fuera_bbdd:
+        problemas.append(f"ids sin coordenadas que la BBDD completa no declara: {fuera_bbdd[:3]}")
+    r.check(not problemas, "D18", "lineas_electricas: features + sin coordenadas = leídos", "; ".join(problemas))
 
 
 def _cruce_espacial(r: Res, inc_path: Path, lineas: list, muestra: int) -> None:
@@ -452,6 +742,76 @@ def _mutaciones(data: Path) -> list[tuple[str, str, str, object]]:
 
         _mut_json(p, desplazar)
 
+    # --- D16-D18. Cada una toca UN archivo --negativas solo restaura el mutado--
+    # y ninguna lanza: si el archivo no esta, no muta, la asercion queda verde y
+    # la mutacion sale como SUPERVIVIENTE, que es ruidoso.
+    der = man.get("derivados") or {}
+    arch_bbdd = (der.get("bbdd_uad_completa") or {}).get("archivo", "bbdd_uad_completa.geojson")
+    arch_lineas = (der.get("lineas_electricas") or {}).get("archivo", "lineas_electricas.geojson")
+
+    def fundir_codigo_general(p: Path):
+        # El defecto real publicado hasta el 2026-09-14: 4.10 leido como float es
+        # 4.1. Renombrar la etiqueta de la tabla reproduce exactamente lo que veia
+        # el visor: las filas de 4.10 decodifican como '4.1'.
+        def fundir(d):
+            t = ((d.get("capas") or {}).get("incendios") or {}).get("tablas", {}).get("causa_general_codigo")
+            if not t or len(t) < 2:
+                return
+            if "4.10" in t:
+                t[t.index("4.10")] = "4.1"
+            else:
+                t[0] = t[1]
+
+        _mut_json(p, fundir)
+
+    def intercambiar_comunas(p: Path):
+        # Dos filas con la comuna del vecino: el archivo sigue siendo un GeoJSON
+        # perfecto con 23 columnas, y solo el cruce contra incendios lo ve.
+        def cambiar(d):
+            fs = d.get("features") or []
+            if not fs:
+                return
+            a = fs[0]["properties"]
+            b = next((f["properties"] for f in fs[1:] if f["properties"].get("Comuna") != a.get("Comuna")), None)
+            if b is not None:
+                a["Comuna"], b["Comuna"] = b["Comuna"], a["Comuna"]
+
+        if p.exists():
+            _mut_json(p, cambiar)
+
+    def quitar_columna_informe(p: Path):
+        # La columna perdida de un solo feature: lo que pasaria si alguien
+        # volviera a construir el feature con gj_io.feature, que tira los null.
+        def quitar(d):
+            fs = d.get("features") or []
+            if fs:
+                fs[0]["properties"].pop("Informe", None)
+
+        if p.exists():
+            _mut_json(p, quitar)
+
+    def colar_otra_causa(p: Path):
+        # Un incendio de otra causa dentro de lineas electricas. Se LEE la BBDD
+        # completa (sin tocarla) para colar una fila real, no una inventada.
+        def colar(d):
+            bbdd = p.parent / arch_bbdd
+            if not bbdd.exists():
+                return
+            otra = next(
+                (f for f in json.loads(bbdd.read_text(encoding="utf-8")).get("features", [])
+                 if f["properties"].get("Causa general 2023") != CAUSA_ELECTRICA),
+                None,
+            )
+            if otra is not None:
+                d["features"].append(otra)
+
+        if p.exists():
+            _mut_json(p, colar)
+
+    def falta_un_feature_si_existe(p: Path):
+        if p.exists():
+            falta_un_feature(p)
+
     return [
         ("D1", "borrar el archivo de una capa", arch_geo, borrar_archivo),
         ("D2", "corromper el magic 'PMTiles' del header", arch_pm, magic_corrupto),
@@ -467,6 +827,11 @@ def _mutaciones(data: Path) -> list[tuple[str, str, str, object]]:
         ("D13", "invertir el huso: desplazar la longitud 5° al oeste", "incendios.geojson", huso_invertido),
         ("D14", "sacar una mancha 1° al este de su comuna", "priorizacion.geojson", mancha_fuera_de_su_bbox),
         ("D15", "leer un punto con el huso vecino: 6° al oeste", "infra_puntos.geojson", punto_con_huso_equivocado),
+        ("D16", "volver a fundir 4.10 en 4.1 en la tabla del manifest", "manifest.json", fundir_codigo_general),
+        ("D17", "intercambiar la comuna de dos incendios en la BBDD completa", arch_bbdd, intercambiar_comunas),
+        ("D17", "quitar la columna Informe de un feature de la BBDD completa", arch_bbdd, quitar_columna_informe),
+        ("D18", "colar un incendio de otra causa en lineas eléctricas", arch_lineas, colar_otra_causa),
+        ("D6", "quitar un feature de un derivado sin tocar el manifest", arch_lineas, falta_un_feature_si_existe),
     ]
 
 

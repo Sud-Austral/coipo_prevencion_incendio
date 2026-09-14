@@ -91,7 +91,7 @@ npm run build                              # ~1,3 s
 npm run verify:banner                      # ~5 s, necesita Chrome
 npm run verify:panel                       # ~1 min, necesita Chrome
 npm run verify:priorizacion                # ~40 s, necesita Chrome
-npm run verify:priorizacion -- --negativas # ~2 min, PARCHEA CapaPuntos.jsx y restaura
+npm run verify:priorizacion -- --negativas # ~5 min, PARCHEA 3 archivos de src/ y restaura
 npm run verify:mutantes                    # ~2 min, PARCHEA el repo y restaura
 ```
 
@@ -161,6 +161,7 @@ npm run verify:mutantes                    # ~2 min, PARCHEA el repo y restaura
 | Aserciones de datos (D1–D13) | 13 distintas, **39 ejecuciones**, y **12 controles negativos** en rojo | `python ETL/verify.py --negativas` |
 | Arnés del banner (A1–A10) | 10 distintas, **49 ejecuciones**, 13 capturas · ~5 s | `npm run verify:banner` |
 | Arnés del panel (B1–B23) | 23 distintas, **133 ejecuciones**, 44 capturas · ~1 min | `npm run verify:panel` |
+| Arnés de priorización (C1–C11) | 13 distintas · ~50 s, y **4 controles negativos** en rojo | `npm run verify:priorizacion` |
 | Mutantes de los arneses | **4**, todos en rojo · ~2 min | `npm run verify:mutantes` |
 | Humo contra lo publicado | base path + manifest + 6 capas por bytes + Range en 2 teselas | job `humo` de `deploy.yml` |
 
@@ -211,9 +212,11 @@ con código de salida 0.
   clics**, y cuál queda encima lo decide el orden en que terminan de descargarse los
   archivos. La regla completa es **ninguna capa vectorial declara `renderer` NI `pane`**:
   `_getPaneRenderer` crea uno nuevo para cualquier pane que no sea `overlayPane`, con
-  precedencia sobre el compartido, así que un `pane` propio reintroduce el fallo sin
-  escribir la palabra `renderer`. `DECISIONES.md` §H — **lo vigila C1 de
-  `verify-priorizacion.mjs`, con su control negativo.**
+  precedencia sobre el compartido, así que un `pane` propio reintroduciría el fallo sin
+  escribir la palabra `renderer` (leído en el fuente, **no comprobado con un mutante**).
+  `DECISIONES.md` §H — **lo vigila C1 de `verify-priorizacion.mjs`**, con un control
+  negativo que conserva `tolerance: 8`: medido, perder la tolerancia también pone C1 roja,
+  así que un mutante que la quite no prueba §H.
 - **La normalización comunal de la vista de priorización NO toca el dato.** No existe
   ningún `puntaje_normalizado`: vive en una función pura de `src/escalas.js` y sólo la lee
   el callback de estilo. Y reparte **por rango**, no por min-max — el min-max lineal deja
@@ -302,8 +305,13 @@ Comprobadas una a una el 2026-09-10:
 - Rama por defecto **`main`**. `.github/workflows/deploy.yml` se dispara con cada push a
   `main` que toque `INSUMO_INCENDIO/**`, `ETL/**`, `frontend/**` o el propio workflow.
 - **Cuatro trabajos**: **build** (ETL + tippecanoe cacheado + commit de las capas +
-  `npm run build`) y **verificar-visual** (banner y panel, en paralelo, sin pagar los
-  832 MB de insumos) → **deploy** → **humo**.
+  `npm run build` + **el arnés de priorización**) y **verificar-visual** (banner y panel,
+  en paralelo, sin pagar los 832 MB de insumos) → **deploy** → **humo**.
+- **`verify:priorizacion` corre en `build` y no en `verificar-visual`, al revés que los
+  otros dos arneses.** No es un descuido: C1–C10 afirman cifras de las capas REALES (572
+  áreas, las 110 de Mulchén, su mínimo 0,1361 y su máximo 0,5555), y `verificar-visual`
+  excluye `/frontend/public/data/` de su sparse-checkout a propósito para bajar menos de
+  1 MB. Allí no hay datos que afirmar; en `build` el ETL acaba de generarlos.
 - El job **humo** pide el **sitio ya publicado**, no el artefacto: comprueba el base path en
   `index.html`, que el manifest parsee, que **cada capa se sirva con los bytes que declara**
   —con `Accept-Encoding: identity`, porque Pages comprime `application/octet-stream` y sin

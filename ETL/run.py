@@ -166,6 +166,19 @@ def main() -> int:
         clave = CLAVE_MANIFEST.get(nombre, nombre)
         capas[clave] = {k: v for k, v in res.items() if not k.startswith("_") and k != "capa"}
 
+    # Los derivados (hoy los dos de incendios) van en su propia clave y NO en
+    # `capas`: PanelLateral suma los dominios de todas las capas y App une sus
+    # bbox, asi que una copia de incendios en `capas` duplicaria los filtros.
+    #
+    # OJO: igual que con `capas`, `--layers` REESCRIBE el manifest solo con lo
+    # pedido. Una corrida sin incendios deja el manifest SIN `derivados`, aunque
+    # los .geojson sigan en disco, y la pagina de lineas electricas deja de
+    # encontrarlos. Para regenerar otra capa sin romper lo publicado: --out a otro
+    # sitio y fusionar a mano (CLAUDE.md §3).
+    derivados = {}
+    for nombre, res in resultados.items():
+        derivados.update(res.get("_derivados") or {})
+
     manifest = {
         "generado": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
         "simplify_m": cfg.simplify,
@@ -173,13 +186,15 @@ def main() -> int:
         "tippecanoe": tv,
         "capas": capas,
     }
+    if derivados:
+        manifest["derivados"] = derivados
     if "kpis" in resultados:
         manifest["kpis"] = "kpis.json"
     write_json(cfg.out / "manifest.json", manifest)
 
     total = sum(
         r.get("bytes", 0) for n, r in resultados.items() if n != "kpis"
-    )
+    ) + sum(d.get("bytes", 0) for d in derivados.values())
     secuencial = sum(r.get("segundos", 0) for r in resultados.values())
     real = time.time() - t0
     print(

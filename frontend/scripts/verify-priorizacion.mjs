@@ -28,7 +28,7 @@
 //   · servidor en puerto 0 y --user-data-dir propio
 
 import { spawn } from 'node:child_process'
-import { createReadStream, existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { mkdtemp } from 'node:fs/promises'
 import { createServer } from 'node:http'
 import net from 'node:net'
@@ -40,6 +40,8 @@ const AQUI = dirname(fileURLToPath(import.meta.url))
 const FRONT = resolve(AQUI, '..')
 const DIST = join(FRONT, 'dist')
 const CAPA_PUNTOS = join(FRONT, 'src', 'components', 'CapaPuntos.jsx')
+const PANEL_PRIORIZ = join(FRONT, 'src', 'components', 'PanelPriorizacion.jsx')
+const APP_JSX = join(FRONT, 'src', 'App.jsx')
 const BASE = '/coipo_prevencion_incendio/'
 const NEGATIVAS = process.argv.includes('--negativas')
 
@@ -228,12 +230,17 @@ async function correr({ soloC1 = false } = {}) {
     // mapa y se exige que respondan DOS capas distintas por lo menos. Con un
     // canvas por capa sólo contesta la de encima, y el conteo cae a 1.
     //
-    // OJO CON EL MUTANTE: mejoras.md propone «quitar `renderer` de las opciones
-    // del mapa», y eso NO reproduce el defecto -- comprobado ejecutándolo.
-    // Sin esa opción, Map.getRenderer cae en _getPaneRenderer('overlayPane'),
-    // que CACHEA un renderer por pane, así que las capas lo siguen
-    // compartiendo. El defecto sólo vuelve si una capa declara `renderer`
-    // propio (o un `pane` propio, que fuerza lo mismo por otra puerta).
+    // ALCANCE, MEDIDO el 2026-09-14 con tres mutantes contra esta misma C1:
+    //
+    //   renderer quitado de las opciones del mapa  -> ROJA · 1 capa (incendios 7)
+    //   renderer compartido pero SIN tolerance: 8  -> ROJA · 1 capa (incendios 7)
+    //   canvas propio por capa CON tolerance 8     -> ROJA · 1 capa (stand-by 9)
+    //
+    // O sea: C1 detecta el defecto de §H (el tercero: sólo contesta la capa de
+    // encima), pero TAMBIÉN se pone roja si se pierde la tolerancia, que es
+    // otro defecto. Un mutante que quite el renderer --o que declare uno sin
+    // opciones-- mezcla los dos y no dice cuál de ellos cazó. Por eso el
+    // control negativo de abajo conserva la tolerancia.
     console.log('\n▶ C1 · renderer compartido (DECISIONES.md §H)')
     await ir('?capas=oecv,puntos_standby,incendios&region=Valpara%C3%ADso')
     await esperar(`document.querySelector('.leaflet-overlay-pane canvas')`, 'canvas del mapa')
@@ -443,11 +450,112 @@ async function correr({ soloC1 = false } = {}) {
         ? png.error
         : `${png?.w}×${png?.h} · ${png?.enPantalla} iconos en pantalla · salud ${png?.salud} px · educación ${png?.educacion} px`,
     )
+    // ---- C9 · el mapa base se puede cambiar en esta vista ----------------
+    // La vista de priorización no monta PanelLateral, que es donde vivía el
+    // único selector de mapa base: al ocultarlo se fue con él, y la pestaña se
+    // quedó atada al fondo «Claro». Las claves de BASEMAPS son contrato
+    // público (?base= en la URL), así que las dos vistas ofrecen las mismas.
+    const mb = await evaluar(`
+      const sels = [...document.querySelectorAll('.panel select')]
+      // El de mapa base es el que NO ofrece "Todas" -- ese es el de comuna.
+      const s = sels.find(x => ![...x.options].some(o => o.textContent === 'Todas'))
+      if (!s) return { error: 'no hay selector de mapa base' }
+      const antes = document.querySelector('.leaflet-tile-pane img')?.src ?? ''
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLSelectElement.prototype, 'value').set
+      setter.call(s, 'Satelital')
+      s.dispatchEvent(new Event('change', { bubbles: true }))
+      await new Promise(r => setTimeout(r, 2500))
+      const despues = document.querySelector('.leaflet-tile-pane img')?.src ?? ''
+      return { n: s.options.length, valor: s.value, cambio: antes !== despues, despues }`)
+    comprobar(
+      mb && !mb.error && mb.n >= 7 && mb.valor === 'Satelital' && mb.cambio,
+      'C9 el mapa base se puede cambiar en priorización',
+      mb?.error ? mb.error : `${mb?.n} opciones · ${mb?.valor} · teselas cambiaron: ${mb?.cambio}`,
+    )
+
+    // ---- C11 · las descargas respetan el recorte del mapa ----------------
+    // El riesgo real no es que el botón no baje nada —eso se ve—, sino que baje
+    // MÁS de lo que el mapa muestra: con Mulchén en pantalla, un archivo con
+    // las 572 áreas del país se abre en Excel y nadie nota que sobran 462.
+    // Se lee el mismo blob que recibe el usuario, interceptando
+    // createObjectURL, y el BOM se comprueba sobre los BYTES: Blob.text()
+    // decodifica en UTF-8 y el decodificador se come el BOM.
+    const csv = await evaluar(`
+      window.__d = null
+      if (!window.__origCOU) window.__origCOU = URL.createObjectURL
+      URL.createObjectURL = (b) => { window.__d = b; return window.__origCOU(b) }
+      const b = [...document.querySelectorAll('button')].find(x => x.textContent.trim() === 'Áreas (CSV)')
+      if (!b) return { error: 'sin botón de descarga' }
+      b.click()
+      for (let i = 0; i < 40 && !window.__d; i++) await new Promise(z => setTimeout(z, 100))
+      if (!window.__d) return { error: 'sin blob' }
+      const txt = await window.__d.text()
+      const b0 = new Uint8Array(await window.__d.slice(0, 3).arrayBuffer())
+      const filas = txt.trim().split('\\r\\n').length - 1
+      return {
+        filas,
+        otras: /Coyhaique|Los Angeles/.test(txt),
+        bom: b0[0] === 0xef && b0[1] === 0xbb && b0[2] === 0xbf,
+      }`)
+    comprobar(
+      csv && !csv.error && csv.filas === 110 && !csv.otras && csv.bom,
+      'C11 el CSV trae sólo la comuna del mapa, y con BOM',
+      csv?.error ? csv.error : `${csv?.filas} filas · otras comunas: ${csv?.otras} · BOM: ${csv?.bom}`,
+    )
+
+    // ---- C10 · el deslizador de opacidad ---------------------------------
+    // Se mide la TINTA del canvas (alfa acumulado), no el estado de React: lo
+    // que se quiere probar es que el mapa se repinta, y para eso hay que mirar
+    // lo pintado. A 0 % la tinta tiene que ser 0 exacto — bordes incluidos, o
+    // «completamente transparente» sería mentira.
+    const tinta = `
+      const c = document.querySelector('.leaflet-overlay-pane canvas')
+      const g = c.getContext('2d', { willReadFrequently: true })
+      const d = g.getImageData(0, 0, c.width, c.height).data
+      let a = 0
+      for (let i = 3; i < d.length; i += 4) a += d[i]
+      return Math.round(a / 1000)`
+
+    const mover = async (pct) => {
+      const r = await evaluar(`
+        const s = document.querySelector('#opacidad-manchas')
+        if (!s) return null
+        const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set
+        setter.call(s, '${pct}')
+        s.dispatchEvent(new Event('change', { bubbles: true }))
+        await new Promise(z => requestAnimationFrame(() => requestAnimationFrame(z)))
+        return { etiqueta: document.querySelector('.fila-opacidad output')?.textContent ?? '' }`)
+      if (!r) return null
+      return { ...r, tinta: await evaluar(tinta) }
+    }
+
+    const op100 = await mover(100)
+    const op30 = await mover(30)
+    const op0 = await mover(0)
+    comprobar(
+      op100 && op30 && op0 && op100.tinta > op30.tinta && op30.tinta > 0 && op0.tinta === 0,
+      'C10 la opacidad de las manchas se regula en el mapa',
+      op100
+        ? `tinta 100 %: ${op100.tinta} · 30 %: ${op30.tinta} · 0 %: ${op0.tinta}`
+        : 'no hay deslizador',
+    )
+    comprobar(
+      op30?.etiqueta.includes('30'),
+      'C10b el control dice en qué opacidad está',
+      `etiqueta "${op30?.etiqueta}"`,
+    )
+    await mover(65)
+
     // El PNG se guarda SIEMPRE, falle o no: la aserción cuenta píxeles, pero
     // quien decide si un icono se ve es alguien mirando el archivo.
     const b64 = await evaluar('return window.__b64 ?? null')
     if (b64) {
+      // mkdir recursivo y no se da por hecho: en local .verificacion/ ya existe
+      // porque lo crean verify:banner y verify:panel, pero en CI este arnés
+      // corre dentro del job `build`, donde esos dos no pasan. Sin esto el
+      // paso reventaría en el runner y en ningún sitio más.
       const dir = join(FRONT, '.verificacion')
+      mkdirSync(dir, { recursive: true })
       writeFileSync(join(dir, 'priorizacion-png-exportado.png'), Buffer.from(b64.split(',')[1], 'base64'))
       console.log('    · .verificacion/priorizacion-png-exportado.png')
     }
@@ -462,49 +570,96 @@ async function correr({ soloC1 = false } = {}) {
 // Control negativo de C1: se quita el renderer compartido de App.jsx, se
 // reconstruye y C1 TIENE que ponerse roja. Es el mutante que pide mejoras.md.
 // ---------------------------------------------------------------------------
+// Cada mutación reintroduce UN defecto concreto y nombra la aserción que tiene
+// que ponerse roja. Sin esto, una aserción verde no prueba nada: es la regla
+// que da sentido a --negativas en todo el repo.
+const MUTACIONES = [
+  {
+    id: 'C1',
+    archivo: CAPA_PUNTOS,
+    titulo: 'dar un canvas propio a cada capa de puntos, con la tolerancia intacta',
+    // Un canvas POR CAPA (useMemo, no uno por marcador) y con `tolerance: 8`:
+    // así lo único que cambia respecto de producción es que el renderer deja
+    // de ser compartido, que es exactamente el defecto de §H. Una versión
+    // anterior de este mutante usaba `L.canvas()` sin opciones, y perder la
+    // tolerancia ya basta para poner C1 roja: medido, no probaba §H.
+    ancla: '  const grupo = useMemo(() => L.layerGroup(), [])',
+    mutar: (t, a) =>
+      t
+        .replace(a, `${a}\n  const rendererPropio = useMemo(() => L.canvas({ padding: 0.5, tolerance: 8 }), [])`)
+        .replace('        radius: radio ?? 4,', '        renderer: rendererPropio,\n        radius: radio ?? 4,'),
+    soloC1: true,
+  },
+  {
+    id: 'C10',
+    archivo: APP_JSX,
+    titulo: 'clavar la opacidad e ignorar el deslizador',
+    // El defecto realista: el control existe y mueve el estado, pero el estilo
+    // no lo lee, así que el mapa nunca cambia. Un vistazo al panel no lo
+    // delata -- el número sube y baja igual.
+    ancla: 'fillOpacity: opacidad,',
+    mutar: (t, a) => t.replace(a, 'fillOpacity: 0.65,'),
+  },
+  {
+    id: 'C11',
+    archivo: PANEL_PRIORIZ,
+    titulo: 'exportar el país entero ignorando la comuna',
+    ancla: '? csv(datos?.features, pasa)',
+    mutar: (t, a) => t.replace(a, '? csv(datos?.features, null)'),
+  },
+  {
+    id: 'C9',
+    archivo: PANEL_PRIORIZ,
+    titulo: 'dejar el selector de mapa base sin opciones',
+    // Se vacía la lista en vez de borrar el bloque: así el JSX sigue siendo
+    // válido y lo que falla es lo que C9 mide, no el build.
+    ancla: 'Object.keys(basemaps ?? {}).map((k) => (',
+    mutar: (t, a) => t.replace(a, '[].map((k) => ('),
+  },
+]
+
+const construir = () =>
+  new Promise((ok, mal) => {
+    const p = spawn('npm', ['run', 'build'], { cwd: FRONT, stdio: 'ignore', shell: true })
+    p.on('exit', (c) => (c === 0 ? ok() : mal(new Error(`build falló (${c})`))))
+  })
+
 async function negativas() {
-  console.log('\n── control negativo ─────────────────────────────────────────')
-  console.log('  el mutante da un canvas PROPIO a la capa de puntos; C1 debe ponerse ROJA\n')
+  console.log('\n── controles negativos ──────────────────────────────────────')
+  console.log(`  ${MUTACIONES.length} mutaciones; cada una debe poner roja SU aserción\n`)
 
-  // NO se muta App.jsx quitando `renderer`, que es lo que propone mejoras.md:
-  // medido, eso no reproduce nada, porque Leaflet cae en _getPaneRenderer y las
-  // capas siguen compartiendo el renderer del pane. El defecto de §H sólo
-  // vuelve cuando una capa declara el suyo, que es justo lo que hacía el código
-  // que lo causó.
-  const original = readFileSync(CAPA_PUNTOS, 'utf8')
-  const ANCLA = 'const m = L.circleMarker([lat, lon], {'
-  if (!original.includes(ANCLA)) {
-    console.error(`  ✘ no se encontró el ancla del mutante en ${CAPA_PUNTOS}`)
-    process.exit(1)
+  let mal = 0
+  for (const m of MUTACIONES) {
+    const original = readFileSync(m.archivo, 'utf8')
+    if (!original.includes(m.ancla)) {
+      console.error(`  ✘ ${m.id}: no se encontró el ancla en ${m.archivo}`)
+      mal++
+      continue
+    }
+    try {
+      writeFileSync(m.archivo, m.mutar(original, m.ancla), 'utf8')
+      await construir()
+      fallos = 0
+      resultados.length = 0
+      await correr({ soloC1: m.soloC1 })
+      const r = resultados.find((x) => x.id === m.id)
+      const bien = r && !r.ok
+      if (!bien) mal++
+      console.log(
+        `\n  ${bien ? '✔' : '✘'} ${m.id} ${m.titulo} — ${
+          bien ? 'se puso roja' : 'NO se inmutó: no está probando nada'
+        }\n`,
+      )
+    } finally {
+      writeFileSync(m.archivo, original, 'utf8')
+    }
   }
 
-  const construir = () =>
-    new Promise((ok, mal) => {
-      const p = spawn('npm', ['run', 'build'], { cwd: FRONT, stdio: 'ignore', shell: true })
-      p.on('exit', (c) => (c === 0 ? ok() : mal(new Error(`build falló (${c})`))))
-    })
-
-  try {
-    // La capa de puntos pasa a tener SU propio canvas: es exactamente el
-    // defecto que DECISIONES.md §H describe.
-    writeFileSync(
-      CAPA_PUNTOS,
-      original.replace(ANCLA, `${ANCLA}\n        renderer: L.canvas(),`),
-      'utf8',
-    )
-    await construir()
-    fallos = 0
-    resultados.length = 0
-    await correr({ soloC1: true })
-    const c1 = resultados.find((r) => r.id === 'C1')
-    const bien = c1 && !c1.ok
-    console.log(`\n  ${bien ? '✔' : '✘'} C1 ${bien ? 'se puso roja con el mutante' : 'NO se inmutó: no está probando nada'}`)
-    process.exitCode = bien ? 0 : 1
-  } finally {
-    writeFileSync(CAPA_PUNTOS, original, 'utf8')
-    await construir()
-    console.log('  · CapaPuntos.jsx restaurado y reconstruido')
-  }
+  await construir()
+  console.log('  · fuentes restaurados y reconstruidos')
+  console.log('─────────────────────────────────────────────────────────────')
+  console.log(mal === 0 ? `✔ las ${MUTACIONES.length} mutaciones se pusieron rojas\n` : `✘ ${mal} mutación(es) no se inmutaron\n`)
+  process.exitCode = mal ? 1 : 0
 }
 
 if (!existsSync(DIST)) {

@@ -1,6 +1,13 @@
 import { useRef, useState } from 'react'
-import { guardar, nombreArchivo } from '../descargas'
+import {
+  csvInfraPuntos,
+  csvPriorizacion,
+  geojsonDe,
+  guardar,
+  nombreArchivo,
+} from '../descargas'
 import { capturarMapa, lienzoAPng } from '../mapaPNG'
+import FechaImagen from './FechaImagen'
 import {
   COLOR_CLASE,
   COLOR_FAMILIA,
@@ -39,6 +46,8 @@ export default function PanelPriorizacion({
   comuna,
   onComuna,
   onModo,
+  opacidad,
+  onOpacidad,
   // El modo activo se lee de `ctx.modo` y no de una prop aparte: contextoEscala
   // puede degradar a 'absoluta' por su cuenta (comuna sin registros), y con dos
   // fuentes la leyenda acabaria diciendo «relativo» sobre colores absolutos.
@@ -55,11 +64,39 @@ export default function PanelPriorizacion({
   onEncuadrar,
   abierto,
   onCerrar,
+  datosAreas,
+  datosPuntos,
   map,
   base,
+  onBase,
+  basemaps,
+  imagen,
 }) {
   const cabecera = useRef(null)
   const [estadoPng, setEstadoPng] = useState('')
+
+  // El mismo predicado que filtra el mapa filtra el archivo: una sola regla, no
+  // dos que puedan divergir.
+  const pasa = comuna ? (p) => p.comuna === comuna : null
+  // Miembro foráneo del GeoJSON: el archivo circula suelto y tiene que decir de
+  // dónde salió y con qué recorte.
+  const procedencia = {
+    fuente: 'Modelo de priorización territorial CONAF',
+    comuna: comuna || 'todas',
+  }
+
+  const bajar = (capa, datos, formato, csv) => {
+    const r =
+      formato === 'csv'
+        ? csv(datos?.features, pasa)
+        : geojsonDe(capa, datos?.features, pasa, { meta: procedencia })
+    const nombre = nombreArchivo(capa, { comuna }, formato)
+    guardar(nombre, r.texto, formato === 'csv' ? 'text/csv;charset=utf-8' : 'application/geo+json')
+    setEstadoPng(`${nombre} · ${r.n} registros`)
+  }
+
+  const bajarDatos = (f) => bajar('priorizacion', datosAreas, f, csvPriorizacion)
+  const bajarPuntos = (f) => bajar('infraestructura', datosPuntos, f, csvInfraPuntos)
   const meta = manifest?.capas?.priorizacion
   const metaPuntos = manifest?.capas?.infra_puntos
 
@@ -135,8 +172,34 @@ export default function PanelPriorizacion({
         )}
       </section>
 
+      {/* Va en la sección de la leyenda, pegado a los colores que regula, y no
+          en una sección propia: es un ajuste de UNA capa, no un modo del
+          visor. La etiqueta nombra la capa —«manchas de priorización»— porque
+          en esta vista hay dos capas encima del mapa y un rótulo genérico
+          dejaría dudando de si también afecta a los iconos. */}
       <section>
         <h2>Leyenda</h2>
+
+        <label className="fila-opacidad" htmlFor="opacidad-manchas">
+          <span>Opacidad de las manchas</span>
+          <output htmlFor="opacidad-manchas">{Math.round(opacidad * 100)} %</output>
+        </label>
+        <input
+          id="opacidad-manchas"
+          className="deslizador"
+          type="range"
+          min="0"
+          max="100"
+          step="5"
+          value={Math.round(opacidad * 100)}
+          // onChange y no onInput: en React onChange YA se dispara en cada
+          // movimiento del pulgar para un input range, así que el mapa se
+          // repinta mientras se arrastra, sin soltar.
+          onChange={(e) => onOpacidad(Number(e.target.value) / 100)}
+          aria-label="Opacidad de las manchas de priorización"
+          aria-valuetext={`${Math.round(opacidad * 100)} por ciento`}
+        />
+
 
         {!normalizado ? (
           <>
@@ -220,8 +283,46 @@ export default function PanelPriorizacion({
         ))}
       </section>
 
+      {/* El mismo selector que la otra vista, y no uno propio: las claves de
+          BASEMAPS son contrato público --son el valor de ?base= en la URL-- y
+          un enlace compartido tiene que abrir el mismo fondo en las dos
+          pestañas. Se lee de `basemaps`, nunca de una lista escrita aquí. */}
+      <section>
+        <h2>Mapa base</h2>
+        <select value={base} onChange={(e) => onBase(e.target.value)}>
+          {Object.keys(basemaps ?? {}).map((k) => (
+            <option key={k} value={k}>
+              {k}
+            </option>
+          ))}
+        </select>
+        {imagen && <FechaImagen info={imagen} />}
+      </section>
+
       <section>
         <h2>Descargar</h2>
+        {/* Lo descargado respeta la comuna elegida, igual que el mapa: si se
+            está mirando Mulchén, el archivo trae Mulchén. El rótulo lo dice
+            para que nadie crea que se lleva el país entero. */}
+        <p className="pista">
+          {comuna ? `Sólo ${comuna}, como en el mapa.` : 'Las tres comunas.'}
+        </p>
+
+        <div className="botones-descarga">
+          <button className="centrar" onClick={() => bajarDatos('csv')}>
+            Áreas (CSV)
+          </button>
+          <button className="centrar" onClick={() => bajarDatos('geojson')}>
+            Áreas (GeoJSON)
+          </button>
+          <button className="centrar" onClick={() => bajarPuntos('csv')}>
+            Infraestructura (CSV)
+          </button>
+          <button className="centrar" onClick={() => bajarPuntos('geojson')}>
+            Infraestructura (GeoJSON)
+          </button>
+        </div>
+
         <button
           className="centrar"
           disabled={!map}

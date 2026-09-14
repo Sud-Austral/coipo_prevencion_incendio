@@ -12,10 +12,13 @@
     "verify:banner": "node scripts/verify-banner.mjs",
     "verify:priorizacion": "node scripts/verify-priorizacion.mjs",
     "verify:panel": "node scripts/verify-panel.mjs",
+    "verify:electrico": "node scripts/verify-electrico.mjs",
     "verify:mutantes": "node scripts/mutaciones.mjs"
   },
   "dependencies": {
     "leaflet": "1.9.4",
+    "leaflet.heat": "0.2.0",
+    "leaflet.markercluster": "1.5.3",
     "pmtiles": "4.4.1",
     "protomaps-leaflet": "5.1.0",
     "react": "19.2.8",

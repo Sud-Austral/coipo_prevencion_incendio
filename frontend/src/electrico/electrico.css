@@ -1,0 +1,562 @@
+/* Vista de incendios por lineas electricas.
+
+   Interfaz OSCURA como la referencia (INSUMO_ELECTRICO), con el mapa base
+   CLARO: la paleta de subcausas se midio contra el fondo del mapa, no contra
+   los paneles (ver src/electrico/paleta.js).
+
+   Una sola apariencia deliberada, sin variante clara: por eso los tokens viven
+   solo en :root y no hay bloque prefers-color-scheme que mantener en paralelo. */
+
+:root {
+  color-scheme: dark;
+  --fondo: #0f1115;
+  --panel: #171a21;
+  --panel-borde: #2a2f3a;
+  /* 14,9:1 sobre --panel */
+  --texto: #e8eaf0;
+  /* Secundario: 7,4:1 sobre --panel. Jerarquia, no un arreglo de contraste. */
+  --texto-2: #a3aaba;
+  /* Barras fuera de la ventana horaria y fondos de barra: recesivos. */
+  --recesivo: #4a5263;
+  --riel: #242833;
+  /* Resalte de la ventana 13-17 y de las barras del ranking. Neutro claro y NO
+     un color con tono: el naranja de la referencia es justo el de la familia
+     4.9.x de la leyenda, y aqui ese tono significa subcausa. */
+  --resalte: #e8eaf0;
+  --aviso-fondo: #2a2412;
+  --aviso-borde: #6b5a1f;
+  --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --lateral-izq: 290px;
+  --lateral-der: 260px;
+}
+
+/* El atributo hidden solo vale display:none en la hoja del navegador, y
+   cualquier `display` de autor le gana: con .velo { display: flex } el velo de
+   error quedaba visible tapando el mapa con data-estado="listo" (visto en la
+   primera captura, 2026-09-14). */
+[hidden] {
+  display: none !important;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--fondo);
+  color: var(--texto);
+  font: 14px/1.4 var(--sans);
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* ---- cabecera ---- */
+#cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 16px;
+  background: var(--fondo);
+  border-bottom: 1px solid var(--panel-borde);
+}
+#cabecera h1 {
+  margin: 0 0 2px;
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+}
+#cabecera p {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--texto-2);
+  max-width: 880px;
+}
+#cabecera .aviso-activos {
+  margin-top: 6px;
+  color: var(--texto);
+}
+.aviso-activos strong {
+  color: #fff;
+}
+.volver {
+  flex: 0 0 auto;
+  color: var(--texto);
+  font-size: 12.5px;
+  padding: 5px 10px;
+  border: 1px solid var(--panel-borde);
+  border-radius: 6px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.volver:hover,
+.volver:focus-visible {
+  background: var(--panel);
+}
+
+/* ---- escenario: mapa con paneles flotantes ---- */
+#escenario {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+#map {
+  position: absolute;
+  inset: 0;
+  background: #d9d9d9;
+}
+
+.lateral {
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  /* 1000 empata con .leaflet-top/.leaflet-bottom de leaflet.css y gana por
+     orden del DOM (los paneles van despues de #map). */
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--panel-borde) transparent;
+}
+#panel-izq {
+  left: 12px;
+  width: var(--lateral-izq);
+}
+#panel-der {
+  right: 12px;
+  width: var(--lateral-der);
+  /* Deja libre la esquina inferior derecha: ahi viven el zoom y la atribucion
+     obligatoria de los mapas base. */
+  bottom: 92px;
+}
+
+.panel {
+  flex: 0 0 auto;
+  background: var(--panel);
+  border: 1px solid var(--panel-borde);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  padding: 12px 14px;
+}
+.panel h2 {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--texto-2);
+}
+.divisor {
+  height: 1px;
+  background: var(--panel-borde);
+  margin: 10px 0;
+}
+.nota {
+  margin: 6px 0 0;
+  font-size: 11.5px;
+  color: var(--texto-2);
+}
+select {
+  width: 100%;
+  font: inherit;
+  color: var(--texto);
+  background: var(--riel);
+  border: 1px solid var(--panel-borde);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+input[type='range'] {
+  width: 100%;
+  accent-color: var(--resalte);
+}
+
+/* ---- capas ---- */
+.fila-capa {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  font-size: 13px;
+  cursor: pointer;
+}
+.fila-capa input {
+  accent-color: var(--resalte);
+}
+.muestra {
+  flex: 0 0 auto;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+.muestra-calor {
+  background: linear-gradient(90deg, #9a9a9a, #111111);
+  box-shadow: 0 0 0 1px var(--texto-2);
+}
+.muestra-puntos {
+  border-radius: 50%;
+  background: conic-gradient(#1844b9 0 33%, #d50b51 33% 66%, #bb731d 66%);
+  box-shadow: 0 0 0 1.5px #fff;
+}
+.muestra-comunas {
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 0 1.5px var(--texto-2);
+}
+.escala-rango {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2px;
+  font-size: 10.5px;
+  color: var(--texto-2);
+}
+/* La rampa se pinta SOBRE el tono dominante del mapa base por omision
+   (#eeeeee), que es sobre lo que se ve el calor de verdad: sobre el panel
+   oscuro los grises oscuros desaparecerian y la leyenda mentiria. */
+.rampa-calor {
+  height: 10px;
+  margin-top: 8px;
+  border-radius: 3px;
+  background:
+    linear-gradient(90deg, rgba(154, 154, 154, 0.3), #6b6b6b 45%, #3b3b3b 75%, #111111),
+    #eeeeee;
+}
+
+/* ---- horario ---- */
+#hourly-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 72px;
+  margin-top: 4px;
+  border-bottom: 1px solid var(--recesivo);
+}
+.hbar-wrap {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  height: 100%;
+}
+.hbar {
+  width: 100%;
+  border-radius: 2px 2px 0 0;
+  background: var(--recesivo);
+}
+.hbar.in-window {
+  background: var(--resalte);
+}
+#hourly-labels {
+  display: flex;
+  gap: 2px;
+  margin-top: 3px;
+}
+#hourly-labels span {
+  flex: 1;
+  font-size: 9px;
+  color: var(--texto-2);
+  text-align: center;
+}
+.callout {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--riel);
+  border: 1px solid var(--panel-borde);
+  font-size: 12px;
+}
+.callout b {
+  color: #fff;
+}
+.callout > b:first-child {
+  font-size: 15px;
+}
+.callout .nota {
+  display: block;
+}
+
+/* ---- ranking ---- */
+.rank-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 5px 0;
+  border: 0;
+  border-bottom: 1px dashed var(--panel-borde);
+  background: none;
+  color: var(--texto);
+  font: inherit;
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+}
+.rank-item:last-child {
+  border-bottom: 0;
+}
+.rank-item:hover .rank-name,
+.rank-item:focus-visible .rank-name {
+  text-decoration: underline;
+}
+.rank-name {
+  flex: 0 1 48%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rank-bar-wrap {
+  flex: 1;
+  height: 6px;
+  background: var(--riel);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.rank-bar {
+  display: block;
+  height: 100%;
+  background: var(--texto-2);
+}
+.rank-count {
+  min-width: 24px;
+  text-align: right;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- resumen ---- */
+.stat-big {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.05;
+  color: #fff;
+}
+.stat-label {
+  margin: 2px 0 10px;
+  font-size: 11.5px;
+  color: var(--texto-2);
+}
+.aviso-sin-coord {
+  margin: 4px 0 0;
+  padding: 7px 9px;
+  font-size: 12px;
+  border-radius: 7px;
+  background: var(--aviso-fondo);
+  border: 1px solid var(--aviso-borde);
+}
+.aviso-sin-coord.sin-faltantes {
+  background: var(--riel);
+  border-color: var(--panel-borde);
+  color: var(--texto-2);
+}
+
+/* ---- leyenda ---- */
+.legend-grupo {
+  margin: 8px 0 2px;
+  font-size: 11px;
+  color: var(--texto-2);
+}
+.legend-grupo:first-child {
+  margin-top: 0;
+}
+.legend-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 3px 0;
+  font-size: 12px;
+}
+/* Mismo aspecto que el punto del mapa: relleno con anillo blanco. */
+.legend-dot {
+  flex: 0 0 auto;
+  width: 11px;
+  height: 11px;
+  margin-top: 3px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px #fff;
+}
+.legend-texto {
+  flex: 1;
+  min-width: 0;
+}
+.legend-codigo {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.legend-n {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.pie {
+  margin: 0 2px;
+  font-size: 11px;
+  color: var(--texto-2);
+}
+
+/* ---- velos de carga y error ---- */
+.velo {
+  position: absolute;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: var(--fondo);
+  color: var(--texto-2);
+  font-size: 13px;
+}
+.velo-error > div {
+  max-width: 520px;
+  padding: 16px 18px;
+  background: var(--panel);
+  border: 1px solid #7a2e2e;
+  border-radius: 10px;
+  color: var(--texto);
+}
+.velo-error h2 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+.velo-error a {
+  color: var(--texto);
+}
+
+/* ---- Leaflet ---- */
+
+/* EL CALOR NO RECIBE CLICS Y VA DEBAJO DE LOS PUNTOS. Dos reglas, dos fallos
+   distintos:
+   - pointer-events: leaflet.heat anade su canvas al overlayPane en cada onAdd.
+     Al apagar y volver a encender el calor, ese canvas queda DESPUES del canvas
+     del renderer y, sin esta regla, se come los clics: los popups de los
+     puntos dejan de abrirse sin ningun error.
+   - z-index 99: .leaflet-map-pane canvas (leaflet.css) les da 100 a los dos
+     canvas y desempata el orden del DOM, asi que tras apagar y encender el
+     calor se pintaria ENCIMA de los puntos y los oscureceria. El selector
+     pesa (0,2,1) para ganarle a esa regla (0,1,1).
+   OJO para quien escriba el mutante: con el z-index puesto, quitar SOLO el
+   pointer-events no rompe el clic, porque el canvas de puntos ya queda arriba. */
+.leaflet-heatmap-layer {
+  pointer-events: none;
+}
+.leaflet-map-pane canvas.leaflet-heatmap-layer {
+  z-index: 99;
+}
+
+.leaflet-container {
+  font-family: var(--sans);
+}
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: var(--panel);
+  color: var(--texto);
+  border: 1px solid var(--panel-borde);
+}
+.leaflet-popup-content {
+  margin: 10px 12px;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+.leaflet-container a.leaflet-popup-close-button {
+  color: var(--texto-2);
+}
+.popup-titulo {
+  margin: 0 18px 6px 0;
+  font-weight: 700;
+  font-size: 13px;
+  color: #fff;
+}
+.popup-fila {
+  display: grid;
+  grid-template-columns: 74px 1fr;
+  gap: 8px;
+  padding: 1px 0;
+}
+.popup-k {
+  color: var(--texto-2);
+}
+.leaflet-control-attribution {
+  font-size: 9.5px;
+}
+
+/* Cumulos NEUTROS: grafito con anillo blanco y cifra blanca. Cualquier tono
+   se leeria como una subcausa mas. */
+.marker-cluster {
+  border-radius: 50%;
+  background: rgba(17, 17, 17, 0.25);
+}
+.marker-cluster div {
+  box-sizing: border-box;
+  width: calc(100% - 8px);
+  height: calc(100% - 8px);
+  margin: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1.5px solid #fff;
+  background: rgba(17, 17, 17, 0.88);
+  color: #fff;
+  font: 700 12px/1 var(--sans);
+}
+.cumulo-grande div {
+  font-size: 13px;
+}
+
+/* ---- telefono: mapa arriba y paneles apilados debajo ----
+   760 px: por debajo, dos paneles flotantes de 260-290 px dejan menos de
+   200 px de mapa. Aqui la pagina crece hacia abajo (scroll vertical) y nunca
+   hacia el lado. */
+@media (max-width: 760px) {
+  #app {
+    display: block;
+    height: auto;
+  }
+  #cabecera {
+    flex-direction: column;
+    gap: 8px;
+  }
+  #escenario {
+    display: flex;
+    flex-direction: column;
+  }
+  #map {
+    position: relative;
+    inset: auto;
+    height: 62vh;
+    min-height: 320px;
+  }
+  /* display: contents deja las secciones como hijas directas del flex de
+     #escenario, y asi se pueden intercalar los dos paneles: en el telefono lo
+     primero bajo el mapa es el ambito y las capas, despues el resumen y la
+     leyenda (lo que explica los colores que se acaban de ver), y al final el
+     horario y el ranking. Sin esto el resumen quedaba bajo doce comunas. */
+  .lateral {
+    display: contents;
+  }
+  .lateral > .panel,
+  .lateral > .pie {
+    margin: 10px 12px 0;
+  }
+  #panel-izq > .panel:nth-child(-n + 2) {
+    order: 1;
+  }
+  #panel-der > .panel {
+    order: 2;
+  }
+  #panel-izq > .panel:nth-child(n + 3) {
+    order: 3;
+  }
+  #pie {
+    order: 4;
+    margin-bottom: 16px;
+  }
+  .velo {
+    position: fixed;
+  }
+}

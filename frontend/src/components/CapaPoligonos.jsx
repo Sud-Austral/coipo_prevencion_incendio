@@ -43,16 +43,24 @@ export default function CapaPoligonos({
 }) {
   const grupo = useMemo(() => L.layerGroup(), [])
   const pool = useRef([])
+  // El estilo vigente, en un ref para que la creacion pueda leerlo SIN que
+  // `estilo` entre en las dependencias del pool: si entrara, mover el slider de
+  // opacidad reconstruiria los 572 poligonos en cada fotograma.
+  const estiloRef = useRef(estilo)
+  estiloRef.current = estilo
 
   // 1) Pool: una sola vez por dataset. NO depende de `estilo`, para que
-  //    normalizar no reconstruya 572 poligonos.
+  //    normalizar ni la opacidad reconstruyan 572 poligonos.
   useEffect(() => {
     if (!data) return
     const poligonos = data.features.map((f) => {
       const g = L.polygon(latlngs(f.geometry), {
-        weight: 0.6,
-        opacity: 0.9,
-        fillOpacity: 0.65,
+        // El poligono NACE con su estilo definitivo en vez de nacer neutro y
+        // corregirse en el efecto de abajo. Nacer neutro es el patron que ya
+        // costo un fallo en este repo: si el estado del que depende el estilo
+        // --la comuna de ?comuna=, la opacidad-- llega DESPUES del primer
+        // render, la correccion no ocurre nunca y la capa se queda gris.
+        ...estiloRef.current?.(f.properties),
         // Sin esto el clic atraviesa al mapa y las capas de teselas pisan la
         // ficha del area con la del camino que pase por debajo.
         bubblingMouseEvents: false,

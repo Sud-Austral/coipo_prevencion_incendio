@@ -521,6 +521,53 @@ select {
   line-height: 1.4;
 }
 
+/* Dos columnas: los cuatro botones de datos son pares (CSV / GeoJSON de cada
+   capa) y en una sola columna ocupaban media pantalla del panel. */
+.botones-descarga {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.botones-descarga .centrar {
+  margin: 0;
+}
+
+/* Fila del deslizador de opacidad: etiqueta a la izquierda, valor a la
+   derecha. El valor se muestra SIEMPRE y no sólo al arrastrar — con el pulgar
+   encima del control, en un panel de 320 px, el porcentaje es lo único que
+   dice en qué punto se está. */
+.fila-opacidad {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-2);
+  margin-top: 4px;
+}
+
+.fila-opacidad output {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-h);
+}
+
+.deslizador {
+  width: 100%;
+  margin: 2px 0 10px;
+  accent-color: var(--accent);
+  /* 24 px de alto real de zona táctil sobre una pista fina: en móvil el
+     control se usa con el dedo y una pista de 4 px es imposible de agarrar. */
+  height: 24px;
+  cursor: pointer;
+}
+
+.deslizador:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .leyenda-rango {
   margin-left: auto;
   font-variant-numeric: tabular-nums;
