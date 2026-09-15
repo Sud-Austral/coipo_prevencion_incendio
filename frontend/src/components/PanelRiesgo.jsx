@@ -131,15 +131,7 @@ export default function PanelRiesgo({
         </button>
       </header>
 
-      {/* Lo que el modelo NO mide va arriba y no en una nota al pie: sin esto,
-          «Alto» se lee como «prioridad alta», que era lo que decía la pestaña
-          anterior con un modelo que sí sumaba exposición. */}
-      <section>
-        <p className="pista">
-          Mide la amenaza del territorio: no considera población, interfaz urbano-forestal
-          ni infraestructura. Un área sin color no es riesgo nulo: puede no tener dato.
-        </p>
-      </section>
+      
 
       {error && (
         <section>
