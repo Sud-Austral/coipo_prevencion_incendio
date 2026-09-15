@@ -1,5 +1,5 @@
 {
-  "generado": "2026-09-15T17:25:04+0000",
+  "generado": "2026-09-15T21:23:15+0000",
   "simplify_m": 25.0,
   "precision": 5,
   "tippecanoe": "tippecanoe v2.78.0",
@@ -5684,7 +5684,7 @@
         -68.01064,
         -17.92029
       ],
-      "segundos": 8.7
+      "segundos": 14.1
     },
     "oecv": {
       "titulo": "OECV — Obras de Eliminación de Combustible Vegetal",
@@ -5830,7 +5830,7 @@
         -67.59344,
         -19.31068
       ],
-      "segundos": 0.9
+      "segundos": 1.3
     },
     "oecv_verificado": {
       "titulo": "OECV verificado en terreno",
@@ -5975,208 +5975,204 @@
       ],
       "segundos": 0.0
     },
-    "rutas": {
-      "titulo": "Rutas de despliegue territorial 25-26",
+    "redvial": {
+      "titulo": "Red vial MOP 2024",
       "carga": "demanda",
-      "leidos": 5278,
-      "vertices_origen": 3843489,
-      "por_archivo": {
-        "Antofagasta": 5,
-        "Arica": 31,
-        "Tarapacá": 24,
-        "Valparaíso": 311,
-        "Metropolitana": 189,
-        "O'Higgins": 463,
-        "Los Ríos": 142,
-        "Aysén": 95,
-        "Magallanes": 58,
-        "CORMA": 1277,
-        "La Araucanía": 480,
-        "Biobío": 382,
-        "Maule": 1288,
-        "Ñuble": 330,
-        "Los Lagos": 203
-      },
+      "leidos": 13964,
+      "vertices_origen": 2191840,
       "filtros": [
         "region",
         "clasificacion",
-        "carpeta",
-        "origen"
+        "carpeta"
       ],
       "dominios": {
         "region": [
           {
-            "v": "Maule",
-            "n": 1455
-          },
-          {
             "v": "La Araucanía",
-            "n": 1005
-          },
-          {
-            "v": "Biobío",
-            "n": 768
-          },
-          {
-            "v": "Ñuble",
-            "n": 474
+            "n": 1775
           },
           {
             "v": "O'Higgins",
-            "n": 465
+            "n": 1558
           },
           {
             "v": "Valparaíso",
-            "n": 305
+            "n": 1483
           },
           {
             "v": "Los Lagos",
-            "n": 208
+            "n": 1473
           },
           {
-            "v": "Metropolitana",
-            "n": 198
+            "v": "Maule",
+            "n": 1433
+          },
+          {
+            "v": "Biobío",
+            "n": 1020
+          },
+          {
+            "v": "Ñuble",
+            "n": 867
           },
           {
             "v": "Los Ríos",
-            "n": 187
+            "n": 819
+          },
+          {
+            "v": "Metropolitana",
+            "n": 775
+          },
+          {
+            "v": "Coquimbo",
+            "n": 761
+          },
+          {
+            "v": "Atacama",
+            "n": 698
           },
           {
             "v": "Aysén",
-            "n": 95
-          },
-          {
-            "v": "Magallanes",
-            "n": 58
-          },
-          {
-            "v": "Arica y Parinacota",
-            "n": 31
+            "n": 318
           },
           {
             "v": "Tarapacá",
-            "n": 24
+            "n": 290
           },
           {
             "v": "Antofagasta",
-            "n": 5
+            "n": 290
+          },
+          {
+            "v": "Arica y Parinacota",
+            "n": 250
+          },
+          {
+            "v": "Magallanes",
+            "n": 154
           }
         ],
         "clasificacion": [
           {
             "v": "Camino Regional Comunal",
-            "n": 2127
-          },
-          {
-            "v": "Sin Información",
-            "n": 994
-          },
-          {
-            "v": "Camino Regional Principal",
-            "n": 488
+            "n": 5722
           },
           {
             "v": "Camino Regional de Acceso",
-            "n": 435
+            "n": 2189
           },
           {
-            "v": "Camino Regional Provincial",
-            "n": 387
+            "v": "Sin Información",
+            "n": 1623
           },
           {
             "v": "Camino Regional Comunal (En Proceso de Enrolamiento)",
-            "n": 336
+            "n": 1293
           },
           {
             "v": "Camino Regional de Acceso (En Proceso de Enrolamiento)",
-            "n": 163
+            "n": 1139
+          },
+          {
+            "v": "Camino Regional Principal",
+            "n": 705
+          },
+          {
+            "v": "Camino Regional Provincial",
+            "n": 639
           },
           {
             "v": "Camino Nacional",
-            "n": 125
+            "n": 182
           },
           {
             "v": "Camino Nacional Longitudinal",
-            "n": 98
+            "n": 158
           },
           {
             "v": "Camino Nacional con Carácter de Internacional",
-            "n": 57
+            "n": 121
           },
           {
             "v": "Camino Regional Comunal (Conexión Vial Urbana)",
-            "n": 34
+            "n": 99
           },
           {
             "v": "Camino Regional Principal (Conexión Vial Urbana)",
-            "n": 13
+            "n": 31
           },
           {
             "v": "Camino Regional Provincial (En Proceso de Enrolamiento)",
-            "n": 12
+            "n": 22
           },
           {
             "v": "Camino Regional Principal (En Proceso de Enrolamiento)",
+            "n": 15
+          },
+          {
+            "v": "Camino Nacional Longitudinal (En Proceso de Enrolamiento)",
+            "n": 8
+          },
+          {
+            "v": "Camino Nacional (Conexión Vial Urbana)",
             "n": 7
           },
           {
             "v": "Camino Regional de Acceso (Conexión Vial Urbana)",
+            "n": 6
+          },
+          {
+            "v": "Camino Regional Provincial (Conexión Vial Urbana)",
+            "n": 3
+          },
+          {
+            "v": "Camino Nacional (En Proceso de Enrolamiento)",
             "n": 1
           },
           {
-            "v": "Camino Nacional Longitudinal (En Proceso de Enrolamiento)",
+            "v": "Camino Privado",
             "n": 1
           }
         ],
         "carpeta": [
           {
             "v": "Ripio",
-            "n": 1892
+            "n": 4916
           },
           {
             "v": "Pavimento Básico",
-            "n": 1350
+            "n": 3826
           },
           {
             "v": "Pavimento",
-            "n": 1315
+            "n": 2438
           },
           {
             "v": "Suelo Natural",
-            "n": 319
-          },
-          {
-            "v": "Pavimento Doble Calzada",
-            "n": 220
+            "n": 1577
           },
           {
             "v": "Grava Tratada",
-            "n": 95
+            "n": 634
+          },
+          {
+            "v": "Pavimento Doble Calzada",
+            "n": 382
           },
           {
             "v": "Sin Información",
-            "n": 87
-          }
-        ],
-        "origen": [
-          {
-            "v": "CONAF",
-            "n": 4001
-          },
-          {
-            "v": "CORMA",
-            "n": 1277
+            "n": 191
           }
         ]
       },
       "formato": "pmtiles",
-      "archivo": "rutas.pmtiles",
-      "capa_mvt": "rutas",
+      "archivo": "redvial.pmtiles",
+      "capa_mvt": "redvial",
       "minzoom": 4,
       "maxzoom": 13,
-      "bytes": 7051850,
-      "features": 5278,
-      "segundos": 26.9
+      "bytes": 18801957,
+      "features": 13964,
+      "segundos": 30.3
     },
     "infra_puntos": {
       "titulo": "Infraestructura crítica",
@@ -6423,205 +6419,6 @@
         -37.20347
       ],
       "segundos": 0.1
-    },
-    "redvial": {
-      "titulo": "Red vial MOP 2024",
-      "carga": "demanda",
-      "leidos": 13964,
-      "vertices_origen": 2191840,
-      "filtros": [
-        "region",
-        "clasificacion",
-        "carpeta"
-      ],
-      "dominios": {
-        "region": [
-          {
-            "v": "La Araucanía",
-            "n": 1775
-          },
-          {
-            "v": "O'Higgins",
-            "n": 1558
-          },
-          {
-            "v": "Valparaíso",
-            "n": 1483
-          },
-          {
-            "v": "Los Lagos",
-            "n": 1473
-          },
-          {
-            "v": "Maule",
-            "n": 1433
-          },
-          {
-            "v": "Biobío",
-            "n": 1020
-          },
-          {
-            "v": "Ñuble",
-            "n": 867
-          },
-          {
-            "v": "Los Ríos",
-            "n": 819
-          },
-          {
-            "v": "Metropolitana",
-            "n": 775
-          },
-          {
-            "v": "Coquimbo",
-            "n": 761
-          },
-          {
-            "v": "Atacama",
-            "n": 698
-          },
-          {
-            "v": "Aysén",
-            "n": 318
-          },
-          {
-            "v": "Tarapacá",
-            "n": 290
-          },
-          {
-            "v": "Antofagasta",
-            "n": 290
-          },
-          {
-            "v": "Arica y Parinacota",
-            "n": 250
-          },
-          {
-            "v": "Magallanes",
-            "n": 154
-          }
-        ],
-        "clasificacion": [
-          {
-            "v": "Camino Regional Comunal",
-            "n": 5722
-          },
-          {
-            "v": "Camino Regional de Acceso",
-            "n": 2189
-          },
-          {
-            "v": "Sin Información",
-            "n": 1623
-          },
-          {
-            "v": "Camino Regional Comunal (En Proceso de Enrolamiento)",
-            "n": 1293
-          },
-          {
-            "v": "Camino Regional de Acceso (En Proceso de Enrolamiento)",
-            "n": 1139
-          },
-          {
-            "v": "Camino Regional Principal",
-            "n": 705
-          },
-          {
-            "v": "Camino Regional Provincial",
-            "n": 639
-          },
-          {
-            "v": "Camino Nacional",
-            "n": 182
-          },
-          {
-            "v": "Camino Nacional Longitudinal",
-            "n": 158
-          },
-          {
-            "v": "Camino Nacional con Carácter de Internacional",
-            "n": 121
-          },
-          {
-            "v": "Camino Regional Comunal (Conexión Vial Urbana)",
-            "n": 99
-          },
-          {
-            "v": "Camino Regional Principal (Conexión Vial Urbana)",
-            "n": 31
-          },
-          {
-            "v": "Camino Regional Provincial (En Proceso de Enrolamiento)",
-            "n": 22
-          },
-          {
-            "v": "Camino Regional Principal (En Proceso de Enrolamiento)",
-            "n": 15
-          },
-          {
-            "v": "Camino Nacional Longitudinal (En Proceso de Enrolamiento)",
-            "n": 8
-          },
-          {
-            "v": "Camino Nacional (Conexión Vial Urbana)",
-            "n": 7
-          },
-          {
-            "v": "Camino Regional de Acceso (Conexión Vial Urbana)",
-            "n": 6
-          },
-          {
-            "v": "Camino Regional Provincial (Conexión Vial Urbana)",
-            "n": 3
-          },
-          {
-            "v": "Camino Nacional (En Proceso de Enrolamiento)",
-            "n": 1
-          },
-          {
-            "v": "Camino Privado",
-            "n": 1
-          }
-        ],
-        "carpeta": [
-          {
-            "v": "Ripio",
-            "n": 4916
-          },
-          {
-            "v": "Pavimento Básico",
-            "n": 3826
-          },
-          {
-            "v": "Pavimento",
-            "n": 2438
-          },
-          {
-            "v": "Suelo Natural",
-            "n": 1577
-          },
-          {
-            "v": "Grava Tratada",
-            "n": 634
-          },
-          {
-            "v": "Pavimento Doble Calzada",
-            "n": 382
-          },
-          {
-            "v": "Sin Información",
-            "n": 191
-          }
-        ]
-      },
-      "formato": "pmtiles",
-      "archivo": "redvial.pmtiles",
-      "capa_mvt": "redvial",
-      "minzoom": 4,
-      "maxzoom": 13,
-      "bytes": 18801957,
-      "features": 13964,
-      "segundos": 27.0
     },
     "riesgo": {
       "titulo": "Riesgo de incendio forestal",
@@ -14173,7 +13970,210 @@
         -66.41559,
         -17.50462
       ],
-      "segundos": 21.6
+      "segundos": 24.1
+    },
+    "rutas": {
+      "titulo": "Rutas de despliegue territorial 25-26",
+      "carga": "demanda",
+      "leidos": 5278,
+      "vertices_origen": 3843489,
+      "por_archivo": {
+        "Antofagasta": 5,
+        "Arica": 31,
+        "Tarapacá": 24,
+        "Valparaíso": 311,
+        "Metropolitana": 189,
+        "O'Higgins": 463,
+        "Los Ríos": 142,
+        "Aysén": 95,
+        "Magallanes": 58,
+        "CORMA": 1277,
+        "La Araucanía": 480,
+        "Biobío": 382,
+        "Maule": 1288,
+        "Ñuble": 330,
+        "Los Lagos": 203
+      },
+      "filtros": [
+        "region",
+        "clasificacion",
+        "carpeta",
+        "origen"
+      ],
+      "dominios": {
+        "region": [
+          {
+            "v": "Maule",
+            "n": 1455
+          },
+          {
+            "v": "La Araucanía",
+            "n": 1005
+          },
+          {
+            "v": "Biobío",
+            "n": 768
+          },
+          {
+            "v": "Ñuble",
+            "n": 474
+          },
+          {
+            "v": "O'Higgins",
+            "n": 465
+          },
+          {
+            "v": "Valparaíso",
+            "n": 305
+          },
+          {
+            "v": "Los Lagos",
+            "n": 208
+          },
+          {
+            "v": "Metropolitana",
+            "n": 198
+          },
+          {
+            "v": "Los Ríos",
+            "n": 187
+          },
+          {
+            "v": "Aysén",
+            "n": 95
+          },
+          {
+            "v": "Magallanes",
+            "n": 58
+          },
+          {
+            "v": "Arica y Parinacota",
+            "n": 31
+          },
+          {
+            "v": "Tarapacá",
+            "n": 24
+          },
+          {
+            "v": "Antofagasta",
+            "n": 5
+          }
+        ],
+        "clasificacion": [
+          {
+            "v": "Camino Regional Comunal",
+            "n": 2127
+          },
+          {
+            "v": "Sin Información",
+            "n": 994
+          },
+          {
+            "v": "Camino Regional Principal",
+            "n": 488
+          },
+          {
+            "v": "Camino Regional de Acceso",
+            "n": 435
+          },
+          {
+            "v": "Camino Regional Provincial",
+            "n": 387
+          },
+          {
+            "v": "Camino Regional Comunal (En Proceso de Enrolamiento)",
+            "n": 336
+          },
+          {
+            "v": "Camino Regional de Acceso (En Proceso de Enrolamiento)",
+            "n": 163
+          },
+          {
+            "v": "Camino Nacional",
+            "n": 125
+          },
+          {
+            "v": "Camino Nacional Longitudinal",
+            "n": 98
+          },
+          {
+            "v": "Camino Nacional con Carácter de Internacional",
+            "n": 57
+          },
+          {
+            "v": "Camino Regional Comunal (Conexión Vial Urbana)",
+            "n": 34
+          },
+          {
+            "v": "Camino Regional Principal (Conexión Vial Urbana)",
+            "n": 13
+          },
+          {
+            "v": "Camino Regional Provincial (En Proceso de Enrolamiento)",
+            "n": 12
+          },
+          {
+            "v": "Camino Regional Principal (En Proceso de Enrolamiento)",
+            "n": 7
+          },
+          {
+            "v": "Camino Regional de Acceso (Conexión Vial Urbana)",
+            "n": 1
+          },
+          {
+            "v": "Camino Nacional Longitudinal (En Proceso de Enrolamiento)",
+            "n": 1
+          }
+        ],
+        "carpeta": [
+          {
+            "v": "Ripio",
+            "n": 1892
+          },
+          {
+            "v": "Pavimento Básico",
+            "n": 1350
+          },
+          {
+            "v": "Pavimento",
+            "n": 1315
+          },
+          {
+            "v": "Suelo Natural",
+            "n": 319
+          },
+          {
+            "v": "Pavimento Doble Calzada",
+            "n": 220
+          },
+          {
+            "v": "Grava Tratada",
+            "n": 95
+          },
+          {
+            "v": "Sin Información",
+            "n": 87
+          }
+        ],
+        "origen": [
+          {
+            "v": "CONAF",
+            "n": 4001
+          },
+          {
+            "v": "CORMA",
+            "n": 1277
+          }
+        ]
+      },
+      "formato": "pmtiles",
+      "archivo": "rutas.pmtiles",
+      "capa_mvt": "rutas",
+      "minzoom": 4,
+      "maxzoom": 13,
+      "bytes": 7051850,
+      "features": 5278,
+      "segundos": 46.5
     }
   },
   "derivados": {
