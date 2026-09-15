@@ -191,6 +191,13 @@ npm run verify:mutantes                    # ~16 min, 17 mutantes, PARCHEA 7 arc
   proceso muere sin manejador (`taskkill /F`), la corrida siguiente encuentra el respaldo y
   **se niega a arrancar** hasta que se restaure. `--solo X` con un id desconocido falla.
 
+- **NO SE COMMITEA MIENTRAS CORREN `verify:mutantes` O `--negativas`.** Durante la corrida
+  los archivos de `src/` están MUTADOS en disco, y un commit (GitHub Desktop commitea lo que
+  haya) se lleva el mutante. Pasó el 2026-09-15: entre las 12:26 y las 12:39, cuatro commits
+  capturaron cuatro mutantes distintos de `PanelLateral.jsx` y `SeccionDescargas.jsx`, y CI
+  se puso rojo en B27 con «Biobío (5 incendios)» sobre la red vial. La restauración byte a
+  byte del script no lo evita: restaura el disco, no lo que ya entró en un commit.
+
 - **`--negativas` y `verify:mutantes` SOBRESCRIBEN las capturas de `.verificacion/` con
   estados MUTADOS.** Medido el 2026-09-15: tras `verify:priorizacion -- --negativas`, la
   ficha capturada decía «2532.0 ha» porque la última corrida fue la del mutante de C14. **Antes
