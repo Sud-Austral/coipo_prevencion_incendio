@@ -184,7 +184,7 @@ export default function SeccionDescargas({
         url: window.location.href,
         fechaDatos: fechaLarga(manifest?.generado),
         fechaInforme: fechaLarga(new Date().toISOString().slice(0, 10)) ?? hoy(),
-        aviso: NO_ACTIVOS,
+        aviso: null,
         temporadas: temps ? `${temps.primera} a ${temps.ultima}` : null,
         mapa,
         mapaMotivo,

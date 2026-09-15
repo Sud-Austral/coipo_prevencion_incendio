@@ -215,7 +215,7 @@ export default function PanelLateral({
         <h2>Filtros</h2>
         {filtrosVisibles.map((f) => {
           const capa = capaQueCuenta(f)
-          if (!capa || f.campo === 'inst') return null
+          if (!capa) return null
           const unidad = UNIDAD_CAPA[capa]
           const ops = opcionesDe(f, capa)
           if (!ops.length) return null
