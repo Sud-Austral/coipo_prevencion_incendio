@@ -19,19 +19,33 @@ asercion que no se ha visto roja no esta probando nada.
     D5-D9     GeoJSON (capas y derivados): FeatureCollection, n de features,
               sin NaN, sin geometrias vacias, dentro de Chile
     D10       campos de filtro presentes (solo capas)
-    D11       regiones canonizadas en los dominios
+    D11       regiones canonizadas en los dominios y en sin_coordenadas.por_region
     D12, D13  cruce espacial incendios <-> red vial (necesitan ETL/_build/)
-    D14, D15  priorizacion e infra_puntos dentro del bbox de su comuna
-    D16       incendios: causa_general_codigo es el prefijo de causa_codigo y
-              cada codigo general lleva una sola etiqueta (el defecto 4.1/4.10)
+    D14       riesgo: cada mancha dentro de la caja de SU comuna, con el CUT y el
+              nombre que declara el manifest para ese archivo
+    D15       infra_puntos: cada punto dentro de la caja de riesgo de su CUT
+    D16       incendios: causa_general_codigo es el prefijo de causa_codigo
+    D16b      incendios: cada codigo general lleva una sola etiqueta. Es la unica
+              guarda de una fila 4.10.x con la etiqueta de 4.1: el prefijo cuadra
+              y D16 queda verde. Va con identificador propio para que su mutacion
+              no pueda ponerse roja gracias a D16
     D17       derivado bbdd_uad_completa == incendios decodificado, fila a fila
     D18       derivado lineas_electricas == filtro de la BBDD completa
+    D19       riesgo: rangos del modelo (0 <= min <= medio <= max <= 4, pct_alto
+              0..100) y clase coherente con los cortes del manifest
+    D20       riesgo: las cuentas cuadran -- partes = total, leidas = publicadas +
+              sin geometria, CSV = leidas + solo en CSV, las 16 regiones, y ningun
+              mancha_id repetido entre comunas
+
+Las capas partidas (`partes` en el manifest, hoy solo riesgo) pasan por D1 y
+D5-D9 archivo por archivo, con UNA linea por asercion para las 343 comunas.
 """
 
 from __future__ import annotations
 
 import argparse
 import contextlib
+import hashlib
 import io
 import json
 import shutil
@@ -129,6 +143,180 @@ def _coords(geom):
     return salida
 
 
+# Resumen por archivo de riesgo, por sha1 de sus BYTES (y de los cortes con los
+# que se juzgo la clase). --negativas llama a verificar() unas 30 veces y cada
+# llamada tendria que volver a parsear 163 MiB repartidos en 343 archivos; con la
+# clave por contenido solo se reparsea el archivo que muto una mutacion. Por
+# contenido y no por mtime a proposito: un cache que enmascarase una mutacion
+# convertiria cada control negativo en un falso superviviente -- y lo contrario,
+# un falso verde, que es peor.
+_RESUMENES: dict[tuple, dict] = {}
+
+
+def _resumen_parte(ruta: Path, clases: list[dict]) -> dict:
+    """Hechos de un archivo de riesgo que no dependen de su entrada del manifest."""
+    datos = ruta.read_bytes()
+    clave = (hashlib.sha1(datos).hexdigest(), json.dumps(clases, sort_keys=True))
+    if clave in _RESUMENES:
+        return _RESUMENES[clave]
+    res = {"parsea": False}
+    try:
+        gj = json.loads(datos.decode("utf-8"))
+    except ValueError:
+        _RESUMENES[clave] = res
+        return res
+    feats = [f for f in (gj.get("features") or []) if isinstance(f, dict)] if isinstance(gj, dict) else []
+    res.update(parsea=True, tipo=gj.get("type") if isinstance(gj, dict) else None, n=len(feats))
+    malas = fuera = vacias = 0
+    ext = [float("inf"), float("inf"), float("-inf"), float("-inf")]
+    cuts, nombres, ids, problemas = set(), set(), [], []
+    cortes = [c["desde"] for c in clases[1:]]
+    etiquetas = [c["clase"] for c in clases]
+    for f in feats:
+        p = f.get("properties") or {}
+        mid = str(p.get("mancha_id"))
+        ids.append(mid)
+        cuts.add(mid[:5])
+        nombres.add(p.get("comuna"))
+        g = f.get("geometry")
+        cs = _coords(g) if g and g.get("coordinates") else []
+        if not cs:
+            vacias += 1
+        for c in cs:
+            lon, lat = c[0], c[1]
+            if lon != lon or lat != lat or abs(lon) == float("inf") or abs(lat) == float("inf"):
+                malas += 1
+                break
+            if not (CHILE[0] <= lon <= CHILE[2] and CHILE[1] <= lat <= CHILE[3]):
+                fuera += 1
+                break
+            ext[0], ext[1] = min(ext[0], lon), min(ext[1], lat)
+            ext[2], ext[3] = max(ext[2], lon), max(ext[3], lat)
+        problemas.extend(f"{mid}: {x}" for x in _problemas_riesgo(p, cortes, etiquetas))
+    res.update(malas=malas, fuera=fuera, vacias=vacias, extension=ext, cuts=cuts,
+               nombres=nombres, ids=ids, problemas=problemas)
+    _RESUMENES[clave] = res
+    return res
+
+
+def _problemas_riesgo(p: dict, cortes: list[float], etiquetas: list[str]) -> list[str]:
+    """D19. DUPLICADO A PROPOSITO de ETL/build_riesgo.py: importarlo verificaria
+    que la regla es igual a si misma. Los limites salen de la DEFINICION del modelo
+    (nivel 0..4, porcentaje 0..100), no de los valores que traen los datos."""
+    num = ("nivel_medio", "nivel_medio_min", "nivel_medio_max", "pct_alto", "area_ha")
+    if any(not isinstance(p.get(c), (int, float)) or isinstance(p.get(c), bool) for c in num):
+        return [f"campos numericos ausentes o no numericos: {[c for c in num if not isinstance(p.get(c), (int, float))]}"]
+    out = []
+    if not 0 <= p["nivel_medio_min"] <= p["nivel_medio"] <= p["nivel_medio_max"] <= 4:
+        out.append("no cumple 0 <= min <= medio <= max <= 4")
+    if not 0 <= p["pct_alto"] <= 100:
+        out.append(f"pct_alto {p['pct_alto']}")
+    v = p["nivel_medio"]
+    # Un valor EXACTAMENTE en un corte puede venir en cualquiera de las dos clases
+    # vecinas: el notebook clasifica antes de redondear a 3 decimales (123 manchas).
+    en = [i for i, c in enumerate(cortes) if abs(v - c) < 1e-9]
+    if en:
+        validas = {etiquetas[en[0]], etiquetas[en[0] + 1]}
+    else:
+        validas = {etiquetas[sum(1 for c in cortes if v >= c)]}
+    if p.get("clase") not in validas:
+        out.append(f"clase {p.get('clase')!r} con nivel_medio {v}")
+    return out
+
+
+def _verificar_partes(r: "Res", data: Path, nombre: str, meta: dict) -> dict[str, dict]:
+    """D1, D5-D9 y D14 de una capa partida, con UNA linea por asercion.
+
+    Devuelve los resumenes por clave de parte para D19/D20.
+    """
+    partes = meta.get("partes") or {}
+    clases = meta.get("clases") or []
+    faltan, no_coleccion, cuentas, d7, d8, d9, d14 = [], [], [], [], [], [], []
+    resumenes: dict[str, dict] = {}
+    for cut, pm in partes.items():
+        ruta = data / str(pm.get("archivo"))
+        if not ruta.exists():
+            faltan.append(pm.get("archivo"))
+            continue
+        res = _resumen_parte(ruta, clases)
+        resumenes[cut] = res
+        if not res["parsea"] or res["tipo"] != "FeatureCollection":
+            no_coleccion.append(cut)
+            continue
+        if res["n"] != pm.get("features"):
+            cuentas.append(f"{cut}: {res['n']} vs {pm.get('features')}")
+        if res["malas"]:
+            d7.append(f"{cut}: {res['malas']}")
+        if res["vacias"]:
+            d8.append(f"{cut}: {res['vacias']}")
+        if res["fuera"]:
+            d9.append(f"{cut}: {res['fuera']}")
+        # Todas las manchas dentro de la caja <=> su extension conjunta dentro de
+        # ella. SIN margen: la caja se calcula DE estas manchas, redondeada hacia
+        # afuera, y encerrarlas es su unica razon de existir.
+        caja, ext = pm.get("bbox") or [0, 0, 0, 0], res["extension"]
+        if res["n"] and not (caja[0] <= ext[0] and caja[1] <= ext[1] and ext[2] <= caja[2] and ext[3] <= caja[3]):
+            d14.append(f"{cut}: extension {[round(x, 5) for x in ext]} fuera de {caja}")
+        # El archivo de una comuna solo trae manchas de ESA comuna, con el nombre
+        # que el manifest le da. Es donde se veria un «Coyhaique» colado.
+        if res["n"] and res["cuts"] != {cut}:
+            d14.append(f"{cut}: trae manchas de {sorted(res['cuts'])}")
+        if res["n"] and res["nombres"] != {pm.get("comuna")}:
+            d14.append(f"{cut}: comuna {sorted(map(str, res['nombres']))} y el manifest dice {pm.get('comuna')!r}")
+    n = len(partes)
+    r.check(not faltan, "D1", f"{nombre}: existen los {n} archivos por comuna", f"faltan {faltan[:3]}" if faltan else "")
+    r.check(not no_coleccion, "D5", f"{nombre}: {n} FeatureCollection", f"{no_coleccion[:3]}" if no_coleccion else "")
+    r.check(not cuentas, "D6", f"{nombre}: features de cada comuna = manifest", f"{cuentas[:3]}" if cuentas else "")
+    r.check(not d7, "D7", f"{nombre}: sin NaN/Infinity", f"{d7[:3]}" if d7 else "")
+    r.check(not d8, "D8", f"{nombre}: sin geometrías vacías", f"{d8[:3]}" if d8 else "")
+    r.check(not d9, "D9", f"{nombre}: todas dentro de Chile", f"{d9[:3]}" if d9 else "")
+    r.check(
+        n > 0 and not d14,
+        "D14",
+        f"{nombre}: cada mancha dentro de la caja de su comuna, con su CUT y su nombre",
+        f"{len(d14)}: {d14[:3]}" if d14 else ("sin partes" if not n else ""),
+    )
+    return resumenes
+
+
+def _cuentas_riesgo(r: "Res", meta: dict, resumenes: dict[str, dict]) -> None:
+    """D19 y D20."""
+    from geo import REGIONES
+
+    problemas = [x for res in resumenes.values() for x in res.get("problemas", [])]
+    r.check(
+        bool(resumenes) and not problemas,
+        "D19",
+        f"riesgo: rangos y clase coherentes en {sum(x.get('n', 0) for x in resumenes.values())} manchas",
+        f"{len(problemas)}: {problemas[:3]}" if problemas else "",
+    )
+
+    partes = meta.get("partes") or {}
+    f = meta.get("fuente") or {}
+    sin = (f.get("sin_geometria") or {}).get("n")
+    malas = []
+    suma = sum(p.get("features") or 0 for p in partes.values())
+    if suma != meta.get("features"):
+        malas.append(f"partes suman {suma} y el total dice {meta.get('features')}")
+    if not isinstance(sin, int) or f.get("leidas") != (meta.get("features") or 0) + sin:
+        malas.append(f"leidas {f.get('leidas')} != publicadas {meta.get('features')} + sin geometria {sin}")
+    if f.get("filas_csv") != (f.get("leidas") or 0) + len(f.get("solo_en_csv") or []):
+        malas.append(f"filas_csv {f.get('filas_csv')} != leidas + {len(f.get('solo_en_csv') or [])} solo en el CSV")
+    por_region = (f.get("sin_geometria") or {}).get("por_region") or {}
+    if isinstance(sin, int) and sum(por_region.values()) != sin:
+        malas.append(f"sin_geometria.por_region suma {sum(por_region.values())} y n={sin}")
+    regiones = {p.get("region") for p in partes.values()}
+    if regiones != set(REGIONES):
+        malas.append(f"regiones: faltan {sorted(set(REGIONES) - regiones)} sobran {sorted(map(str, regiones - set(REGIONES)))}")
+    listadas = [c for reg in meta.get("regiones") or [] for c in reg.get("comunas") or []]
+    if sorted(listadas) != sorted(partes):
+        malas.append(f"`regiones` lista {len(listadas)} comunas y hay {len(partes)} partes")
+    ids = [i for res in resumenes.values() for i in res.get("ids", [])]
+    if len(ids) != len(set(ids)):
+        malas.append(f"{len(ids) - len(set(ids))} mancha_id repetidos entre comunas")
+    r.check(not malas, "D20", f"riesgo: las cuentas cuadran ({len(partes)} comunas)", "; ".join(malas))
+
+
 def _leer_header_pmtiles(p: Path) -> dict | None:
     """Lee el header de un PMTiles v3 (spec: 127 bytes, magic 'PMTiles')."""
     with open(p, "rb") as fh:
@@ -169,7 +357,11 @@ def verificar(data: Path, muestra: int = 500, res: Res | None = None) -> bool:
     # la pagina de lineas electricas descarga no puede quedar sin mirar solo por
     # vivir en otra clave del manifest.
     recorrido = [(n, m, False) for n, m in capas.items()] + [(n, m, True) for n, m in derivados.items()]
+    riesgo_resumenes: dict[str, dict] | None = None
     for nombre, meta, es_derivado in recorrido:
+        if meta.get("partes") is not None:
+            riesgo_resumenes = _verificar_partes(r, data, nombre, meta)
+            continue
         archivo = data / meta["archivo"]
         if not r.check(archivo.exists(), "D1", f"{nombre}: existe {meta['archivo']}"):
             continue
@@ -267,6 +459,14 @@ def verificar(data: Path, muestra: int = 500, res: Res | None = None) -> bool:
         for v in (d["v"] for d in meta.get("dominios", {}).get("region", [])):
             if v not in REGIONES:
                 intrusos.setdefault(nombre, []).append(v)
+    # Tambien las claves de sin_coordenadas.por_region de los derivados: una celda
+    # de region vacia llego a publicarse como la region 'nan' con todo en verde
+    # (revision del 2026-09-14). 'Sin región' es la clave que el ETL usa a proposito.
+    for nombre, meta in (manifest.get("derivados") or {}).items():
+        claves = ((meta or {}).get("sin_coordenadas") or {}).get("por_region") or {}
+        for v in claves:
+            if v not in REGIONES and v != "Sin región":
+                intrusos.setdefault(f"derivados.{nombre}.sin_coordenadas", []).append(v)
     r.check(
         not intrusos,
         "D11",
@@ -274,62 +474,37 @@ def verificar(data: Path, muestra: int = 500, res: Res | None = None) -> bool:
         "; ".join(f"{k}: {v}" for k, v in intrusos.items()) if intrusos else "",
     )
 
-    # --- priorizacion: cada mancha dentro del bbox declarado de SU comuna ---
-    # bbox_comuna es lo que usa el visor para encuadrar al elegir comuna. Si una
-    # mancha se sale, el encuadre deja fuera parte de lo que dice mostrar.
-    prio = data / "priorizacion.geojson"
-    meta_prio = capas.get("priorizacion", {})
-    if prio.exists() and meta_prio.get("bbox_comuna"):
-        cajas = meta_prio["bbox_comuna"]
-        gj = json.loads(prio.read_text(encoding="utf-8"))
-        malas = []
-        for f in gj["features"]:
-            p = f["properties"]
-            caja = cajas.get(p.get("comuna"))
-            if caja is None:
-                malas.append(f"{p.get('mancha_id')}: comuna sin bbox")
-                continue
-            cs = _coords(f["geometry"])
-            if (
-                min(c[0] for c in cs) < caja[0]
-                or min(c[1] for c in cs) < caja[1]
-                or max(c[0] for c in cs) > caja[2]
-                or max(c[1] for c in cs) > caja[3]
-            ):
-                malas.append(str(p.get("mancha_id")))
-        r.check(
-            not malas,
-            "D14",
-            "priorizacion: cada mancha dentro del bbox de su comuna",
-            f"{len(malas)} fuera: {malas[:3]}" if malas else "",
-        )
+    # --- riesgo: rangos, clases y cuentas ---
+    meta_riesgo = capas.get("riesgo")
+    if meta_riesgo is not None:
+        _cuentas_riesgo(r, meta_riesgo, riesgo_resumenes or {})
 
-    # --- infraestructura: cada punto dentro del bbox de la comuna que declara ---
-    # Cruza las DOS capas nuevas, asi que caza de una vez tres fallos distintos:
-    # un huso UTM mal leido (el punto se va ~700 km), un nombre de comuna que no
-    # cruza entre capas, y una comuna publicada en una capa y no en la otra.
-    # El margen es 0,01 grados (~1,1 km): el contorno comunal del que salen las
-    # manchas viene simplificado a 25 m, asi que 0,01 deja 40x de holgura y
+    # --- infraestructura: cada punto dentro de la caja de riesgo de SU CUT ---
+    # Cruza las dos capas, asi que caza de una vez tres fallos distintos: un huso
+    # UTM mal leido (el punto se va ~700 km), un CUT que no es el de la carpeta, y
+    # una comuna con infraestructura y sin manchas.
+    # El margen es 0,01 grados (~1,1 km): las manchas se cortan en el limite
+    # comunal y un punto real puede quedar a unos metros fuera de ellas, y 0,01
     # sigue siendo 70 veces menor que el error de huso que debe detectar.
     infra = data / "infra_puntos.geojson"
-    if infra.exists() and meta_prio.get("bbox_comuna"):
-        cajas = meta_prio["bbox_comuna"]
+    if infra.exists() and meta_riesgo is not None:
+        partes = meta_riesgo.get("partes") or {}
         m = 0.01
         gj = json.loads(infra.read_text(encoding="utf-8"))
         malos = []
         for f in gj["features"]:
             p = f["properties"]
-            caja = cajas.get(p.get("comuna"))
+            caja = (partes.get(str(p.get("cut"))) or {}).get("bbox")
             if caja is None:
-                malos.append(f"{p.get('nombre')}: comuna '{p.get('comuna')}' no esta en priorizacion")
+                malos.append(f"{p.get('nombre')}: CUT {p.get('cut')!r} ({p.get('comuna')}) no esta en riesgo")
                 continue
             lon, lat = f["geometry"]["coordinates"]
             if not (caja[0] - m <= lon <= caja[2] + m and caja[1] - m <= lat <= caja[3] + m):
-                malos.append(f"{p.get('familia')}/{p.get('nombre')} en {p.get('comuna')}")
+                malos.append(f"{p.get('familia')}/{p.get('nombre')} en {p.get('comuna')} ({p.get('cut')})")
         r.check(
-            not malos,
+            bool(gj["features"]) and not malos,
             "D15",
-            "infra_puntos: cada punto dentro del bbox de su comuna",
+            "infra_puntos: cada punto dentro de la caja de riesgo de su CUT",
             f"{len(malos)} fuera: {malos[:3]}" if malos else "",
         )
 
@@ -448,7 +623,7 @@ def _causas_y_derivados(r: Res, data: Path, inc_meta: dict, derivados: dict, par
     dobles = {k: sorted(v) for k, v in etiquetas.items() if len(v) > 1}
     r.check(
         bool(inc_dec) and not dobles,
-        "D16",
+        "D16b",
         f"incendios: cada código general lleva una sola etiqueta ({len(etiquetas)} códigos)",
         f"{dobles}" if dobles else "",
     )
@@ -518,7 +693,9 @@ def _causas_y_derivados(r: Res, data: Path, inc_meta: dict, derivados: dict, par
             problemas.append(f"leidos {bb_meta.get('leidos')} vs incendios {inc_meta.get('leidos')}")
         if len(sin_ids) != inc_meta.get("descartados"):
             problemas.append(f"{len(sin_ids)} sin coordenadas vs {inc_meta.get('descartados')} descartados de incendios")
-        cruzados = {(f.get("properties") or {}).get("ID") for f in bb_feats} & set(sin_ids)
+        # Sin los None: dos filas sin ID, una con y otra sin coordenadas, darian el
+        # falso 'ids a la vez con y sin coordenadas: [None]'.
+        cruzados = ({(f.get("properties") or {}).get("ID") for f in bb_feats} - {None}) & (set(sin_ids) - {None})
         if cruzados:
             problemas.append(f"ids a la vez con y sin coordenadas: {sorted(cruzados, key=str)[:3]}")
         r.check(not problemas, "D17", "bbdd_uad_completa: sin_coordenadas cuadra con incendios", "; ".join(problemas))
@@ -553,14 +730,17 @@ def _causas_y_derivados(r: Res, data: Path, inc_meta: dict, derivados: dict, par
         f"{len(ids)} vs {len(esperados)} · sobran {[i for i in ids if i not in set(esperados)][:3]} · "
         f"faltan {[i for i in esperados if i not in set(ids)][:3]}",
     )
-    por_id = {(f.get("properties") or {}).get("ID"): f for f in bb_feats}
+    # Por POSICION y no por ID: la comprobacion anterior ya exige el mismo orden, y
+    # un dict por ID colapsa las filas sin ID (el Excel anterior traia 6) en una.
+    filtradas = [f for f in bb_feats if (f.get("properties") or {}).get("Causa general 2023") == CAUSA_ELECTRICA]
     distintas = [
         (f.get("properties") or {}).get("ID")
-        for f in li_feats
-        if (b := por_id.get((f.get("properties") or {}).get("ID"))) is None
-        or _canon(f.get("properties")) != _canon(b.get("properties"))
+        for f, b in zip(li_feats, filtradas)
+        if _canon(f.get("properties")) != _canon(b.get("properties"))
         or _canon(f.get("geometry")) != _canon(b.get("geometry"))
     ]
+    if len(li_feats) != len(filtradas):
+        distintas.append(f"{len(li_feats)} features vs {len(filtradas)} filtradas")
     r.check(
         not distintas,
         "D18",
@@ -645,7 +825,10 @@ def _cruce_espacial(r: Res, inc_path: Path, lineas: list, muestra: int) -> None:
 
 def _capas_por_formato(data: Path) -> tuple[dict, str, str]:
     man = json.loads((data / "manifest.json").read_text(encoding="utf-8"))
-    geo = next(n for n, c in man["capas"].items() if c.get("formato") != "pmtiles")
+    # Con `archivo`: una capa partida por comuna no tiene un archivo al que
+    # apuntar las mutaciones genericas, y el orden de `capas` lo decide cual capa
+    # termino antes en el pool.
+    geo = next(n for n, c in man["capas"].items() if c.get("formato") != "pmtiles" and "archivo" in c)
     pm = next(n for n, c in man["capas"].items() if c.get("formato") == "pmtiles")
     return man, geo, pm
 
@@ -723,16 +906,6 @@ def _mutaciones(data: Path) -> list[tuple[str, str, str, object]]:
 
         _mut_json(p, desplazar)
 
-    def mancha_fuera_de_su_bbox(p: Path):
-        # Basta desplazar una mancha un poco: D14 no tiene margen a proposito,
-        # porque bbox_comuna se calcula DE estas mismas manchas y encerrarlas es
-        # su unica razon de existir.
-        def mover(d):
-            g = d["features"][0]["geometry"]
-            g["coordinates"] = [[[x + 1.0, y] for x, y in anillo] for anillo in g["coordinates"]]
-
-        _mut_json(p, mover)
-
     def punto_con_huso_equivocado(p: Path):
         # El defecto que D15 existe para cazar: leer un archivo con el huso de su
         # vecino. Entre 18S y 19S son ~6 grados de longitud, muy por encima del
@@ -808,9 +981,127 @@ def _mutaciones(data: Path) -> list[tuple[str, str, str, object]]:
         if p.exists():
             _mut_json(p, colar)
 
+    def etiqueta_falsa_bajo_4_10(p: Path):
+        # Una fila de 'Otras causas' (4.10.x / 4.10) con la etiqueta de 4.1. El
+        # prefijo sigue cuadrando, asi que D16 queda verde: solo D16b puede verla.
+        def falsear(d):
+            t = ((man.get("capas") or {}).get("incendios") or {}).get("tablas") or {}
+            codigos, generales = t.get("causa_general_codigo") or [], t.get("causa_general") or []
+            if "4.10" not in codigos or "Faenas forestales" not in generales:
+                return
+            i410, ifaenas = codigos.index("4.10"), generales.index("Faenas forestales")
+            f = next((f for f in d.get("features", []) if f["properties"].get("causa_general_codigo") == i410), None)
+            if f is not None:
+                f["properties"]["causa_general"] = ifaenas
+
+        _mut_json(p, falsear)
+
+    def region_nan_en_sin_coordenadas(p: Path):
+        # Lo que publicaba una celda de region vacia antes del arreglo.
+        def colar(d):
+            li = (d.get("derivados") or {}).get("lineas_electricas") or {}
+            pr = (li.get("sin_coordenadas") or {}).get("por_region")
+            if isinstance(pr, dict):
+                pr["nan"] = 1
+
+        _mut_json(p, colar)
+
     def falta_un_feature_si_existe(p: Path):
         if p.exists():
             falta_un_feature(p)
+
+    # --- riesgo. Se muta la comuna con MENOS manchas que tenga al menos dos, y
+    # la mutacion de D14 por nombre usa otra, para no depender de una sola.
+    partes = ((man["capas"].get("riesgo") or {}).get("partes")) or {}
+    chicas = sorted((p["features"], c) for c, p in partes.items() if p.get("features", 0) >= 2)
+    cut_a = chicas[0][1] if chicas else None
+    cut_b = chicas[1][1] if len(chicas) > 1 else cut_a
+    arch_a = partes[cut_a]["archivo"] if cut_a else "riesgo/sin-partes.geojson"
+    arch_b = partes[cut_b]["archivo"] if cut_b else arch_a
+
+    def mancha_sin_geometria(p: Path):
+        _mut_json(p, lambda d: d["features"][0].__setitem__("geometry", None))
+
+    def mancha_fuera_de_chile(p: Path):
+        def mover(d):
+            g = d["features"][0]["geometry"]
+            polys = [g["coordinates"]] if g["type"] == "Polygon" else g["coordinates"]
+            for poly in polys:
+                for anillo in poly:
+                    for c in anillo:
+                        c[0] += 60.0
+
+        _mut_json(p, mover)
+
+    def mancha_fuera_de_su_caja(p: Path):
+        # Basta 0,5 grados al este: sigue dentro de Chile (D9 verde) y fuera de la
+        # caja de su comuna, que es lo unico que D14 puede ver.
+        def mover(d):
+            g = d["features"][0]["geometry"]
+            polys = [g["coordinates"]] if g["type"] == "Polygon" else g["coordinates"]
+            for poly in polys:
+                for anillo in poly:
+                    for c in anillo:
+                        c[0] += 0.5
+
+        _mut_json(p, mover)
+
+    def mancha_con_otra_grafia(p: Path):
+        # El defecto real de este insumo: la misma comuna escrita de dos formas
+        # («Coyhaique» / «Coihaique»). El archivo sigue perfecto en todo lo demas.
+        _mut_json(p, lambda d: d["features"][0]["properties"].__setitem__("comuna", "Coyhaique"))
+
+    def clase_incoherente(p: Path):
+        def subir(d):
+            pr = d["features"][0]["properties"]
+            clases = [c["clase"] for c in (man["capas"].get("riesgo") or {}).get("clases", [])]
+            if pr.get("clase") in clases:
+                pr["clase"] = clases[(clases.index(pr["clase"]) + 2) % len(clases)]
+
+        _mut_json(p, subir)
+
+    def pct_alto_fuera_de_rango(p: Path):
+        _mut_json(p, lambda d: d["features"][0]["properties"].__setitem__("pct_alto", 150.0))
+
+    def descuadrar_sin_geometria(p: Path):
+        # Lo que pasaria si el ETL dejara de contar las manchas sin geometria de
+        # la region 12: 1.231 manchas desaparecerian del visor sin que conste.
+        def tocar(d):
+            sg = ((d["capas"].get("riesgo") or {}).get("fuente") or {}).get("sin_geometria")
+            if isinstance(sg, dict):
+                sg["n"] = 0
+                sg["por_region"] = {}
+
+        _mut_json(p, tocar)
+
+    def quitar_una_region(p: Path):
+        def quitar(d):
+            rg = d["capas"].get("riesgo") or {}
+            pts = rg.get("partes") or {}
+            if not pts:
+                return
+            region = next(iter(pts.values()))["region"]
+            for c in [c for c, v in pts.items() if v["region"] == region]:
+                rg["features"] -= pts[c]["features"]
+                rg["fuente"]["leidas"] -= pts[c]["features"]
+                rg["fuente"]["filas_csv"] -= pts[c]["features"]
+                del pts[c]
+            rg["regiones"] = [x for x in rg.get("regiones", []) if x["region"] != region]
+
+        _mut_json(p, quitar)
+
+    def punto_con_cut_de_otra_comuna(p: Path):
+        # Lo que dejaria un CUT mal escrito en COMUNAS de build_infra_puntos: los
+        # iconos de Mulchen apareciendo en Los Angeles.
+        def cambiar(d):
+            fs = d.get("features") or []
+            cuts = sorted({f["properties"].get("cut") for f in fs} - {None})
+            if len(cuts) < 2:
+                return
+            a = fs[0]["properties"]
+            a["cut"] = next(c for c in cuts if c != a.get("cut"))
+
+        _mut_json(p, cambiar)
 
     return [
         ("D1", "borrar el archivo de una capa", arch_geo, borrar_archivo),
@@ -825,9 +1116,21 @@ def _mutaciones(data: Path) -> list[tuple[str, str, str, object]]:
         ("D10", "borrar un campo de filtro de los 200 primeros", arch_geo, sin_campo_de_filtro),
         ("D11", "colar una región sin canonizar en el manifest", "manifest.json", region_sin_canonizar),
         ("D13", "invertir el huso: desplazar la longitud 5° al oeste", "incendios.geojson", huso_invertido),
-        ("D14", "sacar una mancha 1° al este de su comuna", "priorizacion.geojson", mancha_fuera_de_su_bbox),
+        ("D1", "borrar el archivo de una comuna de riesgo", arch_a, borrar_archivo),
+        ("D6", "quitar una mancha de una comuna sin tocar el manifest", arch_a, falta_un_feature),
+        ("D8", "dejar sin geometría una mancha de riesgo", arch_a, mancha_sin_geometria),
+        ("D9", "llevar una mancha de riesgo 60° al este", arch_a, mancha_fuera_de_chile),
+        ("D14", "sacar una mancha 0,5° al este de la caja de su comuna", arch_a, mancha_fuera_de_su_caja),
+        ("D14", "escribir «Coyhaique» en una mancha de otra comuna", arch_b, mancha_con_otra_grafia),
         ("D15", "leer un punto con el huso vecino: 6° al oeste", "infra_puntos.geojson", punto_con_huso_equivocado),
+        ("D15", "dar a un punto el CUT de otra comuna", "infra_puntos.geojson", punto_con_cut_de_otra_comuna),
+        ("D19", "subir dos clases una mancha sin cambiar su nivel", arch_a, clase_incoherente),
+        ("D19", "pct_alto = 150 en una mancha", arch_b, pct_alto_fuera_de_rango),
+        ("D20", "olvidar en el manifest las manchas sin geometría", "manifest.json", descuadrar_sin_geometria),
+        ("D20", "quitar del manifest una región entera de riesgo", "manifest.json", quitar_una_region),
         ("D16", "volver a fundir 4.10 en 4.1 en la tabla del manifest", "manifest.json", fundir_codigo_general),
+        ("D16b", "etiquetar como 'Faenas forestales' una fila de 4.10", "incendios.geojson", etiqueta_falsa_bajo_4_10),
+        ("D11", "colar la región 'nan' en sin_coordenadas de un derivado", "manifest.json", region_nan_en_sin_coordenadas),
         ("D17", "intercambiar la comuna de dos incendios en la BBDD completa", arch_bbdd, intercambiar_comunas),
         ("D17", "quitar la columna Informe de un feature de la BBDD completa", arch_bbdd, quitar_columna_informe),
         ("D18", "colar un incendio de otra causa en lineas eléctricas", arch_lineas, colar_otra_causa),
@@ -854,10 +1157,13 @@ def negativas(data: Path, muestra: int = 500) -> bool:
     with tempfile.TemporaryDirectory(prefix="verify-negativas-") as tmp:
         espejo = Path(tmp) / "data"
         shutil.copytree(data, espejo)
-        original = {p.name: p.read_bytes() for p in espejo.iterdir() if p.is_file()}
-
         for ident, desc, arch, fn in muts:
             objetivo = espejo / arch
+            # Se guarda el archivo JUSTO antes de mutarlo, y no una foto del primer
+            # nivel de data/: las comunas de riesgo viven en data/riesgo/, y con la
+            # foto de primer nivel la mutacion de una comuna quedaba sin restaurar
+            # y contaminaba todas las siguientes.
+            antes = objetivo.read_bytes() if objetivo.exists() else None
             try:
                 fn(objetivo)
                 r = Res()
@@ -867,8 +1173,8 @@ def negativas(data: Path, muestra: int = 500) -> bool:
                     verificar(espejo, muestra, res=r)
                 roja = ident in r.rojos
             finally:
-                if objetivo.name in original:
-                    objetivo.write_bytes(original[objetivo.name])
+                if antes is not None:
+                    objetivo.write_bytes(antes)
 
             if not roja:
                 sobreviven.append((ident, desc))

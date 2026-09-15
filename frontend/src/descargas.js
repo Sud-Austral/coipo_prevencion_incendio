@@ -228,45 +228,41 @@ export function csvStandby(features, pasa) {
 }
 
 /**
- * Areas de priorizacion.
+ * Manchas de riesgo de UNA comuna, la cargada.
  *
- * `puntaje_medio` sale ACOMPAÑADO de `puntaje_min` y `puntaje_max`, igual que en
- * la ficha y por la misma razon: solo enganya cuando aparece solo. La mancha
- * COYHAIQU-MUYBAJ-01 tiene medio 0,113 y maximo 0,200 sobre 561.027 ha.
+ * `nivel_medio` sale ACOMPAÑADO de su rango y de `pct_alto`, igual que en la
+ * ficha y por la misma razon: la clase es un promedio y sola enganya. La region
+ * y el codigo CUT van en cada fila porque el archivo circula suelto y el nombre
+ * de la comuna no basta para volver a unirlo (el modelo escribe «Coihaique» y
+ * otras fuentes «Coyhaique»).
  *
  * NO se exporta ninguna columna normalizada. La normalizacion es una lectura
  * visual de la comuna que se este mirando; en un archivo que va a circular
- * suelto, una columna asi se leeria como si fuera el puntaje y caducaria en
- * cuanto cambiara el conjunto de comunas.
+ * suelto, una columna asi se leeria como si fuera el nivel del modelo.
  */
-export function csvPriorizacion(features, pasa) {
+export function csvRiesgo(features, { region, cut } = {}) {
   const filas = []
   for (const f of features ?? []) {
     const p = f.properties
-    if (pasa && !pasa(p)) continue
     filas.push([
+      region,
+      cut,
       p.comuna,
       p.mancha_id,
       p.clase,
-      num(p.puntaje_medio),
-      num(p.puntaje_min),
-      num(p.puntaje_max),
+      num(p.nivel_medio),
+      num(p.nivel_medio_min),
+      num(p.nivel_medio_max),
+      num(p.pct_alto),
       num(p.n_hexagonos),
       num(p.area_ha),
-      num(p.sub_riesgo),
-      num(p.sub_interfaz),
-      num(p.sub_infra),
-      num(p.sub_preparadas),
-      p.componente_dominante,
-      num(p.n_elementos),
     ])
   }
   return {
     texto: armarCSV(
       [
-        'comuna', 'mancha_id', 'clase', 'puntaje_medio', 'puntaje_min', 'puntaje_max',
-        'n_hexagonos', 'area_ha', 'sub_riesgo', 'sub_interfaz', 'sub_infra',
-        'sub_preparadas', 'componente_dominante', 'n_elementos',
+        'region', 'cod_comuna', 'comuna', 'mancha_id', 'clase', 'nivel_medio',
+        'nivel_medio_min', 'nivel_medio_max', 'pct_alto', 'n_hexagonos', 'area_ha',
       ],
       filas,
     ),

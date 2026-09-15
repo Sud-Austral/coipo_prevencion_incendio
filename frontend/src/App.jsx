@@ -5,8 +5,8 @@ import {
   CAPAS,
   COLOR_CAUSA,
   COLOR_CAUSA_OTRA,
-  COLOR_CLASE,
   COLOR_FAMILIA,
+  COLOR_NIVEL,
   COLOR_OECV,
   COLOR_REDVIAL,
   COLOR_RUTA,
@@ -20,8 +20,8 @@ import {
   MAX_PANEL,
   MIN_MAPA,
   MIN_PANEL,
-  VISTAS,
   VISTA_INICIAL,
+  vistaValida,
   fmt,
 } from './config'
 import { useGeoJSON, useKpis, useManifest } from './hooks/useDatos'
@@ -38,7 +38,7 @@ import {
 import { colorDeMancha, contextoEscala, rangoComunal } from './escalas'
 import CapaIconos from './components/CapaIconos'
 import CapaPoligonos from './components/CapaPoligonos'
-import PanelPriorizacion from './components/PanelPriorizacion'
+import PanelRiesgo from './components/PanelRiesgo'
 import Banner from './components/Banner'
 import CartelContexto from './components/CartelContexto'
 import EtiquetaImagen from './components/EtiquetaImagen'
@@ -81,7 +81,11 @@ const menosMovimiento = () => window.matchMedia('(prefers-reduced-motion: reduce
  * region. Duplicarlo era la via mas corta a que los dos encuadres divergieran.
  */
 function limitesDelManifest(manifest) {
+  // Sin las capas partidas por comuna (riesgo): cubren el pais entero, islas y
+  // Cabo de Hornos incluidos, pero se dibujan de a una comuna y en otra pestaña.
+  // Con su bbox el encuadre inicial de incendios se corria al sur y al este.
   const bboxes = Object.values(manifest?.capas ?? {})
+    .filter((c) => !c.partes)
     .map((c) => c.bbox)
     .filter(Boolean)
   if (!bboxes.length) return null
@@ -95,6 +99,27 @@ function limitesDelManifest(manifest) {
     [b[1], b[0]],
     [b[3], b[2]],
   ]
+}
+
+/**
+ * Codigo CUT de la comuna pedida en ?comuna=, o '' si no se reconoce.
+ *
+ * Acepta el codigo (lo que escribe el visor desde el 2026-09-15), el nombre tal
+ * como lo trae el modelo, el nombre sin tildes ni mayusculas, y los alias que el
+ * ETL publica para los enlaces que ya circulaban con el modelo anterior
+ * («Mulchen», «Coyhaique»). Ninguna comuna se escribe aqui: todo sale del
+ * manifest.
+ */
+function cutDeComuna(meta, valor) {
+  const partes = meta?.partes
+  if (!partes || !valor) return ''
+  if (partes[valor]) return valor
+  const clave = (x) => String(x).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
+  const buscado = clave(valor)
+  for (const [cut, p] of Object.entries(partes)) {
+    if (clave(p.comuna) === buscado || (p.alias ?? []).some((a) => clave(a) === buscado)) return cut
+  }
+  return ''
 }
 
 /**
@@ -135,10 +160,10 @@ export default function App() {
   const [base, setBase] = useState(inicial.base ?? 'Claro')
   // Vista activa. El mapa NO se remonta al cambiar: solo cambian las capas que
   // se montan y el panel izquierdo, para que el encuadre sobreviva al cambio de
-  // pestaña. Un valor desconocido en ?vista= cae a 'incendios'.
-  const [vista, setVista] = useState(
-    VISTAS.some((v) => v.id === inicial.vista) ? inicial.vista : 'incendios',
-  )
+  // pestaña. Un valor desconocido en ?vista= cae a 'incendios', y uno ya
+  // publicado con otro nombre (?vista=priorizacion) abre la vista que lo
+  // reemplazo: ver ALIAS_VISTA en config.js.
+  const [vista, setVista] = useState(vistaValida(inicial.vista))
   const [capasActivas, setCapasActivas] = useState(
     inicial.capas ?? CAPAS.filter((c) => c.porDefecto).map((c) => c.id),
   )
@@ -349,7 +374,7 @@ export default function App() {
       setCapasActivas(e.capas ?? CAPAS.filter((c) => c.porDefecto).map((c) => c.id))
       setFiltros(e.filtros ?? {})
       setBase(e.base ?? 'Claro')
-      setVista(VISTAS.some((v) => v.id === e.vista) ? e.vista : 'incendios')
+      setVista(vistaValida(e.vista))
       if (e.center) map.setView(e.center, e.zoom ?? map.getZoom(), { animate: false })
     }
     window.addEventListener('popstate', alVolver)
@@ -386,11 +411,17 @@ export default function App() {
     esGeoJSON(capaMeta('redvial')) ? capaMeta('redvial')?.archivo : null,
     activa('redvial'),
   )
-  // Las dos capas de priorizacion se descargan al entrar en SU pestaña y no
-  // antes: quien solo mira incendios no paga 875 KiB que no va a ver.
-  const enPriorizacion = vista === 'priorizacion'
-  const prioriz = useGeoJSON(capaMeta('priorizacion')?.archivo, enPriorizacion)
-  const infraPuntos = useGeoJSON(capaMeta('infra_puntos')?.archivo, enPriorizacion)
+  // Las capas de la vista de riesgo se descargan al entrar en SU pestaña y no
+  // antes. Las manchas, ademas, de a UNA comuna: son 343 archivos y 163 MiB, y
+  // solo se pide el de la comuna elegida (Natales, la mayor, pesa 36,8 MB).
+  // La comuna viaja dentro de `filtros` y no en un estado aparte: asi urlState
+  // la serializa sola como ?comuna=, sin tocar nada mas.
+  const enRiesgo = vista === 'riesgo'
+  const metaRiesgo = capaMeta('riesgo')
+  const cutRiesgo = cutDeComuna(metaRiesgo, filtros.comuna)
+  const parteRiesgo = cutRiesgo ? metaRiesgo.partes[cutRiesgo] : null
+  const riesgo = useGeoJSON(parteRiesgo?.archivo, enRiesgo && !!parteRiesgo, { cachear: false })
+  const infraPuntos = useGeoJSON(capaMeta('infra_puntos')?.archivo, enRiesgo)
 
   const cargando = {
     incendios: incendios.cargando,
@@ -399,7 +430,7 @@ export default function App() {
     puntos_standby: standby.cargando,
     rutas: rutas.cargando,
     redvial: redvial.cargando,
-    priorizacion: prioriz.cargando,
+    riesgo: riesgo.cargando,
     infra_puntos: infraPuntos.cargando,
   }
 
@@ -417,7 +448,7 @@ export default function App() {
     puntos_standby: standby.error,
     rutas: rutas.error,
     redvial: redvial.error,
-    priorizacion: prioriz.error,
+    riesgo: riesgo.error,
     infra_puntos: infraPuntos.error,
   }
   const reintentos = {
@@ -427,7 +458,7 @@ export default function App() {
     puntos_standby: standby.reintentar,
     rutas: rutas.reintentar,
     redvial: redvial.reintentar,
-    priorizacion: prioriz.reintentar,
+    riesgo: riesgo.reintentar,
     infra_puntos: infraPuntos.reintentar,
   }
 
@@ -488,10 +519,8 @@ export default function App() {
   const pasaVerificado = useMemo(() => pasaPorCampos(['region']), [pasaPorCampos])
   const pasaVial = useMemo(() => pasaPorCampos(['region', 'carpeta']), [pasaPorCampos])
 
-  // ---------- priorizacion ----------
-  // La comuna viaja dentro de `filtros` y no en un estado aparte: asi urlState
-  // la serializa sola como ?comuna=, sin tocar nada mas.
-  const comunaPrior = filtros.comuna ?? ''
+  // ---------- riesgo ----------
+  const comunaRiesgo = parteRiesgo?.comuna ?? ''
   const [modoEscala, setModoEscala] = useState('absoluta')
   const [familiasActivas, setFamiliasActivas] = useState(null)
   // Opacidad del relleno de las manchas. Arranca en 0,65 --el valor con el que
@@ -528,28 +557,35 @@ export default function App() {
   // se apaga solo. Es lo que impide que una escala relativa quede activa sobre
   // una vista multicomunal, que es donde comparar colores entre comunas engaña.
   useEffect(() => {
-    if (!comunaPrior && modoEscala !== 'absoluta') setModoEscala('absoluta')
-  }, [comunaPrior, modoEscala])
+    if (!comunaRiesgo && modoEscala !== 'absoluta') setModoEscala('absoluta')
+  }, [comunaRiesgo, modoEscala])
 
   // Los anclajes se recalculan al cambiar de comuna o de modo. NO se guarda
   // nada en las properties: `ctx` es el unico portador de la normalizacion.
   const ctxEscala = useMemo(
-    () => contextoEscala(prioriz.data?.features, comunaPrior, modoEscala),
-    [prioriz.data, comunaPrior, modoEscala],
+    () => contextoEscala(riesgo.data?.features, comunaRiesgo, modoEscala),
+    [riesgo.data, comunaRiesgo, modoEscala],
   )
 
+  // Etiqueta de clase -> color. Las etiquetas y su nivel vienen del manifest y
+  // los colores de config.js por NIVEL: una clase que el manifest no declare
+  // sale gris, y D19/C-clases lo vigilan.
+  const colorClase = useMemo(() => {
+    const porClase = new Map((metaRiesgo?.clases ?? []).map((c) => [c.clase, COLOR_NIVEL[c.nivel]]))
+    return (clase) => porClase.get(clase) ?? '#CCCCCC'
+  }, [metaRiesgo])
+
   // El estilo se pasa ya construido a la capa, que no sabe de escalas ni de
-  // opacidad: cambiar de comuna o mover el slider repinta 572 poligonos sin
-  // reconstruir ninguno. Es la UNICA definicion del estilo de una mancha --
-  // antes el valor de arranque estaba tambien en CapaPoligonos y las dos copias
-  // podian divergir.
+  // opacidad: normalizar o mover el slider repinta sin reconstruir ningun
+  // poligono. Es la UNICA definicion del estilo de una mancha -- antes el valor
+  // de arranque estaba tambien en CapaPoligonos y las dos copias podian divergir.
   const estiloMancha = useCallback(
     (p) => ({
-      fillColor: colorDeMancha(p, ctxEscala),
+      fillColor: colorDeMancha(p, ctxEscala, colorClase),
       // El CONTORNO conserva siempre el color absoluto de la clase, tambien en
       // modo relativo: doble codificacion sin coste de espacio, y la lectura
       // del modelo no desaparece nunca del mapa.
-      color: COLOR_CLASE[p.clase] ?? '#888',
+      color: colorClase(p.clase),
       weight: 0.6,
       fillOpacity: opacidad,
       // El borde acompaña al relleno pero mas marcado, para que al bajar la
@@ -558,13 +594,14 @@ export default function App() {
       // transparente» tiene que serlo de verdad, o el control miente.
       opacity: Math.min(1, opacidad * 1.4),
     }),
-    [ctxEscala, opacidad],
+    [ctxEscala, opacidad, colorClase],
   )
 
-  const pasaMancha = useMemo(
-    () => (comunaPrior ? (p) => p.comuna === comunaPrior : null),
-    [comunaPrior],
-  )
+  // Los iconos se cruzan con la comuna por CODIGO CUT, no por nombre: la
+  // infraestructura escribe «Coyhaique» y «Mulchen», y el modelo de riesgo
+  // «Coihaique» y «Mulchén». Por nombre, elegir esas dos comunas dejaba 0 iconos.
+  // Sin comuna no se dibuja ninguno: no hay manchas que acompañar.
+  const pasaPunto = useMemo(() => (p) => p.cut === cutRiesgo, [cutRiesgo])
 
   /**
    * Encuadra el mapa en una region (o en el pais entero con region vacia).
@@ -700,25 +737,24 @@ export default function App() {
         conCoord(
           fichaMancha(
             p,
-            // La posicion en su comuna solo se calcula cuando esa comuna esta
-            // seleccionada: fuera de ese contexto «la 3.ª de 110» no dice nada.
-            comunaPrior === p.comuna ? rangoComunal(prioriz.data?.features, p) : null,
-            colorDeMancha(p, ctxEscala),
+            rangoComunal(riesgo.data?.features, p),
+            colorDeMancha(p, ctxEscala, colorClase),
+            parteRiesgo?.region,
           ),
           ll,
         ),
       ),
-    [abrirFicha, comunaPrior, prioriz.data, ctxEscala],
+    [abrirFicha, riesgo.data, ctxEscala, colorClase, parteRiesgo],
   )
   const selPunto = useCallback(
     (p, ll) => abrirFicha(conCoord(fichaPunto(p, COLOR_FAMILIA[p.familia] ?? '#4B5563'), ll)),
     [abrirFicha],
   )
 
-  /** Encuadra el mapa en el bbox que el ETL calculo para esa comuna. */
+  /** Encuadra el mapa en el bbox que el ETL calculo para esa comuna (por CUT). */
   const encuadrarComuna = useCallback(
-    (comuna) => {
-      const caja = capaMeta('priorizacion')?.bbox_comuna?.[comuna]
+    (cut) => {
+      const caja = capaMeta('riesgo')?.partes?.[cut]?.bbox
       if (!map || !caja) return
       map.fitBounds(
         [
@@ -731,29 +767,24 @@ export default function App() {
     [map, capaMeta],
   )
 
-  // Al elegir comuna se encuadra sola, y al entrar en la pestaña se encuadra al
-  // conjunto. Sin esto la vista abre en el encuadre nacional heredado de la
-  // pestaña de incendios y las areas priorizadas -- que cubren tres comunas --
-  // se ven como dos motas, que es como se veia en la primera captura.
-  //
-  // El bbox de la capa NO sirve para el caso de una comuna: Biobio y Aysen
-  // estan a ~1.000 km, asi que encuadrar las tres juntas es encuadrar medio
-  // pais. Por eso el ETL publica ademas un bbox por comuna.
-  const encuadradoPrior = useRef(false)
+  // Al elegir comuna se encuadra sola, y al entrar en la pestaña sin comuna se
+  // encuadra el pais. El ETL publica una caja por comuna (partes[cut].bbox),
+  // redondeada hacia afuera para que ninguna mancha quede fuera (D14).
+  const encuadradoRiesgo = useRef(false)
   useEffect(() => {
-    if (!enPriorizacion) {
-      encuadradoPrior.current = false
+    if (!enRiesgo) {
+      encuadradoRiesgo.current = false
       return
     }
-    if (comunaPrior) {
-      encuadrarComuna(comunaPrior)
-      encuadradoPrior.current = true
+    if (cutRiesgo) {
+      encuadrarComuna(cutRiesgo)
+      encuadradoRiesgo.current = true
       return
     }
     // Solo la PRIMERA vez que se entra sin comuna: si se reencuadrara en cada
     // render, el usuario no podria alejar ni desplazar el mapa.
-    if (encuadradoPrior.current || !map) return
-    const b = capaMeta('priorizacion')?.bbox
+    if (encuadradoRiesgo.current || !map) return
+    const b = capaMeta('riesgo')?.bbox
     if (!b) return
     map.fitBounds(
       [
@@ -762,8 +793,8 @@ export default function App() {
       ],
       { padding: [24, 24] },
     )
-    encuadradoPrior.current = true
-  }, [enPriorizacion, comunaPrior, encuadrarComuna, map, capaMeta])
+    encuadradoRiesgo.current = true
+  }, [enRiesgo, cutRiesgo, encuadrarComuna, map, capaMeta])
 
   // Ruta de teclado hacia las fichas.
   //
@@ -1080,9 +1111,9 @@ export default function App() {
   // data-regimen lo publica JS para que la verificacion pueda comprobar que
   // coincide con el numero de pistas que resuelve el CSS: los cortes viven en
   // los dos sitios y esa duplicacion es la que B12 vigila.
-  // En priorizacion la pista de indicadores no existe, asi que la rejilla se
+  // En riesgo la pista de indicadores no existe, asi que la rejilla se
   // queda en dos columnas por la misma via que usa el plegado manual.
-  const kpiActivo = kpiVisible && !enPriorizacion
+  const kpiActivo = kpiVisible && !enRiesgo
   const clases = [
     'app',
     panelVisible ? '' : 'sin-panel',
@@ -1122,10 +1153,10 @@ export default function App() {
         ☰
       </button>
 
-      {enPriorizacion ? (
-        <PanelPriorizacion
+      {enRiesgo ? (
+        <PanelRiesgo
           manifest={manifest}
-          comuna={comunaPrior}
+          cut={cutRiesgo}
           onComuna={(v) => setFiltro('comuna', v)}
           onModo={setModoEscala}
           opacidad={opacidad}
@@ -1138,15 +1169,16 @@ export default function App() {
               a.includes(f) ? a.filter((x) => x !== f) : [...a, f],
             )
           }
-          cuentaAreas={cuentas.priorizacion}
-          cuentaPuntos={cuentas.infra_puntos}
+          cuentaAreas={cuentas.riesgo}
+          cuentaPuntos={cutRiesgo ? cuentas.infra_puntos : 0}
           iconosLejos={iconosLejos}
-          cargando={cargando.priorizacion}
-          error={errores.priorizacion}
-          onReintentar={() => reintentos.priorizacion?.()}
+          cargando={cargando.riesgo}
+          error={errores.riesgo}
+          onReintentar={() => reintentos.riesgo?.()}
           onEncuadrar={encuadrarComuna}
-          datosAreas={prioriz.data}
+          datosAreas={riesgo.data}
           datosPuntos={infraPuntos.data}
+          pasaPuntos={pasaPunto}
           map={map}
           base={base}
           onBase={setBase}
@@ -1221,8 +1253,8 @@ export default function App() {
         ref={contenedor}
         id="vista-activa"
         aria-label={
-          vista === 'priorizacion'
-            ? 'Mapa de áreas de priorización territorial'
+          vista === 'riesgo'
+            ? 'Mapa de riesgo de incendio forestal por comuna'
             : 'Mapa de incendios forestales ya investigados'
         }
         aria-describedby="mapa-ayuda"
@@ -1255,9 +1287,9 @@ export default function App() {
           paneles anclados (>1200 px) abrirlos no cambia nada visible y el
           cartel se quedaria en pantalla como si el boton no funcionara. */}
       {/* El cartel explica la capa de incendios («cada punto es un incendio que
-          ya ocurrio…»), asi que en la vista de priorizacion describiria algo
+          ya ocurrio…»), asi que en la vista de riesgo describiria algo
           que no esta en pantalla. */}
-      {cartelVisible && !enPriorizacion && (
+      {cartelVisible && !enRiesgo && (
         <CartelContexto
           manifest={manifest}
           capasActivas={capasActivas}
@@ -1277,10 +1309,10 @@ export default function App() {
           esta es la tercera columna. Los Capa* de abajo devuelven null y no
           ocupan celda, y ModalFicha es un <dialog> que vive en la top layer.
           Los indicadores hablan SOLO de incendios investigados --causas,
-          superficie quemada, temporadas--, asi que en la vista de priorizacion
+          superficie quemada, temporadas--, asi que en la vista de riesgo
           la pista entera se colapsa en vez de mostrar cifras de la otra
           pestaña junto a un mapa que no las ilustra. */}
-      {!enPriorizacion && (
+      {!enRiesgo && (
         <>
           <div className="funda-kpi">
             <PanelIndicadores {...propsIndicadores} abierto={kpiVisible} onCerrar={cerrarKpi} />
@@ -1317,22 +1349,22 @@ export default function App() {
           bringToBack() al montar: el orden del JSX no basta porque en canvas
           manda el orden en que terminan de descargarse los archivos. Ver la
           regla 2 de CapaPoligonos.jsx. */}
-      {enPriorizacion && (
+      {enRiesgo && (
         <>
+          {/* Sin `pasa`: el archivo cargado YA es solo la comuna elegida. */}
           <CapaPoligonos
             map={map}
-            data={prioriz.data}
+            data={riesgo.data}
             visible
-            pasa={pasaMancha}
             estilo={estiloMancha}
             onSeleccion={selMancha}
-            onCuenta={setCuenta('priorizacion')}
+            onCuenta={setCuenta('riesgo')}
           />
           <CapaIconos
             map={map}
             data={infraPuntos.data}
             familiasActivas={familiasActivas ?? []}
-            pasa={pasaMancha}
+            pasa={pasaPunto}
             onSeleccion={selPunto}
             onCuenta={setCuenta('infra_puntos')}
             onLejos={setIconosLejos}
@@ -1340,7 +1372,7 @@ export default function App() {
         </>
       )}
 
-      {!enPriorizacion && (
+      {!enRiesgo && (
         <>
       {/* Red vial primero: es contexto y debe quedar bajo el resto. */}
       {metaRedvial &&

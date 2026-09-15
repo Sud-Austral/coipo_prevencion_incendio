@@ -5,6 +5,11 @@ on:
     branches: [main]
     paths:
       - 'INSUMO_INCENDIO/**'
+      # Las manchas de riesgo y la infraestructura critica. Sin estas dos lineas
+      # subir un insumo nuevo del modelo no regeneraba nada: habia que lanzar el
+      # workflow a mano y nada lo recordaba.
+      - 'INSUMO_RIESGO/**'
+      - 'INSUMO_PRIORIZACION/**'
       - 'ETL/**'
       - 'frontend/**'
       - '.github/workflows/deploy.yml'
@@ -136,28 +141,29 @@ jobs:
       - run: npm run build
         working-directory: frontend
 
-      # La vista de priorización se verifica AQUÍ y no en `verificar-visual`, al
-      # revés que el banner y el panel. La razón es la contraria a la de aquel
-      # job: C1..C10 afirman cifras de las capas REALES —572 áreas, las 110 de
-      # Mulchén, su mínimo 0,1361 y su máximo 0,5555—, y `verificar-visual`
-      # excluye `/frontend/public/data/` de su sparse-checkout a propósito para
-      # bajar menos de 1 MB. Allí no hay datos que afirmar; aquí el ETL acaba de
-      # generarlos dos pasos más arriba.
+      # La vista de riesgo (el arnés conserva su nombre de «priorización») se
+      # verifica AQUÍ y no en `verificar-visual`, al revés que el banner y el
+      # panel. La razón es la contraria a la de aquel job: C2..C15 afirman cifras
+      # de las capas REALES —las manchas y los puntos de la comuna que eligen por
+      # definición, sus extremos de nivel, las clases del manifest—, y
+      # `verificar-visual` excluye `/frontend/public/data/` de su sparse-checkout
+      # a propósito para bajar menos de 1 MB. Allí no hay datos que afirmar; aquí
+      # el ETL acaba de generarlos dos pasos más arriba.
       #
       # Va DESPUÉS de `npm run build` porque el arnés sirve `dist/` y no lo
       # construye, y ANTES de subir el artefacto de Pages: si la vista está
       # rota, no se despliega. El commit de las capas ya ocurrió más arriba, así
       # que un fallo aquí no deja los datos sin versionar.
       #
-      # Sin `--negativas`: son tres mutaciones con un `npm run build` cada una,
-      # ~4 min, y `mejoras.md` §D4 ya decidió que los mutantes de frontend no
-      # corren en cada push. El equivalente barato de los datos
-      # —`verify.py --negativas`, 19 s— sí corre, dos pasos más arriba.
-      - name: Verificación visual de la vista de priorización
+      # Sin `--negativas`: son 21 mutaciones con un `npm run build` cada una, y
+      # `mejoras.md` §D4 ya decidió que los mutantes de frontend no corren en
+      # cada push. El equivalente de los datos —`verify.py --negativas`, 31
+      # mutaciones, ~2 min en Windows— sí corre, dos pasos más arriba.
+      - name: Verificación visual de la vista de riesgo
         run: npm run verify:priorizacion
         working-directory: frontend
 
-      - name: Capturas de priorización
+      - name: Capturas de la vista de riesgo
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -338,7 +344,14 @@ jobs:
           # deja de ser igual a "pmtiles", el bucle de Range se salta TODAS las
           # capas y el job pasa en verde sin haber comprobado nada. Comprobado
           # el 2026-09-10 corriendo este mismo guion en Windows.
-          python3 -c "import json; m=json.load(open('manifest.json', encoding='utf-8')); [print(n, c['archivo'], c['bytes'], c.get('formato','geojson')) for n, c in m['capas'].items()]" | sed 's/[[:space:]]*$//' > capas.txt
+          python3 -c "import json; m=json.load(open('manifest.json', encoding='utf-8')); [print(n, c['archivo'], c['bytes'], c.get('formato','geojson')) for n, c in m['capas'].items() if 'archivo' in c]" | sed 's/[[:space:]]*$//' > capas.txt
+
+          # Las capas partidas por comuna (riesgo: 343 archivos) no tienen un
+          # `archivo` sino `partes`, y la linea de arriba las salta. Cada parte
+          # entra a la MISMA lista con su nombre, para que el bucle de bytes las
+          # recorra una a una. Si riesgo esta declarada y no trae partes, FALLA:
+          # la vista no tendria nada que cargar.
+          python3 -c "import json, sys; m=json.load(open('manifest.json', encoding='utf-8')); r=m['capas'].get('riesgo'); r is None or r.get('partes') or sys.exit('FALLA: capas.riesgo sin partes'); [print(n + '/' + k, p['archivo'], p['bytes'], 'geojson') for n, c in m['capas'].items() for k, p in (c.get('partes') or {}).items()]" | sed 's/[[:space:]]*$//' >> capas.txt
 
           # Los derivados van en `manifest.derivados` y no en `capas` (si no, el
           # visor duplicaria los filtros), asi que la linea de arriba no los ve.
@@ -346,7 +359,7 @@ jobs:
           # bytes los recorra. Sin lineas_electricas el job FALLA: la pagina
           # publicada no tiene nada que dibujar y lo dice con un error.
           python3 -c "import json, sys; m=json.load(open('manifest.json', encoding='utf-8')); d=m.get('derivados') or {}; 'lineas_electricas' in d or sys.exit('FALLA: manifest.derivados no declara lineas_electricas'); [print(n, c['archivo'], c['bytes'], c.get('formato','geojson')) for n, c in d.items()]" | sed 's/[[:space:]]*$//' >> capas.txt
-          cat capas.txt
+          echo "$(wc -l < capas.txt) archivos a comprobar"
 
           # Accept-Encoding: identity es OBLIGATORIO. Pages comprime
           # application/octet-stream, y sin esa cabecera se compara el tamano

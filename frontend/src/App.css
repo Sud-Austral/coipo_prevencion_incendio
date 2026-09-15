@@ -511,7 +511,7 @@ select {
   display: inline-block;
 }
 
-/* ---------- priorización ---------- */
+/* ---------- riesgo ---------- */
 
 /* Texto de apoyo del panel: explica una decisión, no rotula un dato. */
 .pista {
@@ -519,6 +519,22 @@ select {
   color: var(--text-2);
   margin: 6px 0 0;
   line-height: 1.4;
+}
+
+/* .centrar sube 4 px para pegarse al desplegable que tiene encima. Con una
+   pista en medio -«Descarga de 35,1 MB» al elegir Natales- esos 4 px la montaban
+   sobre el borde del botón (visto en captura el 2026-09-15). */
+.pista + .centrar {
+  margin-top: 8px;
+}
+
+/* Contorno en las fichas de la leyenda de clases: el paso más oscuro de la
+   rampa del modelo (#650101, Muy Alto) sobre el fondo del panel en tema oscuro
+   no se distinguía del fondo (visto en captura el 2026-09-15). --border se
+   quedaba en ~1,3:1 contra el panel oscuro y tampoco se veía; --text-2 es el
+   gris de texto secundario, 5,20:1 contra ese mismo panel. */
+.leyenda .chip {
+  box-shadow: 0 0 0 1px var(--text-2);
 }
 
 /* Dos columnas: los cuatro botones de datos son pares (CSV / GeoJSON de cada
@@ -1535,10 +1551,10 @@ select {
   .funda-kpi {
     display: block;
     position: fixed;
-    /* NO var(--alto-minimo-banner) a secas como .panel: aquella regla solo es
-       exacta porque su media query corta en 900, por debajo del cruce de
-       1164,83 px. Esta llega hasta 1200, donde la banda ya mide 70,05 px, asi
-       que se reproduce la formula del banner. */
+    /* NO var(--alto-minimo-banner) a secas: esta media query llega hasta
+       1200, donde la banda ya mide 70,05 px (el cruce es 1164,83), y ademas la
+       cabecera incluye la barra de pestañas. .panel usa la misma variable por
+       este segundo motivo. */
     inset: calc(var(--alto-banner)) 0 0 auto;
     width: var(--ancho-kpi);
     overflow: hidden;
@@ -1611,10 +1627,6 @@ select {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  /* INVARIANTE de la regla de posicion que sigue: a <=900 px el banner mide
-     SIEMPRE --alto-minimo-banner, porque 900 < 1164,83 (el cruce). Si alguien
-     sube este breakpoint por encima del cruce, deja de ser exacta. */
-
   /* Mismo motivo que .panel-kpi: ver el comentario del bloque de 1200 px.
      El tirador no tiene sentido en un cajon de ancho fijo. */
   .tirador {
@@ -1630,8 +1642,15 @@ select {
        y la fecha. El cajon derecho no lo sufria solo porque su funda va DESPUES
        de .mapa. Ver el comentario largo de .funda-kpi. */
     z-index: 1100;
-    /* Arranca bajo el banner en vez de taparlo. */
-    inset: var(--alto-minimo-banner) auto 0 0;
+    /* Arranca bajo la cabecera ENTERA --imagen mas barra de pestañas-- en vez
+       de taparla. Con var(--alto-minimo-banner) a secas, que era lo que habia,
+       el cajon empezaba en y=68 y la barra de pestañas vive entre 68 y 106:
+       medido el 2026-09-14 a 390 y 768 px con el cajon abierto,
+       elementFromPoint en el centro de «Incendios» y de «Priorizacion»
+       devolvia el h1 del cajon, y en la captura la barra no se veia. Era la
+       septima regla que se quedo corta al añadir las pestañas (ver
+       --alto-banner en index.css). Lo vigila B24 de verify-panel.mjs. */
+    inset: var(--alto-banner) auto 0 0;
     width: 300px;
     transform: translateX(-100%);
     visibility: hidden;

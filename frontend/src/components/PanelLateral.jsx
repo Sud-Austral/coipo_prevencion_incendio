@@ -13,6 +13,7 @@ import {
   COLOR_STANDBY,
   FILTROS,
   NO_ACTIVOS,
+  UNIDAD_CAPA,
   fechaLarga,
   fmt,
   temporadasIncendios,
@@ -66,19 +67,34 @@ export default function PanelLateral({
   // Las opciones de cada filtro salen del manifest: el frontend no hardcodea
   // ninguna temporada, region ni causa. Si el ETL ve una temporada nueva,
   // aparece sola aqui.
-  const opcionesDe = (campo) => {
-    const vistos = new Map()
-    for (const capaId of Object.keys(capasMan)) {
-      const dom = capasMan[capaId]?.dominios?.[campo]
-      if (!dom) continue
-      for (const { v, n } of dom) vistos.set(v, (vistos.get(v) ?? 0) + n)
+  // Dos fuentes distintas a proposito (ver FILTROS en config.js): los VALORES
+  // salen de todas las capas que el filtro recorta, y la CUENTA de una sola.
+  // Sumar las cuentas de varias capas daba «Biobío (5.049)», mezcla de
+  // incendios, obras, puntos, tramos y rutas.
+  // La que cuenta es la PRIMERA ENCENDIDA de `f.capas` (que va en orden de
+  // prioridad) con ese campo en su `dominios`. Una capa duena fija contaba
+  // aunque estuviera apagada: con ?capas=redvial, «Ripio (1.892 rutas)» era la
+  // cifra de Rutas de despliegue, que no estaba en el mapa. Exigir el dominio
+  // evita escribir «(0 obras)» en todas las opciones cuando el ETL no publico
+  // el campo: sin capa que cuente, el filtro no se pinta, y B27 lo delata.
+  const capaQueCuenta = (f) =>
+    f.capas.find((c) => capasActivas.includes(c) && capasMan[c]?.dominios?.[f.campo]) ?? null
+
+  const opcionesDe = (f, capa) => {
+    const cuenta = new Map()
+    for (const { v, n } of Object.values(capasMan).flatMap((m) => m?.dominios?.[f.campo] ?? [])) {
+      cuenta.set(v, (cuenta.get(v) ?? 0) + n)
+    }
+    const valores = new Set(cuenta.keys())
+    for (const capaId of f.capas) {
+      for (const { v } of capasMan[capaId]?.dominios?.[f.campo] ?? []) valores.add(v)
     }
     // Las regiones se ordenan alfabeticamente y el resto por frecuencia. Nadie
     // busca su region por cuantos incendios tuvo: con el orden por cuenta, la
     // lista empezaba en La Araucania, Biobio, Maule… y encontrar la propia
     // exigia leerlas todas.
-    return [...vistos.entries()].sort(
-      campo === 'region'
+    return [...valores].map((v) => [v, cuenta.get(v) ?? 0]).sort(
+      f.campo === 'region'
         ? (a, b) => claveRegion(a[0]).localeCompare(claveRegion(b[0]), 'es')
         : (a, b) => b[1] - a[1],
     )
@@ -198,20 +214,30 @@ export default function PanelLateral({
       <section>
         <h2>Filtros</h2>
         {filtrosVisibles.map((f) => {
-          const ops = opcionesDe(f.campo)
+          const capa = capaQueCuenta(f)
+          if (!capa) return null
+          const unidad = UNIDAD_CAPA[capa]
+          const ops = opcionesDe(f, capa)
           if (!ops.length) return null
           return (
             <div key={f.campo}>
               <label className="fila-filtro">
                 <span>{f.etiqueta}</span>
+                {/* `name` es el campo: identifica el control en un formulario
+                    sin depender del texto de la etiqueta. */}
                 <select
+                  name={f.campo}
                   value={filtros[f.campo] ?? ''}
                   onChange={(e) => onFiltro(f.campo, e.target.value)}
                 >
                   <option value="">Todas</option>
+                  {/* La unidad va escrita en cada opcion y es la de la capa que
+                      cuenta: «(2.820)» a secas no dice si cuenta incendios,
+                      obras o rutas, y la misma «Región» cuenta incendios u
+                      obras segun que capas esten encendidas. */}
                   {ops.map(([v, n]) => (
                     <option key={v} value={v}>
-                      {v} ({fmt.format(n)})
+                      {v} ({fmt.format(n)} {unidad[n === 1 ? 0 : 1]})
                     </option>
                   ))}
                 </select>

@@ -1,34 +1,34 @@
-// Escalas de color de las areas de priorizacion.
+// Escalas de color de las manchas de riesgo.
 //
 // DOS LECTURAS DISTINTAS, y la interfaz nunca puede dejar dudas de cual esta
 // activa:
 //
-//   'absoluta'   · color por `clase`, con los cortes fijos del modelo
-//                  (0,20 / 0,35 / 0,50 / 0,65). No depende de que comunas esten
-//                  cargadas, asi que anadir una comuna nueva no recolorea las
-//                  que ya estaban. Es la lectura por omision.
+//   'absoluta'   · color por `clase`, con los cortes fijos del modelo sobre
+//                  `nivel_medio` (0,5 / 1,5 / 2,5 / 3,5, del manifest). No
+//                  depende de que comuna se mire, asi que es comparable entre
+//                  comunas. Es la lectura por omision.
 //   'normalizada'· color por la POSICION de cada mancha dentro de su comuna.
-//                  Responde «cuales son las mas prioritarias DE ESTA COMUNA»,
-//                  que con la escala absoluta no se puede ver.
+//                  Responde «cuales son las de mas riesgo DE ESTA COMUNA», que
+//                  con la escala absoluta no siempre se ve.
 //
-// POR QUE NO ES UN MIN-MAX LINEAL. Medido sobre los datos reales antes de
-// elegir: normalizando Mulchen entre su minimo (0,1361) y su maximo (0,5555),
-// el reparto en 10 escalones queda [21,54,10,3,0,4,10,3,2,3] -- 75 de sus 110
-// manchas (68 %) siguen amontonadas en los dos escalones mas bajos y la mediana
-// cae en 0,145. El problema no es que la escala sea nacional, es que la
-// distribucion es muy asimetrica, y reescalar los extremos no la endereza.
-// Coyhaique es peor: tiene 2 manchas en 0,0000 exacto que tiran del minimo y
-// dejan el 15 % de la comuna repartido en 7 milesimas de rampa.
-// Repartir por RANGO si separa los colores, que es lo que se pedia. El precio
-// esta declarado en la leyenda: el color pasa a indicar posicion relativa y no
-// magnitud. Con K=1 esta misma funcion degenera en el min-max lineal, por si
-// algun dia se quiere ofrecer tambien esa lectura.
+// POR QUE NO ES UN MIN-MAX LINEAL. Medido sobre los datos reales del modelo
+// nacional el 2026-09-15: normalizando Mulchén entre su minimo (0) y su maximo
+// (3,998), el reparto en 10 escalones queda [3,0,17,59,11,19,85,11,3,5] -- 144 de
+// sus 213 manchas (68 %) caen en solo dos escalones, porque los niveles se
+// agrupan cerca del centro de cada clase. Y las cinco comunas medidas (Mulchén,
+// Los Angeles, Coihaique, Natales, Santiago) tienen minimo 0, asi que el min-max
+// ni siquiera cambia el ancla inferior. Repartir por RANGO si separa los
+// colores. El precio esta declarado en la leyenda: el color pasa a indicar
+// posicion relativa y no magnitud. Con K=1 esta misma funcion degenera en el
+// min-max lineal, por si algun dia se quiere ofrecer tambien esa lectura.
+// (Con el modelo anterior de 3 comunas se habia medido lo mismo por otro motivo:
+// el 68 % de Mulchen amontonado en los dos escalones mas bajos.)
 //
 // EL DATO ORIGINAL NO SE TOCA. Aqui no se escribe nada en feature.properties:
 // `t` es el valor de retorno de una funcion pura y solo lo consume el callback
-// de estilo. La ficha, la leyenda y la descarga siguen leyendo puntaje_medio.
+// de estilo. La ficha, la leyenda y la descarga siguen leyendo nivel_medio.
 
-import { COLOR_CLASE, RAMPA_NORMALIZADA } from './config'
+import { RAMPA_NORMALIZADA } from './config'
 
 // 8 escalones. Con menos, dos manchas vecinas en el ranking se ven iguales; con
 // muchos mas, la rampa deja de leerse como escalones y vuelve a parecer
@@ -60,7 +60,7 @@ export function contextoEscala(features, comuna, modo = 'absoluta') {
   const vals = []
   for (const f of features) {
     if (f.properties.comuna !== comuna) continue
-    const v = f.properties.puntaje_medio
+    const v = f.properties.nivel_medio
     if (typeof v === 'number' && Number.isFinite(v)) vals.push(v)
   }
   const m = vals.length
@@ -74,6 +74,7 @@ export function contextoEscala(features, comuna, modo = 'absoluta') {
   // contraste interno que mostrar. Se declara y la leyenda lo dice; lo que NO
   // se puede hacer es dividir por cero, porque un NaN dejaria fillColor en
   // undefined y el poligono saldria TRANSPARENTE, indistinguible de «sin dato».
+  // Medido: cinco comunas del modelo nacional tienen una sola mancha.
   if (m === 1 || max - min < 1e-9) {
     return { modo: 'normalizada', comuna, q: null, m, min, max, uniforme: true }
   }
@@ -117,32 +118,36 @@ export function colorRampa(t) {
 /**
  * Color de relleno de una mancha.
  *
+ * `colorClase` traduce la etiqueta de la clase a su color. Llega de fuera
+ * porque las etiquetas son del manifest y los colores de config.js (por nivel):
+ * aqui no se escribe ninguna de las dos cosas.
+ *
  * En modo normalizado solo cambian las manchas DE LA COMUNA seleccionada; el
  * resto conserva su color absoluto, para que no parezca que se han recalculado
  * cosas que no se han recalculado.
  */
-export function colorDeMancha(props, ctx) {
+export function colorDeMancha(props, ctx, colorClase) {
   if (ctx?.modo === 'normalizada' && props.comuna === ctx.comuna) {
     if (ctx.uniforme) return colorRampa(0.5)
-    const t = normalizar(props.puntaje_medio, ctx)
+    const t = normalizar(props.nivel_medio, ctx)
     if (t !== null) return colorRampa(t)
   }
-  return COLOR_CLASE[props.clase] ?? '#CCCCCC'
+  return colorClase(props.clase)
 }
 
 /**
- * Percentil comunal (1..100) de una mancha, para la ficha. Es lo que permite
- * decir «la 3.ª de 110» sin que el usuario tenga que deducirlo del color.
- * Devuelve null fuera del modo normalizado.
+ * Posicion de una mancha en su comuna, de mayor a menor nivel, para la ficha.
+ * Es lo que permite decir «la 3.ª de 213» sin que el usuario tenga que
+ * deducirlo del color.
  */
 export function rangoComunal(features, props) {
   if (!features) return null
   const vals = features
     .filter((f) => f.properties.comuna === props.comuna)
-    .map((f) => f.properties.puntaje_medio)
+    .map((f) => f.properties.nivel_medio)
     .filter((v) => typeof v === 'number' && Number.isFinite(v))
   if (!vals.length) return null
   vals.sort((a, b) => b - a)
-  const pos = vals.findIndex((v) => v <= props.puntaje_medio) + 1
+  const pos = vals.findIndex((v) => v <= props.nivel_medio) + 1
   return { pos: pos || vals.length, total: vals.length }
 }

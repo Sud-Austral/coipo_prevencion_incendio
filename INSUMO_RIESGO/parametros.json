@@ -1,0 +1,25 @@
+{
+  "regiones": "todas",
+  "tramo_mb": 48,
+  "vmax": 256,
+  "cortes": [
+    0.5,
+    1.5,
+    2.5,
+    3.5
+  ],
+  "cobertura_min": 0.5,
+  "etiquetas": {
+    "0": "Muy Bajo",
+    "1": "Bajo",
+    "2": "Medio",
+    "3": "Alto",
+    "4": "Muy Alto"
+  },
+  "epsg_riesgo": 32719,
+  "crs_area": "+proj=aea +lat_1=-19 +lat_2=-52 +lat_0=-36 +lon_0=-71 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs",
+  "piezas": 1198096,
+  "piezas_incluidas": 1188882,
+  "manchas": 111943,
+  "poligonos_cruzados": 26225219
+}

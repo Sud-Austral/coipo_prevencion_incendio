@@ -419,7 +419,9 @@ def archivos_huerfanos(man, datos=None):
     d = Path(datos or man.get("_ruta") or "")
     if not d.is_dir():
         return []
-    declarados = {m["archivo"] for m in man.get("capas", {}).values()}
+    # Las capas partidas por comuna (riesgo) declaran `partes` y no `archivo`, y
+    # sus archivos viven en un subdirectorio que el iterdir de abajo no recorre.
+    declarados = {m["archivo"] for m in man.get("capas", {}).values() if "archivo" in m}
     declarados |= {m["archivo"] for m in (man.get("derivados") or {}).values()}
     declarados |= {man.get("kpis") or "kpis.json", "manifest.json"}
     return sorted(
@@ -1385,6 +1387,14 @@ def reconciliar(man=None, datos=None):
 
     for capa in man["capas"]:
         meta = man["capas"][capa]
+        if "partes" in meta:
+            # Una fila por capa y no 343: lo que se contrasta es la suma.
+            en_disco = sum((Path(man["_ruta"]) / p["archivo"]).stat().st_size
+                          for p in meta["partes"].values()
+                          if (Path(man["_ruta"]) / p["archivo"]).exists())
+            chk(capa + ": bytes en disco (" + str(len(meta["partes"])) + " comunas)", en_disco,
+                meta.get("bytes"), nota="suma de los archivos por comuna")
+            continue
         ruta = Path(man["_ruta"]) / meta["archivo"]
         if ruta.exists():
             chk(capa + ": bytes en disco", ruta.stat().st_size, meta.get("bytes"),

@@ -1,5 +1,5 @@
 /**
- * Barra de vistas: «Incendios» y «Priorizacion».
+ * Barra de vistas: «Incendios» y «Riesgo».
  *
  * VIVE DENTRO DE <header class="banner"> Y NO ES UN ITEM DE LA REJILLA, igual
  * que .cartel y .descargando son fixed por la misma razon. Un cuarto hijo en

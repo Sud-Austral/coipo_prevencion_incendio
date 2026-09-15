@@ -29,10 +29,13 @@ RAIZ = Path(__file__).resolve().parent.parent
 @dataclass
 class Cfg:
     insumo: Path = RAIZ / "INSUMO_INCENDIO"
-    # Segunda raiz de insumos, separada de la primera a proposito: son otro
-    # origen (el modelo de priorizacion de 3 comunas, no las 16 regiones) y
+    # Raices de insumos separadas de la primera a proposito: son otros origenes y
     # apuntar --insumo alla romperia las seis capas que salen de INSUMO_INCENDIO.
+    # INSUMO_PRIORIZACION guarda hoy solo la infraestructura critica de las 3
+    # comunas del modelo anterior; las manchas de riesgo nacionales viven en
+    # INSUMO_RIESGO (salida del notebook 4 de lab/priorizacion).
     insumo_prior: Path = RAIZ / "INSUMO_PRIORIZACION"
+    insumo_riesgo: Path = RAIZ / "INSUMO_RIESGO"
     out: Path = RAIZ / "frontend" / "public" / "data"
     build: Path = RAIZ / "ETL" / "_build"
     simplify: float = 25.0          # tolerancia DP para las capas viales (modo degradado)
@@ -46,6 +49,7 @@ class Cfg:
     def __post_init__(self):
         self.insumo = Path(self.insumo)
         self.insumo_prior = Path(self.insumo_prior)
+        self.insumo_riesgo = Path(self.insumo_riesgo)
         self.out = Path(self.out)
         self.build = Path(self.build)
         self.out.mkdir(parents=True, exist_ok=True)

@@ -30,8 +30,14 @@ export function useManifest() {
 /**
  * Descarga un GeoJSON solo cuando `activo` es true (carga perezosa).
  * Las capas viales pesan varios MB y no deben descargarse si nadie las enciende.
+ *
+ * `cachear: false` es para archivos que CAMBIAN con la seleccion, como las
+ * manchas de riesgo de cada comuna: la cache de modulo no se vacia nunca, y
+ * pasar por Natales (36,8 MB), Punta Arenas y Cabo de Hornos dejaria los tres
+ * parseados en memoria para toda la sesion. Sin cache, volver a una comuna la
+ * vuelve a pedir, y el navegador la sirve de su cache HTTP.
  */
-export function useGeoJSON(archivo, activo) {
+export function useGeoJSON(archivo, activo, { cachear = true } = {}) {
   const [data, setData] = useState(() => (archivo ? cache.get(archivo) : null) ?? null)
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState(null)
@@ -41,6 +47,10 @@ export function useGeoJSON(archivo, activo) {
   const abort = useRef(null)
 
   useEffect(() => {
+    // Un archivo que CAMBIA con la seleccion (cachear: false) y pasa a no haber
+    // ninguno --«Elige una comuna»-- tiene que soltar los datos: si no, el mapa
+    // seguia pintando la ultima comuna sin que ninguna estuviera elegida.
+    if (!archivo && !cachear) setData(null)
     if (!archivo || !activo) return
     if (cache.has(archivo)) {
       setData(cache.get(archivo))
@@ -48,6 +58,11 @@ export function useGeoJSON(archivo, activo) {
     }
     const ctrl = new AbortController()
     abort.current = ctrl
+    // Los datos del archivo ANTERIOR se sueltan antes de pedir el nuevo. Con
+    // un archivo fijo por capa daba igual; con uno por comuna, el mapa seguia
+    // pintando la comuna anterior -y la ficha y la escala calculandose sobre
+    // ella- mientras bajaba la nueva.
+    setData(null)
     setCargando(true)
     setError(null)
 
@@ -57,7 +72,7 @@ export function useGeoJSON(archivo, activo) {
         return r.json()
       })
       .then((d) => {
-        cache.set(archivo, d)
+        if (cachear) cache.set(archivo, d)
         setData(d)
         setCargando(false)
       })
@@ -73,7 +88,7 @@ export function useGeoJSON(archivo, activo) {
       })
 
     return () => ctrl.abort()
-  }, [archivo, activo, intento])
+  }, [archivo, activo, intento, cachear])
 
   /**
    * Reintenta una descarga que fallo. La clave se borra del cache de modulo por

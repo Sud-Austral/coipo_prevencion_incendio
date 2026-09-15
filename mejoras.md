@@ -3,7 +3,7 @@
 Catálogo de lo que falta, lo que está por debajo del estándar y lo que no se puede copiar
 de ningún sitio porque los datos son distintos.
 
-Estado a **2026-09-10**. El repo de referencia es
+Estado a **2026-09-15**. El repo de referencia es
 [`coipo_vista_catastro`](https://github.com/Sud-Austral/coipo_vista_catastro): mismo stack
 (React 19 + Vite 8 + Leaflet + oxlint + Python 3.13 + Pages, sin backend), otros datos.
 
@@ -23,6 +23,129 @@ Estado a **2026-09-10**. El repo de referencia es
    `npm run verify:mutantes`.
 4. **El repo de referencia es la plantilla**, pero no siempre gana: hay cosas que aquí ya
    están mejor (ver la última sección). Antes de "alinear" algo, comprobar en qué dirección.
+
+## 0. Alineación de la interfaz con `coipo_vista_catastro` (plan F0–F6)
+
+Decidido por Luis el 2026-09-14. Las decisiones y su porqué están en `DECISIONES.md` §R.
+Cada fase deja el sitio en verde, con sus arneses y mutantes, y Luis decide cuándo
+commitear y publicar cada una.
+
+| Fase | Qué | Estado |
+|---|---|---|
+| **F0** | Defectos y vigilantes, sin rediseño | **HECHA, sin commitear** (detalle abajo) |
+| F1 | Piel común: token de control, radios, sombra por tema, un solo anillo de foco, ficha con cabecera sticky y pista de scroll, botón de acento con contraste en oscuro | pendiente |
+| F2 | Incendios: filtros en botonera con modal anclado (copiado de catastro con origen), Territorio región › provincia › comuna, Capas, Mapa base, Información · Descargar · Compartir | pendiente |
+| F3 | Riesgo (antes Priorización) con la misma botonera. Su leyenda ya está en es-CL desde el 2026-09-15, al cambiar el insumo (`DECISIONES.md` §S) | pendiente |
+| F4 | Indicadores en secciones plegables (`<details>` con el h2 dentro del `summary`) | pendiente |
+| F5 | Líneas eléctricas como tercera vista `?vista=electrico` | pendiente |
+| F6 | `lineas-electricas.html` pasa a redirección que conserva `?region=` | pendiente |
+
+**Lo que dejó F0.**
+
+- **Pestañas:** el cajón izquierdo ya no las tapa a ≤900 px. Lo vigila B24.
+- **Foco:** el panel de indicadores ya no lo roba al cargar. Lo vigila B25.
+- **Aviso con una temporada:** ya no dice «Enciende la capa» con una capa encendida. Explica por qué no hay serie y da las cifras de esa temporada. Lo vigila B26.
+- **Cuentas de los filtros:**
+  - cada filtro cuenta en la **primera capa encendida** a la que se aplica, con su unidad («incendios», «obras», «tramos», «rutas de despliegue»…);
+  - antes «Biobío (5.049)» sumaba incendios, obras, stand-by, rutas y tramos, y con sólo Red vial encendida la carpeta contaba rutas de una capa apagada;
+  - «Titularidad (OECV)» ofrecía 28 tipos de infraestructura de Priorización.
+
+  Lo vigila B27, en 4 combinaciones de capas.
+- **«No muestra incendios activos»:** vigilado como VISIBLE en el encabezado del panel, en el cartel, en el GeoJSON descargado y en el informe (B28). `getClientRects` solo no basta: con el cajón cerrado devuelve un rectángulo oculto.
+- **Google Earth:** usa `/web/search/lat,lon` y planta la chincheta. La URL de cámara aterrizaba sin ninguna marca. Lo vigila C12.
+- **Fichas en es-CL:** además corrigió 46 porcentajes de 2.288 que `toFixed(1)` redondeaba mal. Lo vigilan C13 y C14.
+- **Guardas de parcheo** de `verify:mutantes` y `verify:priorizacion -- --negativas`:
+  - instantánea con sha256 y respaldo en disco con `pendiente.json`, que la corrida siguiente detecta;
+  - restauración ante SIGINT, SIGTERM, SIGHUP y SIGBREAK;
+  - `--solo` con un id desconocido falla.
+- **Datos:**
+  - la región vacía ya no se publica como `'nan'`;
+  - D16b tiene identificador y mutación propios;
+  - D17 y D18 toleran IDs nulos;
+  - el notebook quedó reejecutado.
+
+### Hallazgos abiertos que destapó F0 (defectos previos, no introducidos)
+
+- **El informe se titula con la fecha UTC.** `SeccionDescargas.jsx` usa
+  `new Date().toISOString()`: generado a las 21:54 del 14, decía «15 de septiembre» mientras
+  el CSV se llamaba `…_2026-09-14.csv`. Es el mismo error que `DECISIONES.md` §K. *Hipótesis
+  por lectura de código, no aislada.*
+- **Una cifra escrita a mano que es falsa con filtro.** Con `?temporada=2025-2026`, la nota
+  fija «Líneas eléctricas es cuarta por recuento y segunda por superficie» no se cumple: esa
+  temporada tiene 317 incendios (quinta) y 20.565,4 ha (primera). Viola «las cifras salen del
+  manifest».
+- **«0 % de los incendios investigados son de causa humana» con 0 incendios** en el ámbito.
+- **Pestañas por teclado.** Tras ir con las flechas de Priorización a Incendios, el foco se queda en
+  «Priorización», que ya no es la activa; el patrón tablist pide enfocar la nueva. → F1.
+- **`?vista=priorizacion` ignora `?lat=&lon=&z=`**: reencuadra a la comuna. Un enlace
+  compartido desde esa vista perdería su encuadre. *Deducido del efecto `encuadradoPrior` y
+  medido con una URL a mano; no generado desde el botón «Compartir».*
+- **La ficha de un incendio se corta a 1440×900.** `max-height` 630 px contra `scrollHeight` 658: la
+  fila «Informe» queda a medias, sin pista de scroll, con el cartel asomando. → F1.
+- **Filtros cortados a 287 px.** 6 de las 14 causas generales y 2 de las 7 carpetas se cortan en la lista. → F2,
+  con filas que envuelven el texto.
+- **Un filtro puesto en la URL cuyas capas están todas apagadas** sigue aplicándose, pero no
+  se ve en el panel.
+- **Con sólo OECV encendida, la región ofrece opciones con «(0 obras)».** Es honesto, pero
+  ocultarlas es una decisión de presentación de Luis.
+- **`--negativas` y `verify:mutantes` sobrescriben las capturas de `.verificacion/` con
+  estados mutados.** Medido el 2026-09-15: tras `verify:priorizacion -- --negativas` la ficha
+  capturada decía «2532.0 ha» (el último mutante de C14) y se leyó como un defecto que no
+  existía. Conviene que las corridas con mutante escriban sus capturas en otra carpeta.
+- **Los arneses no fijan `prefers-color-scheme`.** En este equipo capturan en oscuro, y el tema
+  claro queda sin mirar salvo que alguien lo emule. → F1: pasada en los dos temas.
+- **Perfiles de Chrome que los arneses dejan en `%TEMP%`**: 21 de verify-banner, 26 de
+  verify-electrico, 19 de verify-panel y 30 de verify-priorizacion, contados el 2026-09-14.
+- **`src/index.css` y `src/fichas.js` tienen CRLF en la copia de trabajo** (git normaliza a LF).
+  Por eso las anclas de sus mutantes son de una sola línea.
+
+### Pendientes de datos
+
+- **Las 5 comunas de riesgo de más de 10 MB son lentas en un equipo modesto.** Medido el
+  2026-09-15 con la CPU a ×4: Natales (36,8 MB, 25.278 manchas) tarda 8,4 s en cargar y
+  2,1 s por cada repintado de opacidad; Punta Arenas, 4,4 s y 1,3 s. Tres salidas, de menos
+  a más invasiva: (a) no hacer nada y avisar del peso, que es lo que hace hoy el panel;
+  (b) repintar la opacidad sin `setStyle` por polígono (la opacidad del canvas entero, que
+  en esta vista sólo lleva manchas); (c) simplificar esas comunas con
+  `shapely.coverage_simplify`, que respeta los bordes compartidos pero **cambia la geometría
+  publicada**: es una decisión sobre el dato y la toma Luis. Simplificar mancha por mancha
+  no sirve: a 25 m abre 13.627 solapes (`DECISIONES.md` §S).
+- **La región 12 de riesgo se publica simplificada**, con 5 geometrías inválidas y 1.231
+  manchas sin geometría (9,24 ha, contadas en el manifest). Si el lab registra cómo se
+  simplificó, o produce el `.json` de forma reproducible, se puede verificar; hoy no.
+- **`doble_ponderacion.md` y `.tex` describen el modelo de priorización retirado** (pesos,
+  Spearman y peso efectivo sobre las 572 manchas). Qué hacer con ellos lo decide Luis: nota
+  de alcance, mover a un archivo histórico o borrar.
+
+- **Canonizar la grafía de las comunas en el ETL.** El subconjunto eléctrico trae 226 etiquetas
+  para 220 comunas (CABRERO/Cabrero y otras cinco). El visor las publica como comunas
+  distintas en sus tablas (`DECISIONES.md` §Q).
+- **`INSUMO_ELECTRICO/` quedó versionado en `18ff9db`.** Trae la copia «(2)» del Excel,
+  idéntica byte a byte a la de `INSUMO_INCENDIO/`, y la vista de referencia. Qué hacer con
+  esa carpeta lo decide Luis.
+
+### Para F5 (salió de la revisión adversarial de la página de Líneas eléctricas)
+
+- **Círculos comunales que roban el clic.** Se añaden después de los puntos al mismo canvas, y
+  una comuna con un solo incendio (43 de 218) tapa su punto → `interactive:false` o `bringToBack`.
+- **Cúmulos bloqueados tras cambiar de fondo.** markercluster congela `_maxZoom` al crearse:
+  tras pasar a Satelital (maxZoom 18) un cúmulo que sólo se separaba a z19 queda bloqueado → `maxZoom` fijo en el mapa.
+- **Comentario del calor que no cuadra con el código.** Dice «a z5 queda en la mitad», pero el piso es 0,8.
+- **Huecos del arnés actual (`verify-electrico.mjs`).**
+  - Ninguna aserción vigila §H: el clic se hace con las comunas apagadas y no cuenta canvas.
+  - El mutante de E5 se pone rojo por el formato de la clave, no por la agrupación.
+  - Sus guardas no atienden SIGHUP ni SIGBREAK.
+
+### Para `coipo_vista_catastro` (vistos al relevarlo; no se tocan desde este repo)
+
+- **Cajón:** z-index 1000; el zoom de Leaflet se pinta sobre el título del cajón a 400 px.
+- **`EtiquetaImagen`:** pinta una pastilla vacía bajo el zoom.
+- **Cartel:** va arriba y queda tapado por el zoom y por la etiqueta de fecha con Satelital.
+- **Táctil:** filas de 25 px, porque la media query `coarse` va antes de la regla base.
+- **Contraste:** blanco sobre el acento lleno en oscuro, 2,09:1.
+- **Textos:** «Quitar los 1 filtros»; h2 duplicado en Descargar; doble marcador en las secciones plegadas.
+- **Filtros:** `con-filtro` activo en Territorio y Mapa base sin haber elegido nada.
+- **Modales:** listas con scroll de 240 px cortadas en seco, sin pista de que hay más.
 
 ---
 
@@ -50,15 +173,16 @@ Estado a **2026-09-10**. El repo de referencia es
   De paso, la regla de `DECISIONES.md` §H se amplió: no basta con no declarar `renderer`,
   tampoco se puede declarar `pane` propio en una capa vectorial. **Eso último está leído en
   el fuente de Leaflet, no comprobado con un mutante**, y C1 no lo cazaría tal como está.
-- **Llevar `python ETL/verify.py --negativas` al job `build` del CI.** Ya existe y corre en
-  ~19 s, pero el workflow sólo ejecuta la pasada normal a través de `run.py`. Ojo: D12 y
-  D13 sí se pueden verificar en CI, porque allí tippecanoe puebla `ETL/_build/`.
+- ~~**Llevar `python ETL/verify.py --negativas` al job `build` del CI.**~~ **HECHO**: es el
+  paso «Controles negativos de los datos» de `deploy.yml`, que corre D12 y D13 porque allí
+  tippecanoe puebla `ETL/_build/`. Hoy son 31 mutaciones: 12 de ellas, de la capa de riesgo
+  (2026-09-15).
 
 ### Prioridad media
 
-- **Más mutantes de frontend.** Hoy `npm run verify:mutantes` cubre A1 y B12. Faltan al
-  menos: B4 (el suelo del mapa), B8 (la aritmética del panel contra el oráculo) y A10 (la
-  pantalla de error sin banner).
+- **Más mutantes de frontend.** Desde F0 (2026-09-15) `npm run verify:mutantes` tiene 17:
+  A1, B12, B24, B25, B26, B27 y B28. Faltan al menos: B4 (el suelo del mapa), B8 (la
+  aritmética del panel contra el oráculo) y A10 (la pantalla de error sin banner).
 - **Un `spike/`**, como el de la referencia: código de medición con su `NOTAS.md`, para que
   las decisiones de rendimiento futuras dejen rastro reproducible en vez de vivir en el
   historial de una sesión.

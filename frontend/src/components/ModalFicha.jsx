@@ -45,13 +45,33 @@ export default function ModalFicha({ ficha, onCerrar }) {
             </button>
           </header>
 
-          {/* Enlaces de ida, no integracion: son deep links publicos que se
+          {/* Origen: coipo_vista_catastro@a1ee125 frontend/src/components/ModalFicha.jsx:48-63
+              (comentario adaptado; los enlaces conservan la clase y el estilo
+              .ficha-acciones de este visor).
+
+              Enlaces de ida, no integracion: son deep links publicos que se
               abren en la sesion del PROPIO usuario. No consumen ninguna API,
               no requieren clave y no le cuentan nada de este visor a Google
-              mas alla de la coordenada que el usuario decide abrir. Formatos
-              verificados contra ambos servicios (HTTP 200):
-              Maps con la URL universal documentada (maps/search/?api=1) y
-              Earth con la URL de camara de earth.google.com/web. */}
+              mas alla de la coordenada que el usuario decide abrir.
+
+              LOS DOS EN FORMA DE BUSQUEDA, y Earth lo aprendio por las malas.
+              Estaba con la URL de camara --/web/@lat,lon,0a,1200d,...-- que
+              SOLO mueve la camara: aterrizaba a 1,2 km sobre un campo generico,
+              sin nada que marcara el punto, y habia que adivinar cual de todos
+              los claros era. Abiertas las dos y fotografiadas: la de busqueda
+              planta chincheta roja, rotula la coordenada y abre su panel; la de
+              camara no pinta ni una marca y el unico rotulo era un POI ajeno.
+              Repetido aqui el 2026-09-14 con el incendio 1262 (Cuesta
+              Llampaiquillo), capturando a los 40 s: la de camara, bosque y un
+              camino sin ninguna marca; la de busqueda, chincheta roja en el
+              centro rotulada 33°12'37.8"S 71°35'51.7"W y el panel «QCQ2+QWV
+              Casablanca», que es la comuna del registro.
+
+              Y el HTTP 200 no vale como prueba aqui: Earth es una SPA y
+              devuelve 200 para cualquier ruta, incluida una que no exista. Lo
+              que se comprueba es la CAPTURA. La forma del enlace, y que su
+              coordenada sea la del registro, la vigila C12 de
+              scripts/verify-priorizacion.mjs. */}
           {ficha.coord && (
             <p className="ficha-acciones">
               <a
@@ -62,7 +82,7 @@ export default function ModalFicha({ ficha, onCerrar }) {
                 Ver en Google Maps
               </a>
               <a
-                href={`https://earth.google.com/web/@${ficha.coord[0]},${ficha.coord[1]},0a,1200d,35y,0h,0t,0r`}
+                href={`https://earth.google.com/web/search/${ficha.coord[0]},${ficha.coord[1]}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >

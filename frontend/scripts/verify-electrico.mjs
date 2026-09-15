@@ -33,9 +33,10 @@
 //   · cada Runtime.evaluate va en un IIFE **async** e imprime exceptionDetails
 //   · el tamano se fija con Emulation.setDeviceMetricsOverride
 //   · servidor en el puerto 0 y --user-data-dir propio en mkdtemp
-//   · E8 hace un clic REAL con Input.dispatchMouseEvent. Un dispatchEvent sobre
-//     el canvas se salta el hit-testing del navegador y no ve el canvas del
-//     calor que queda encima: daria verde con el defecto puesto.
+//   · E8 hace un clic REAL con Input.dispatchMouseEvent, que pasa por el
+//     hit-testing del navegador. Un dispatchEvent sobre el canvas de los puntos
+//     entrega el evento a ESE elemento aunque el canvas del calor este encima,
+//     asi que no puede ver el defecto que E8 vigila.
 
 import { spawn } from 'node:child_process'
 import { createHash } from 'node:crypto'
@@ -959,10 +960,11 @@ const MUTACIONES = [
     id: 'E8',
     archivo: ELECTRICO_CSS,
     titulo: 'el canvas del calor recibe clics y va encima',
-    // Se quitan LAS DOS reglas. Medido por quien escribio la pagina el
-    // 2026-09-14: con el z-index 99 puesto, quitar solo pointer-events NO rompe
-    // el clic, porque el canvas de los puntos ya queda arriba y recibe el
-    // evento. Un mutante de una sola regla seguiria verde sin que E8 fallara.
+    // Se quitan LAS DOS reglas. Medido el 2026-09-14 con este mismo E8: con el
+    // z-index 99 puesto, quitar solo pointer-events deja E8 en VERDE (popup de
+    // ID 5365, bajo el cursor el canvas de los puntos), porque ese canvas ya
+    // queda arriba y recibe el evento. Un mutante de una sola regla no probaria
+    // nada; con las dos quitadas, bajo el cursor queda el canvas del calor.
     ancla: '.leaflet-heatmap-layer {\n  pointer-events: none;\n}\n.leaflet-map-pane canvas.leaflet-heatmap-layer {\n  z-index: 99;\n}\n',
     mutar: (t, a) => t.replace(a, ''),
   },

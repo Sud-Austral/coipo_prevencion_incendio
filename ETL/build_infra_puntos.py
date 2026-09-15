@@ -1,8 +1,10 @@
 """Infraestructura critica de las 3 comunas priorizadas -> infra_puntos.geojson
 
-Los 707 elementos puntuales que alimentan los subindices `sub_infra` y
-`sub_preparadas` del modelo de priorizacion, en 8 familias y 23 shapefiles.
-Se publican para que el visor pueda mostrar QUE hay dentro de cada mancha.
+Los 707 elementos puntuales que alimentaban los subindices `sub_infra` y
+`sub_preparadas` del modelo de priorizacion de 3 comunas, en 8 familias y 23
+shapefiles. Ese modelo ya no se publica (lo reemplazo el riesgo nacional,
+DECISIONES.md §S), pero la infraestructura se conserva encima de las manchas de
+riesgo de sus tres comunas, cruzada por codigo CUT.
 
 Las capas se descubren por el nombre de la carpeta, no por una lista de 23
 rutas, porque los nombres de archivo del paquete son inconsistentes: hay dobles
@@ -39,13 +41,18 @@ from geo import en_chile, to_wgs84
 from gj_io import dominios, feature, humano, write_geojson
 from shp_reader import read_dbf, read_shapefile
 
-# La carpeta de primer nivel manda sobre la comuna. Se escribe sin tilde para
-# que coincida EXACTAMENTE con el campo `comuna` de priorizacion.geojson: el
-# frontend cruza las dos capas por ese literal.
+# La carpeta de primer nivel manda sobre la comuna: (nombre, codigo CUT).
+#
+# El cruce con las manchas de riesgo es por CUT y NO por nombre: el insumo de
+# riesgo escribe «Coihaique» y «Mulchén» y este paquete «Coyhaique» y «Mulchen».
+# Cruzar por el literal dejaba 0 iconos al elegir esas dos comunas. Los codigos
+# son los que ya usan subestaciones y salud como texto (ALIAS_COMUNA, abajo), y
+# D15 comprueba que cada punto caiga dentro de la caja de su CUT: un codigo
+# equivocado manda los puntos a otra comuna y se pone rojo.
 COMUNAS = {
-    "INFRAESTRUCTURA CRITICA COYHAIQUE": "Coyhaique",
-    "INFRAESTRUCTURA CRITICA LOS ANGELES": "Los Angeles",
-    "INFRAESTRUCTURA CRITICA MULCHEN": "Mulchen",
+    "INFRAESTRUCTURA CRITICA COYHAIQUE": ("Coyhaique", "11101"),
+    "INFRAESTRUCTURA CRITICA LOS ANGELES": ("Los Angeles", "08301"),
+    "INFRAESTRUCTURA CRITICA MULCHEN": ("Mulchen", "08305"),
 }
 
 # Alias de comuna vistos en los .dbf, ya normalizados (sin tildes, minusculas).
@@ -187,11 +194,12 @@ def _familia_de(nombre_carpeta: str):
     return None
 
 
-def _props(familia, etiqueta, comuna, campo_tipo, campo_nombre, extras, raw) -> dict:
+def _props(familia, etiqueta, comuna, cut, campo_tipo, campo_nombre, extras, raw) -> dict:
     p = {
         "familia": familia,
         "grupo": etiqueta,
         "comuna": comuna,
+        "cut": cut,
         "nombre": raw.get(campo_nombre) if campo_nombre else None,
         "tipo": raw.get(campo_tipo) if campo_tipo else None,
     }
@@ -211,10 +219,10 @@ def build(cfg: Cfg) -> dict:
     sin_familia: list[str] = []
 
     for carpeta_comuna in sorted(d for d in raiz.iterdir() if d.is_dir()):
-        comuna = COMUNAS.get(carpeta_comuna.name)
-        if comuna is None:
+        if carpeta_comuna.name not in COMUNAS:
             sin_familia.append(carpeta_comuna.name)
             continue
+        comuna, cut = COMUNAS[carpeta_comuna.name]
 
         for sub in sorted(d for d in carpeta_comuna.iterdir() if d.is_dir()):
             emparejada = _familia_de(sub.name)
@@ -268,7 +276,7 @@ def build(cfg: Cfg) -> dict:
                                     ],
                                 },
                                 _props(
-                                    familia, etiqueta, comuna,
+                                    familia, etiqueta, comuna, cut,
                                     campo_tipo, campo_nombre, extras, raw,
                                 ),
                             )
@@ -293,7 +301,7 @@ def build(cfg: Cfg) -> dict:
                                 ],
                             },
                             _props(
-                                familia, etiqueta, comuna,
+                                familia, etiqueta, comuna, cut,
                                 campo_tipo, campo_nombre, extras, raw,
                             ),
                         )
@@ -324,8 +332,8 @@ def build(cfg: Cfg) -> dict:
         "por_familia": por_familia,
         "fuera_de_comuna": fuera_de_comuna,
         "descartados": fuera_de_chile,
-        "filtros": ["comuna", "familia"],
-        "dominios": dominios(feats, ["comuna", "familia", "grupo", "tipo"]),
+        "filtros": ["comuna", "cut", "familia"],
+        "dominios": dominios(feats, ["comuna", "cut", "familia", "grupo", "tipo"]),
         **st,
     }
 

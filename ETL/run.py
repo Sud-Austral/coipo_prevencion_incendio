@@ -37,9 +37,11 @@ TAREAS = [
     ("oecv", "build_oecv", 25, False),
     ("verificado", "build_verificado", 15, False),
     ("puntos", "build_puntos", 10, False),
+    # 171 MB de GeoJSON regional -> un archivo por comuna. Se lee region a region
+    # para que el pico sea el de la mayor (la 12, 75 MB, ~500 MB de RSS medidos).
+    ("riesgo", "build_riesgo", 60, False),
     ("infra_puntos", "build_infra_puntos", 8, False),
     ("kpis", "build_kpis", 5, False),
-    ("prioriz", "build_priorizacion", 3, False),  # el calculo ya viene hecho: solo valida
 ]
 
 CLAVE_MANIFEST = {
@@ -49,7 +51,7 @@ CLAVE_MANIFEST = {
     "puntos": "puntos_standby",
     "rutas": "rutas",
     "redvial": "redvial",
-    "prioriz": "priorizacion",
+    "riesgo": "riesgo",
     "infra_puntos": "infra_puntos",
 }
 
@@ -74,7 +76,7 @@ def main() -> int:
     ap.add_argument("--insumo", type=Path, default=RAIZ / "INSUMO_INCENDIO")
     ap.add_argument("--out", type=Path, default=RAIZ / "frontend" / "public" / "data")
     ap.add_argument(
-        "--layers", default="all", help="all | incendios,oecv,verificado,puntos,rutas,redvial,kpis"
+        "--layers", default="all", help="all | incendios,oecv,verificado,puntos,rutas,redvial,riesgo,infra_puntos,kpis"
     )
     ap.add_argument("--jobs", type=int, default=0, help="0 = automatico")
     ap.add_argument("--secuencial", action="store_true", help="equivale a --jobs 1")

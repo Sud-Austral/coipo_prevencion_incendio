@@ -392,10 +392,18 @@ input[type='range'] {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
+/* El pie vivia suelto bajo el panel derecho, SIN fondo, encima del mapa:
+   --texto-2 (#a3aaba) sobre el gris claro de 'Claro' (#f0f0f0) da 2,04:1 y en
+   la captura de Magallanes no se leia. Sobre el fondo de panel, 7,48:1
+   (contraste WCAG calculado el 2026-09-14). */
 .pie {
-  margin: 0 2px;
+  margin: 0;
+  padding: 8px 12px;
   font-size: 11px;
   color: var(--texto-2);
+  background: var(--panel);
+  border: 1px solid var(--panel-borde);
+  border-radius: 10px;
 }
 
 /* ---- velos de carga y error ---- */

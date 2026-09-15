@@ -161,7 +161,9 @@ def _codigo_general(causa_codigo: str | None, float_excel) -> tuple[str | None, 
     El codigo general es el prefijo de dos niveles de la causa investigada
     ('4.10.2' -> '4.10'). Se toma SOLO si como float coincide con la celda del
     Excel: asi el prefijo decide la grafia ('4.10' y no '4.1') pero no puede
-    inventar un codigo que la fuente no declara. Si no coinciden, gana el Excel
+    inventar un codigo que la fuente no declara. OJO: esa igualdad de floats NO
+    detecta una fila 4.10.x cuya celda diga 4.1, porque 4.1 == 4.10 como numero;
+    esa garantia la da D16b de verify.py (una etiqueta por codigo). Si no coinciden, gana el Excel
     formateado con fmt_codigo y el motivo 'conflicto' lo cuenta el log. Medido el
     2026-09-14: 0 conflictos sobre 14.985 filas.
 
@@ -188,7 +190,11 @@ def _region_provincia(fila: dict, lookup: dict) -> tuple[str | None, str | None]
     saltaba esta resolucion.
     """
     comuna = norm_txt(fila["comuna"])
-    region = canon_region(fila["region"])
+    # norm_txt ANTES de canon_region: una celda vacia llega de pandas como NaN,
+    # canon_region solo filtra None y '' y devolvia la cadena 'nan', que ademas
+    # es truthy y le impedia al catalogo completar la region. Encontrado en la
+    # revision del 2026-09-14 (latente: el Excel actual no trae la celda vacia).
+    region = canon_region(norm_txt(fila["region"]))
     provincia = norm_txt(fila["provincia"])
     if comuna and (not region or not provincia):
         hit = lookup.get(comuna.lower())
@@ -407,10 +413,15 @@ def build(cfg: Cfg) -> dict:
     sin_fila: list[tuple] = []
     conflictos: list[tuple] = []
     dos_niveles = 0
+    # Filas sin ID: el Excel anterior traia 6. Se publican con ID null (es lo que
+    # dice la fuente) pero se cuentan en el log, para que no pasen en silencio.
+    sin_id = 0
 
     for _, row in df.iterrows():
         fila = {k: row[col] for k, col in c.items()}
         ident = int(fila["id"]) if pd.notna(fila["id"]) else None
+        if ident is None:
+            sin_id += 1
         region, provincia = _region_provincia(fila, lookup)
         causa_general = _txt_coma(fila["causa_general"])
 
@@ -519,6 +530,7 @@ def build(cfg: Cfg) -> dict:
         "incendios",
         f"{n_filas} filas -> {len(feats)} features ({pct:.1f} %) · "
         f"{sin_coord} sin coord + {len(fuera)} fuera de Chile · "
+        f"{sin_id} sin ID · "
         f"{inseguros} con huso por regla de respaldo · "
         f"18S {husos[32718]} / 19S {husos[32719]} · {humano(st['bytes'])}",
     )

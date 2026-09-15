@@ -4,6 +4,13 @@ import { fmt, fmt1 } from './config'
  *  resuelve probando ambos contra la franja de longitudes de la region. */
 const HUSO = { 32718: 'huso 18S', 32719: 'huso 19S' }
 
+/** Metros UTM tal como vienen, sin agrupar (ver la ficha del incendio) pero con
+ *  COMA decimal: 19 de los 14.705 incendios traen decimas de metro y la ficha
+ *  del 1262 decia «257878.8 E · 6322367.6 N», con punto, al lado de la
+ *  superficie «2.532 ha» (medido el 2026-09-14). Se cambia solo el separador,
+ *  no se redondea: los digitos son los del registro. */
+const metros = (v) => String(v).replace('.', ',')
+
 /**
  * 'YYYY-MM-DD' -> 'D de mes de YYYY'. El ETL ya normalizo la mezcla de
  * datetime, texto 'dd/mm/yyyy' y centinelas que trae el Excel, asi que aqui
@@ -80,7 +87,7 @@ export function fichaIncendio(p, d, color) {
             // fmt.format(360886) da «360.886» y un easting se lee como si
             // tuviera decimales. Una coordenada mal leida manda a alguien a
             // otro sitio; los metros van sin agrupar.
-            `${p.utm_x} E · ${p.utm_y} N${HUSO[p.utm_epsg] ? ` · ${HUSO[p.utm_epsg]}` : ''}`
+            `${metros(p.utm_x)} E · ${metros(p.utm_y)} N${HUSO[p.utm_epsg] ? ` · ${HUSO[p.utm_epsg]}` : ''}`
           : null,
       ),
       fila('Superficie', p.superficie_ha != null ? `${fmt1.format(p.superficie_ha)} ha` : null),
@@ -168,47 +175,57 @@ export function fichaStandBy(p, color) {
   )
 }
 
-const pct = (v) => (typeof v === 'number' ? `${(v * 100).toFixed(1)} %` : null)
+// Cifras con decimales FIJOS en es-CL, como el resto de la interfaz. Antes eran
+// toFixed, que siempre usa punto: la ficha decia «0.1998» y «49.8 %» mientras el
+// panel de indicadores escribe «59,4 %» (capturas del 2026-09-14). Con minimo =
+// maximo de decimales el cero final dice con que precision viaja el dato, y los
+// decimales son los que trae el insumo (medido el 2026-09-15 en las 111.939
+// manchas): nivel_medio y su rango con 3, pct_alto con 1 y area_ha con 2. Asi
+// aqui no hay redondeo, solo relleno.
+const fmt3 = new Intl.NumberFormat('es-CL', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
+const fmt2 = new Intl.NumberFormat('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+const fmtPct1 = new Intl.NumberFormat('es-CL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+const num = (f, v) => (typeof v === 'number' ? f.format(v) : null)
 
 /**
- * Area priorizada.
+ * Mancha de riesgo.
  *
- * `puntaje_medio` VA SIEMPRE ACOMPANADO de su rango min-max, porque solo enganya
- * cuando aparece solo: la mancha COYHAIQU-MUYBAJ-01 tiene medio 0,113 y maximo
- * 0,200 repartidos sobre 561.027 ha. Los tres campos viajan juntos en el
- * GeoJSON precisamente para poder mostrarlos juntos.
+ * `nivel_medio` VA SIEMPRE ACOMPANADO de su rango min-max y de `pct_alto`,
+ * porque la clase es un PROMEDIO redondeado: una mancha «Medio» puede tener
+ * piezas en Alto (manchas_riesgo.py). Por eso tambien se muestra que parte de
+ * su superficie con dato esta en nivel Alto o Muy Alto.
  *
- * La clase del modelo se rotula «(escala del modelo)» y no desaparece nunca,
- * tampoco en modo normalizado: es el ancla que impide leer el color relativo de
- * una comuna como si fuera una magnitud comparable con otra.
+ * `pct_alto` YA VIENE EN PORCENTAJE (0..100). NO pasa por un formateador con
+ * style:'percent', que multiplica por 100 y escribiria «5.000,0 %».
+ *
+ * La clase se rotula «(escala del modelo)» y no desaparece nunca, tampoco en
+ * modo normalizado: es el ancla que impide leer el color relativo de una comuna
+ * como si fuera una magnitud comparable con otra.
  */
-export function fichaMancha(p, rango, color) {
+export function fichaMancha(p, rango, color, region) {
   return ficha(
-    'Área priorizada',
+    'Mancha de riesgo',
     `${p.comuna} · ${p.clase}`,
     [
       fila('Comuna', p.comuna),
+      fila('Región', region),
       fila('Clase (escala del modelo)', p.clase),
-      fila('Puntaje medio', typeof p.puntaje_medio === 'number' ? p.puntaje_medio.toFixed(4) : null),
+      fila('Nivel medio (0 a 4)', num(fmt3, p.nivel_medio)),
       fila(
         'Rango interno',
-        typeof p.puntaje_min === 'number'
-          ? `${p.puntaje_min.toFixed(4)} – ${p.puntaje_max.toFixed(4)}`
+        typeof p.nivel_medio_min === 'number' && typeof p.nivel_medio_max === 'number'
+          ? `${fmt3.format(p.nivel_medio_min)} – ${fmt3.format(p.nivel_medio_max)}`
           : null,
       ),
-      // Solo con una comuna seleccionada: fuera de ese contexto, «la 3.ª de 110»
-      // no significa nada.
-      rango ? fila('Posición en su comuna', `${rango.pos}.ª de ${rango.total}`) : null,
-      fila('Superficie', typeof p.area_ha === 'number' ? `${fmt.format(Math.round(p.area_ha))} ha` : null),
-      // area_ha NO es n_hexagonos x 100: 135 de las 572 manchas no cuadran,
-      // porque el modelo las recorta al limite comunal despues de contar.
-      fila('Hexágonos', typeof p.n_hexagonos === 'number' ? fmt.format(p.n_hexagonos) : null),
-      fila('Componente dominante', p.componente_dominante),
-      fila('Riesgo', pct(p.sub_riesgo)),
-      fila('Interfaz', pct(p.sub_interfaz)),
-      fila('Infraestructura', pct(p.sub_infra)),
-      fila('Preparadas', pct(p.sub_preparadas)),
-      fila('Elementos dentro', typeof p.n_elementos === 'number' ? fmt.format(p.n_elementos) : null),
+      fila('Superficie en nivel Alto o Muy Alto', typeof p.pct_alto === 'number' ? `${fmtPct1.format(p.pct_alto)} %` : null),
+      // Solo tiene sentido dentro de la comuna cargada, que es la unica que hay.
+      rango ? fila('Posición en su comuna', `${fmt.format(rango.pos)}.ª de ${fmt.format(rango.total)}`) : null,
+      // 2 decimales y no Math.round: el 32 % de las manchas mide menos de 1 ha
+      // (medido), y redondeadas se leerian todas «0 ha».
+      fila('Superficie', typeof p.area_ha === 'number' ? `${fmt2.format(p.area_ha)} ha` : null),
+      // Celdas H3 distintas con al menos un trozo en la mancha. Cuenta
+      // fragmentos: una celda partida por el limite comunal cuenta en las dos.
+      fila('Celdas H3', typeof p.n_hexagonos === 'number' ? fmt.format(p.n_hexagonos) : null),
       fila('Identificador', p.mancha_id),
     ],
     color,
