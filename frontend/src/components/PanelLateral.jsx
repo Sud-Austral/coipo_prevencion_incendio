@@ -78,11 +78,11 @@ export default function PanelLateral({
   // evita escribir «(0 obras)» en todas las opciones cuando el ETL no publico
   // el campo: sin capa que cuente, el filtro no se pinta, y B27 lo delata.
   const capaQueCuenta = (f) =>
-    f.capas.find((c) => capasActivas.includes(c) && capasMan[c]?.dominios?.[f.campo]) ?? null
+    f.capas.find((c) => capasMan[c]?.dominios?.[f.campo]) ?? null
 
   const opcionesDe = (f, capa) => {
     const cuenta = new Map()
-    for (const { v, n } of Object.values(capasMan).flatMap((m) => m?.dominios?.[f.campo] ?? [])) {
+    for (const { v, n } of capasMan[capa].dominios[f.campo]) {
       cuenta.set(v, (cuenta.get(v) ?? 0) + n)
     }
     const valores = new Set(cuenta.keys())
