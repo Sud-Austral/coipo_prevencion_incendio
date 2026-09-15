@@ -6,7 +6,7 @@
 
 ## Cuanto se recupera
 
-El detector encontro **2** candidatos (27 KB), el **0.2%** de los 1147 archivos que el analizador recorre en cada corrida.
+El detector encontro **2** candidatos (27 KB), el **0.1%** de los 1391 archivos que el analizador recorre en cada corrida.
 
 De ellos, **0** se proponen para borrar (0 KB) y **2** quedan para revisar.
 
