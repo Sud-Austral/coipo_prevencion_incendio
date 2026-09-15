@@ -78,7 +78,7 @@ export default function PanelLateral({
   // evita escribir «(0 obras)» en todas las opciones cuando el ETL no publico
   // el campo: sin capa que cuente, el filtro no se pinta, y B27 lo delata.
   const capaQueCuenta = (f) =>
-    f.capas.find((c) => capasMan[c]?.dominios?.[f.campo]) ?? null
+    f.capas.find((c) => capasActivas.includes(c) && capasMan[c]?.dominios?.[f.campo]) ?? null
 
   const opcionesDe = (f, capa) => {
     const cuenta = new Map()
@@ -215,7 +215,7 @@ export default function PanelLateral({
         <h2>Filtros</h2>
         {filtrosVisibles.map((f) => {
           const capa = capaQueCuenta(f)
-          if (!capa) return null
+          if (!capa || f.campo === 'inst') return null
           const unidad = UNIDAD_CAPA[capa]
           const ops = opcionesDe(f, capa)
           if (!ops.length) return null
