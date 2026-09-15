@@ -116,13 +116,28 @@ export default function PanelIndicadores({
     // extrae del rotulo «Otras (n)»: ese texto lo compone topConOtras y
     // parsearlo de vuelta ataria esta frase a su formato.
     const restantes = agruparQuemas(resumen.negligentes.porEspecifica).length - nombradas.length
-    return { pct: (100 * nombradas.reduce((a, d) => a + d.n, 0)) / total, restantes }
+    // Negligentes sin causa_especifica: no estan en ninguna fila, ni en «Otras».
+    // Sin contarlos, «las conductas restantes suman el resto» seria falso en
+    // cuanto hubiera uno. Hoy son 0 de 8.730 (medido el 2026-09-15).
+    const sinConducta = total - resumen.negligentes.porEspecifica.reduce((a, d) => a + d.n, 0)
+    return { pct: (100 * nombradas.reduce((a, d) => a + d.n, 0)) / total, restantes, sinConducta }
   }, [conductas, resumen])
 
   // Ver el comentario gemelo en PanelLateral: el foco entra al encabezado al
   // abrir el cajon, y App lo devuelve al boton al cerrarlo.
+  // La guarda del primer render es la misma que alli y faltaba aqui: anclado
+  // (>1200 px) el panel nace con abierto=true y el efecto le robaba el foco a
+  // la pagina nada mas cargar. Medido el 2026-09-14 en 1440 y 1920 px:
+  // document.activeElement era este h2 «Indicadores» sin que nadie pulsara
+  // nada; a 1165 y 390 px, donde nace cerrado, era <body>. Tambien pasaba al
+  // volver desde la pestaña Priorizacion, que remonta el panel. Lo vigila B25.
   const cabecera = useRef(null)
+  const montado = useRef(false)
   useEffect(() => {
+    if (!montado.current) {
+      montado.current = true
+      return
+    }
     if (abierto) cabecera.current?.focus()
   }, [abierto])
 
@@ -239,49 +254,83 @@ export default function PanelIndicadores({
             // sondeo de scripts/verify-panel.mjs espera a que ese aviso
             // desaparezca -- no fallaria una asercion, agotaria el job.
             <CapaApagada etiqueta={capaIncendios} onEncender={encenderIncendios} />
+          ) : resumen.negligentes.n === 0 ? (
+            // Antes `conductas.length > 0 && (...)`: sin negligentes en el ambito
+            // la seccion quedaba con su titulo y su bajada y nada debajo, y no
+            // se sabia si faltaba un dato o habia fallado algo. Medido el
+            // 2026-09-14 con ?causa_grupo=Intencionales.
+            // La condicion es el NUMERO de negligentes y no `conductas.length`:
+            // un negligente sin causa_especifica no entra en porEspecifica
+            // (indicadores.js hace `especifica.n[null]++`, que en un Int32Array
+            // crea la propiedad «null» y no suma en ningun indice), asi que con
+            // todos los del ambito sin conducta la lista queda vacia HABIENDO
+            // incendios por descuido, y esta frase lo negaria. Hoy es latente:
+            // medido el 2026-09-15 en public/data/incendios.geojson, 0 de 8.730
+            // negligentes vienen sin causa_especifica.
+            <p className="apagada">
+              Con los filtros actuales no queda ningún incendio por descuido, así que no hay conductas
+              que mostrar: esta sección describe solo los incendios por negligencia.
+            </p>
+          ) : conductas.length === 0 ? (
+            <p className="apagada">
+              Con los filtros actuales hay {fmt.format(resumen.negligentes.n)}{' '}
+              {resumen.negligentes.n === 1 ? 'incendio' : 'incendios'} por descuido, pero la
+              investigación no registró qué se estaba haciendo en{' '}
+              {resumen.negligentes.n === 1 ? 'él' : 'ninguno de ellos'}, así que no hay conductas que
+              mostrar.
+            </p>
           ) : (
-            conductas.length > 0 && (
-              <>
-                {conductas.map((d) => (
-                  <BarraFila
-                    key={d.v}
-                    etiqueta={d.v}
-                    titulo={d.detalle}
-                    valor={d.n}
-                    max={conductas[0].n}
-                    texto={fmt.format(d.n)}
-                    extra={d.ha == null ? null : ha(d.ha)}
-                    color={d.otras ? 'var(--border)' : COLOR_CAUSA.Negligentes}
-                    atenuada={d.otras}
-                  />
-                ))}
-                {/* La gemela lista el catalogo ORIGINAL sin agrupar: la fusion
-                    de las quemas es una decision de presentacion y el dato
-                    oficial tiene que seguir accesible. */}
-                <TablaKpi
-                  titulo="Causa específica de los incendios por negligencia, sin agrupar"
-                  cabeceras={['Causa específica', 'Incendios', 'Hectáreas']}
-                  filas={resumen.negligentes.porEspecifica.map((d) => [
-                    d.v,
-                    fmt.format(d.n),
-                    d.ha == null ? 'sin dato' : fmt1.format(d.ha),
-                  ])}
+            <>
+              {conductas.map((d) => (
+                <BarraFila
+                  key={d.v}
+                  etiqueta={d.v}
+                  titulo={d.detalle}
+                  valor={d.n}
+                  max={conductas[0].n}
+                  texto={fmt.format(d.n)}
+                  extra={d.ha == null ? null : ha(d.ha)}
+                  color={d.otras ? 'var(--border)' : COLOR_CAUSA.Negligentes}
+                  atenuada={d.otras}
                 />
-                {cubreConductas && (
-                  <p className="nota">
-                    Estas filas cubren el {pc(cubreConductas.pct)} de los{' '}
-                    {fmt.format(resumen.negligentes.n)} incendios por negligencia
-                    {cubreConductas.restantes > 0 &&
-                      `; las ${cubreConductas.restantes} conductas restantes suman el resto`}
-                    .
-                  </p>
-                )}
+              ))}
+              {/* La gemela lista el catalogo ORIGINAL sin agrupar: la fusion
+                  de las quemas es una decision de presentacion y el dato
+                  oficial tiene que seguir accesible. */}
+              <TablaKpi
+                titulo="Causa específica de los incendios por negligencia, sin agrupar"
+                cabeceras={['Causa específica', 'Incendios', 'Hectáreas']}
+                filas={resumen.negligentes.porEspecifica.map((d) => [
+                  d.v,
+                  fmt.format(d.n),
+                  d.ha == null ? 'sin dato' : fmt1.format(d.ha),
+                ])}
+              />
+              {cubreConductas && (
                 <p className="nota">
-                  Es un recuento de lo ocurrido, no una lista de recomendaciones ni una norma.
+                  Estas filas cubren el {pc(cubreConductas.pct)} de los{' '}
+                  {fmt.format(resumen.negligentes.n)} incendios por negligencia
+                  {cubreConductas.restantes > 0 &&
+                    cubreConductas.sinConducta === 0 &&
+                    `; las ${cubreConductas.restantes} conductas restantes suman el resto`}
+                  {cubreConductas.restantes > 0 &&
+                    cubreConductas.sinConducta > 0 &&
+                    `; el resto son las ${cubreConductas.restantes} conductas restantes y ${fmt.format(
+                      cubreConductas.sinConducta,
+                    )} ${cubreConductas.sinConducta === 1 ? 'incendio' : 'incendios'} sin la conducta registrada`}
+                  {cubreConductas.restantes === 0 &&
+                    cubreConductas.sinConducta > 0 &&
+                    `; ${fmt.format(cubreConductas.sinConducta)} ${
+                      cubreConductas.sinConducta === 1 ? 'no tiene' : 'no tienen'
+                    } la conducta registrada`}
+                  .
                 </p>
-                {AVISO_CIVICO && <p className="nota">{AVISO_CIVICO}</p>}
-              </>
-            )
+              )}
+              <p className="nota">
+                Es un recuento de lo ocurrido, no una lista de recomendaciones ni una norma.
+              </p>
+              {AVISO_CIVICO && <p className="nota">{AVISO_CIVICO}</p>}
+            </>
           )}
         </section>
       )}
@@ -606,7 +655,16 @@ export default function PanelIndicadores({
           De cada 100 incendios investigados en una temporada, cuántos fueron por descuido y
           cuántos intencionales.
         </p>
-        {conFeatures && resumen.porTemporada.length > 1 ? (
+        {/* Tres casos y no dos. Antes era `conFeatures && porTemporada.length > 1`
+            con <CapaApagada> en el else, y ese else tambien recogia la capa YA
+            cargada con una sola temporada: medido el 2026-09-14 con
+            ?temporada=2024-2025, el panel decia «Enciende la capa Incendios
+            investigados» con la capa encendida (esa temporada tiene 3.204).
+            Un aviso falso, y ademas agotaba el sondeo de ir() en verify-panel,
+            que espera a que ese texto desaparezca. Lo vigila B26. */}
+        {!conFeatures ? (
+          <CapaApagada etiqueta={capaIncendios} onEncender={encenderIncendios} />
+        ) : resumen.porTemporada.length > 1 ? (
           <>
             <LeyendaLineas series={SERIES_CAUSA} />
             <Lineas
@@ -630,8 +688,21 @@ export default function PanelIndicadores({
               educación, la regulación de quemas y el manejo de interfaz.
             </p>
           </>
+        ) : resumen.porTemporada.length === 1 ? (
+          // Con una sola temporada la composicion SI existe, lo que no existe es
+          // la evolucion que dibuja el grafico. Se dice por que no hay grafico y
+          // se dan las dos cifras de esa temporada, que es lo que la bajada
+          // promete. La salida del filtro solo se ofrece si la temporada unica
+          // la impone el filtro: con otra combinacion, quitarlo no es la causa.
+          <p className="apagada">
+            Con una sola temporada no hay evolución que dibujar: este gráfico compara la proporción
+            de causas entre temporadas. En {resumen.porTemporada[0].v}, el{' '}
+            {pc(resumen.porTemporada[0].pctNeg)} fue por descuido y el{' '}
+            {pc(resumen.porTemporada[0].pctInt)} intencional.
+            {filtros?.temporada && ' Quita el filtro de temporada para ver la serie completa.'}
+          </p>
         ) : (
-          <CapaApagada etiqueta={capaIncendios} onEncender={encenderIncendios} />
+          <p className="apagada">Ningún incendio investigado cumple los filtros actuales.</p>
         )}
       </section>
 

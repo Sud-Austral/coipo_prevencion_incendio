@@ -336,6 +336,70 @@ export const COLOR_VERIFICADO = '#00838F'
 
 export const radioPorZoom = (z) => (z < 7 ? 2.5 : z < 10 ? 3.5 : 5)
 
+// ---------- riesgo de incendio forestal ----------
+
+// LAS CLAVES SON CONTRATO PUBLICO, igual que las de BASEMAPS: son el valor de
+// ?vista= en la URL. Anadir una vista es libre; renombrar o retirar una ya
+// publicada cambia el significado de todo enlace compartido.
+export const VISTAS = [
+  { id: 'incendios', etiqueta: 'Incendios' },
+  { id: 'riesgo', etiqueta: 'Riesgo' },
+]
+
+// Vistas ya publicadas con otro id. La segunda pestaña se llamo «priorizacion»
+// mientras mostraba el modelo compuesto de 3 comunas; el 2026-09-15 paso a
+// mostrar el riesgo nacional y a llamarse «riesgo» (DECISIONES.md §S). Los
+// enlaces que ya circulan con ?vista=priorizacion tienen que seguir abriendo
+// esta pestaña, no caer a la de incendios.
+export const ALIAS_VISTA = { priorizacion: 'riesgo' }
+
+/** Id de vista valido para un valor de ?vista=, con alias; 'incendios' si no se reconoce. */
+export const vistaValida = (v) => {
+  const id = ALIAS_VISTA[v] ?? v
+  return VISTAS.some((x) => x.id === id) ? id : 'incendios'
+}
+
+// Un color por NIVEL de riesgo (0 = Muy Bajo ... 4 = Muy Alto), por indice y no
+// por etiqueta: los nombres de las clases y sus cortes vienen del manifest
+// (`capas.riesgo.clases`, sacado de parametros.json del modelo), y el visor no
+// los escribe en ningun sitio. Las claves en femenino del modelo anterior
+// («Muy Alta») dejaban el mapa entero gris sin un error cuando las clases
+// pasaron a masculino; por indice eso no puede volver a pasar.
+//
+// Es la rampa con la que el autor del modelo publica sus mapas (notebook 4 de
+// lab/priorizacion, construir_notebook4.py:439), no una reinventada aqui: que el
+// visor y el informe del modelo se vean igual es lo que permite cotejarlos. El
+// notebook la eligio contra la OrRd del modelo anterior porque el primer paso de
+// esa (#FEF0D9) tiene 1,10:1 contra el fondo, y el desierto del norte -casi todo
+// Muy Bajo- se leia igual que el blanco de «sin dato».
+export const COLOR_NIVEL = ['#F9A129', '#DC7709', '#BB4F04', '#912902', '#650101']
+
+// Rampa del modo normalizado. Es una familia cromatica DISTINTA de la
+// categorica a proposito: las dos lecturas no se pueden confundir de un
+// vistazo, y quien vea morado sabe que esta mirando contraste interno de una
+// comuna y no la clase del modelo.
+export const RAMPA_NORMALIZADA = ['#F2F0F7', '#DADAEB', '#BCBDDC', '#9E9AC8', '#807DBA', '#6A51A3', '#4A1486']
+
+// Por debajo de este zoom los iconos de infraestructura no se dibujan.
+// MEDIDO mirando la captura con el modelo anterior: con las tres comunas
+// encuadradas --Biobio y Aysen estan a ~1.000 km-- los 696 iconos colapsaban en
+// dos cumulos que no dejaban ver NINGUNA mancha. A 9 cabe una comuna entera en
+// pantalla y los iconos ya se separan.
+export const ZOOM_ICONOS = 9
+
+// Un color por familia de infraestructura. Se evitan a proposito los tres de
+// COLOR_OECV y los cinco de COLOR_CAUSA.
+export const COLOR_FAMILIA = {
+  educacion: '#1F6FEB',
+  escuelas_prep: '#0E7490',
+  salud: '#DC2626',
+  ssr: '#0891B2',
+  antenas: '#7C3AED',
+  subestaciones: '#CA8A04',
+  aeropuerto: '#4B5563',
+  penitenciaria: '#9D174D',
+}
+
 // Definicion de las capas: orden del panel, clave en el manifest y estilo.
 //
 // `descripcion` traduce la etiqueta para quien no trabaja en el programa. Las
@@ -401,21 +465,87 @@ export const CAPAS = [
   },
 ]
 
+/*
+ * Que cuenta UNA feature de cada capa, [singular, plural], para escribir la
+ * cuenta entre parentesis de las opciones de filtro. Sale de lo que es cada
+ * feature en su ficha (src/fichas.js) y en la cabecera de su modulo del ETL:
+ *   · oecv: una obra por feature (fichaOECV la titula «Obra de eliminacion…»).
+ *   · oecv_verificado: NO se dice «obras». Cada feature es una linea de la
+ *     evidencia que mando una region, y ETL/build_verificado.py avisa de que
+ *     Valparaiso mezcla obras y accesos en el mismo KMZ: «obras verificadas»
+ *     prometeria mas de lo que la capa sabe.
+ *   · rutas: «rutas de despliegue» entero y no «rutas». Medido el 2026-09-14
+ *     con ?capas=redvial: «Ripio (1.892 rutas)» se leia como «caminos», que es
+ *     justo lo que dibuja la red vial. El rotulo «Tipo de carpeta» no lo
+ *     desambigua, porque cuenta en rutas O en red vial segun cual este encendida.
+ *     Tiene un coste, visto en captura el 2026-09-15 a 1440 px: en el select
+ *     de 287 px se cortan 2 de las 7 carpetas, y elegida, «Pavimento Doble
+ *     Calzada (220 rutas de despliegue)» queda en «…(220 rutas de d». En la
+ *     misma captura ya se cortaban 6 de las 14 causas generales. Se prefiere
+ *     una cifra cortada a una que dice otra cosa.
+ *   · redvial: «tramos», que es como la ficha llama a cada feature (fichaRuta,
+ *     «Tramo vial»).
+ */
+export const UNIDAD_CAPA = {
+  incendios: ['incendio', 'incendios'],
+  oecv: ['obra', 'obras'],
+  oecv_verificado: ['tramo verificado', 'tramos verificados'],
+  puntos_standby: ['punto stand-by', 'puntos stand-by'],
+  rutas: ['ruta de despliegue', 'rutas de despliegue'],
+  redvial: ['tramo', 'tramos'],
+}
+
 // Filtros del panel: que campo miran y a que capas afectan.
+/*
+ * `capas`  las capas a las que el filtro RECORTA, EN ORDEN DE PRIORIDAD. Decide
+ *          cuando se muestra (si hay alguna encendida), de que capas salen sus
+ *          opciones y en cual se cuenta.
+ * `porque` por que ese orden.
+ *
+ * La cuenta entre parentesis de cada opcion sale de UNA sola capa: la PRIMERA
+ * de `capas` que este ENCENDIDA y publique ese campo en su `dominios`, escrita
+ * con la unidad de ESA capa (UNIDAD_CAPA). Si ninguna cumple, el filtro no se
+ * muestra. Lo vigila B27 de verify-panel.mjs, que recalcula la capa y la cuenta
+ * con codigo propio en varias combinaciones de capas.
+ *
+ * Por que una sola capa: la cuenta sumaba los `dominios` de TODAS las capas del
+ * manifest. Medido el 2026-09-14 sobre el manifest de CI, «Biobío (5.049)» eran
+ * 2.820 incendios + 379 obras OECV + 62 puntos stand-by + 1.020 tramos de red
+ * vial + 768 rutas: un numero que no cuenta nada, junto a unos indicadores que
+ * decian 2.820. Y como recorria todas, no solo las de `capas`, «Titularidad
+ * (OECV)» ofrecia 31 opciones de las que 28 eran tipos de infraestructura de la
+ * vista de priorizacion («Monoposte (74)»).
+ *
+ * Por que la primera ENCENDIDA y no una capa duena fija: con una duena fija,
+ * medido el 2026-09-14, ?capas=redvial ofrecia «Ripio (1.892 rutas)» --cifra de
+ * Rutas de despliegue, apagada-- junto a un mapa que dibujaba 4.916 tramos de
+ * ripio, y ?capas=oecv decia «Antofagasta (8 incendios)» con solo obras a la
+ * vista. La cifra tiene que hablar de lo que se ve.
+ * Si una opcion no esta en la capa que cuenta (sale de otra capa del filtro),
+ * su cuenta es 0 y se dice: nunca se suman entidades distintas.
+ */
 export const FILTROS = [
   // "ver solo mi región" no es adorno: es el filtro que busca cualquiera que
   // llega de fuera, y con la etiqueta a secas nadie sabia que al elegir una
   // region el visor entero --mapa e indicadores-- pasa a hablar solo de ella.
+  // Orden: incendios primero, porque es la capa de la que hablan los
+  // indicadores y el cartel; despues las del programa en el orden del panel de
+  // capas, y la red vial al final, porque es contexto del territorio.
   {
     campo: 'region',
     etiqueta: 'Región · ver solo mi región',
     capas: ['incendios', 'oecv', 'oecv_verificado', 'puntos_standby', 'rutas', 'redvial'],
   },
+  // Una sola capa: incendios es la unica con temporada y causa, y oecv la unica
+  // a la que recortan tipo e inst (App.jsx: pasaOECV).
   { campo: 'temporada', etiqueta: 'Temporada', capas: ['incendios'] },
   { campo: 'causa_grupo', etiqueta: 'Grupo de causa', capas: ['incendios'] },
   { campo: 'causa_general', etiqueta: 'Causa general', capas: ['incendios'] },
   { campo: 'tipo', etiqueta: 'Titularidad (OECV)', capas: ['oecv'] },
   { campo: 'inst', etiqueta: 'Institución (OECV)', capas: ['oecv'] },
+  // Orden: rutas antes que red vial. Traen las mismas 7 carpetas, pero rutas es
+  // la capa operativa del programa --por donde llegan las brigadas-- y la red
+  // vial es contexto. Con las dos encendidas cuenta rutas de despliegue.
   { campo: 'carpeta', etiqueta: 'Tipo de carpeta', capas: ['rutas', 'redvial'] },
 ]
 

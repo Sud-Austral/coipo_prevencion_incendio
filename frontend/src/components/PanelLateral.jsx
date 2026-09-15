@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { flush } from '../urlState'
+import FechaImagen from './FechaImagen'
 import {
   AVISO_CIVICO,
   CAPAS,
@@ -12,9 +13,9 @@ import {
   COLOR_STANDBY,
   FILTROS,
   NO_ACTIVOS,
+  UNIDAD_CAPA,
   fechaLarga,
   fmt,
-  fmt1,
   temporadasIncendios,
 } from '../config'
 
@@ -37,76 +38,6 @@ const claveRegion = (s) =>
 
 function Chip({ color }) {
   return <span className="chip" style={{ background: color }} />
-}
-
-/**
- * Fecha de captura de la imagen satelital bajo el CENTRO de la vista.
- *
- * Los cuatro estados se dicen, ninguno se calla. Que la respuesta valga solo
- * para el centro no es un detalle menor y va escrito: World Imagery es un
- * mosaico de miles de escenas de fechas distintas, asi que una sola fecha para
- * toda la pantalla seria falsa.
- */
-function FechaImagen({ info }) {
-  if (info.estado === 'cargando') {
-    return <p className="nota">Consultando la fecha de la imagen…</p>
-  }
-  if (info.estado === 'error') {
-    return <p className="nota">No se pudo consultar la fecha de la imagen.</p>
-  }
-  // Fecha conocida de antemano. Se dice ademas QUE ES un mosaico anual, porque
-  // Sentinel-2 revisita cada ~5 dias y es facil suponer que se esta viendo la
-  // pasada mas reciente: esto es un compuesto de todo el año, sin nubes.
-  if (info.estado === 'fijo') {
-    return (
-      <>
-        <p className="kpi">
-          <b>{info.texto}</b>
-        </p>
-        <p className="nota">
-          10 m por píxel. No hay un mes de captura: cada píxel se toma de la observación menos
-          nublada del año, así que dos puntos vecinos pueden ser de fechas muy distintas. Eso es lo
-          que permite que no haya nubes.
-        </p>
-        <p className="nota">
-          Si necesitas la fecha exacta de una imagen, usa el mapa base <b>Satelital</b>: ese sí la
-          informa punto por punto.
-        </p>
-      </>
-    )
-  }
-
-  const detalle = [
-    info.resolucion != null && `${fmt1.format(info.resolucion)} m por píxel`,
-    info.fuente,
-  ]
-    .filter(Boolean)
-    .join(' · ')
-
-  if (info.estado === 'sin-fecha') {
-    return (
-      <p className="nota">
-        {info.motivo === 'mosaico'
-          ? `A este nivel de acercamiento se ve el mosaico global de baja resolución${
-              detalle ? ` (${detalle})` : ''
-            }, que no publica fecha de captura. Acércate para ver la fecha de la imagen de alta resolución.`
-          : 'El servicio no informa qué imagen cubre este punto.'}
-      </p>
-    )
-  }
-
-  return (
-    <>
-      <p className="kpi">
-        Imagen del <b>{fechaLarga(info.iso)}</b>
-      </p>
-      {detalle && <p className="nota">{detalle}.</p>}
-      <p className="nota">
-        Corresponde al centro de la vista y cambia al desplazar el mapa: el fondo satelital es un
-        mosaico de escenas de distintas fechas, no una sola foto.
-      </p>
-    </>
-  )
 }
 
 export default function PanelLateral({
@@ -136,19 +67,34 @@ export default function PanelLateral({
   // Las opciones de cada filtro salen del manifest: el frontend no hardcodea
   // ninguna temporada, region ni causa. Si el ETL ve una temporada nueva,
   // aparece sola aqui.
-  const opcionesDe = (campo) => {
-    const vistos = new Map()
-    for (const capaId of Object.keys(capasMan)) {
-      const dom = capasMan[capaId]?.dominios?.[campo]
-      if (!dom) continue
-      for (const { v, n } of dom) vistos.set(v, (vistos.get(v) ?? 0) + n)
+  // Dos fuentes distintas a proposito (ver FILTROS en config.js): los VALORES
+  // salen de todas las capas que el filtro recorta, y la CUENTA de una sola.
+  // Sumar las cuentas de varias capas daba «Biobío (5.049)», mezcla de
+  // incendios, obras, puntos, tramos y rutas.
+  // La que cuenta es la PRIMERA ENCENDIDA de `f.capas` (que va en orden de
+  // prioridad) con ese campo en su `dominios`. Una capa duena fija contaba
+  // aunque estuviera apagada: con ?capas=redvial, «Ripio (1.892 rutas)» era la
+  // cifra de Rutas de despliegue, que no estaba en el mapa. Exigir el dominio
+  // evita escribir «(0 obras)» en todas las opciones cuando el ETL no publico
+  // el campo: sin capa que cuente, el filtro no se pinta, y B27 lo delata.
+  const capaQueCuenta = (f) =>
+    f.capas.find((c) => capasActivas.includes(c) && capasMan[c]?.dominios?.[f.campo]) ?? null
+
+  const opcionesDe = (f, capa) => {
+    const cuenta = new Map()
+    for (const { v, n } of capasMan[capa].dominios[f.campo]) {
+      cuenta.set(v, (cuenta.get(v) ?? 0) + n)
+    }
+    const valores = new Set(cuenta.keys())
+    for (const capaId of f.capas) {
+      for (const { v } of capasMan[capaId]?.dominios?.[f.campo] ?? []) valores.add(v)
     }
     // Las regiones se ordenan alfabeticamente y el resto por frecuencia. Nadie
     // busca su region por cuantos incendios tuvo: con el orden por cuenta, la
     // lista empezaba en La Araucania, Biobio, Maule… y encontrar la propia
     // exigia leerlas todas.
-    return [...vistos.entries()].sort(
-      campo === 'region'
+    return [...valores].map((v) => [v, cuenta.get(v) ?? 0]).sort(
+      f.campo === 'region'
         ? (a, b) => claveRegion(a[0]).localeCompare(claveRegion(b[0]), 'es')
         : (a, b) => b[1] - a[1],
     )
@@ -268,20 +214,30 @@ export default function PanelLateral({
       <section>
         <h2>Filtros</h2>
         {filtrosVisibles.map((f) => {
-          const ops = opcionesDe(f.campo)
+          const capa = capaQueCuenta(f)
+          if (!capa) return null
+          const unidad = UNIDAD_CAPA[capa]
+          const ops = opcionesDe(f, capa)
           if (!ops.length) return null
           return (
             <div key={f.campo}>
               <label className="fila-filtro">
                 <span>{f.etiqueta}</span>
+                {/* `name` es el campo: identifica el control en un formulario
+                    sin depender del texto de la etiqueta. */}
                 <select
+                  name={f.campo}
                   value={filtros[f.campo] ?? ''}
                   onChange={(e) => onFiltro(f.campo, e.target.value)}
                 >
                   <option value="">Todas</option>
+                  {/* La unidad va escrita en cada opcion y es la de la capa que
+                      cuenta: «(2.820)» a secas no dice si cuenta incendios,
+                      obras o rutas, y la misma «Región» cuenta incendios u
+                      obras segun que capas esten encendidas. */}
                   {ops.map(([v, n]) => (
                     <option key={v} value={v}>
-                      {v} ({fmt.format(n)})
+                      {v} ({fmt.format(n)} {unidad[n === 1 ? 0 : 1]})
                     </option>
                   ))}
                 </select>

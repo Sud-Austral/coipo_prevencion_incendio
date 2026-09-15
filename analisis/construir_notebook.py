@@ -334,8 +334,10 @@ md(r"""
 
 Aquí ocurre de **tres formas** y las tres importan.
 
-**(a) En ambas direcciones dentro de `causa_general`.** Es la forma literal de la
-trampa, y es la más grave porque afecta al campo que el visor usa como filtro.
+**(a) En una dirección dentro de `causa_general`.** Es la forma literal de la
+trampa, y es la más grave porque afecta al campo que el visor usa como filtro:
+una misma etiqueta cuelga de varios códigos oficiales. Al revés no pasa, y la
+segunda celda lo comprueba.
 """)
 
 co(r'''
@@ -353,8 +355,10 @@ pares[pares.causa_general.isin(por_etiqueta[por_etiqueta > 1].index)]
 ''')
 
 co(r'''
-# La direccion contraria, que es la que rompe cualquier agregacion por codigo:
-# el codigo 4.1 son DOS causas generales distintas.
+# La direccion contraria tiene que salir VACIA: cada codigo lleva una sola
+# etiqueta. Hasta el 2026-09-14 salian 4.1 y 1.1 con dos, y se presentaba como
+# hallazgo, pero era un defecto del ETL: el codigo llega como float y 4.10 es el
+# mismo numero que 4.1. Lo vigila D16 de ETL/verify.py.
 pares[pares.causa_general_codigo.isin(por_codigo[por_codigo > 1].index)].sort_values(
     ["causa_general_codigo", "n"], ascending=[True, False])
 ''')
@@ -865,9 +869,11 @@ falsa.
 
 - **Es la causa principal, no una composición.** Los tres niveles son un único
   árbol por incendio, no un reparto entre causas concurrentes.
-- **Ni la etiqueta ni el código de `causa_general` identifican solos:** 9 etiquetas
-  tienen más de un código oficial, y los códigos `4.1` y `1.1` llevan dos etiquetas
-  distintas cada uno. Hay que decir cuál se usa.
+- **La etiqueta de `causa_general` no identifica sola:** 9 etiquetas tienen más de
+  un código oficial ('Líneas eléctricas' es 4.9 y 1.9). El código sí: cada uno lleva
+  una sola etiqueta. Hay que decir cuál se usa. (Que `4.1` y `1.1` llevaran dos
+  etiquetas era un defecto del ETL, corregido el 2026-09-14: el código llegaba como
+  número y `4.10` se leía como `4.1`.)
 - **Nada sobre jefes de brigada.** Pese al encabezado, esa columna no trae personas.
 - **Nada judicial.** La causa es una determinación técnica de la UAD, no una
   imputación: es un recuento de lo ocurrido, no una lista de recomendaciones ni una

@@ -227,6 +227,91 @@ export function csvStandby(features, pasa) {
   }
 }
 
+/**
+ * Manchas de riesgo de UNA comuna, la cargada.
+ *
+ * `nivel_medio` sale ACOMPAÑADO de su rango y de `pct_alto`, igual que en la
+ * ficha y por la misma razon: la clase es un promedio y sola enganya. La region
+ * y el codigo CUT van en cada fila porque el archivo circula suelto y el nombre
+ * de la comuna no basta para volver a unirlo (el modelo escribe «Coihaique» y
+ * otras fuentes «Coyhaique»).
+ *
+ * NO se exporta ninguna columna normalizada. La normalizacion es una lectura
+ * visual de la comuna que se este mirando; en un archivo que va a circular
+ * suelto, una columna asi se leeria como si fuera el nivel del modelo.
+ */
+export function csvRiesgo(features, { region, cut } = {}) {
+  const filas = []
+  for (const f of features ?? []) {
+    const p = f.properties
+    filas.push([
+      region,
+      cut,
+      p.comuna,
+      p.mancha_id,
+      p.clase,
+      num(p.nivel_medio),
+      num(p.nivel_medio_min),
+      num(p.nivel_medio_max),
+      num(p.pct_alto),
+      num(p.n_hexagonos),
+      num(p.area_ha),
+    ])
+  }
+  return {
+    texto: armarCSV(
+      [
+        'region', 'cod_comuna', 'comuna', 'mancha_id', 'clase', 'nivel_medio',
+        'nivel_medio_min', 'nivel_medio_max', 'pct_alto', 'n_hexagonos', 'area_ha',
+      ],
+      filas,
+    ),
+    n: filas.length,
+  }
+}
+
+/** Infraestructura critica. `dependencia_cod` va SIN traducir, como en la
+ *  ficha: el .dbf del MINEDUC no trae diccionario y rotularlo seria inventar. */
+export function csvInfraPuntos(features, pasa) {
+  const filas = []
+  for (const f of features ?? []) {
+    const p = f.properties
+    if (pasa && !pasa(p)) continue
+    const [lon, lat] = coords(f.geometry)
+    filas.push([
+      p.comuna,
+      p.familia,
+      p.grupo,
+      p.nombre,
+      p.tipo,
+      p.direccion,
+      num(p.matricula),
+      num(p.dependencia_cod),
+      p.complejidad,
+      p.detalle,
+      p.ambito,
+      num(p.beneficiarios),
+      p.tension_kv,
+      p.propiedad,
+      p.operador,
+      p.codigo_oaci,
+      num(red6(lon)),
+      num(red6(lat)),
+    ])
+  }
+  return {
+    texto: armarCSV(
+      [
+        'comuna', 'familia', 'grupo', 'nombre', 'tipo', 'direccion', 'matricula',
+        'dependencia_cod', 'complejidad', 'detalle', 'ambito', 'beneficiarios',
+        'tension_kv', 'propiedad', 'operador', 'codigo_oaci', 'lon', 'lat',
+      ],
+      filas,
+    ),
+    n: filas.length,
+  }
+}
+
 // ---------------------------------------------------------------------------
 // GeoJSON
 // ---------------------------------------------------------------------------

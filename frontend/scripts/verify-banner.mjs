@@ -172,48 +172,6 @@ function chromePath() {
 
 const espera = (ms) => new Promise((ok) => setTimeout(ok, ms))
 
-async function lanzarChrome2() {
-  const perfil = await mkdtemp(join(tmpdir(), 'verify-banner-'))
-  const proc = spawn(
-    chromePath(),
-    [
-      '--headless=new',
-      '--disable-gpu',
-      '--hide-scrollbars',
-      '--force-device-scale-factor=1',
-      '--no-first-run',
-      '--no-default-browser-check',
-      '--disable-extensions',
-      '--disable-background-networking',
-      '--remote-debugging-port=0',
-      `--user-data-dir=${perfil}`,
-      'about:blank',
-    ],
-    { stdio: 'ignore' },
-  )
-
-  // El puerto asignado se publica en este archivo del perfil. El try/catch no
-  // es decorativo: en Windows, leerlo en el instante en que Chrome lo esta
-  // escribiendo devuelve EBUSY, y sin capturarlo el script muere una de cada
-  // varias corridas.
-  const archivo = join(perfil, 'DevToolsActivePort')
-  for (let i = 0; i < 200; i++) {
-    try {
-      const puerto = readFileSync(archivo, 'utf8').split('\n')[0].trim()
-      if (puerto) {
-        const r = await fetch(`http://127.0.0.1:${puerto}/json/version`)
-        return { proc, perfil, ws: (await r.json()).webSocketDebuggerUrl }
-      }
-    } catch {
-      /* aún no existe, o Chrome lo tiene abierto: se reintenta */
-    }
-    await espera(50)
-  }
-  throw new Error('Chrome no publicó su puerto de depuración')
-}
-
-/*
-*/
 async function puertoLibre() {
   return await new Promise((resolve, reject) => {
     const server = net.createServer()
@@ -299,70 +257,6 @@ async function lanzarChrome() {
   )
 }
 
-async function lanzarChrome3() {
-  const perfil = await mkdtemp(join(tmpdir(), 'verify-banner-'))
-  const puerto = await puertoLibre()
-
-  const proc = spawn(
-    chromePath(),
-    [
-      '--headless=new',
-      '--no-sandbox',
-      '--disable-gpu',
-      '--disable-dev-shm-usage',
-      '--hide-scrollbars',
-      '--force-device-scale-factor=1',
-      '--no-first-run',
-      '--no-default-browser-check',
-      '--disable-extensions',
-      '--disable-background-networking',
-      `--remote-debugging-port=${puerto}`,
-      `--user-data-dir=${perfil}`,
-      'about:blank',
-    ],
-    {
-      stdio: 'ignore',
-    },
-  )
-
-  // Esperamos a que Chrome publique su endpoint CDP.
-  for (let i = 0; i < 200; i++) {
-    try {
-      if (proc.exitCode !== null) {
-        throw new Error(
-          `Chrome terminó prematuramente con código ${proc.exitCode}`,
-        )
-      }
-
-      const r = await fetch(
-        `http://127.0.0.1:${puerto}/json/version`,
-      )
-
-      if (r.ok) {
-        const info = await r.json()
-
-        if (info.webSocketDebuggerUrl) {
-          return {
-            proc,
-            perfil,
-            ws: info.webSocketDebuggerUrl,
-          }
-        }
-      }
-    } catch {
-      // Chrome todavía está iniciando.
-    }
-
-    await espera(50)
-  }
-
-  throw new Error(
-    `Chrome no inició CDP en el puerto ${puerto}`,
-  )
-}
-
-/*
-*/
 async function conectar(url) {
   const ws = new WebSocket(url)
   await new Promise((ok, mal) => {

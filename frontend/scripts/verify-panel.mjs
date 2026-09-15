@@ -23,6 +23,23 @@
  *   CAPTURAS   lo unico que juzga si esto se lee. Las aserciones no ven que dos
  *              rotulos se pisen ni que un naranjo vibre sobre fondo oscuro.
  *
+ * Y desde el 2026-09-14, cinco defectos que se vieron en captura y que ninguna
+ * asercion vigilaba (cada una con su mutante en scripts/mutaciones.mjs):
+ *
+ *   B24  con un cajon abierto (<=900 px el izquierdo, <=1200 el derecho) las
+ *        pestañas siguen recibiendo el clic: elementFromPoint en su centro.
+ *   B25  nada roba el foco al cargar, y abrir el cajon de indicadores si lo
+ *        lleva a su encabezado.
+ *   B26  con una sola temporada filtrada el panel NO dice «Enciende la capa»
+ *        y la composicion da las cifras de esa temporada.
+ *   B27  con varias combinaciones de ?capas=, cada filtro con alguna capa
+ *        encendida ESTA en el panel con opciones (y ninguno sin ellas), y la
+ *        cuenta de cada opcion sale SOLO de la primera capa encendida en su
+ *        orden de prioridad, recontada aqui, con la unidad de esa capa.
+ *   B28  «Este visor no muestra incendios activos» se VE en el encabezado del
+ *        panel y en el cartel, y viaja en el GeoJSON y en el informe. El
+ *        literal esta duplicado aqui a proposito, igual que MIN_PANEL.
+ *
  * DOS MODOS DE DATOS. Con datos reales se afirman las cifras de produccion;
  * con el fixture, cifras calculadas a mano sobre 12 features.
  *
@@ -65,6 +82,46 @@ const MIN_MAPA = 520
 // donde se cuelan estos fallos.
 const ANCHOS = [1920, 1440, 1366, 1201, 1200, 1165, 901, 900, 768, 390]
 const CAJON = [1165, 768, 390] // anchos donde el panel derecho es cajon
+
+// Copia del literal de src/config.js (NO_ACTIVOS). Duplicado a proposito: si el
+// arnes lo importara, borrar la frase del bundle la borraria tambien de aqui y
+// B28 seguiria verde. Si alguien cambia la redaccion en config.js, B28 se pone
+// roja y obliga a releer las tres superficies (DECISIONES.md §O).
+const LITERAL_NO_ACTIVOS = 'Este visor no muestra incendios activos'
+
+// Copia de FILTROS y UNIDAD_CAPA de src/config.js: que capas recorta cada
+// filtro, EN ORDEN DE PRIORIDAD para la cuenta, y con que unidad se escribe la
+// cuenta de cada capa. Duplicadas por la misma razon que MIN_PANEL: importadas,
+// cambiar el orden o la unidad alla lo cambiaria tambien aqui y B27 seguiria
+// verde. Si se añade un filtro alla y no aqui, B27 lo dice.
+const FILTROS_ESPERADOS = {
+  region: { capas: ['incendios', 'oecv', 'oecv_verificado', 'puntos_standby', 'rutas', 'redvial'] },
+  temporada: { capas: ['incendios'] },
+  causa_grupo: { capas: ['incendios'] },
+  causa_general: { capas: ['incendios'] },
+  tipo: { capas: ['oecv'] },
+  inst: { capas: ['oecv'] },
+  carpeta: { capas: ['rutas', 'redvial'] },
+}
+const UNIDADES_ESPERADAS = {
+  incendios: ['incendio', 'incendios'],
+  oecv: ['obra', 'obras'],
+  oecv_verificado: ['tramo verificado', 'tramos verificados'],
+  puntos_standby: ['punto stand-by', 'puntos stand-by'],
+  rutas: ['ruta de despliegue', 'rutas de despliegue'],
+  redvial: ['tramo', 'tramos'],
+}
+// Combinaciones de ?capas= que recorre B27. El defecto de la duena fija solo se
+// ve cuando la capa que contaba antes esta APAGADA, asi que no basta la de
+// siempre: solo red vial (la carpeta contaba rutas apagadas) y solo OECV (la
+// region contaba incendios apagados). La cuarta toca las dos unidades que las
+// otras no ven.
+const CASOS_B27 = [
+  ['incendios', 'oecv', 'rutas'],
+  ['redvial'],
+  ['oecv'],
+  ['puntos_standby', 'oecv_verificado'],
+]
 
 // services.arcgisonline.com es un host DISTINTO de server.arcgisonline.com: el
 // segundo sirve las teselas satelitales y el primero la metadata de fecha de
@@ -182,7 +239,40 @@ const FIXTURE = {
         bytes: 4096,
         bbox: [-73, -38, -72, -37],
         filtros: ['region', 'carpeta'],
-        dominios: { region: [{ v: 'Biobío', n: 5278 }] },
+        // `carpeta` hace falta desde B27: sin dominio, «Tipo de carpeta» no se
+        // pinta y en CI ese filtro no se comprobaba nunca.
+        dominios: {
+          region: [{ v: 'Biobío', n: 5278 }],
+          carpeta: [
+            { v: 'Ripio', n: 3000 },
+            { v: 'Pavimento', n: 2278 },
+          ],
+        },
+      },
+      // Red vial solo para B27, que la enciende sola: es el caso en que la
+      // carpeta tiene que contar tramos y no rutas. «Suelo Natural» esta aqui y
+      // no en rutas a proposito, para que con rutas encendida salga «(0 rutas
+      // de despliegue)»; y Ripio en 1, para que salga el singular.
+      redvial: {
+        titulo: 'Red vial',
+        formato: 'pmtiles',
+        geometria: 'LineString',
+        archivo: 'redvial.pmtiles',
+        features: 900,
+        bytes: 4096,
+        bbox: [-73, -38, -72, -37],
+        filtros: ['region', 'carpeta'],
+        dominios: {
+          region: [
+            { v: 'Biobío', n: 700 },
+            { v: 'Maule', n: 200 },
+          ],
+          carpeta: [
+            { v: 'Pavimento', n: 850 },
+            { v: 'Suelo Natural', n: 49 },
+            { v: 'Ripio', n: 1 },
+          ],
+        },
       },
       puntos_standby: {
         titulo: 'Stand-by',
@@ -466,7 +556,19 @@ window.__laboratorioListo = true
 async function ir(
   cdp,
   sesion,
-  { ancho, tema = 'light', puerto, query = '', degradado = false, conservarAlmacen = false, semilla, antes, ganchos, teselasFalsas = false },
+  {
+    ancho,
+    tema = 'light',
+    puerto,
+    query = '',
+    degradado = false,
+    conservarAlmacen = false,
+    semilla,
+    antes,
+    ganchos,
+    teselasFalsas = false,
+    sinEspera = false,
+  },
 ) {
   // El guion por documento se reescribe entero en cada navegacion: limpiar,
   // conservar, sembrar un valor concreto o romper el almacenamiento. Va aqui y
@@ -498,6 +600,11 @@ async function ir(
   // manda 40 peticiones a la red real y el script se cuelga ahi.
   await cdp.enviar('Network.setBlockedURLs', { urls: teselasFalsas ? [] : TILES }, sesion)
   await cdp.enviar('Page.navigate', { url: `http://127.0.0.1:${puerto}${BASE}${query}` }, sesion)
+  // `sinEspera` es para las aserciones cuyo DEFECTO es justamente que el
+  // sondeo de abajo no termine (B26: «Enciende la capa» que no desaparece).
+  // Con la espera normal, el mutante agotaria los 20 s y el script moriria con
+  // una excepcion en vez de poner roja su asercion. Esas llaman a esperarHasta.
+  if (sinEspera) return
   // Esperar a `.cifra b` NO basta, y esto costo seis aserciones rojas: el panel
   // degrada con solo el manifest y ya pinta su cifra principal, asi que el
   // script seguia adelante y afirmaba cifras que dependen de un GeoJSON de
@@ -539,6 +646,86 @@ async function abrirCajon(cdp, sesion) {
   const e = await evaluar(cdp, sesion, estado)
   throw new Error(`el cajón no se abrió: ${JSON.stringify(e)}`)
 }
+
+/**
+ * Como sondear, pero sin lanzar: devuelve si la condicion llego a cumplirse
+ * dentro del plazo. Para las aserciones que tienen que ponerse ROJAS (y no
+ * reventar el script) cuando la condicion no llega nunca.
+ */
+async function esperarHasta(cdp, sesion, fuente, ms) {
+  const t0 = Date.now()
+  while (Date.now() - t0 < ms) {
+    if (await evaluar(cdp, sesion, fuente)) return true
+    await espera(100)
+  }
+  return false
+}
+
+/**
+ * Abre el cajon IZQUIERDO (<=900 px) y espera a que se asiente. Gemelo de
+ * abrirCajon, que abre el derecho.
+ */
+async function abrirCajonIzq(cdp, sesion) {
+  const estado = `(() => { const p = document.querySelector('.panel')
+                           return { clases: p && p.className, transform: p && getComputedStyle(p).transform } })()`
+  await evaluar(cdp, sesion, `document.querySelector('.abrir').click()`)
+  for (let i = 0; i < 200; i++) {
+    const e = await evaluar(cdp, sesion, estado)
+    if (e.clases?.includes('abierto') && e.transform === 'none') return
+    if (i > 0 && i % 10 === 0) await evaluar(cdp, sesion, `document.querySelector('.abrir')?.click()`)
+    await espera(100)
+  }
+  throw new Error(`el cajón izquierdo no se abrió: ${JSON.stringify(await evaluar(cdp, sesion, estado))}`)
+}
+
+/**
+ * B24. Que pestaña pinta el pixel del centro de cada [role=tab]. Un cajon que
+ * arranca en --alto-minimo-banner (68 px) cubre la barra de pestañas, que
+ * vive entre 68 y 106: elementFromPoint devolvia el h1 del cajon. Se mira el
+ * pixel y no las cajas: comparar rectangulos no dice quien pinta encima, y
+ * eso lo decide el apilado (el cajon va a z-index 1100).
+ */
+const PESTANAS_ALCANZABLES = `(() => [...document.querySelectorAll('[role=tab]')].map((t) => {
+  const r = t.getBoundingClientRect()
+  const e = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+  return { tab: t.textContent.trim(), ok: !!e && (e === t || t.contains(e)),
+           encima: e ? e.tagName.toLowerCase() + (e.getAttribute('class') ? '.' + e.getAttribute('class').split(' ')[0] : '') : 'nada' }
+}))()`
+
+/**
+ * B28. ¿Se VE el literal dentro de `raiz`? Se buscan los rectangulos del
+ * propio texto con un Range, no los del parrafo: borrar la frase deja el
+ * parrafo en pie con el resto del texto. Y no basta getClientRects: medido el
+ * 2026-09-14, el aviso del cajon cerrado a 390 px devuelve 1 rectangulo con
+ * visibility:hidden. Por eso ademas checkVisibility (visibility, opacity,
+ * content-visibility) y elementFromPoint en el centro del literal, que caza
+ * que otra caja lo tape.
+ */
+const literalVisible = (raiz) => `(() => {
+  const L = ${JSON.stringify(LITERAL_NO_ACTIVOS)}
+  const r0 = document.querySelector(${JSON.stringify(raiz)})
+  if (!r0) return { ok: false, motivo: 'no existe ' + ${JSON.stringify(raiz)} }
+  const w = document.createTreeWalker(r0, NodeFilter.SHOW_TEXT)
+  let nodo = w.nextNode()
+  while (nodo && !nodo.data.includes(L)) nodo = w.nextNode()
+  if (!nodo) return { ok: false, motivo: 'el literal no está en ' + ${JSON.stringify(raiz)} }
+  const rg = document.createRange()
+  const i = nodo.data.indexOf(L)
+  rg.setStart(nodo, i)
+  rg.setEnd(nodo, i + L.length)
+  const rects = [...rg.getClientRects()].filter((x) => x.width > 0 && x.height > 0)
+  const el = nodo.parentElement
+  const css = el.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })
+  if (!rects.length || !css) return { ok: false, motivo: 'rectángulos ' + rects.length + ' · checkVisibility ' + css }
+  const c = rects[0]
+  const x = c.left + c.width / 2
+  const y = c.top + c.height / 2
+  const dentro = x >= 0 && y >= 0 && x < innerWidth && y < innerHeight
+  const e = dentro ? document.elementFromPoint(x, y) : null
+  const ok = !!e && (e === el || el.contains(e))
+  return { ok, motivo: ok ? 'visible en ' + Math.round(x) + ',' + Math.round(y)
+                          : (dentro ? 'tapado por ' + (e ? e.tagName + '.' + (e.getAttribute('class') || '') : 'nada') : 'fuera de pantalla') }
+})()`
 
 /** Identificador del guion por documento que gobierna el almacenamiento. */
 let guionAlmacen = null
@@ -704,6 +891,13 @@ const MEDIR = `(() => {
     almacen: (() => {
       try { return localStorage.getItem('coipo.disposicion') } catch { return 'INACCESIBLE' }
     })(),
+    // --- B25 --- quien tiene el foco. Selector corto y legible en el detalle.
+    foco: (() => {
+      const a = document.activeElement
+      if (!a || a === document.body) return 'body'
+      const cont = a.closest('.panel-kpi') ? '.panel-kpi ' : a.closest('.panel') ? '.panel ' : ''
+      return cont + a.tagName.toLowerCase() + (a.textContent ? ' «' + a.textContent.trim().slice(0, 20) + '»' : '')
+    })(),
   }
 })()`
 
@@ -774,7 +968,85 @@ function esperado() {
   const filtro = MODO === 'ficticios' ? 'Biobío' : 'Biobío'
   const F = barrer(filtro)
 
+  // ---- B26 · una sola temporada -------------------------------------------
+  // La mas reciente de la tabla, sea cual sea: no se escribe ninguna a mano.
+  // Composicion recontada aqui: negligentes e intencionales sobre el total de
+  // esa temporada, con el mismo redondeo de una cifra que usa el panel.
+  const temporadaUnica = [...T.temporada].sort().at(-1)
+  let tN = 0
+  let tNeg = 0
+  let tInt = 0
+  for (const f of inc.features) {
+    const p = f.properties
+    if (T.temporada[p.temporada] !== temporadaUnica) continue
+    tN++
+    const g = T.causa_grupo[p.causa_grupo]
+    if (g === 'Negligentes') tNeg++
+    else if (g === 'Intencionales') tInt++
+  }
+
+  // ---- B27 · oraculo de las cuentas de los filtros --------------------------
+  // Para UNA capa y un campo, cuantas features hay de cada valor. Las capas
+  // GeoJSON se recuentan aqui sobre sus features, decodificando contra `tablas`
+  // si el campo viaja codificado (incendios). Las servidas por teselas (rutas,
+  // red vial) no tienen features que contar desde aqui: su oraculo es el
+  // `dominios` del manifest de ESA capa, que sigue delatando una suma entre
+  // capas o una capa equivocada, pero no un dominio mal calculado por el ETL.
+  // Se deja escrito en el detalle de cada linea.
+  // NO se decide aqui que filtros tienen que aparecer: eso sale de las capas
+  // encendidas. Decidirlo por los dominios del manifest es lo que dejaba verde
+  // a B27 cuando el ETL dejaba de publicar `inst`: sin dominio no habia nada
+  // que esperar, y el filtro desaparecia en silencio (revision de F0).
+  const geojson = new Map([
+    [man.capas.incendios.archivo, inc],
+    [man.capas.oecv.archivo, oecv],
+  ])
+  const leerGeo = (archivo) => {
+    if (!geojson.has(archivo)) {
+      const crudo =
+        MODO === 'ficticios'
+          ? FIXTURE[archivo]
+          : existsSync(join(DATOS, archivo))
+            ? readFileSync(join(DATOS, archivo), 'utf8')
+            : null
+      geojson.set(archivo, crudo ? JSON.parse(crudo) : null)
+    }
+    return geojson.get(archivo)
+  }
+  const oraculoCuenta = (capa, campo) => {
+    const meta = man.capas[capa]
+    if (!meta) return null
+    if (meta.archivo?.endsWith('.geojson')) {
+      const gj = leerGeo(meta.archivo)
+      if (!gj) return null
+      const tabla = meta.codificados?.includes(campo) ? meta.tablas?.[campo] : null
+      const cuenta = new Map()
+      for (const f of gj.features) {
+        const crudo = f.properties?.[campo]
+        const v = tabla ? tabla[crudo] : crudo
+        if (v == null || v === '') continue
+        cuenta.set(v, (cuenta.get(v) ?? 0) + 1)
+      }
+      return { cuenta, oraculo: `features de ${capa}` }
+    }
+    const dom = meta.dominios?.[campo]
+    return dom ? { cuenta: new Map(dom.map((d) => [d.v, d.n])), oraculo: `dominio del manifest de ${capa} (teselas)` } : null
+  }
+  // Opciones que el panel tiene que ofrecer: la union de los dominios de TODAS
+  // las capas que el filtro recorta, esten encendidas o no.
+  const valoresFiltro = Object.fromEntries(
+    Object.entries(FILTROS_ESPERADOS).map(([campo, def]) => [
+      campo,
+      new Set(def.capas.flatMap((c) => (man.capas[c]?.dominios?.[campo] ?? []).map((d) => d.v))),
+    ]),
+  )
+
   return {
+    temporadaUnica,
+    composicionUnica: tN ? { neg: n1.format((100 * tNeg) / tN), int: n1.format((100 * tInt) / tN) } : null,
+    oraculoCuenta,
+    valoresFiltro,
+    capasManifest: Object.keys(man.capas),
     filtro,
     nacionalN: N.n,
     filtroAmbito: 'nacional',
@@ -911,6 +1183,23 @@ async function main() {
           `display ${g.panelDisplay}`,
         )
       }
+
+      // B25 y B28 tambien aqui dentro, por el mismo motivo que B12: estas diez
+      // cargas ya estan pagadas.
+      // Nadie ha pulsado nada: el foco tiene que seguir en <body>. Sin la
+      // guarda de primer montaje, anclado (>1200) quedaba en el h2 del panel
+      // de indicadores -- medido el 2026-09-14 a 1440 y 1920 px.
+      comprobar(g.foco === 'body', `B25 nada roba el foco al cargar (${ancho})`, `activeElement ${g.foco}`)
+
+      const cartel = await evaluar(cdp, pagina, literalVisible('.cartel'))
+      comprobar(cartel.ok, `B28 el cartel dice que no hay incendios activos (${ancho})`, cartel.motivo)
+      // Por encima de 900 px el panel izquierdo esta anclado y su encabezado se
+      // ve sin tocar nada. Por debajo vive en un cajon cerrado: se comprueba
+      // abierto, en el bloque de B24.
+      if (ancho > 900) {
+        const cab = await evaluar(cdp, pagina, literalVisible('.panel header'))
+        comprobar(cab.ok, `B28 el encabezado del panel lo dice (${ancho})`, cab.motivo)
+      }
     }
 
     // ---- B3 con el cajon ABIERTO -----------------------------------------
@@ -926,7 +1215,64 @@ async function main() {
         `B3 sin desbordamiento con el cajón abierto (${ancho})`,
         `scrollWidth ${g.scrollW} · panel.right ${g.kpi.right.toFixed(0)} · viewport ${g.vw}`,
       )
+
+      // La otra mitad de B25: la guarda de primer montaje no puede comerse el
+      // foco que SI se pidio. Abrir el cajon lo lleva a su encabezado.
+      comprobar(
+        g.foco.startsWith('.panel-kpi h2'),
+        `B25 abrir el cajón lleva el foco a su encabezado (${ancho})`,
+        `activeElement ${g.foco}`,
+      )
+
+      // B24 con el cajon DERECHO: su funda ya arrancaba en --alto-banner, asi
+      // que esto no delata el defecto que se arreglo; esta para que el cajon
+      // derecho no pueda empezar a tapar las pestañas sin que nadie lo vea.
+      const tabsKpi = await evaluar(cdp, pagina, PESTANAS_ALCANZABLES)
+      comprobar(
+        tabsKpi.length >= 2 && tabsKpi.every((t) => t.ok),
+        `B24 las pestañas siguen alcanzables con los indicadores abiertos (${ancho})`,
+        tabsKpi.map((t) => `${t.tab}: ${t.ok ? 'ok' : `tapada por ${t.encima}`}`).join(' · '),
+      )
     }
+
+    // ---- B24 · el cajon izquierdo no tapa las pestañas --------------------
+    // 900 y no 1165: por encima de 900 el panel izquierdo esta anclado y no
+    // hay cajon. 768 y 390 son los dos anchos donde se vio el defecto.
+    console.log('\n▶ cajón izquierdo abierto')
+    for (const ancho of [768, 390]) {
+      await ir(cdp, pagina, { ancho, puerto })
+      await abrirCajonIzq(cdp, pagina)
+      const tabs = await evaluar(cdp, pagina, PESTANAS_ALCANZABLES)
+      comprobar(
+        tabs.length >= 2 && tabs.every((t) => t.ok),
+        `B24 el cajón izquierdo no tapa las pestañas (${ancho})`,
+        tabs.map((t) => `${t.tab}: ${t.ok ? 'ok' : `tapada por ${t.encima}`}`).join(' · '),
+      )
+      const cab = await evaluar(cdp, pagina, literalVisible('.panel header'))
+      comprobar(cab.ok, `B28 el encabezado del cajón lo dice (${ancho})`, cab.motivo)
+    }
+
+    // La vista de priorizacion reutiliza la clase .panel y por tanto la misma
+    // regla de posicion. Se mira en un solo ancho: la regla es una.
+    // Sin ir(): su sondeo espera al panel de indicadores, que esta vista no
+    // monta. En modo ficticios sus capas dan 404 y el panel sale con error,
+    // pero el cajon y su cabecera se pintan igual, que es lo que se mide.
+    await ir(cdp, pagina, { ancho: 390, puerto, query: '?vista=priorizacion', sinEspera: true })
+    const hayPrior = await esperarHasta(
+      cdp,
+      pagina,
+      `!!document.querySelector('.panel h1') && !!document.querySelector('[role=tab]') && !document.querySelector('.panel-kpi')`,
+      20000,
+    )
+    if (hayPrior) await abrirCajonIzq(cdp, pagina)
+    const tabsPrior = hayPrior ? await evaluar(cdp, pagina, PESTANAS_ALCANZABLES) : []
+    comprobar(
+      hayPrior && tabsPrior.length >= 2 && tabsPrior.every((t) => t.ok),
+      'B24 tampoco en la vista de priorización (390)',
+      hayPrior
+        ? tabsPrior.map((t) => `${t.tab}: ${t.ok ? 'ok' : `tapada por ${t.encima}`}`).join(' · ')
+        : 'la vista de priorización no llegó a pintar su panel en 20 s',
+    )
 
     // ---- B10/B12 · plegar y desplegar anclado -----------------------------
     console.log('\n▶ plegar y desplegar')
@@ -1233,6 +1579,172 @@ async function main() {
     )
     await capturar('captura-kpi-sin-capas.png', { x: 1920 - ANCHO_KPI, y: 0, width: ANCHO_KPI, height: ALTO_VENTANA, scale: 1 })
 
+    // ---- B26 · una sola temporada no es «capa apagada» --------------------
+    // Plazo propio y sin ir(): el defecto consiste en que «Enciende la capa» no
+    // desaparece nunca, que es exactamente lo que espera el sondeo de ir().
+    // Con ir() el mutante mataria el script por tiempo en vez de poner roja
+    // esta asercion. La señal de que las features llegaron es el pie: con un
+    // filtro puesto dice «Agregados calculados en el navegador» SOLO si hay
+    // features; con el manifest solo, dice que las cifras son nacionales.
+    console.log(`\n▶ una sola temporada (${E.temporadaUnica})`)
+    await ir(cdp, pagina, {
+      ancho: 1920,
+      puerto,
+      query: `?temporada=${encodeURIComponent(E.temporadaUnica)}`,
+      sinEspera: true,
+    })
+    const llegaron = await esperarHasta(
+      cdp,
+      pagina,
+      `!!document.querySelector('.panel-kpi footer')?.textContent.includes('Agregados calculados en el navegador')`,
+      30000,
+    )
+    const una = await evaluar(
+      cdp,
+      pagina,
+      `(() => { const p = document.querySelector('.panel-kpi')
+                const s = [...p.querySelectorAll('section')].find((x) => x.querySelector('h2')?.textContent.includes('Composición'))
+                return { apagada: p.textContent.includes('Enciende la capa'), comp: s ? s.textContent : null } })()`,
+    )
+    const cU = E.composicionUnica
+    comprobar(
+      llegaron && !una.apagada,
+      'B26 con una temporada no aparece «Enciende la capa»',
+      !llegaron
+        ? 'las features no llegaron en 30 s'
+        : una.apagada
+          ? 'el panel pide encender una capa que YA está encendida'
+          : 'ningún aviso de capa apagada',
+    )
+    comprobar(
+      llegaron &&
+        !!una.comp &&
+        !!cU &&
+        una.comp.includes('una sola temporada') &&
+        una.comp.includes(E.temporadaUnica) &&
+        una.comp.includes(`${cU.neg} %`) &&
+        una.comp.includes(`${cU.int} %`),
+      'B26 la composición dice por qué no hay serie y da las cifras',
+      cU ? `esperado «${cU.neg} %» y «${cU.int} %» en ${E.temporadaUnica} · «${(una.comp ?? '—').slice(-160)}»` : 'sin incendios en esa temporada',
+    )
+    await evaluar(
+      cdp,
+      pagina,
+      `(() => { const p = document.querySelector('.panel-kpi')
+                const s = [...p.querySelectorAll('section')].find((x) => x.querySelector('h2')?.textContent.includes('Composición'))
+                if (s) p.scrollTop += s.getBoundingClientRect().top - p.getBoundingClientRect().top - 120 })()`,
+    )
+    await espera(80)
+    await capturar('captura-kpi-una-temporada.png', { x: 1920 - ANCHO_KPI, y: 0, width: ANCHO_KPI, height: ALTO_VENTANA, scale: 1 })
+
+    // ---- B27 · cada filtro cuenta en la primera capa encendida -------------
+    // Por cada combinacion de CASOS_B27 el arnes decide POR SU CUENTA, sin
+    // mirar el panel ni los dominios:
+    //   · que filtros TIENEN que estar: los que tienen alguna capa encendida.
+    //     Si falta uno, o esta vacio, rojo con su nombre. Antes solo se
+    //     comprobaban los filtros con dominio en el manifest, y sin `inst` en
+    //     el manifest el filtro desaparecia con B27 en verde (revision de F0).
+    //   · que filtros NO pueden estar: los que tienen todas sus capas apagadas.
+    //   · en que capa cuenta cada uno: la PRIMERA encendida en el orden de
+    //     FILTROS_ESPERADOS, y con la unidad de esa capa.
+    // «Encendida» es pedida en ?capas= Y publicada por el manifest: una capa
+    // que el manifest no trae no tiene casilla en el panel. Para que esa
+    // condicion no encoja la prueba en silencio, con datos reales se exige
+    // ademas que todas las capas pedidas esten en el manifest.
+    // Las capas por teselas no se sirven por rangos desde aqui; da igual, lo
+    // que se mide son las opciones, que salen del manifest y no de las teselas.
+    console.log('\n▶ cuentas de los filtros')
+    const n0 = new Intl.NumberFormat('es-CL')
+    for (const pedidas of CASOS_B27) {
+      const query = `?capas=${pedidas.join(',')}`
+      const noPublicadas = pedidas.filter((c) => !E.capasManifest.includes(c))
+      if (MODO === 'reales') {
+        comprobar(
+          noPublicadas.length === 0,
+          `B27 las capas de ${query} están en el manifest`,
+          noPublicadas.length ? `no están: ${noPublicadas.join(', ')}` : 'todas',
+        )
+      }
+      const encendidas = pedidas.filter((c) => E.capasManifest.includes(c))
+      // Sin incendios el panel de indicadores dice «Enciende la capa» para
+      // siempre: se espera al panel degradado, que ya tiene el manifest.
+      await ir(cdp, pagina, { ancho: 1920, puerto, query, degradado: !encendidas.includes('incendios') })
+      // Los filtros y las filas de capas salen del mismo manifest. Se espera a
+      // las filas y NO a un select: un select que falta es justo lo que se mide.
+      await sondear(cdp, pagina, `document.querySelectorAll('.panel .fila-capa').length > 0`, 'las filas de capas del panel')
+      const selects = await evaluar(
+        cdp,
+        pagina,
+        `[...document.querySelectorAll('.panel select[name]')].map((s) => ({
+           campo: s.name,
+           ops: [...s.options].filter((o) => o.value !== '').map((o) => ({ v: o.value, texto: o.textContent })) }))`,
+      )
+      const deMas = []
+      for (const [campo, def] of Object.entries(FILTROS_ESPERADOS)) {
+        const s = selects.find((x) => x.campo === campo)
+        const capa = def.capas.find((c) => encendidas.includes(c))
+        if (!capa) {
+          if (s) deMas.push(campo)
+          continue
+        }
+        const etiqueta = `B27 «${campo}» cuenta en ${capa} (${query})`
+        if (!s || s.ops.length === 0) {
+          comprobar(
+            false,
+            etiqueta,
+            s ? `el filtro está VACÍO con ${capa} encendida` : `el filtro NO está en el panel con ${capa} encendida`,
+          )
+          continue
+        }
+        const orac = E.oraculoCuenta(capa, campo)
+        if (!orac) {
+          comprobar(false, etiqueta, `el arnés no tiene con qué contar «${campo}» en ${capa}`)
+          continue
+        }
+        const unidades = UNIDADES_ESPERADAS[capa]
+        const malas = []
+        for (const o of s.ops) {
+          // La unidad puede llevar espacios («rutas de despliegue»); el valor,
+          // parentesis propios. Por eso el ultimo parentesis y sin «(» dentro.
+          const m = /^(.*) \((\d{1,3}(?:\.\d{3})*) ([^()]+)\)$/.exec(o.texto)
+          const n = orac.cuenta.get(o.v) ?? 0
+          const unidad = unidades[n === 1 ? 0 : 1]
+          if (!m || m[1] !== o.v || Number(m[2].replaceAll('.', '')) !== n || m[3] !== unidad) {
+            malas.push(`«${o.texto}» ≠ «${o.v} (${n0.format(n)} ${unidad})»`)
+          }
+        }
+        const valores = E.valoresFiltro[campo]
+        const valoresPanel = new Set(s.ops.map((o) => o.v))
+        const sobran = [...valoresPanel].filter((v) => !valores.has(v))
+        const faltan = [...valores].filter((v) => !valoresPanel.has(v))
+        comprobar(
+          malas.length === 0 && sobran.length === 0 && faltan.length === 0,
+          etiqueta,
+          malas.length
+            ? `${malas.length} de ${s.ops.length} mal: ${malas[0]}`
+            : sobran.length || faltan.length
+              ? `opciones ajenas: ${sobran.slice(0, 3).join(', ') || '—'} · faltan: ${faltan.slice(0, 3).join(', ') || '—'}`
+              : `${s.ops.length} ${s.ops.length === 1 ? 'opción' : 'opciones'} = ${orac.oraculo}`,
+        )
+      }
+      comprobar(
+        deMas.length === 0,
+        `B27 sin filtros de capas apagadas (${query})`,
+        deMas.length ? `aparecen con todas sus capas apagadas: ${deMas.join(', ')}` : 'ninguno',
+      )
+      // Un filtro del panel que el arnes no conoce no esta vigilado: se dice.
+      const ajenos = selects.map((s) => s.campo).filter((c) => !FILTROS_ESPERADOS[c])
+      comprobar(
+        ajenos.length === 0,
+        `B27 todos los filtros del panel están vigilados (${query})`,
+        ajenos.join(', ') || 'ninguno sin copia en FILTROS_ESPERADOS',
+      )
+      await capturar(
+        pedidas.join(',') === 'incendios,oecv,rutas' ? 'captura-panel-filtros.png' : `captura-panel-filtros-${pedidas.join('-')}.png`,
+        { x: 0, y: 0, width: 360, height: ALTO_VENTANA, scale: 1 },
+      )
+    }
+
     // ---- B18..B23 · descargas --------------------------------------------
     // window.print() no abre dialogo en headless y window.open esta bloqueado,
     // asi que se sustituyen desde el guion por documento: los ganchos viven en
@@ -1324,7 +1836,8 @@ async function main() {
          const j = JSON.parse(await d.blob.text()); const p = j.features[0]?.properties ?? {}
          return { nombre: d.nombre, tipo: j.type, n: j.features.length, hayCrs: 'crs' in j,
                   coipo: !!j.coipo && !!j.coipo.ambito && !!j.coipo.aviso,
-                  region: p.region, cod: p.region_cod, coords: j.features[0]?.geometry?.coordinates } })()`,
+                  region: p.region, cod: p.region_cod, coords: j.features[0]?.geometry?.coordinates,
+                  aviso: j.coipo?.aviso ?? null } })()`,
     )
     comprobar(
       gj.tipo === 'FeatureCollection' &&
@@ -1339,6 +1852,12 @@ async function main() {
         gj.coords[1] < -15,
       'B22 el GeoJSON lleva etiqueta y código, sin crs y con procedencia',
       `${gj.n} figuras · region «${gj.region}» cod ${gj.cod} · crs ${gj.hayCrs}`,
+    )
+    // B28, tercera superficie: quien descarga no ve ni el panel ni el cartel.
+    comprobar(
+      typeof gj.aviso === 'string' && gj.aviso.includes(LITERAL_NO_ACTIVOS),
+      'B28 el GeoJSON descargado lleva el aviso',
+      `coipo.aviso «${gj.aviso}»`,
     )
 
     // -- B20 · el PNG no es un lienzo en blanco --
@@ -1447,6 +1966,15 @@ async function main() {
          return ${JSON.stringify([E.nacional.evitables, E.nacional.elecHa, E.nacional.avance])}.every(c => h.includes(c)) })()`,
     )
     comprobar(llevaCifras, 'B18 el informe imprime las mismas cifras que el panel', 'coinciden con B8')
+    // Sobre el HTML decodificado, por la misma razon que las notas de B19.
+    const informeAvisa = await evaluar(
+      cdp,
+      pagina,
+      `(() => { const t = document.createElement('textarea')
+         const h = window.__informe.replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (m) => { t.innerHTML = m; return t.value })
+         return h.includes(${JSON.stringify(LITERAL_NO_ACTIVOS)}) })()`,
+    )
+    comprobar(informeAvisa, 'B28 el informe lleva el aviso', informeAvisa ? 'presente' : 'AUSENTE del HTML del informe')
 
     // -- B21 · degradacion honesta si el lienzo se contamina --
     conCORS = false
@@ -1605,6 +2133,13 @@ async function main() {
       await ir(cdp, pagina, { ancho: 390, tema, puerto })
       await abrirCajon(cdp, pagina)
       await capturar(`captura-kpi-390-${tema}-cajon.png`, { x: 70, y: 0, width: ANCHO_KPI, height: 844, scale: 1 })
+    }
+    // Y el izquierdo, con la barra de pestañas encima: B24 mira un pixel por
+    // pestaña, la captura dice si ademas se lee.
+    for (const tema of ['light', 'dark']) {
+      await ir(cdp, pagina, { ancho: 390, tema, puerto })
+      await abrirCajonIzq(cdp, pagina)
+      await capturar(`captura-panel-390-${tema}-cajon.png`, { x: 0, y: 0, width: 390, height: 844, scale: 1 })
     }
 
     // Ampliacion x3 de la mancuerna: 9 px de disco y 2 px de conector no se

@@ -31,3 +31,11 @@
 *.css     text eol=lf
 *.yml     text eol=lf
 *.ipynb   text eol=lf
+
+# Insumo del modelo de riesgo (lab/priorizacion, notebook 4) y su salida por comuna.
+# El CSV se versiona byte a byte como sale del lab (CRLF y BOM), para que su sha256
+# siga siendo el del original. Y sin diff de lineas: son 188 MB de insumo y 163 MiB
+# de salida en archivos de una sola linea, que git intentaria comparar linea a linea.
+INSUMO_RIESGO/*.csv            -text
+INSUMO_RIESGO/**               -diff
+frontend/public/data/riesgo/** -diff

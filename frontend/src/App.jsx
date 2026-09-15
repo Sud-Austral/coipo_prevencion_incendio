@@ -5,6 +5,8 @@ import {
   CAPAS,
   COLOR_CAUSA,
   COLOR_CAUSA_OTRA,
+  COLOR_FAMILIA,
+  COLOR_NIVEL,
   COLOR_OECV,
   COLOR_REDVIAL,
   COLOR_RUTA,
@@ -19,11 +21,24 @@ import {
   MIN_MAPA,
   MIN_PANEL,
   VISTA_INICIAL,
+  vistaValida,
   fmt,
 } from './config'
 import { useGeoJSON, useKpis, useManifest } from './hooks/useDatos'
 import { useFechaImagen } from './hooks/useFechaImagen'
-import { fichaIncendio, fichaOECV, fichaRuta, fichaStandBy, fichaVerificado } from './fichas'
+import {
+  fichaIncendio,
+  fichaMancha,
+  fichaOECV,
+  fichaPunto,
+  fichaRuta,
+  fichaStandBy,
+  fichaVerificado,
+} from './fichas'
+import { colorDeMancha, contextoEscala, rangoComunal } from './escalas'
+import CapaIconos from './components/CapaIconos'
+import CapaPoligonos from './components/CapaPoligonos'
+import PanelRiesgo from './components/PanelRiesgo'
 import Banner from './components/Banner'
 import CartelContexto from './components/CartelContexto'
 import EtiquetaImagen from './components/EtiquetaImagen'
@@ -66,7 +81,11 @@ const menosMovimiento = () => window.matchMedia('(prefers-reduced-motion: reduce
  * region. Duplicarlo era la via mas corta a que los dos encuadres divergieran.
  */
 function limitesDelManifest(manifest) {
+  // Sin las capas partidas por comuna (riesgo): cubren el pais entero, islas y
+  // Cabo de Hornos incluidos, pero se dibujan de a una comuna y en otra pestaña.
+  // Con su bbox el encuadre inicial de incendios se corria al sur y al este.
   const bboxes = Object.values(manifest?.capas ?? {})
+    .filter((c) => !c.partes)
     .map((c) => c.bbox)
     .filter(Boolean)
   if (!bboxes.length) return null
@@ -80,6 +99,27 @@ function limitesDelManifest(manifest) {
     [b[1], b[0]],
     [b[3], b[2]],
   ]
+}
+
+/**
+ * Codigo CUT de la comuna pedida en ?comuna=, o '' si no se reconoce.
+ *
+ * Acepta el codigo (lo que escribe el visor desde el 2026-09-15), el nombre tal
+ * como lo trae el modelo, el nombre sin tildes ni mayusculas, y los alias que el
+ * ETL publica para los enlaces que ya circulaban con el modelo anterior
+ * («Mulchen», «Coyhaique»). Ninguna comuna se escribe aqui: todo sale del
+ * manifest.
+ */
+function cutDeComuna(meta, valor) {
+  const partes = meta?.partes
+  if (!partes || !valor) return ''
+  if (partes[valor]) return valor
+  const clave = (x) => String(x).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
+  const buscado = clave(valor)
+  for (const [cut, p] of Object.entries(partes)) {
+    if (clave(p.comuna) === buscado || (p.alias ?? []).some((a) => clave(a) === buscado)) return cut
+  }
+  return ''
 }
 
 /**
@@ -118,6 +158,12 @@ export default function App() {
   const capaBase = useRef(null)
 
   const [base, setBase] = useState(inicial.base ?? 'Claro')
+  // Vista activa. El mapa NO se remonta al cambiar: solo cambian las capas que
+  // se montan y el panel izquierdo, para que el encuadre sobreviva al cambio de
+  // pestaña. Un valor desconocido en ?vista= cae a 'incendios', y uno ya
+  // publicado con otro nombre (?vista=priorizacion) abre la vista que lo
+  // reemplazo: ver ALIAS_VISTA en config.js.
+  const [vista, setVista] = useState(vistaValida(inicial.vista))
   const [capasActivas, setCapasActivas] = useState(
     inicial.capas ?? CAPAS.filter((c) => c.porDefecto).map((c) => c.id),
   )
@@ -287,6 +333,7 @@ export default function App() {
       capas: capasActivas,
       filtros,
       base,
+      vista,
     })
     // Se EMPUJA solo lo que el usuario reconoce como "hice algo": capas,
     // filtros y mapa base, que son las tres cosas de las que depende este
@@ -311,7 +358,7 @@ export default function App() {
     }
     map.on('moveend', sync)
     return () => map.off('moveend', sync)
-  }, [map, capasActivas, filtros, base])
+  }, [map, capasActivas, filtros, base, vista])
 
   // Atras y Adelante reponen el estado en vez de sacar del sitio.
   useEffect(() => {
@@ -327,6 +374,7 @@ export default function App() {
       setCapasActivas(e.capas ?? CAPAS.filter((c) => c.porDefecto).map((c) => c.id))
       setFiltros(e.filtros ?? {})
       setBase(e.base ?? 'Claro')
+      setVista(vistaValida(e.vista))
       if (e.center) map.setView(e.center, e.zoom ?? map.getZoom(), { animate: false })
     }
     window.addEventListener('popstate', alVolver)
@@ -363,6 +411,17 @@ export default function App() {
     esGeoJSON(capaMeta('redvial')) ? capaMeta('redvial')?.archivo : null,
     activa('redvial'),
   )
+  // Las capas de la vista de riesgo se descargan al entrar en SU pestaña y no
+  // antes. Las manchas, ademas, de a UNA comuna: son 343 archivos y 163 MiB, y
+  // solo se pide el de la comuna elegida (Natales, la mayor, pesa 36,8 MB).
+  // La comuna viaja dentro de `filtros` y no en un estado aparte: asi urlState
+  // la serializa sola como ?comuna=, sin tocar nada mas.
+  const enRiesgo = vista === 'riesgo'
+  const metaRiesgo = capaMeta('riesgo')
+  const cutRiesgo = cutDeComuna(metaRiesgo, filtros.comuna)
+  const parteRiesgo = cutRiesgo ? metaRiesgo.partes[cutRiesgo] : null
+  const riesgo = useGeoJSON(parteRiesgo?.archivo, enRiesgo && !!parteRiesgo, { cachear: false })
+  const infraPuntos = useGeoJSON(capaMeta('infra_puntos')?.archivo, enRiesgo)
 
   const cargando = {
     incendios: incendios.cargando,
@@ -371,6 +430,8 @@ export default function App() {
     puntos_standby: standby.cargando,
     rutas: rutas.cargando,
     redvial: redvial.cargando,
+    riesgo: riesgo.cargando,
+    infra_puntos: infraPuntos.cargando,
   }
 
   // useGeoJSON siempre devolvio `error` y NADIE lo consumia. El resultado era el
@@ -387,6 +448,8 @@ export default function App() {
     puntos_standby: standby.error,
     rutas: rutas.error,
     redvial: redvial.error,
+    riesgo: riesgo.error,
+    infra_puntos: infraPuntos.error,
   }
   const reintentos = {
     incendios: incendios.reintentar,
@@ -395,6 +458,8 @@ export default function App() {
     puntos_standby: standby.reintentar,
     rutas: rutas.reintentar,
     redvial: redvial.reintentar,
+    riesgo: riesgo.reintentar,
+    infra_puntos: infraPuntos.reintentar,
   }
 
   // Aviso de descarga. Los dos unicos avisos de carga que existian
@@ -453,6 +518,90 @@ export default function App() {
   const pasaOECV = useMemo(() => pasaPorCampos(['region', 'tipo', 'inst']), [pasaPorCampos])
   const pasaVerificado = useMemo(() => pasaPorCampos(['region']), [pasaPorCampos])
   const pasaVial = useMemo(() => pasaPorCampos(['region', 'carpeta']), [pasaPorCampos])
+
+  // ---------- riesgo ----------
+  const comunaRiesgo = parteRiesgo?.comuna ?? ''
+  const [modoEscala, setModoEscala] = useState('absoluta')
+  const [familiasActivas, setFamiliasActivas] = useState(null)
+  // Opacidad del relleno de las manchas. Arranca en 0,65 --el valor con el que
+  // se diseño la simbologia-- porque es el punto donde ya se leen las calles y
+  // los rios del mapa base sin perder la clase de cada mancha. El control lo
+  // baja para inspeccionar el territorio de debajo y lo sube para presentar.
+  const [opacidad, setOpacidad] = useState(0.65)
+  // Los iconos estan filtrados por zoom, no ausentes: el panel tiene que
+  // decirlo o parecera que la capa no cargo.
+  const [iconosLejos, setIconosLejos] = useState(false)
+
+  // Las familias salen del manifest, no de una lista escrita a mano. `null`
+  // significa "aun no llego el manifest"; en cuanto llega, todas encendidas.
+  const familias = useMemo(() => {
+    const doms = capaMeta('infra_puntos')?.dominios
+    if (!doms?.familia) return []
+    const etiquetas = new Map((doms.grupo ?? []).map((g) => [g.v, g.v]))
+    return doms.familia.map((f) => ({
+      v: f.v,
+      n: f.n,
+      // El nombre legible sale del propio dato (`grupo`), emparejado por orden
+      // de frecuencia con `familia`: las dos listas las emite el mismo ETL.
+      etiqueta: etiquetas.get(f.v) ?? (doms.grupo ?? [])[doms.familia.indexOf(f)]?.v ?? f.v,
+    }))
+  }, [capaMeta])
+
+  useEffect(() => {
+    if (familiasActivas === null && familias.length) {
+      setFamiliasActivas(familias.map((f) => f.v))
+    }
+  }, [familias, familiasActivas])
+
+  // Sin comuna no hay contraste comunal que mostrar, asi que el modo relativo
+  // se apaga solo. Es lo que impide que una escala relativa quede activa sobre
+  // una vista multicomunal, que es donde comparar colores entre comunas engaña.
+  useEffect(() => {
+    if (!comunaRiesgo && modoEscala !== 'absoluta') setModoEscala('absoluta')
+  }, [comunaRiesgo, modoEscala])
+
+  // Los anclajes se recalculan al cambiar de comuna o de modo. NO se guarda
+  // nada en las properties: `ctx` es el unico portador de la normalizacion.
+  const ctxEscala = useMemo(
+    () => contextoEscala(riesgo.data?.features, comunaRiesgo, modoEscala),
+    [riesgo.data, comunaRiesgo, modoEscala],
+  )
+
+  // Etiqueta de clase -> color. Las etiquetas y su nivel vienen del manifest y
+  // los colores de config.js por NIVEL: una clase que el manifest no declare
+  // sale gris, y D19/C-clases lo vigilan.
+  const colorClase = useMemo(() => {
+    const porClase = new Map((metaRiesgo?.clases ?? []).map((c) => [c.clase, COLOR_NIVEL[c.nivel]]))
+    return (clase) => porClase.get(clase) ?? '#CCCCCC'
+  }, [metaRiesgo])
+
+  // El estilo se pasa ya construido a la capa, que no sabe de escalas ni de
+  // opacidad: normalizar o mover el slider repinta sin reconstruir ningun
+  // poligono. Es la UNICA definicion del estilo de una mancha -- antes el valor
+  // de arranque estaba tambien en CapaPoligonos y las dos copias podian divergir.
+  const estiloMancha = useCallback(
+    (p) => ({
+      fillColor: colorDeMancha(p, ctxEscala, colorClase),
+      // El CONTORNO conserva siempre el color absoluto de la clase, tambien en
+      // modo relativo: doble codificacion sin coste de espacio, y la lectura
+      // del modelo no desaparece nunca del mapa.
+      color: colorClase(p.clase),
+      weight: 0.6,
+      fillOpacity: opacidad,
+      // El borde acompaña al relleno pero mas marcado, para que al bajar la
+      // opacidad se siga viendo DONDE estan las manchas mientras se lee el
+      // mapa base de debajo. En 0 desaparecen las dos: «completamente
+      // transparente» tiene que serlo de verdad, o el control miente.
+      opacity: Math.min(1, opacidad * 1.4),
+    }),
+    [ctxEscala, opacidad, colorClase],
+  )
+
+  // Los iconos se cruzan con la comuna por CODIGO CUT, no por nombre: la
+  // infraestructura escribe «Coyhaique» y «Mulchen», y el modelo de riesgo
+  // «Coihaique» y «Mulchén». Por nombre, elegir esas dos comunas dejaba 0 iconos.
+  // Sin comuna no se dibuja ninguno: no hay manchas que acompañar.
+  const pasaPunto = useMemo(() => (p) => p.cut === cutRiesgo, [cutRiesgo])
 
   /**
    * Encuadra el mapa en una region (o en el pais entero con region vacia).
@@ -582,6 +731,70 @@ export default function App() {
       abrirFicha(conCoord(fichaRuta(p, etiqueta, COLOR_REDVIAL), ll)),
     [abrirFicha],
   )
+  const selMancha = useCallback(
+    (p, ll) =>
+      abrirFicha(
+        conCoord(
+          fichaMancha(
+            p,
+            rangoComunal(riesgo.data?.features, p),
+            colorDeMancha(p, ctxEscala, colorClase),
+            parteRiesgo?.region,
+          ),
+          ll,
+        ),
+      ),
+    [abrirFicha, riesgo.data, ctxEscala, colorClase, parteRiesgo],
+  )
+  const selPunto = useCallback(
+    (p, ll) => abrirFicha(conCoord(fichaPunto(p, COLOR_FAMILIA[p.familia] ?? '#4B5563'), ll)),
+    [abrirFicha],
+  )
+
+  /** Encuadra el mapa en el bbox que el ETL calculo para esa comuna (por CUT). */
+  const encuadrarComuna = useCallback(
+    (cut) => {
+      const caja = capaMeta('riesgo')?.partes?.[cut]?.bbox
+      if (!map || !caja) return
+      map.fitBounds(
+        [
+          [caja[1], caja[0]],
+          [caja[3], caja[2]],
+        ],
+        { padding: [24, 24] },
+      )
+    },
+    [map, capaMeta],
+  )
+
+  // Al elegir comuna se encuadra sola, y al entrar en la pestaña sin comuna se
+  // encuadra el pais. El ETL publica una caja por comuna (partes[cut].bbox),
+  // redondeada hacia afuera para que ninguna mancha quede fuera (D14).
+  const encuadradoRiesgo = useRef(false)
+  useEffect(() => {
+    if (!enRiesgo) {
+      encuadradoRiesgo.current = false
+      return
+    }
+    if (cutRiesgo) {
+      encuadrarComuna(cutRiesgo)
+      encuadradoRiesgo.current = true
+      return
+    }
+    // Solo la PRIMERA vez que se entra sin comuna: si se reencuadrara en cada
+    // render, el usuario no podria alejar ni desplazar el mapa.
+    if (encuadradoRiesgo.current || !map) return
+    const b = capaMeta('riesgo')?.bbox
+    if (!b) return
+    map.fitBounds(
+      [
+        [b[1], b[0]],
+        [b[3], b[2]],
+      ],
+      { padding: [24, 24] },
+    )
+    encuadradoRiesgo.current = true
+  }, [enRiesgo, cutRiesgo, encuadrarComuna, map, capaMeta])
 
   // Ruta de teclado hacia las fichas.
   //
@@ -898,10 +1111,13 @@ export default function App() {
   // data-regimen lo publica JS para que la verificacion pueda comprobar que
   // coincide con el numero de pistas que resuelve el CSS: los cortes viven en
   // los dos sitios y esa duplicacion es la que B12 vigila.
+  // En riesgo la pista de indicadores no existe, asi que la rejilla se
+  // queda en dos columnas por la misma via que usa el plegado manual.
+  const kpiActivo = kpiVisible && !enRiesgo
   const clases = [
     'app',
     panelVisible ? '' : 'sin-panel',
-    kpiVisible ? '' : 'sin-kpi',
+    kpiActivo ? '' : 'sin-kpi',
     redimensionando ? 'redimensionando' : '',
   ]
     .filter(Boolean)
@@ -920,10 +1136,10 @@ export default function App() {
         // La variable en linea SOLO cuando cada panel se ve: plegar es cosa de
         // las clases .sin-panel/.sin-kpi, y un estilo en linea les ganaria.
         ...(panelVisible && { '--pista-panel': `${anchoPanel}px` }),
-        ...(kpiVisible && { '--pista-kpi': `${anchoKpi}px` }),
+        ...(kpiActivo && { '--pista-kpi': `${anchoKpi}px` }),
       }}
     >
-      <Banner />
+      <Banner vista={vista} onVista={setVista} />
 
       {/* aria-expanded y aria-controls, que .abrir-kpi ya tenia y este no. */}
       <button
@@ -937,6 +1153,41 @@ export default function App() {
         ☰
       </button>
 
+      {enRiesgo ? (
+        <PanelRiesgo
+          manifest={manifest}
+          cut={cutRiesgo}
+          onComuna={(v) => setFiltro('comuna', v)}
+          onModo={setModoEscala}
+          opacidad={opacidad}
+          onOpacidad={setOpacidad}
+          ctx={ctxEscala}
+          familias={familias}
+          familiasActivas={familiasActivas ?? []}
+          onFamilia={(f) =>
+            setFamiliasActivas((a) =>
+              a.includes(f) ? a.filter((x) => x !== f) : [...a, f],
+            )
+          }
+          cuentaAreas={cuentas.riesgo}
+          cuentaPuntos={cutRiesgo ? cuentas.infra_puntos : 0}
+          iconosLejos={iconosLejos}
+          cargando={cargando.riesgo}
+          error={errores.riesgo}
+          onReintentar={() => reintentos.riesgo?.()}
+          onEncuadrar={encuadrarComuna}
+          datosAreas={riesgo.data}
+          datosPuntos={infraPuntos.data}
+          pasaPuntos={pasaPunto}
+          map={map}
+          base={base}
+          onBase={setBase}
+          basemaps={BASEMAPS}
+          imagen={imagen}
+          abierto={panelVisible}
+          onCerrar={cerrarPanel}
+        />
+      ) : (
       <PanelLateral
         manifest={manifest}
         capasActivas={capasActivas}
@@ -977,6 +1228,7 @@ export default function App() {
           propsIndicadores={propsIndicadores}
         />
       </PanelLateral>
+      )}
 
       {/* Hermano del panel y no hijo suyo: .panel scrollea, y dentro quedaba
           recortado por su overflow y se iba con el scroll. Ver .tirador en
@@ -999,7 +1251,12 @@ export default function App() {
       <main
         className="mapa"
         ref={contenedor}
-        aria-label="Mapa de incendios forestales ya investigados"
+        id="vista-activa"
+        aria-label={
+          vista === 'riesgo'
+            ? 'Mapa de riesgo de incendio forestal por comuna'
+            : 'Mapa de incendios forestales ya investigados'
+        }
         aria-describedby="mapa-ayuda"
       />
 
@@ -1029,7 +1286,10 @@ export default function App() {
           Los dos botones de navegacion tambien lo descartan, porque con los
           paneles anclados (>1200 px) abrirlos no cambia nada visible y el
           cartel se quedaria en pantalla como si el boton no funcionara. */}
-      {cartelVisible && (
+      {/* El cartel explica la capa de incendios («cada punto es un incendio que
+          ya ocurrio…»), asi que en la vista de riesgo describiria algo
+          que no esta en pantalla. */}
+      {cartelVisible && !enRiesgo && (
         <CartelContexto
           manifest={manifest}
           capasActivas={capasActivas}
@@ -1047,36 +1307,73 @@ export default function App() {
 
       {/* DESPUES de .mapa a proposito: la rejilla coloca por orden del DOM y
           esta es la tercera columna. Los Capa* de abajo devuelven null y no
-          ocupan celda, y ModalFicha es un <dialog> que vive en la top layer. */}
-      <div className="funda-kpi">
-        <PanelIndicadores {...propsIndicadores} abierto={kpiVisible} onCerrar={cerrarKpi} />
-      </div>
+          ocupan celda, y ModalFicha es un <dialog> que vive en la top layer.
+          Los indicadores hablan SOLO de incendios investigados --causas,
+          superficie quemada, temporadas--, asi que en la vista de riesgo
+          la pista entera se colapsa en vez de mostrar cifras de la otra
+          pestaña junto a un mapa que no las ilustra. */}
+      {!enRiesgo && (
+        <>
+          <div className="funda-kpi">
+            <PanelIndicadores {...propsIndicadores} abierto={kpiVisible} onCerrar={cerrarKpi} />
+          </div>
 
-      {/* El gemelo derecho del tirador. Mismo componente con la geometria
-          espejada; solo existe anclado (>1200 px): en cajon el ancho es fijo. */}
-      <Tirador
-        lado="der"
-        objetivo="panel-indicadores"
-        etiqueta="Ancho del panel de indicadores"
-        ancho={anchoKpi}
-        min={ANCHO_KPI}
-        max={maxKpi}
-        reposo={ANCHO_KPI}
-        onAncho={cambiarAnchoKpi}
-        onArrastre={setRedimensionando}
-      />
+          {/* El gemelo derecho del tirador. Mismo componente con la geometria
+              espejada; solo existe anclado (>1200 px): en cajon el ancho es fijo. */}
+          <Tirador
+            lado="der"
+            objetivo="panel-indicadores"
+            etiqueta="Ancho del panel de indicadores"
+            ancho={anchoKpi}
+            min={ANCHO_KPI}
+            max={maxKpi}
+            reposo={ANCHO_KPI}
+            onAncho={cambiarAnchoKpi}
+            onArrastre={setRedimensionando}
+          />
 
-      <button
-        ref={btnKpi}
-        className="abrir-kpi"
-        onClick={() => mostrarKpi(true)}
-        aria-label="Abrir indicadores"
-        aria-expanded={kpiVisible}
-        aria-controls="panel-indicadores"
-      >
-        <IconoIndicadores />
-      </button>
+          <button
+            ref={btnKpi}
+            className="abrir-kpi"
+            onClick={() => mostrarKpi(true)}
+            aria-label="Abrir indicadores"
+            aria-expanded={kpiVisible}
+            aria-controls="panel-indicadores"
+          >
+            <IconoIndicadores />
+          </button>
+        </>
+      )}
 
+      {/* Las areas van las PRIMERAS del arbol y ademas la capa hace
+          bringToBack() al montar: el orden del JSX no basta porque en canvas
+          manda el orden en que terminan de descargarse los archivos. Ver la
+          regla 2 de CapaPoligonos.jsx. */}
+      {enRiesgo && (
+        <>
+          {/* Sin `pasa`: el archivo cargado YA es solo la comuna elegida. */}
+          <CapaPoligonos
+            map={map}
+            data={riesgo.data}
+            visible
+            estilo={estiloMancha}
+            onSeleccion={selMancha}
+            onCuenta={setCuenta('riesgo')}
+          />
+          <CapaIconos
+            map={map}
+            data={infraPuntos.data}
+            familiasActivas={familiasActivas ?? []}
+            pasa={pasaPunto}
+            onSeleccion={selPunto}
+            onCuenta={setCuenta('infra_puntos')}
+            onLejos={setIconosLejos}
+          />
+        </>
+      )}
+
+      {!enRiesgo && (
+        <>
       {/* Red vial primero: es contexto y debe quedar bajo el resto. */}
       {metaRedvial &&
         (esGeoJSON(metaRedvial) ? (
@@ -1174,6 +1471,8 @@ export default function App() {
         onSeleccion={selIncendio}
         onCuenta={setCuenta('incendios')}
       />
+        </>
+      )}
 
       <EtiquetaImagen map={map} info={imagen} />
 

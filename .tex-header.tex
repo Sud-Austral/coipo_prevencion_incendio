@@ -1,0 +1,49 @@
+% Preámbulo para compilar doble_ponderacion.md a PDF con XeTeX (Tectonic).
+%
+% Resuelve los 312 caracteres que la fuente por defecto (Latin Modern) no tiene
+% y que salían como hueco en blanco:
+%
+%   ─ │ ├ └ ┐ ┘   (144+60+38+18+2+2) el diagrama de la sección 2
+%   ✓             (34) la tabla de recuento de la sección 2.1
+%   α ρ           (10+4) el parámetro de la sección 5.1 y la rho de Spearman
+%
+% Dos estrategias distintas a propósito:
+%
+%  - Los símbolos matemáticos (α ρ ✓) se mapean a comandos de LaTeX, que
+%    componen igual en cualquier equipo y no dependen de ninguna fuente
+%    instalada.
+%  - Los de dibujo de caja NO tienen equivalente en LaTeX, así que hacen falta
+%    de una fuente real. Consolas viene con Windows desde Vista y los trae
+%    todos; se verificó que existe antes de fijarla aquí.
+
+\usepackage{newunicodechar}
+\newunicodechar{α}{\ensuremath{\alpha}}
+\newunicodechar{ρ}{\ensuremath{\rho}}
+\newunicodechar{✓}{\ensuremath{\checkmark}}
+
+% Consolas sólo para el texto monoespaciado: es donde vive el diagrama. El
+% cuerpo del documento sigue con la serif de LaTeX, que compone mucho mejor.
+\setmonofont{Consolas}[Scale=0.82]
+
+% El diagrama de la sección 2 mide 74 columnas y se sale de la caja con el
+% cuerpo por defecto. Reducirlo aquí evita tener que estrechar el margen de
+% todo el documento por culpa de un solo bloque.
+\usepackage{fancyvrb}
+\fvset{fontsize=\footnotesize}
+
+% Las 18 tablas son anchas; sin esto el texto de las celdas queda con espacios
+% enormes entre palabras.
+\usepackage{ragged2e}
+\usepackage{array}
+
+% Deja partir las palabras en monoespaciada. Sin esto, el nombre del PDF de
+% origen --63 caracteres sin espacios-- no cabe en la caja y se sale 18,45 pt
+% por el margen derecho, que es visible en la página 1.
+\usepackage[htt]{hyphenat}
+
+% Filetes de tabla con aire, que es lo que separa una tabla legible de una
+% rejilla apretada.
+\usepackage{booktabs}
+\setlength{\aboverulesep}{2pt}
+\setlength{\belowrulesep}{2pt}
+\renewcommand{\arraystretch}{1.15}

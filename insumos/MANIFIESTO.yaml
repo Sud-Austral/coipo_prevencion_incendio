@@ -1,0 +1,291 @@
+archivos:
+
+  # --- Insumos de origen: lo que entregan las regiones ---
+
+  - ruta: "INSUMO_INCENDIO/BBDD INVESTIGACIÓN UAD CONSOLIDADA COMPLETA.xlsx"
+    sha256: "b1f7b3762fd68c63d9b1f95e9000c121349583cc9f6bd55af13cd8d72219587d"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] es el archivo de mayor riesgo del repositorio por lo que declara su nombre; la evidencia no incluye su contenido ni sus columnas, de modo que patron y conteo no estan determinados. No vive en tests, fixtures, mocks ni semillas: es material de trabajo."
+    puede_versionarse: "[VERIFICAR] depende de contiene_pii"
+    uso: "Planilla consolidada de investigacion; por su ubicacion es insumo del proceso de incendios [ETL/build_incendios.py]."
+
+  - ruta: "INSUMO_INCENDIO/OECV 2025 - 2026/OECV 2025-2026.xlsx"
+    sha256: "c9f840559d172115583476ba3e894db37acc376f46fea5b837fb1135fc37954e"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] planilla de trabajo; patron y conteo no determinados en la evidencia"
+    puede_versionarse: "[VERIFICAR] depende de contiene_pii"
+    uso: "Planilla consolidada de obras de prevencion de la temporada; insumo del proceso correspondiente [ETL/build_oecv.py]."
+
+  - ruta: "INSUMO_INCENDIO/OECV 2025 - 2026/13.- Los Ríos/Verificado/Detalle OECVs Temporada 2025-2026.xlsx"
+    sha256: "1c212216f0a6c2e01eb119a12c03dcc3f094ce91b25250f91fdb744067e2119c"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] planilla de detalle regional; patron y conteo no determinados en la evidencia"
+    puede_versionarse: "[VERIFICAR] depende de contiene_pii"
+    uso: "Detalle regional de obras verificadas; insumo del proceso de verificado [ETL/build_verificado.py]."
+
+  - ruta: "INSUMO_INCENDIO/OECV 2025 - 2026/16.- Magallanes/Planificado/Detalle OECV Magallanes 2025-2026.xlsx"
+    sha256: "4030746004dcc4f188b5df0ba4399d90eef36bc07c2cb1292a1b450ab3caeac5"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] planilla de detalle regional; patron y conteo no determinados en la evidencia"
+    puede_versionarse: "[VERIFICAR] depende de contiene_pii"
+    uso: "Detalle regional de obras planificadas."
+
+  - ruta: "INSUMO_INCENDIO/OECV 2025 - 2026/9.- Maule/Planificado/Planificación OECV Region del Maule.xlsx"
+    sha256: "a66966a5577dc2de0c405eade42551a7c3dd913e2b7aabf4af6ee314d90578c0"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] planilla de detalle regional; patron y conteo no determinados en la evidencia"
+    puede_versionarse: "[VERIFICAR] depende de contiene_pii"
+    uso: "Planificacion regional de obras de prevencion."
+
+  - ruta: "INSUMO_INCENDIO/OECV 2025 - 2026/13.- Los Ríos/Verificado/RUTAS (MOP)/Rutas Priorizadas Conaf 2025-2026.xls"
+    sha256: "3e0159428a229e8806cc77b8ff27ce35ef05e53e513f315e3ef0a13e5ddbcb97"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] planilla de priorizacion; patron y conteo no determinados en la evidencia"
+    puede_versionarse: "[VERIFICAR] depende de contiene_pii"
+    uso: "Priorizacion de rutas de una region; unico insumo en formato de planilla antiguo."
+
+  - ruta: "INSUMO_INCENDIO/Red-vial_MOP_2024/Red-vial_MOP_2024.json"
+    sha256: "748293683c8c940f26b52e33453a655137089429b394289e76e31f88964aacb0"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] capa vial; sin indicio de datos de personas, patron y conteo no determinados en la evidencia"
+    puede_versionarse: "[VERIFICAR] depende de si la capa tiene condiciones de uso propias"
+    uso: "Capa vial de origen; insumo del proceso de red vial [ETL/build_redvial.py]."
+
+  - ruta: "INSUMO_INCENDIO/Despliegue territorial/Consolidado/Rutas_Maule_25-26_Conaf.dbf"
+    sha256: "5b8eb2a06ef8e587cd3d0d1da91ed29bbfabdbf69811e8c5df9ecd20a7ac2753"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] tabla de atributos de una capa geografica; patron y conteo no determinados en la evidencia"
+    puede_versionarse: "[VERIFICAR] depende de contiene_pii"
+    uso: "Ejemplo representativo de las capas de recorridos consolidadas por region; insumo del proceso de rutas [ETL/build_rutas.py]. La evidencia registra decenas de archivos hermanos con la misma estructura, que este manifiesto no enumera uno por uno."
+
+  - ruta: "INSUMO_INCENDIO/Despliegue territorial/11.- Biobío/Rutas_Correccion/Rutas_Biob+¡o_25-26_Conaf.dbf"
+    sha256: "e5520abd920a940f40e80e00821c38611c972a4f39244199f4056290a3e0ba9a"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] tabla de atributos de una capa geografica; patron y conteo no determinados en la evidencia"
+    puede_versionarse: "[VERIFICAR] depende de contiene_pii"
+    uso: "Se registra por su nombre con acentos danados, que es evidencia del recorrido que hace el material antes de llegar."
+
+  - ruta: "INSUMO_INCENDIO/Despliegue territorial/7.- Metropolitana/Rutas_Metropolitana_25-26_Conaf.rar"
+    sha256: "ad040776ce79824c07d684c43542be1a7cf47953750b8cc62dc53413203e1dfb"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] carpeta comprimida; su contenido no fue extraido, de modo que patron y conteo no estan determinados"
+    puede_versionarse: "[VERIFICAR] depende de contiene_pii"
+    uso: "Entrega regional que quedo comprimida; ningun proceso de la evidencia declara leer este formato."
+
+  - ruta: "INSUMO_INCENDIO/Despliegue territorial/8.- O_Higgins/Acta Reunión.docx"
+    sha256: "db4e31a484882644a860a11a621d4b49b6c125581c09b33bbef64e3e0e358278"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] un acta de reunion suele consignar nombres de asistentes; el contenido no fue extraido y el patron y el conteo no estan determinados"
+    puede_versionarse: "[VERIFICAR] depende de contiene_pii"
+    uso: "Acta de reunion entregada junto al material regional. Ningun proceso de la evidencia la consume: esta guardada, no procesada."
+
+  - ruta: "INSUMO_INCENDIO/Despliegue territorial/13.- Los Ríos/Acta reunion Rutas 25-26.pdf"
+    sha256: "dd7020c2236426b27ddfb872fb0c3fab26feba925d8f47b6b0b12a07a33faca1"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] un acta de reunion suele consignar nombres de asistentes; el contenido no fue extraido y el patron y el conteo no estan determinados"
+    puede_versionarse: "[VERIFICAR] depende de contiene_pii"
+    uso: "Acta de reunion entregada junto al material regional. La evidencia registra varias mas con el mismo caracter, que este manifiesto no enumera una por una."
+
+  # --- Configuracion y manifiestos del codigo ---
+
+  - ruta: ETL/requirements.txt
+    sha256: "7113f7d12b1ccbe388928ce196226d75057b2f4e89dee0baa31325c896336c6a"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] sin patrones detectados; solo nombres y versiones de dependencias"
+    puede_versionarse: true
+    uso: "Dependencias del proceso de transformacion."
+
+  - ruta: frontend/package.json
+    sha256: "21a2fe3c42a6212ed4aa08655dc526dd722ec697a6954c5804e7f1c4c5a19fd5"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] sin patron de datos personales detectado; [VERIFICAR] si declara autor"
+    puede_versionarse: true
+    uso: "Dependencias y ordenes del visor, incluida la que baja las capas ya publicadas."
+
+  - ruta: frontend/package-lock.json
+    sha256: "4686b2c562a8b5089f65a2612abd50375f7ce9900abc6d66c844954ff39c46f5"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] sin patrones detectados"
+    puede_versionarse: true
+    uso: "Fijacion exacta de las versiones instaladas del visor."
+
+  - ruta: frontend/vite.config.js
+    sha256: "7dd32da18d8df63e06ad064e7e5112e13ebf353f1c9cfc24cff8deb88b1b641a"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] sin patrones detectados"
+    puede_versionarse: true
+    uso: "Configuracion de construccion; define la ruta base de publicacion [frontend/vite.config.js:7]."
+
+  - ruta: frontend/.oxlintrc.json
+    sha256: "7f2823b315028e384f7c7d772211e5b55c5f69a17418716be4ca28247a962cef"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] sin patrones detectados"
+    puede_versionarse: true
+    uso: "Reglas de revision automatica del codigo del visor."
+
+  - ruta: .github/workflows/deploy.yml
+    sha256: "5dc38b451eeda056e3dfdb6d2042ea1178d88ba901e4e9418ef0ea4b421eb07d"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] sin patrones detectados"
+    puede_versionarse: true
+    uso: "Unico flujo de trabajo del repositorio: reconstruye las capas y publica el visor."
+
+  - ruta: .claude/settings.local.json
+    sha256: "a988bd47038ed9b6494484262f428863178303eb94a52706ce0239a9dfe703bc"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] configuracion local de una herramienta de asistencia; [VERIFICAR] si contiene rutas de equipo o identificadores de usuario"
+    puede_versionarse: "[VERIFICAR] es configuracion local y su versionado deberia revisarse"
+    uso: "Configuracion local de la herramienta de asistencia usada en el repositorio."
+
+  - ruta: .gitignore
+    sha256: "2ac0d2943d6e6723450ddc72a57e3ec62530547471f9d434914ca0175fcb7659"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] sin patrones detectados"
+    puede_versionarse: true
+    uso: "Exclusiones del control de versiones; es donde tendria que estar anclada, con barra inicial, cualquier ruta que resulte no versionable."
+
+  - ruta: .gitattributes
+    sha256: "854919f33f00facddab8f2a524803e66ba1dbd2d9f9b00cc54e658043b5f1fb7"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] sin patrones detectados"
+    puede_versionarse: true
+    uso: "Configuracion del control de versiones."
+
+  # --- Datos producidos por el proceso y versionados a proposito ---
+
+  - ruta: frontend/public/data/manifest.json
+    sha256: "d39834915041de0843058934d2f0ea5cda3ced33fa2a4c94953b878748822f08"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] indice de archivos; sin indicio de datos de personas"
+    puede_versionarse: true
+    uso: "Indice de lo publicado; lo escribe el proceso [ETL/gj_io.py] y lo leen el visor [frontend/src/hooks/useDatos.js:15] y el guion de descarga [frontend/scripts/descargar-datos.mjs]."
+
+  - ruta: frontend/public/data/incendios.geojson
+    sha256: "76b5f681992b8b3e6d84f29e8b217437073c50b931793a4e586a8ebba5661fd2"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] capa publicada con coordenadas; patron y conteo de atributos no determinados en la evidencia"
+    puede_versionarse: "[VERIFICAR] depende de contiene_pii y de la decision de publicarla abierta"
+    uso: "Capa de incendios que consume el visor; la produce [ETL/build_incendios.py]."
+
+  - ruta: frontend/public/data/oecv.geojson
+    sha256: "c2e9cde0d4a7a382494a47ed0ed95c0a1ef49bd3e7f2943d2de8fd891198aa1a"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] capa publicada; patron y conteo de atributos no determinados en la evidencia"
+    puede_versionarse: "[VERIFICAR] depende de contiene_pii"
+    uso: "Capa de obras planificadas; la produce [ETL/build_oecv.py]."
+
+  - ruta: frontend/public/data/oecv_verificado.geojson
+    sha256: "b3ea9226057a9da84830443bb477122cf277ba5813f06ba1a6a13570d4ca0729"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] capa publicada; patron y conteo de atributos no determinados en la evidencia"
+    puede_versionarse: "[VERIFICAR] depende de contiene_pii"
+    uso: "Capa de obras verificadas; la produce [ETL/build_verificado.py]."
+
+  - ruta: frontend/public/data/puntos_standby.geojson
+    sha256: "536ebdf0aae1ebe2ed15125a8f6a2f2db7c818237915517b597910f6a33e1f93"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] capa publicada; patron y conteo de atributos no determinados en la evidencia"
+    puede_versionarse: "[VERIFICAR] depende de contiene_pii"
+    uso: "Capa de puntos; la produce [ETL/build_puntos.py]."
+
+  - ruta: frontend/public/data/rutas.pmtiles
+    sha256: "65463cb2185f2f4d675dde077a8fd493601e7e357dfceb1868dd63b2b3412c79"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] capa publicada en teselas; patron y conteo de atributos no determinados en la evidencia"
+    puede_versionarse: "[VERIFICAR] depende de contiene_pii"
+    uso: "Capa de recorridos en teselas; la produce [ETL/build_rutas.py] via [ETL/tiles.py]."
+
+  - ruta: frontend/public/data/redvial.pmtiles
+    sha256: "03e9ac005e24515065ce7a2a9e6f41dd0b7359da1bf0f847d2b49987e84eb4fb"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] capa publicada en teselas; patron y conteo de atributos no determinados en la evidencia"
+    puede_versionarse: "[VERIFICAR] depende de contiene_pii"
+    uso: "Capa vial en teselas; la produce [ETL/build_redvial.py] via [ETL/tiles.py]."
+
+  - ruta: frontend/public/data/kpis.json
+    sha256: "b9f42b9d4bb6d98f5d257e20129a0401bb0f0b8eff31cc0d90ce585b074697bb"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] valores agregados; sin indicio de datos de personas"
+    puede_versionarse: true
+    uso: "Indicadores que muestra el panel [frontend/src/components/PanelIndicadores.jsx]; los produce [ETL/build_kpis.py]."
+
+  # --- Salidas del analisis ---
+
+  - ruta: analisis/salidas/incendios.csv
+    sha256: "3bc57c022dc5939a06271a153c27fe76adcf9e92ec6c1eb91ee6d3538a24933c"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] tabla derivada de la capa de incendios; patron y conteo de columnas no determinados en la evidencia"
+    puede_versionarse: "[VERIFICAR] depende de contiene_pii"
+    uso: "Salida tabular de la via de analisis [analisis/leer_capas.py]."
+
+  - ruta: analisis/salidas/incendios.parquet
+    sha256: "985dbec136522228c6570174e71d4655130d2026d0db674df0e263414f8b7408"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] misma tabla en formato binario; patron y conteo de columnas no determinados en la evidencia"
+    puede_versionarse: "[VERIFICAR] depende de contiene_pii"
+    uso: "Salida tabular de la via de analisis, en formato comprimido."
+
+  - ruta: analisis/salidas/incendios_tablas.json
+    sha256: "c2719a436ce432c970fe208d3e554d05a7fc343fca5f786c6509c57522e5e877"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] tablas agregadas; sin indicio de datos de personas"
+    puede_versionarse: true
+    uso: "Resultados agregados de la via de analisis."
+
+  - ruta: analisis/salidas/procedencia.json
+    sha256: "35cc005c9ad6a69766c8a7cea54399c75bef8df196b0aad869912b5b7960ed17"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] registro de procedencia; sin indicio de datos de personas"
+    puede_versionarse: true
+    uso: "Deja constancia de de donde salio cada resultado del analisis. Es lo mas parecido a un sellado que ya existe en el repositorio."
+
+  # --- Material grafico e informes ---
+
+  - ruta: "INFORME_INSUMOS/Inventario_INSUMO_INCENDIO_2026-08-17.xlsx"
+    sha256: "03317a7bb262680effecbc3bfd8e5f9e33fbcc1228ff2410456eb2ee6f5f95ef"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] inventario de archivos; patron y conteo no determinados en la evidencia"
+    puede_versionarse: "[VERIFICAR] depende de contiene_pii"
+    uso: "Inventario del material de origen, con sus versiones para leer en [INFORME_INSUMOS/Inventario_INSUMO_INCENDIO_2026-08-17.html] y [INFORME_INSUMOS/Inventario_INSUMO_INCENDIO_2026-08-17.pdf]."
+
+  - ruta: INSUMO_GRAFICO/verificacion/medidas.json
+    sha256: "1592b1f54fa28487b49a81fbfcb14a6e0dd17f8f590a8e184017a73ab2abc2c7"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] medidas de verificacion visual; sin indicio de datos de personas"
+    puede_versionarse: true
+    uso: "Medidas de referencia de la verificacion visual del encabezado."
+
+  - ruta: frontend/src/assets/banner-conaf-incendios.jpg
+    sha256: "8ac22446f669d5aa287781a888714b70c6d67f6507bd4af310bd31ae80b93b90"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] imagen; [VERIFICAR] si muestra personas identificables"
+    puede_versionarse: "[VERIFICAR] depende de contiene_pii y de los derechos de la imagen"
+    uso: "Imagen del encabezado del visor [frontend/src/components/Banner.jsx]."
+
+  - ruta: README.md
+    sha256: "425b9f08e2d8640b21327e67701762f1c11babb61592bdc27cb72668e203dac2"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] sin patrones detectados"
+    puede_versionarse: true
+    uso: "Documentacion principal: describe el uso, la publicacion y la advertencia sobre corridas locales."
+
+  - ruta: analisis/README.md
+    sha256: "d075514a6d0134ef7cd98fa6800c5a8672cdf7f21c5a44aa38a47f14af6a6a19"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] sin patrones detectados"
+    puede_versionarse: true
+    uso: "Documentacion de la via de analisis."
+
+  - ruta: INSUMO_GRAFICO/README.md
+    sha256: "d4ef21c84ed4b3aa30bf5bb52c7519284b5b02c57f3e61da4525cff9c83facd8"
+    origen: "[PENDIENTE] quien lo entrego y cuando"
+    contiene_pii: "[VERIFICAR] sin patrones detectados"
+    puede_versionarse: true
+    uso: "Documentacion del material grafico, junto a [INSUMO_GRAFICO/implementacion_banner.md]."
+
+pendientes_de_declaracion:
+  - "[PENDIENTE] Este manifiesto no enumera uno por uno los cientos de archivos de insumo que registra la evidencia. Cubre los que consume el proceso y los ejemplos representativos de cada familia; completar el resto requiere una corrida del script de sellado sobre el arbol de insumos."
+  - "[VERIFICAR] Contenido de [INSUMO_INCENDIO/BBDD INVESTIGACIÓN UAD CONSOLIDADA COMPLETA.xlsx]. Es la revision mas urgente: el repositorio figura como publico en los metadatos de la evidencia."
+  - "[VERIFICAR] Las actas de reunion versionadas junto al material regional. Suelen consignar asistentes y nadie declaro que corresponda publicarlas."
+  - "[PENDIENTE] Quien entrego cada capa regional y con que autorizacion para publicarla. Ningun archivo del repositorio lo consigna y el autor del commit no sirve como respuesta."
+  - "[PENDIENTE] Que capa alimenta exactamente cada proceso. La configuracion de rutas [ETL/cfg.py] no aparece resuelta en la evidencia, de modo que la correspondencia entre insumo y salida esta inferida por ubicacion y por nombre, no leida."

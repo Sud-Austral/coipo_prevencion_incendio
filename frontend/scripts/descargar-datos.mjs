@@ -46,16 +46,39 @@ try {
   process.exit(1)
 }
 
-const archivos = ['manifest.json', 'kpis.json', ...Object.values(manifest.capas).map((c) => c.archivo)]
+// `derivados` (bbdd_uad_completa, lineas_electricas) viven en una clave aparte
+// de `capas` para que el visor no duplique filtros. Sin esta linea el
+// manifest bajado declara archivos que no llegan a public/data.
+//
+// Las capas partidas por comuna (riesgo) no declaran `archivo` sino `partes`:
+// 343 archivos y ~163 MB. Sin la tercera linea el visor local mostraba la lista
+// de comunas y ninguna cargaba.
+const archivos = [
+  'manifest.json',
+  'kpis.json',
+  ...Object.values(manifest.capas).map((c) => c.archivo).filter(Boolean),
+  ...Object.values(manifest.capas).flatMap((c) => Object.values(c.partes ?? {}).map((p) => p.archivo)),
+  ...Object.values(manifest.derivados ?? {}).map((c) => c.archivo),
+]
 
 let total = 0
-for (const a of [...new Set(archivos)]) {
-  try {
-    total += await bajar(a)
-  } catch (e) {
-    console.error(`  ✘ ${a}: ${e.message}`)
-  }
-}
+let fallidos = 0
+// De a 8 en paralelo: de uno en uno, las 343 comunas tardaban minutos.
+const pendientes = [...new Set(archivos)]
+await Promise.all(
+  Array.from({ length: 8 }, async () => {
+    for (let a = pendientes.shift(); a; a = pendientes.shift()) {
+      try {
+        total += await bajar(a)
+      } catch (e) {
+        fallidos++
+        console.error(`  ✘ ${a}: ${e.message}`)
+      }
+    }
+  }),
+)
 
-console.log(`Listo · ${mb(total)} en ${DESTINO}`)
+console.log(`Listo · ${mb(total)} en ${DESTINO}${fallidos ? ` · ${fallidos} FALLARON` : ''}`)
+// Un archivo que no bajo deja el visor local a medias sin decir nada.
+if (fallidos) process.exitCode = 1
 console.log(`Generado el ${(manifest.generado ?? '').slice(0, 10)}`)

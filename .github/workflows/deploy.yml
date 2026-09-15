@@ -5,6 +5,11 @@ on:
     branches: [main]
     paths:
       - 'INSUMO_INCENDIO/**'
+      # Las manchas de riesgo y la infraestructura critica. Sin estas dos lineas
+      # subir un insumo nuevo del modelo no regeneraba nada: habia que lanzar el
+      # workflow a mano y nada lo recordaba.
+      - 'INSUMO_RIESGO/**'
+      - 'INSUMO_PRIORIZACION/**'
       - 'ETL/**'
       - 'frontend/**'
       - '.github/workflows/deploy.yml'
@@ -75,6 +80,14 @@ jobs:
       - name: ETL
         run: python ETL/run.py -v
 
+      # Los controles negativos: cada mutacion reintroduce un defecto y exige que
+      # se ponga roja la asercion que lo vigila. Va DESPUES del ETL a proposito:
+      # necesita ETL/_build/*.geojson, el intermedio de tippecanoe, sin el cual
+      # D12 y D13 -las dos que cazan un huso UTM invertido- no se pueden
+      # verificar. En Windows ese intermedio no existe; aqui si.
+      - name: Controles negativos de los datos
+        run: python ETL/verify.py --negativas
+
       # Redundante con el commit de más abajo en el caso feliz, y se conserva a
       # propósito: es el único canal que sobrevive cuando una corrida genera las
       # capas pero falla o se cancela antes de commitearlas.
@@ -127,6 +140,66 @@ jobs:
 
       - run: npm run build
         working-directory: frontend
+
+      # La vista de riesgo (el arnés conserva su nombre de «priorización») se
+      # verifica AQUÍ y no en `verificar-visual`, al revés que el banner y el
+      # panel. La razón es la contraria a la de aquel job: C2..C15 afirman cifras
+      # de las capas REALES —las manchas y los puntos de la comuna que eligen por
+      # definición, sus extremos de nivel, las clases del manifest—, y
+      # `verificar-visual` excluye `/frontend/public/data/` de su sparse-checkout
+      # a propósito para bajar menos de 1 MB. Allí no hay datos que afirmar; aquí
+      # el ETL acaba de generarlos dos pasos más arriba.
+      #
+      # Va DESPUÉS de `npm run build` porque el arnés sirve `dist/` y no lo
+      # construye, y ANTES de subir el artefacto de Pages: si la vista está
+      # rota, no se despliega. El commit de las capas ya ocurrió más arriba, así
+      # que un fallo aquí no deja los datos sin versionar.
+      #
+      # Sin `--negativas`: son 21 mutaciones con un `npm run build` cada una, y
+      # `mejoras.md` §D4 ya decidió que los mutantes de frontend no corren en
+      # cada push. El equivalente de los datos —`verify.py --negativas`, 31
+      # mutaciones, ~2 min en Windows— sí corre, dos pasos más arriba.
+      - name: Verificación visual de la vista de riesgo
+        run: npm run verify:priorizacion
+        working-directory: frontend
+
+      - name: Capturas de la vista de riesgo
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capturas-priorizacion
+          path: frontend/.verificacion/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      # La pagina de lineas electricas se verifica AQUI, en `build`, por la misma
+      # razon que la de priorizacion: E2..E11 afirman cifras de las capas REALES
+      # -el cruce contra incendios.geojson, los totales, el top-12 y la leyenda
+      # de cada region- y `verificar-visual` excluye `/frontend/public/data/` de
+      # su sparse-checkout. Alli no hay datos que afirmar; aqui el ETL acaba de
+      # generarlos, `derivados` incluidos.
+      #
+      # DESPUES de `npm run build`, porque el arnes sirve `dist/` y no lo
+      # construye, y ANTES de subir el artefacto de Pages: si la pagina esta
+      # rota, no se despliega.
+      #
+      # Sin `--negativas`: son seis mutaciones con un `npm run build` cada una
+      # (~1 min en local el 2026-09-14) y `mejoras.md` §D4 recomienda no correr
+      # los mutantes de frontend en cada push.
+      - name: Verificación visual de la página de líneas eléctricas
+        run: npm run verify:electrico
+        working-directory: frontend
+
+      # Artefacto aparte y no el de priorizacion: ese sube .verificacion/ ANTES
+      # de que corra este arnes, asi que estas capturas no llegarian a el.
+      - name: Capturas de líneas eléctricas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capturas-electrico
+          path: frontend/.verificacion/electrico/
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Resumen
         run: |
@@ -222,3 +295,110 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # Prueba de humo contra el sitio YA PUBLICADO, no contra el artefacto. Un
+  # artefacto correcto puede servirse mal: el base path, la compresion de Pages y
+  # el soporte de Range son propiedades del SERVIDOR, no del build, y ninguna de
+  # las tres se ve en una captura local ni en dist/.
+  humo:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pedir el sitio publicado
+        env:
+          # ACOPLADO al `base` de frontend/vite.config.js y al <link rel="preconnect">
+          # de frontend/index.html. Los tres se cambian juntos.
+          BASE: https://sud-austral.github.io/coipo_prevencion_incendio/
+        run: |
+          set -euo pipefail
+
+          echo "== index.html y su base path"
+          curl -sSfL "$BASE" -o index.html
+          if ! grep -q '/coipo_prevencion_incendio/assets/' index.html; then
+            echo "FALLA: index.html no referencia /coipo_prevencion_incendio/assets/"
+            echo "       el build salio con el base mal resuelto y codigo de salida 0"
+            exit 1
+          fi
+          echo "OK   index.html referencia el subpath correcto"
+
+          # La segunda entrada del build multipagina (vite.config.js). Si se
+          # pierde de `input`, el visor sigue publicandose en verde y esta pagina
+          # da 404; si el base sale mal resuelto, sus assets no cargan.
+          echo "== lineas-electricas.html y su base path"
+          curl -sSfL "${BASE}lineas-electricas.html" -o lineas-electricas.html
+          if ! grep -q '/coipo_prevencion_incendio/assets/' lineas-electricas.html; then
+            echo "FALLA: lineas-electricas.html no referencia /coipo_prevencion_incendio/assets/"
+            exit 1
+          fi
+          echo "OK   lineas-electricas.html referencia el subpath correcto"
+
+          echo "== manifest.json"
+          curl -sSfL "${BASE}data/manifest.json" -o manifest.json
+          python3 -c "import json; json.load(open('manifest.json', encoding='utf-8'))"
+          echo "OK   manifest.json parsea"
+
+          # Una linea por capa: nombre archivo bytes formato.
+          #
+          # El sed que quita el blanco final no sobra. Si el interprete emite
+          # finales CRLF, el ultimo campo queda con un retorno de carro pegado,
+          # deja de ser igual a "pmtiles", el bucle de Range se salta TODAS las
+          # capas y el job pasa en verde sin haber comprobado nada. Comprobado
+          # el 2026-09-10 corriendo este mismo guion en Windows.
+          python3 -c "import json; m=json.load(open('manifest.json', encoding='utf-8')); [print(n, c['archivo'], c['bytes'], c.get('formato','geojson')) for n, c in m['capas'].items() if 'archivo' in c]" | sed 's/[[:space:]]*$//' > capas.txt
+
+          # Las capas partidas por comuna (riesgo: 343 archivos) no tienen un
+          # `archivo` sino `partes`, y la linea de arriba las salta. Cada parte
+          # entra a la MISMA lista con su nombre, para que el bucle de bytes las
+          # recorra una a una. Si riesgo esta declarada y no trae partes, FALLA:
+          # la vista no tendria nada que cargar.
+          python3 -c "import json, sys; m=json.load(open('manifest.json', encoding='utf-8')); r=m['capas'].get('riesgo'); r is None or r.get('partes') or sys.exit('FALLA: capas.riesgo sin partes'); [print(n + '/' + k, p['archivo'], p['bytes'], 'geojson') for n, c in m['capas'].items() for k, p in (c.get('partes') or {}).items()]" | sed 's/[[:space:]]*$//' >> capas.txt
+
+          # Los derivados van en `manifest.derivados` y no en `capas` (si no, el
+          # visor duplicaria los filtros), asi que la linea de arriba no los ve.
+          # Se anaden a la MISMA lista, con el mismo sed, para que el bucle de
+          # bytes los recorra. Sin lineas_electricas el job FALLA: la pagina
+          # publicada no tiene nada que dibujar y lo dice con un error.
+          python3 -c "import json, sys; m=json.load(open('manifest.json', encoding='utf-8')); d=m.get('derivados') or {}; 'lineas_electricas' in d or sys.exit('FALLA: manifest.derivados no declara lineas_electricas'); [print(n, c['archivo'], c['bytes'], c.get('formato','geojson')) for n, c in d.items()]" | sed 's/[[:space:]]*$//' >> capas.txt
+          echo "$(wc -l < capas.txt) archivos a comprobar"
+
+          # Accept-Encoding: identity es OBLIGATORIO. Pages comprime
+          # application/octet-stream, y sin esa cabecera se compara el tamano
+          # declarado contra el del cuerpo COMPRIMIDO: falso rojo garantizado.
+          echo "== tamano servido vs. declarado"
+          while read -r nombre archivo bytes formato; do
+            servido=$(curl -sSfL -H 'Accept-Encoding: identity' -o /dev/null -w '%{size_download}' "${BASE}data/${archivo}")
+            if [ "$servido" != "$bytes" ]; then
+              echo "FALLA: $nombre: el manifest declara $bytes B y Pages sirve $servido B"
+              exit 1
+            fi
+            echo "OK   $nombre: $servido B, como declara el manifest"
+          done < capas.txt
+
+          # Sin respuestas 206 el visor NO DIBUJA NINGUNA CARRETERA y falla con
+          # «Check that your storage backend supports HTTP Byte Serving». Es el
+          # unico fallo del visor que no se ve ni en el artefacto ni en una
+          # captura local: depende de como sirva el host.
+          echo "== HTTP Range sobre las teselas"
+          vistas=0
+          while read -r nombre archivo bytes formato; do
+            [ "$formato" = "pmtiles" ] || continue
+            vistas=$((vistas + 1))
+            codigo=$(curl -sS -o cabecera.bin -w '%{http_code}' -H 'Range: bytes=0-126' "${BASE}data/${archivo}")
+            if [ "$codigo" != "206" ]; then
+              echo "FALLA: $nombre: Range devolvio $codigo y no 206; el visor no dibujaria esta capa"
+              exit 1
+            fi
+            if [ "$(head -c 7 cabecera.bin)" != "PMTiles" ]; then
+              echo "FALLA: $nombre: el rango 0-126 no empieza por el magic 'PMTiles'"
+              exit 1
+            fi
+            echo "OK   $nombre: 206 y magic PMTiles en los primeros 127 B"
+          done < capas.txt
+
+          # Una comprobacion que no comprueba nada es peor que no tenerla: si el
+          # bucle de arriba no vio ni una capa de teselas, esto no paso, fallo.
+          if [ "$vistas" -eq 0 ]; then
+            echo "FALLA: ninguna capa pmtiles entro al bucle de Range"
+            exit 1
+          fi
+          echo "OK   $vistas capas de teselas verificadas con Range"

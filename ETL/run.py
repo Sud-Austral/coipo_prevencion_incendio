@@ -37,6 +37,10 @@ TAREAS = [
     ("oecv", "build_oecv", 25, False),
     ("verificado", "build_verificado", 15, False),
     ("puntos", "build_puntos", 10, False),
+    # 171 MB de GeoJSON regional -> un archivo por comuna. Se lee region a region
+    # para que el pico sea el de la mayor (la 12, 75 MB, ~500 MB de RSS medidos).
+    ("riesgo", "build_riesgo", 60, False),
+    ("infra_puntos", "build_infra_puntos", 8, False),
     ("kpis", "build_kpis", 5, False),
 ]
 
@@ -47,6 +51,8 @@ CLAVE_MANIFEST = {
     "puntos": "puntos_standby",
     "rutas": "rutas",
     "redvial": "redvial",
+    "riesgo": "riesgo",
+    "infra_puntos": "infra_puntos",
 }
 
 
@@ -70,7 +76,7 @@ def main() -> int:
     ap.add_argument("--insumo", type=Path, default=RAIZ / "INSUMO_INCENDIO")
     ap.add_argument("--out", type=Path, default=RAIZ / "frontend" / "public" / "data")
     ap.add_argument(
-        "--layers", default="all", help="all | incendios,oecv,verificado,puntos,rutas,redvial,kpis"
+        "--layers", default="all", help="all | incendios,oecv,verificado,puntos,rutas,redvial,riesgo,infra_puntos,kpis"
     )
     ap.add_argument("--jobs", type=int, default=0, help="0 = automatico")
     ap.add_argument("--secuencial", action="store_true", help="equivale a --jobs 1")
@@ -162,6 +168,19 @@ def main() -> int:
         clave = CLAVE_MANIFEST.get(nombre, nombre)
         capas[clave] = {k: v for k, v in res.items() if not k.startswith("_") and k != "capa"}
 
+    # Los derivados (hoy los dos de incendios) van en su propia clave y NO en
+    # `capas`: PanelLateral suma los dominios de todas las capas y App une sus
+    # bbox, asi que una copia de incendios en `capas` duplicaria los filtros.
+    #
+    # OJO: igual que con `capas`, `--layers` REESCRIBE el manifest solo con lo
+    # pedido. Una corrida sin incendios deja el manifest SIN `derivados`, aunque
+    # los .geojson sigan en disco, y la pagina de lineas electricas deja de
+    # encontrarlos. Para regenerar otra capa sin romper lo publicado: --out a otro
+    # sitio y fusionar a mano (CLAUDE.md §3).
+    derivados = {}
+    for nombre, res in resultados.items():
+        derivados.update(res.get("_derivados") or {})
+
     manifest = {
         "generado": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
         "simplify_m": cfg.simplify,
@@ -169,13 +188,15 @@ def main() -> int:
         "tippecanoe": tv,
         "capas": capas,
     }
+    if derivados:
+        manifest["derivados"] = derivados
     if "kpis" in resultados:
         manifest["kpis"] = "kpis.json"
     write_json(cfg.out / "manifest.json", manifest)
 
     total = sum(
         r.get("bytes", 0) for n, r in resultados.items() if n != "kpis"
-    )
+    ) + sum(d.get("bytes", 0) for d in derivados.values())
     secuencial = sum(r.get("segundos", 0) for r in resultados.values())
     real = time.time() - t0
     print(

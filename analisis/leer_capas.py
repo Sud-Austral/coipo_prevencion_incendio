@@ -82,14 +82,19 @@ CUATRO TRAMPAS, MEDIDAS SOBRE ESTE DATASET (manifest generado 2026-08-25)
 3. LAS ETIQUETAS SE REPITEN ENTRE CODIGOS DISTINTOS. Aqui pasa de tres formas y
    las tres importan:
 
-   a) EN AMBAS DIRECCIONES dentro de causa_general. Las 14 etiquetas se reparten
-      en 23 pares (etiqueta, codigo oficial): NUEVE etiquetas tienen mas de un
-      codigo --'Otras quemas' es 4.8 (2.485 filas) y 1.8 (5); 'Lineas
-      electricas' es 4.9 (1.143) y 1.9 (105)-- y DOS codigos llevan mas de una
-      etiqueta: 4.1 es a la vez 'Faenas forestales' (914) y 'Otras causas'
-      (1.006), y 1.1 lo mismo. O sea: ni la etiqueta ni el codigo bastan solos.
-      En causa_especifica x causa_codigo, en cambio, la correspondencia es 1:1
-      perfecta (92 <-> 92).
+   a) EN UNA DIRECCION dentro de causa_general. Las 14 etiquetas se reparten
+      en 23 pares (etiqueta, codigo oficial), uno por codigo: NUEVE etiquetas
+      tienen mas de un codigo --'Otras quemas' es 4.8 (2.485 filas) y 1.8 (5);
+      'Lineas electricas' es 4.9 (1.143) y 1.9 (105)--, asi que la etiqueta
+      sola no identifica. Al reves NO pasa: cada codigo lleva una sola etiqueta
+      (lo vigila D16 de ETL/verify.py). Hasta el 2026-09-14 este texto decia que
+      4.1 era a la vez 'Faenas forestales' (914) y 'Otras causas' (1.006), y 1.1
+      lo mismo. No era un hallazgo sobre el catalogo sino un defecto del ETL: la
+      celda 'Codigo causa general 2023' llega como float, 4.10 es el mismo
+      numero que 4.1, y 'Otras causas' (4.10) se publicaba bajo 4.1. El ETL lo
+      recupera ahora del prefijo de causa_codigo (build_incendios._codigo_general).
+      En causa_especifica x causa_codigo la correspondencia es 1:1 perfecta
+      (92 <-> 92). Cifras medidas el 2026-09-14 sobre las features publicables.
 
    b) ENTRE VOCABULARIOS: 88 etiquetas aparecen en mas de un campo. 'Valparaiso'
       es region[5], provincia[13] Y comuna[7]. 'Sin registro' es provincia[33] y
@@ -405,11 +410,19 @@ def huella(man):
 
 
 def archivos_huerfanos(man, datos=None):
-    """Archivos de datos en disco que ninguna capa del manifest declara."""
+    """Archivos de datos en disco que ninguna capa ni derivado del manifest declara.
+
+    Los derivados (bbdd_uad_completa, lineas_electricas) viven en
+    `manifest.derivados` y no en `capas` a proposito: si esta funcion solo mirara
+    `capas`, los dos saldrian como huerfanos en cada lectura.
+    """
     d = Path(datos or man.get("_ruta") or "")
     if not d.is_dir():
         return []
-    declarados = {m["archivo"] for m in man.get("capas", {}).values()}
+    # Las capas partidas por comuna (riesgo) declaran `partes` y no `archivo`, y
+    # sus archivos viven en un subdirectorio que el iterdir de abajo no recorre.
+    declarados = {m["archivo"] for m in man.get("capas", {}).values() if "archivo" in m}
+    declarados |= {m["archivo"] for m in (man.get("derivados") or {}).values()}
     declarados |= {man.get("kpis") or "kpis.json", "manifest.json"}
     return sorted(
         p.name for p in d.iterdir()
@@ -1152,9 +1165,11 @@ def colisiones_entre_campos(man, capa="incendios"):
 def pares_etiqueta_codigo(df, etiqueta, codigo):
     """Tabla cruzada etiqueta x codigo oficial, con el conteo de cada par.
 
-    Es lo que demuestra que en causa_general ni la etiqueta ni el codigo bastan
-    solos: 14 etiquetas producen 23 pares, nueve etiquetas tienen mas de un
-    codigo, y los codigos 4.1 y 1.1 llevan dos etiquetas distintas cada uno.
+    Es lo que demuestra que en causa_general la etiqueta no basta sola: 14
+    etiquetas producen 23 pares y nueve etiquetas tienen mas de un codigo. Al
+    reves no pasa, cada codigo lleva una etiqueta. Que 4.1 y 1.1 llevaran dos
+    era el defecto del float del ETL (4.10 == 4.1), corregido el 2026-09-14, no
+    una propiedad del catalogo de causas.
     """
     t = (df.groupby([etiqueta, codigo], observed=True, dropna=False)
            .size().rename("n").reset_index())
@@ -1372,6 +1387,14 @@ def reconciliar(man=None, datos=None):
 
     for capa in man["capas"]:
         meta = man["capas"][capa]
+        if "partes" in meta:
+            # Una fila por capa y no 343: lo que se contrasta es la suma.
+            en_disco = sum((Path(man["_ruta"]) / p["archivo"]).stat().st_size
+                          for p in meta["partes"].values()
+                          if (Path(man["_ruta"]) / p["archivo"]).exists())
+            chk(capa + ": bytes en disco (" + str(len(meta["partes"])) + " comunas)", en_disco,
+                meta.get("bytes"), nota="suma de los archivos por comuna")
+            continue
         ruta = Path(man["_ruta"]) / meta["archivo"]
         if ruta.exists():
             chk(capa + ": bytes en disco", ruta.stat().st_size, meta.get("bytes"),

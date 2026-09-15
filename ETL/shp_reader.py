@@ -51,6 +51,19 @@ CRS_OVERRIDES = {
 }
 
 
+def _sidecar(base: Path, ext: str) -> Path:
+    """Ruta del archivo hermano `base + ext`, sin usar with_suffix().
+
+    with_suffix() REEMPLAZA el sufijo en vez de anadirlo, asi que revienta con
+    cualquier base que lleve un punto interno. Medido: de los 23 shapefiles
+    puntuales de INSUMO_PRIORIZACION uno se llama
+    'ESTABLECIMIENTOS_EDUCACIONALES_LOS ANGELES._shp.shp'; con with_suffix la
+    base '..._LOS ANGELES._shp' pierde el '._shp' y se busca un archivo que no
+    existe, con FileNotFoundError sobre un archivo que si esta en el disco.
+    """
+    return Path(str(base) + ext)
+
+
 @dataclass
 class Field:
     """Un campo del .dbf."""
@@ -214,7 +227,7 @@ def read_cpg(base: Path) -> str:
     Los 33 shapefiles de este proyecto traen .cpg = 'UTF-8' aunque el header
     dBASE no lo declare. Sin esto sale 'La AraucanÃ­a' en vez de 'La Araucania'.
     """
-    cpg = base.with_suffix(".cpg")
+    cpg = _sidecar(base, ".cpg")
     if cpg.exists():
         txt = cpg.read_text(encoding="ascii", errors="replace").strip().lower()
         if txt in ("utf-8", "utf8", "65001"):
@@ -357,7 +370,7 @@ def read_shapefile(
     base = Path(base)
     if base.suffix.lower() == ".shp":
         base = base.with_suffix("")
-    shp = base.with_suffix(".shp")
+    shp = _sidecar(base, ".shp")
     if not shp.exists():
         raise FileNotFoundError(shp)
 
@@ -366,12 +379,12 @@ def read_shapefile(
     with open(shp, "rb") as fh:
         shape_type, bbox = read_shp_header(fh)
 
-    fields, records = read_dbf(base.with_suffix(".dbf"), encoding=enc)
+    fields, records = read_dbf(_sidecar(base, ".dbf"), encoding=enc)
 
     if epsg is None:
         epsg = CRS_OVERRIDES.get(base.name)
     if epsg is None:
-        epsg = read_prj_epsg(base.with_suffix(".prj"))
+        epsg = read_prj_epsg(_sidecar(base, ".prj"))
     if epsg is None:
         raise ValueError(
             f"No se pudo determinar el EPSG de {shp.name}. "

@@ -40,3 +40,13 @@ analisis/salidas/
 *.njsproj
 *.sln
 *.sw?
+
+# reglas de COIPO_ERRORES (rutas absolutas, personales)
+.claude/rules/errores-*.md
+
+# Configuracion local de Claude Code. Estuvo versionada hasta 2026-09-10 con un
+# allowlist total (Bash(*), PowerShell(*)): lo que una persona permite en su
+# maquina no es una decision del repositorio. insumos/MANIFIESTO.yaml ya lo
+# marcaba para revisar.
+.claude/settings.local.json
+descarga.rar

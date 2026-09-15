@@ -1,0 +1,1567 @@
+// Arnés de la vista de riesgo · aserciones C1..C15
+//
+// Conserva el nombre de cuando la segunda pestaña se llamaba «Priorización»
+// (scripts, CI y documentos lo citan así); desde el 2026-09-15 mide la vista
+// «Riesgo», con el modelo nacional partido en un archivo por comuna
+// (DECISIONES.md §S).
+//
+// A está tomado por verify-banner y B por verify-panel, así que esta serie
+// empieza en C. C12..C14 vigilan la ficha (<dialog class="ficha">), que es la
+// misma en las dos vistas: están aquí porque este es el arnés que corre con
+// las capas REALES, y lo que afirman sale de una figura concreta de los datos.
+//
+// LAS COMUNAS NO SE ESCRIBEN AQUÍ: se eligen por definición desde dist/data
+// (ver comunasDeRiesgo). «A» es la comuna con infraestructura cuyo nombre en el
+// paquete de infraestructura NO casa con el del modelo ni quitando tildes (hoy
+// Coyhaique/Coihaique); «B», otra con infraestructura y máximo distinto.
+//
+//     npm run verify:priorizacion
+//     npm run verify:priorizacion -- --negativas [--solo C12,C13]
+//
+// EXIGE `npm run build` ANTES: sirve `dist/`, no lo construye. Medido el
+// 2026-09-10: sin ese build el arnés mide el artefacto anterior y da un verde
+// --o un rojo-- que no corresponde al código que se acaba de tocar.
+//
+// C1 ES LA DEUDA MÁS VIEJA DEL REPO. DECISIONES.md §H documenta que con un
+// canvas por capa sólo la de encima recibe los clics, y dice que no lo vigila
+// nada; mejoras.md lo pone como prioridad alta n.º 1 y describe la prueba:
+// «encender dos capas superpuestas, pinchar sobre una figura de la de abajo y
+// exigir que se abra su ficha; el mutante es quitar `renderer` de las opciones
+// del mapa en src/App.jsx». Hasta ahora no se podía escribir porque ninguna
+// capa se superponía de verdad a otra; las áreas de priorización sí.
+//
+// Trampas del arnés ya pagadas y respetadas aquí:
+//   · cada Runtime.evaluate va en un IIFE **async** — sin el async cualquier
+//     await lanza SyntaxError y la captura se toma igual, pareciendo correcta
+//   · se imprime exceptionDetails SIEMPRE
+//   · el tamaño se fija con Emulation.setDeviceMetricsOverride, no con
+//     --window-size, que en Windows no baja de ~500 px y RECORTA
+//   · en React `select.value = x` no cambia el estado: hay que llamar al setter
+//     nativo del prototipo y despachar 'change'
+//   · se cuentan COLORES DISTINTOS, no píxeles pintados: un contador de píxeles
+//     pasa en verde con todo el mapa del mismo color
+//   · servidor en puerto 0 y --user-data-dir propio
+
+import { spawn, spawnSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
+import { createReadStream, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtemp } from 'node:fs/promises'
+import { createServer } from 'node:http'
+import net from 'node:net'
+import { dirname, extname, join, normalize, relative, resolve } from 'node:path'
+import { tmpdir } from 'node:os'
+import { fileURLToPath } from 'node:url'
+
+const AQUI = dirname(fileURLToPath(import.meta.url))
+const FRONT = resolve(AQUI, '..')
+const DIST = join(FRONT, 'dist')
+const CAPA_PUNTOS = join(FRONT, 'src', 'components', 'CapaPuntos.jsx')
+const PANEL_RIESGO = join(FRONT, 'src', 'components', 'PanelRiesgo.jsx')
+const CONFIG_JS = join(FRONT, 'src', 'config.js')
+const ESCALAS = join(FRONT, 'src', 'escalas.js')
+const APP_JSX = join(FRONT, 'src', 'App.jsx')
+const MODAL_FICHA = join(FRONT, 'src', 'components', 'ModalFicha.jsx')
+const FICHAS = join(FRONT, 'src', 'fichas.js')
+const BASE = '/coipo_prevencion_incendio/'
+const ARGS = process.argv.slice(2)
+const valorDe = (flag) => (ARGS.includes(flag) ? ARGS[ARGS.indexOf(flag) + 1] : null)
+const NEGATIVAS = ARGS.includes('--negativas')
+const SOLO = valorDe('--solo') ? new Set(valorDe('--solo').split(',')) : null
+const SIMULAR_CTRL_C = valorDe('--simular-ctrl-c') ? Number(valorDe('--simular-ctrl-c')) : null
+// Las cuatro señales de corte de --negativas (ver la guarda 3) y su codigo de
+// salida, 128 + n como hace un shell. SIGBREAK es la 21 en Windows.
+const SENALES = { SIGINT: 130, SIGTERM: 143, SIGHUP: 129, SIGBREAK: 149 }
+const SENAL_SIMULADA = valorDe('--senal') ?? 'SIGINT'
+if (!(SENAL_SIMULADA in SENALES)) {
+  console.error(`✘ --senal ${SENAL_SIMULADA}: se esperaba una de ${Object.keys(SENALES).join(', ')}`)
+  process.exit(1)
+}
+
+/**
+ * Formato es-CL escrito con aritmetica decimal PROPIA, sin Intl ni toFixed:
+ * parte del texto del numero tal como viaja en el GeoJSON, redondea la mitad
+ * hacia arriba con enteros, agrupa miles con punto y separa decimales con coma.
+ * `escala` corre la coma (2 = porcentaje) sin multiplicar en binario.
+ *
+ * No se usa Intl a proposito: la app lo usa, y compararla contra el mismo
+ * formateador verificaria que Intl es igual a si mismo. Y tampoco v * 100:
+ * medido el 2026-09-14, 0.5295 * 100 da 52,949999999999996, y sobre los 2.288
+ * porcentajes de las areas toFixed(1) de v * 100 se aparta del redondeo
+ * decimal en 46 y Intl de v * 100 en 13. Probado contra 20 casos escritos por
+ * definicion (0,5295 -> «53,0»; 2532 -> «2.532»; 373,5 -> «374») y, como
+ * contraste, igual a los formateadores Intl que ahora usa la app en los 19.215
+ * valores de areas e incendios (medido en Node 22, no en Chrome).
+ */
+function esCL(v, { min = 0, max = min, escala = 0 } = {}) {
+  const m = /^(-?)(\d+)(?:\.(\d+))?$/.exec(String(v))
+  if (!m) return `¿${v}?`
+  const [, signo, ent, frac = ''] = m
+  let n = BigInt(ent + frac)
+  let k = frac.length - escala
+  if (k < 0) {
+    n *= 10n ** BigInt(-k)
+    k = 0
+  }
+  if (k > max) {
+    const div = 10n ** BigInt(k - max)
+    const resto = n % div
+    n = n / div + (resto * 2n >= div ? 1n : 0n)
+    k = max
+  }
+  while (k < max) {
+    n *= 10n
+    k++
+  }
+  while (k > min && n % 10n === 0n) {
+    n /= 10n
+    k--
+  }
+  const txt = n.toString().padStart(k + 1, '0')
+  const entero = (k ? txt.slice(0, -k) : txt).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+  return `${signo}${entero}${k ? `,${txt.slice(-k)}` : ''}`
+}
+
+/** Punto dentro de un anillo [[lon, lat], ...], por paridad de cruces. */
+function dentro([x, y], anillo) {
+  let si = false
+  for (let i = 0, j = anillo.length - 1; i < anillo.length; j = i++) {
+    const [xi, yi] = anillo[i]
+    const [xj, yj] = anillo[j]
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) si = !si
+  }
+  return si
+}
+
+const sinTildes = (x) => String(x).normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+
+/**
+ * Las dos comunas que usa el arnés, elegidas POR DEFINICIÓN desde dist/data.
+ *
+ * A · con infraestructura y con un nombre en el paquete de infraestructura que
+ *     NO casa con el del modelo ni quitando tildes y mayúsculas (Coyhaique /
+ *     Coihaique), la de menos manchas. Es la comuna donde un cruce por nombre
+ *     deja 0 iconos y donde un enlace viejo ?comuna= sólo casa por el alias.
+ *     Medido el 2026-09-15: con la definición anterior -«nombre distinto» a
+ *     secas- salía Mulchen/Mulchén, que casa quitando la tilde, y el mutante que
+ *     desactiva los alias SOBREVIVIÓ. C3 cubría la mitad de lo que decía.
+ * T · una comuna SIN infraestructura con tilde en el nombre, la de menos manchas.
+ *     Sin infraestructura no tiene alias, así que un ?comuna= sin tildes sólo
+ *     puede casar normalizando. Medido el 2026-09-15: probarlo con Mulchén no
+ *     prueba nada, porque su alias «Mulchen» ya casa con «MULCHEN» y el mutante
+ *     que quita la normalización SOBREVIVIÓ.
+ * B · otra con infraestructura y con un máximo de nivel_medio DISTINTO del de A
+ *     a 3 decimales: el mínimo es 0 en las comunas medidas, así que sólo el
+ *     máximo puede delatar una escala heredada.
+ *
+ * Lee el manifest y los GeoJSON, que son datos; nada de src/.
+ */
+function comunasDeRiesgo() {
+  const data = join(DIST, 'data')
+  const manifest = JSON.parse(readFileSync(join(data, 'manifest.json'), 'utf8'))
+  const riesgo = manifest.capas?.riesgo
+  if (!riesgo?.partes) throw new Error('el manifest no declara capas.riesgo.partes')
+  const infra = JSON.parse(readFileSync(join(data, manifest.capas.infra_puntos.archivo), 'utf8'))
+  const nombreInfra = new Map()
+  const puntos = new Map()
+  for (const f of infra.features) {
+    const cut = f.properties.cut
+    nombreInfra.set(cut, f.properties.comuna)
+    puntos.set(cut, (puntos.get(cut) ?? 0) + 1)
+  }
+  const d3 = { min: 3, max: 3 }
+  const conInfra = [...nombreInfra.keys()]
+    .filter((cut) => riesgo.partes[cut])
+    .map((cut) => {
+      const gj = JSON.parse(readFileSync(join(data, riesgo.partes[cut].archivo), 'utf8'))
+      let min = Infinity
+      let max = -Infinity
+      for (const f of gj.features) {
+        min = Math.min(min, f.properties.nivel_medio)
+        max = Math.max(max, f.properties.nivel_medio)
+      }
+      return { cut, gj, parte: riesgo.partes[cut], min, max, nombreInfra: nombreInfra.get(cut), puntos: puntos.get(cut) }
+    })
+    .sort((x, y) => x.parte.features - y.parte.features || x.cut.localeCompare(y.cut))
+  const clave = (x) => sinTildes(x).toLowerCase().trim()
+  const a = conInfra.find((x) => clave(x.nombreInfra) !== clave(x.parte.comuna))
+  const b = a && conInfra.find((x) => x !== a && esCL(x.max, d3) !== esCL(a.max, d3))
+  const t = Object.entries(riesgo.partes)
+    .filter(([cut, p]) => !nombreInfra.has(cut) && sinTildes(p.comuna) !== p.comuna)
+    .sort(([c1, p1], [c2, p2]) => p1.features - p2.features || c1.localeCompare(c2))
+    .map(([cut, parte]) => ({ cut, parte }))[0]
+  if (!a || !b || !t) throw new Error(`no hay comunas que cumplan la definición (A=${a?.cut} B=${b?.cut} T=${t?.cut})`)
+  return { manifest, riesgo, a, b, t }
+}
+
+// Procesos vivos, para que Ctrl+C durante --negativas pueda matarlos.
+let chromeVivo = null
+let buildVivo = null
+
+const MIME = {
+  '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
+  '.json': 'application/json', '.geojson': 'application/json',
+  '.jpg': 'image/jpeg', '.png': 'image/png', '.svg': 'image/svg+xml',
+  '.pmtiles': 'application/octet-stream',
+}
+
+const espera = (ms) => new Promise((r) => setTimeout(r, ms))
+let fallos = 0
+const resultados = []
+
+function comprobar(cond, titulo, detalle = '') {
+  console.log(`  ${cond ? '✔' : '✘'} ${titulo.padEnd(52)} ${detalle}`)
+  if (!cond) fallos++
+  resultados.push({ id: titulo.split(' ')[0], ok: !!cond })
+  return !!cond
+}
+
+function servidor() {
+  const s = createServer((req, res) => {
+    let ruta = decodeURIComponent(new URL(req.url, 'http://l').pathname)
+    if (!ruta.startsWith(BASE)) return res.writeHead(404).end()
+    ruta = ruta.slice(BASE.length) || 'index.html'
+    const archivo = join(DIST, normalize(ruta).replace(/^(\.\.[/\\])+/, ''))
+    if (!archivo.startsWith(DIST) || !existsSync(archivo)) return res.writeHead(404).end()
+    res.writeHead(200, { 'content-type': MIME[extname(archivo)] ?? 'application/octet-stream' })
+    createReadStream(archivo).pipe(res)
+  })
+  return new Promise((ok) => s.listen(0, '127.0.0.1', () => ok({ s, puerto: s.address().port })))
+}
+
+function chromePath() {
+  if (process.env.CHROME_BIN) return process.env.CHROME_BIN
+  return [
+    'C:/Program Files/Google/Chrome/Application/chrome.exe',
+    'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+    '/usr/bin/google-chrome',
+    '/usr/bin/chromium-browser',
+  ].find(existsSync)
+}
+
+function puertoLibre() {
+  return new Promise((ok) => {
+    const s = net.createServer()
+    s.listen(0, '127.0.0.1', () => { const p = s.address().port; s.close(() => ok(p)) })
+  })
+}
+
+async function lanzarChrome() {
+  // --user-data-dir propio: sin él Chrome se adjunta a la sesión ya abierta,
+  // termina de inmediato y no genera ninguna captura.
+  const perfil = await mkdtemp(join(tmpdir(), 'verify-prioriz-'))
+  const puerto = await puertoLibre()
+  const proc = spawn(chromePath(), [
+    '--headless=new', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage',
+    '--hide-scrollbars', '--force-device-scale-factor=1', '--no-first-run',
+    '--no-default-browser-check', '--disable-extensions', '--disable-background-networking',
+    `--remote-debugging-port=${puerto}`, '--remote-debugging-address=127.0.0.1',
+    `--user-data-dir=${perfil}`, 'about:blank',
+  ], { stdio: 'ignore' })
+  chromeVivo = proc
+  for (let i = 0; i < 400; i++) {
+    if (proc.exitCode !== null) throw new Error(`Chrome terminó con código ${proc.exitCode}`)
+    try {
+      const r = await fetch(`http://127.0.0.1:${puerto}/json/version`)
+      if (r.ok) {
+        const j = await r.json()
+        if (j.webSocketDebuggerUrl) return { proc, ws: j.webSocketDebuggerUrl }
+      }
+    } catch { /* arrancando */ }
+    await espera(50)
+  }
+  throw new Error('Chrome no inició CDP')
+}
+
+async function conectar(url) {
+  const ws = new WebSocket(url)
+  await new Promise((ok, mal) => {
+    ws.addEventListener('open', ok, { once: true })
+    ws.addEventListener('error', () => mal(new Error('CDP no abrió')), { once: true })
+  })
+  let id = 0
+  const pend = new Map()
+  ws.addEventListener('message', (ev) => {
+    const m = JSON.parse(ev.data)
+    const p = pend.get(m.id)
+    if (!p) return
+    pend.delete(m.id)
+    if (m.error) p.mal(new Error(m.error.message))
+    else p.ok(m.result)
+  })
+  const enviar = (method, params = {}, sessionId) =>
+    new Promise((ok, mal) => {
+      const msg = { id: ++id, method, params }
+      if (sessionId) msg.sessionId = sessionId
+      pend.set(msg.id, { ok, mal })
+      ws.send(JSON.stringify(msg))
+    })
+  return { ws, enviar }
+}
+
+// ---------------------------------------------------------------------------
+
+// `bloque`: sin él corre todo; 'C1' sólo C1; 'ficha' sólo C12..C14. Los dos
+// últimos existen para que cada mutante de --negativas no pague la suite
+// entera (~45 s) cuando su aserción está en un solo bloque.
+async function correr({ bloque } = {}) {
+  const { s, puerto } = await servidor()
+  const { proc, ws: wsUrl } = await lanzarChrome()
+  const cdp = await conectar(wsUrl)
+  const { targetId } = await cdp.enviar('Target.createTarget', { url: 'about:blank' })
+  const { sessionId } = await cdp.enviar('Target.attachToTarget', { targetId, flatten: true })
+  await cdp.enviar('Page.enable', {}, sessionId)
+  await cdp.enviar('Runtime.enable', {}, sessionId)
+  // Chrome SUSPENDE el renderizado de las pestañas en segundo plano.
+  await cdp.enviar('Target.activateTarget', { targetId })
+  await cdp.enviar('Emulation.setDeviceMetricsOverride',
+    { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false }, sessionId)
+
+  const evaluar = async (expr) => {
+    const r = await cdp.enviar('Runtime.evaluate', {
+      // IIFE **async**: ver la cabecera.
+      expression: `(async () => { ${expr} })()`,
+      returnByValue: true, awaitPromise: true,
+    }, sessionId)
+    if (r.exceptionDetails) {
+      console.error('    EXCEPCIÓN:', JSON.stringify(r.exceptionDetails.exception ?? r.exceptionDetails))
+      return null
+    }
+    return r.result?.value
+  }
+
+  const esperar = async (expr, etiqueta, ms = 30000) => {
+    const t0 = Date.now()
+    while (Date.now() - t0 < ms) {
+      if (await evaluar(`return !!(${expr})`)) return true
+      await espera(150)
+    }
+    console.error(`    AGOTADO esperando: ${etiqueta}`)
+    return false
+  }
+
+  const ir = async (query) => {
+    await cdp.enviar('Page.navigate', { url: `http://127.0.0.1:${puerto}${BASE}${query}` }, sessionId)
+    await espera(500)
+  }
+
+  // Colores del mapa, leídos de los PÍXELES del canvas y no del estado de
+  // React ni de las opciones de Leaflet. Dos razones: mirar el resultado es lo
+  // único que prueba que se pintó, y así el arnés no depende de ningún interno
+  // (`window.__mapa` y compañía) que habría que exponer sólo para medirlo.
+  //
+  // Devuelve el número de colores DISTINTOS con presencia real y el recuento
+  // del más extendido. Contar píxeles pintados a secas pasaría en verde con
+  // todo el mapa del mismo color, que es el fallo que esto viene a cazar.
+  const coloresDeAreas = `
+    const c = document.querySelector('.leaflet-overlay-pane canvas')
+    if (!c) return null
+    const g = c.getContext('2d', { willReadFrequently: true })
+    const d = g.getImageData(0, 0, c.width, c.height).data
+    const cuenta = {}
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i + 3] < 40) continue
+      // Se cuantiza a pasos de 8 para que el antialias de los bordes no
+      // invente colores que nadie eligió.
+      const k = ((d[i] >> 3) << 10) | ((d[i + 1] >> 3) << 5) | (d[i + 2] >> 3)
+      cuenta[k] = (cuenta[k] ?? 0) + 1
+    }
+    // Sólo los colores con superficie de verdad: por debajo de 200 px es borde.
+    const reales = Object.values(cuenta).filter((n) => n > 200)
+    return { distintos: reales.length, mayor: reales.length ? Math.max(...reales) : 0 }`
+
+  // La pantalla tal cual, con la ficha abierta. No es una aserción: quien
+  // decide si la ficha se lee es alguien mirando el PNG.
+  const capturar = async (nombre) => {
+    const { data } = await cdp.enviar('Page.captureScreenshot', { format: 'png' }, sessionId)
+    const dir = join(FRONT, '.verificacion')
+    mkdirSync(dir, { recursive: true })
+    writeFileSync(join(dir, nombre), Buffer.from(data, 'base64'))
+    console.log(`    · .verificacion/${nombre}`)
+  }
+
+  // Abre la ficha de UNA figura concreta de los datos: pincha alrededor de
+  // `punto` (por omisión, el centro del mapa) hasta que la ficha abierta diga,
+  // en la fila `rotulo`, el `valor` buscado; una ficha de otra figura se cierra
+  // y se sigue. Deja la ficha ABIERTA, para capturarla.
+  const abrirFichaDe = async (rotulo, valor, { punto = null, radioMax = 24, paso = 6 } = {}) => {
+    let r = null
+    // Hasta tres pasadas: la capa puede no haber terminado de pintarse.
+    for (let intento = 0; intento < 3; intento++) {
+      r = await evaluar(`
+        const ROTULO = ${JSON.stringify(rotulo)}, VALOR = ${JSON.stringify(valor)}
+        const cont = document.querySelector('.leaflet-container')
+        const lienzo = cont?.querySelector('.leaflet-overlay-pane canvas')
+        const d = document.querySelector('dialog.ficha')
+        if (!lienzo || !d) return { error: 'sin canvas o sin dialog.ficha' }
+        const caja = cont.getBoundingClientRect()
+        const [cx, cy] = ${JSON.stringify(punto)} ?? [caja.left + caja.width / 2, caja.top + caja.height / 2]
+        const vistas = []
+        for (let radio = 0; radio <= ${radioMax}; radio += ${paso}) {
+          const pasos = radio
+            ? [[radio, 0], [-radio, 0], [0, radio], [0, -radio], [radio, radio], [-radio, -radio], [radio, -radio], [-radio, radio]]
+            : [[0, 0]]
+          for (const [dx, dy] of pasos) {
+            for (const tipo of ['mousedown', 'mouseup', 'click']) {
+              lienzo.dispatchEvent(new MouseEvent(tipo, {
+                clientX: cx + dx, clientY: cy + dy, bubbles: true, cancelable: true, view: window,
+              }))
+            }
+            for (let i = 0; i < 10 && !d.open; i++) await new Promise(z => setTimeout(z, 30))
+            if (!d.open) continue
+            const filas = Object.fromEntries([...d.querySelectorAll('tr')].map((tr) => [
+              tr.querySelector('th')?.textContent.trim(), tr.querySelector('td')?.textContent.trim(),
+            ]))
+            if (filas[ROTULO] === VALOR) {
+              return {
+                dx, dy, filas,
+                capa: d.querySelector('.ficha-capa')?.textContent.trim() ?? '',
+                enlaces: [...d.querySelectorAll('a')].map((a) => a.getAttribute('href') ?? ''),
+                html: d.innerHTML,
+              }
+            }
+            vistas.push(filas[ROTULO] ?? '?')
+            d.close()
+            await new Promise(z => setTimeout(z, 30))
+          }
+        }
+        return { error: 'no se abrió su ficha', vistas }`)
+      if (r && !r.error) return r
+      await espera(1500)
+    }
+    return r
+  }
+
+  const cerrarFicha = () => evaluar(`document.querySelector('dialog.ficha')?.close(); return true`)
+
+  // ---- C12..C14 · la ficha ----------------------------------------------
+  const comprobarFicha = async () => {
+    console.log('\n▶ C12..C14 · la ficha: enlaces a Maps y Earth, cifras es-CL')
+    let manifest, incendios, R
+    try {
+      manifest = JSON.parse(readFileSync(join(DIST, 'data', 'manifest.json'), 'utf8'))
+      incendios = JSON.parse(readFileSync(join(DIST, 'data', manifest.capas.incendios.archivo), 'utf8'))
+      R = comunasDeRiesgo()
+    } catch (e) {
+      for (const id of ['C12', 'C13', 'C14']) comprobar(false, `${id} la ficha`, `no se pudieron leer las capas de dist/data: ${e.message}`)
+      return
+    }
+
+    // ---- C12 · Maps y Earth marcan la coordenada del registro -------------
+    // Earth estuvo con la URL de cámara /web/@lat,lon,0a,1200d,... que sólo
+    // mueve la cámara: capturada a los 40 s el 2026-09-14 con el incendio
+    // 1262, bosque y un camino SIN ninguna marca. La de búsqueda
+    // /web/search/lat,lon planta la chincheta. El HTTP 200 no discrimina (Earth
+    // es una SPA), así que se afirma la FORMA del enlace y que su coordenada
+    // sea la de la figura, leída por el arnés de su propia geometría.
+    //
+    // La figura se elige por definición y no a mano: un incendio con ID, sin
+    // otro en la misma coordenada (el clic sería ambiguo) y con décimas de
+    // metro en X e Y, que es lo que C14 necesita; entre ellos el de mayor
+    // superficie, para que la superficie pase de 999 y lleve punto de miles.
+    // Con los datos del 2026-09-14 es el 1262, Cuesta Llampaiquillo.
+    const fraccion = (v) => typeof v === 'number' && !Number.isInteger(v)
+    const enMismoSitio = new Map()
+    for (const f of incendios.features) {
+      const k = f.geometry?.coordinates?.join(',')
+      enMismoSitio.set(k, (enMismoSitio.get(k) ?? 0) + 1)
+    }
+    const inc = incendios.features
+      .filter((f) => f.geometry?.type === 'Point' && f.properties.id != null
+        && fraccion(f.properties.utm_x) && fraccion(f.properties.utm_y)
+        && enMismoSitio.get(f.geometry.coordinates.join(',')) === 1)
+      .sort((a, b) => (b.properties.superficie_ha ?? 0) - (a.properties.superficie_ha ?? 0))[0]
+
+    if (!inc) {
+      // Sin figura no hay nada que medir, y un verde aquí sería mentira.
+      comprobar(false, 'C12 Maps y Earth marcan la coordenada del registro', 'ningún incendio cumple el criterio de selección')
+      comprobar(false, 'C14 la ficha del incendio escribe metros y superficie en es-CL', 'ningún incendio con décimas de metro en X e Y')
+    } else {
+      const [lon, lat] = inc.geometry.coordinates
+      const p = inc.properties
+      // La vista de incendios SÍ respeta el encuadre de la URL: con el punto en
+      // el centro basta pinchar el centro del mapa (a z16 el vecino más cercano
+      // del 1262 queda a 3,3 km, cientos de píxeles).
+      await ir(`?capas=incendios&lat=${lat}&lon=${lon}&z=16`)
+      await esperar(`document.querySelector('.leaflet-overlay-pane canvas')`, 'canvas del mapa')
+      await esperar(
+        `[...document.querySelectorAll('.kpi, .meta')].some(e => /\\d/.test(e.textContent))`,
+        'capas contadas',
+      )
+      await espera(2000)
+      const fi = await abrirFichaDe('ID', String(p.id))
+      if (fi && !fi.error) await capturar('priorizacion-ficha-incendio.png')
+
+      const num = '(-?\\d+(?:\\.\\d+)?)'
+      const reMaps = new RegExp(`^https://www\\.google\\.com/maps/search/\\?api=1&query=${num}%2C${num}$`)
+      const reEarth = new RegExp(`^https://earth\\.google\\.com/web/search/${num},${num}$`)
+      const enlaces = fi?.enlaces ?? []
+      const mMaps = enlaces.map((h) => reMaps.exec(h)).find(Boolean)
+      const mEarth = enlaces.map((h) => reEarth.exec(h)).find(Boolean)
+      // La ficha publica 5 decimales (~1 m, App.jsx): ninguna cifra de más, y
+      // la tolerancia es media unidad de la quinta.
+      const cerca = (txt, ref) => (txt.split('.')[1] ?? '').length <= 5 && Math.abs(Number(txt) - ref) <= 0.5e-5 + 1e-9
+      const okMaps = !!mMaps && cerca(mMaps[1], lat) && cerca(mMaps[2], lon)
+      const okEarth = !!mEarth && cerca(mEarth[1], lat) && cerca(mEarth[2], lon)
+      // En TODA la ficha, no sólo en el enlace de Earth: la URL de cámara no
+      // puede volver por ningún sitio.
+      const conCamara = !fi?.html || fi.html.includes('/web/@')
+      comprobar(
+        fi && !fi.error && okMaps && okEarth && !conCamara,
+        'C12 Maps y Earth marcan la coordenada del registro',
+        fi?.error
+          ? `incendio ${p.id}: ${fi.error} · vistas ${JSON.stringify(fi.vistas)}`
+          : `incendio ${p.id} en ${lat},${lon} · Maps ${okMaps ? 'ok' : `MAL ${enlaces[0]}`} · Earth ${
+            okEarth ? 'ok' : `MAL ${enlaces.find((h) => h.includes('earth')) ?? 'sin enlace'}`
+          } · /web/@ ${conCamara ? 'PRESENTE' : 'ausente'}`,
+      )
+
+      // ---- C14 · metros UTM y superficie en es-CL ---------------------------
+      // Los metros van SIN agrupar a propósito (un «360.886» se lee como
+      // decimal, fichas.js lo explica) pero con coma decimal: el 1262 decía
+      // «257878.8 E». Lo que se exige sale de la definición, no de copiar la
+      // app: sólo dígitos y a lo sumo una coma, y leída esa coma como punto,
+      // el MISMO número del GeoJSON. El huso sale del EPSG (327zz = zona zz S).
+      const utm = fi?.filas?.['Coordenadas UTM'] ?? ''
+      const mU = /^(\d+(?:,\d+)?) E · (\d+(?:,\d+)?) N · huso (\d{2})S$/.exec(utm)
+      const okUtm = !!mU
+        && Number(mU[1].replace(',', '.')) === p.utm_x
+        && Number(mU[2].replace(',', '.')) === p.utm_y
+        && mU[3] === String(p.utm_epsg - 32700)
+      const supEsperada = `${esCL(p.superficie_ha, { min: 0, max: 1 })} ha`
+      const okSup = fi?.filas?.Superficie === supEsperada
+      comprobar(
+        fi && !fi.error && okUtm && okSup,
+        'C14 la ficha del incendio escribe metros y superficie en es-CL',
+        `UTM «${utm}» (${p.utm_x} · ${p.utm_y} · EPSG ${p.utm_epsg}) · superficie «${fi?.filas?.Superficie}», esperada «${supEsperada}»`,
+      )
+      await cerrarFicha()
+    }
+
+    // ---- C13 · las cifras de la ficha de una mancha, en es-CL --------------
+    // Cada cifra se recalcula con esCL() desde la figura del GeoJSON y se
+    // compara texto con texto; además ninguna celda puede traer un punto
+    // decimal (un punto seguido de 1, 2 o 4+ dígitos; el de 3 es de miles).
+    //
+    // La mancha se elige para que cada formato pueda fallar a la vista: nivel
+    // con 3 decimales, rango con mínimo distinto del máximo (invertirlos se
+    // nota), pct_alto con décima (un formateador de porcentaje que multiplica
+    // por 100 escribiría «5.000,0 %») y superficie de 1.000 ha o más con
+    // centésimas (punto de miles y coma decimal a la vez). Entre esas, la
+    // mayor: es la más fácil de pinchar. Siempre de la comuna A.
+    //
+    // Cómo se pincha: esta vista NO respeta ?lat=&lon=&z= --al entrar encuadra
+    // la comuna, medido el 2026-09-14--, así que se entra con ?comuna=, se lee
+    // el encuadre que la app escribe en la URL y el arnés proyecta el polígono
+    // a píxeles con su propio Web Mercator. Se pincha en el punto interior más
+    // alejado del borde, y sólo si esa holgura es de 3 px o más.
+    const decimales = (v) => (String(v).split('.')[1] ?? '').length
+    const candidatas = R.a.gj.features
+      .filter((f) => ['Polygon', 'MultiPolygon'].includes(f.geometry?.type))
+      .filter((f) => {
+        const p = f.properties
+        return decimales(p.nivel_medio) === 3 && p.nivel_medio_min !== p.nivel_medio_max
+          && decimales(p.pct_alto) === 1 && p.area_ha >= 1000 && decimales(p.area_ha) === 2
+      })
+      .map((f) => ({ f }))
+      .sort((x, y) => y.f.properties.area_ha - x.f.properties.area_ha
+        || x.f.properties.mancha_id.localeCompare(y.f.properties.mancha_id))
+      .slice(0, 6)
+
+    const mercator = (lon, lat, z) => {
+      const e = 256 * 2 ** z
+      const s = Math.sin((lat * Math.PI) / 180)
+      return [((lon + 180) / 360) * e, (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * e]
+    }
+    const aSegmento = (q, a, b) => {
+      const dx = b[0] - a[0], dy = b[1] - a[1]
+      const t = Math.max(0, Math.min(1, ((q[0] - a[0]) * dx + (q[1] - a[1]) * dy) / (dx * dx + dy * dy || 1)))
+      return Math.hypot(q[0] - a[0] - t * dx, q[1] - a[1] - t * dy)
+    }
+
+    let fa = null
+    let elegida = null
+    let comunaCargada = null
+    const intentos = []
+    for (const cand of candidatas) {
+      const pc = cand.f.properties
+      if (comunaCargada !== pc.comuna) {
+        await ir(`?vista=riesgo&comuna=${R.a.cut}`)
+        await esperar(`document.querySelector('.panel h1')?.textContent.includes('Riesgo')`, 'panel')
+        await esperar(`document.querySelector('.leaflet-overlay-pane canvas')`, 'canvas del mapa')
+        // El encuadre se anima y la URL se escribe 250 ms después del moveend.
+        await esperar(`new URLSearchParams(location.search).get('z')`, 'encuadre escrito en la URL')
+        await espera(1800)
+        comunaCargada = pc.comuna
+      }
+      const v = await evaluar(`
+        const q = new URLSearchParams(location.search)
+        const r = document.querySelector('.leaflet-container').getBoundingClientRect()
+        return { lat: +q.get('lat'), lon: +q.get('lon'), z: +q.get('z'), r: [r.left, r.top, r.width, r.height] }`)
+      if (!v || !Number.isFinite(v.z)) {
+        intentos.push(`${pc.mancha_id}: sin encuadre en la URL`)
+        continue
+      }
+      const c0 = mercator(v.lon, v.lat, v.z)
+      const [left, top, ancho, alto] = v.r
+      const aPx = ([lo, la]) => {
+        const m = mercator(lo, la, v.z)
+        return [left + ancho / 2 + m[0] - c0[0], top + alto / 2 + m[1] - c0[1]]
+      }
+      const poligonos = (cand.f.geometry.type === 'Polygon' ? [cand.f.geometry.coordinates] : cand.f.geometry.coordinates)
+        .map((pol) => pol.map((anillo) => anillo.map(aPx)))
+      let mejor = null
+      for (const [exterior, ...huecos] of poligonos) {
+        const xs = exterior.map((q) => q[0]), ys = exterior.map((q) => q[1])
+        const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)]
+        for (let i = 0; i <= 32; i++) {
+          for (let j = 0; j <= 32; j++) {
+            const q = [x0 + ((x1 - x0) * i) / 32, y0 + ((y1 - y0) * j) / 32]
+            if (q[0] < left + 8 || q[0] > left + ancho - 8 || q[1] < top + 8 || q[1] > top + alto - 8) continue
+            if (!dentro(q, exterior) || huecos.some((h) => dentro(q, h))) continue
+            let holgura = Infinity
+            for (const anillo of [exterior, ...huecos]) {
+              for (let k = 0; k < anillo.length - 1; k++) holgura = Math.min(holgura, aSegmento(q, anillo[k], anillo[k + 1]))
+            }
+            if (!mejor || holgura > mejor.holgura) mejor = { q, holgura }
+          }
+        }
+      }
+      if (!mejor || mejor.holgura < 3) {
+        intentos.push(`${pc.mancha_id}: holgura ${mejor ? mejor.holgura.toFixed(1) : 0} px a z${v.z}`)
+        continue
+      }
+      fa = await abrirFichaDe('Identificador', pc.mancha_id, { punto: mejor.q, radioMax: 2, paso: 1 })
+      if (fa && !fa.error) {
+        elegida = { ...cand, holgura: mejor.holgura, z: v.z }
+        break
+      }
+      intentos.push(`${pc.mancha_id}: ${fa?.error} · vistas ${JSON.stringify(fa?.vistas)}`)
+    }
+
+    if (!elegida) {
+      comprobar(false, 'C13 la ficha de una mancha escribe sus cifras en es-CL', `no se abrió ninguna: ${intentos.join(' | ') || 'sin candidatas en la comuna ' + R.a.cut}`)
+      return
+    }
+    const pa = elegida.f.properties
+    await capturar('priorizacion-ficha-mancha.png')
+
+    const d3 = { min: 3, max: 3 }
+    const esperado = {
+      Comuna: pa.comuna,
+      Región: R.a.parte.region,
+      'Clase (escala del modelo)': pa.clase,
+      'Nivel medio (0 a 4)': esCL(pa.nivel_medio, d3),
+      'Rango interno': `${esCL(pa.nivel_medio_min, d3)} – ${esCL(pa.nivel_medio_max, d3)}`,
+      'Superficie en nivel Alto o Muy Alto': `${esCL(pa.pct_alto, { min: 1, max: 1 })} %`,
+      Superficie: `${esCL(pa.area_ha, { min: 2, max: 2 })} ha`,
+      'Celdas H3': esCL(pa.n_hexagonos),
+      Identificador: pa.mancha_id,
+    }
+    const filas = fa?.filas ?? {}
+    const malas = Object.entries(esperado)
+      .filter(([k, v]) => filas[k] !== v)
+      .map(([k, v]) => `${k} «${filas[k]}» ≠ «${v}»`)
+    const conPunto = Object.entries(filas).filter(([, v]) => /\d\.(?:\d{1,2}|\d{4,})(?!\d)/.test(v ?? ''))
+    comprobar(
+      fa && !fa.error && malas.length === 0 && conPunto.length === 0,
+      'C13 la ficha de una mancha escribe sus cifras en es-CL',
+      fa?.error
+        ? `${pa.mancha_id}: ${fa.error} · vistas ${JSON.stringify(fa.vistas)}`
+        : malas.length || conPunto.length
+          ? [...malas, ...conPunto.map(([k, v]) => `${k} «${v}» con punto decimal`)].join(' · ')
+          : `${pa.mancha_id}: ${Object.keys(esperado).length} filas iguales · ${esCL(pa.area_ha, { min: 2, max: 2 })} ha · holgura ${elegida.holgura.toFixed(1)} px a z${elegida.z}`,
+    )
+    await cerrarFicha()
+  }
+
+  try {
+    if (bloque === 'ficha') {
+      await comprobarFicha()
+      return
+    }
+
+    // `bloque === 'vista'` salta C1 y la ficha: lo usan los mutantes de C2..C11
+    // y C15 para no pagar la suite entera.
+    if (bloque !== 'vista') {
+      // ---- C1 · el renderer compartido ------------------------------------
+      // LA DEUDA DE DECISIONES.md §H, que mejoras.md pone como prioridad alta
+      // n.º 1: «con un canvas por capa sólo la de encima recibe los clics, y cuál
+      // queda encima lo decide el orden en que terminan de descargarse los
+      // archivos». El síntoma medido entonces fue que OECV y stand-by dejaban de
+      // responder al clic con varias capas encendidas.
+      //
+      // NO se puede probar en la vista de priorización: allí sólo hay UNA capa
+      // vectorial (las áreas), y los iconos van por el pane de marcadores, que es
+      // otro camino de eventos. Hacen falta capas de CANVAS superpuestas, y eso
+      // es la vista de incendios con OECV + stand-by + incendios encendidas.
+      //
+      // La prueba es el síntoma directo: se barre una rejilla de clics sobre el
+      // mapa y se exige que respondan DOS capas distintas por lo menos. Con un
+      // canvas por capa sólo contesta la de encima, y el conteo cae a 1.
+      //
+      // ALCANCE, MEDIDO el 2026-09-14 con tres mutantes contra esta misma C1:
+      //
+      //   renderer quitado de las opciones del mapa  -> ROJA · 1 capa (incendios 7)
+      //   renderer compartido pero SIN tolerance: 8  -> ROJA · 1 capa (incendios 7)
+      //   canvas propio por capa CON tolerance 8     -> ROJA · 1 capa (stand-by 9)
+      //
+      // O sea: C1 detecta el defecto de §H (el tercero: sólo contesta la capa de
+      // encima), pero TAMBIÉN se pone roja si se pierde la tolerancia, que es
+      // otro defecto. Un mutante que quite el renderer --o que declare uno sin
+      // opciones-- mezcla los dos y no dice cuál de ellos cazó. Por eso el
+      // control negativo de abajo conserva la tolerancia.
+      console.log('\n▶ C1 · renderer compartido (DECISIONES.md §H)')
+      await ir('?capas=oecv,puntos_standby,incendios&region=Valpara%C3%ADso')
+      await esperar(`document.querySelector('.leaflet-overlay-pane canvas')`, 'canvas del mapa')
+      await esperar(
+        `[...document.querySelectorAll('.kpi, .meta')].some(e => /\\d/.test(e.textContent))`,
+        'capas contadas',
+      )
+      await espera(3500)
+
+      const barrido = await evaluar(`
+        const cont = document.querySelector('.leaflet-container')
+        const lienzo = cont.querySelector('.leaflet-overlay-pane canvas')
+        if (!lienzo) return { error: 'sin canvas' }
+        const r = cont.getBoundingClientRect()
+        const d = document.querySelector('dialog.ficha')
+        const capas = {}
+        let aciertos = 0
+        // Rejilla sobre el mapa. Cada acierto anota QUE capa contesto.
+        for (let ix = 1; ix < 16; ix++) {
+          for (let iy = 1; iy < 11; iy++) {
+            const x = r.left + (r.width * ix) / 16
+            const y = r.top + (r.height * iy) / 11
+            for (const tipo of ['mousedown', 'mouseup', 'click']) {
+              lienzo.dispatchEvent(new MouseEvent(tipo, {
+                clientX: x, clientY: y, bubbles: true, cancelable: true, view: window,
+              }))
+            }
+            await new Promise(z => setTimeout(z, 12))
+            if (d && d.open) {
+              const capa = d.querySelector('.ficha-capa')?.textContent?.trim() ?? '?'
+              capas[capa] = (capas[capa] ?? 0) + 1
+              aciertos++
+              d.close()
+              await new Promise(z => setTimeout(z, 8))
+            }
+          }
+        }
+        return { capas, aciertos, distintas: Object.keys(capas).length }`)
+
+      comprobar(
+        barrido && !barrido.error && barrido.distintas >= 2,
+        'C1 varias capas superpuestas reciben clics',
+        barrido?.error
+          ? barrido.error
+          : `${barrido?.distintas} capas respondieron · ${JSON.stringify(barrido?.capas)}`,
+      )
+
+      if (bloque === 'C1') return
+    }
+
+    // ---- C2 · un enlace viejo abre la vista nueva, sin comuna ----------------
+    // ?vista=priorizacion circula desde que existía la pestaña de 3 comunas. Tiene
+    // que abrir Riesgo (no caer a Incendios), con el selector vacío, con TODAS
+    // las comunas del manifest agrupadas por región, y sin ninguna mancha: sin
+    // comuna no hay nada que dibujar. La tinta 0 caza además que se quede
+    // pintada una comuna anterior.
+    console.log('\n▶ C2..C11, C15 · vista de riesgo: comuna, escalas, iconos y exportación')
+    let R
+    try {
+      R = comunasDeRiesgo()
+    } catch (e) {
+      for (const id of ['C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10', 'C11', 'C15']) comprobar(false, `${id} vista de riesgo`, `no se pudieron elegir las comunas: ${e.message}`)
+      return
+    }
+    console.log(`    · A = ${R.a.parte.comuna} (${R.a.cut}, «${R.a.nombreInfra}» en infraestructura, ${R.a.parte.features} manchas, ${R.a.puntos} puntos) · B = ${R.b.parte.comuna} (${R.b.cut}) · T = ${R.t.parte.comuna} (${R.t.cut})`)
+
+    await ir('?vista=priorizacion')
+    await esperar(`document.querySelector('.panel h1')?.textContent.includes('Riesgo')`, 'panel de riesgo')
+    await espera(1500)
+    const nPartes = Object.keys(R.riesgo.partes).length
+    const nRegiones = new Set(Object.values(R.riesgo.partes).map((p) => p.region)).size
+    const c2 = await evaluar(`
+      const s = document.querySelector('.panel select')
+      const c = document.querySelector('.leaflet-overlay-pane canvas')
+      let tinta = 0
+      if (c) {
+        const d = c.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, c.width, c.height).data
+        for (let i = 3; i < d.length; i += 4) tinta += d[i]
+      }
+      return {
+        h1: document.querySelector('.panel h1')?.textContent ?? '',
+        valor: s?.value ?? null,
+        opciones: s ? [...s.options].filter((o) => o.value).length : 0,
+        grupos: s ? s.querySelectorAll('optgroup').length : 0,
+        tinta,
+      }`)
+    comprobar(
+      c2 && c2.h1.includes('Riesgo') && c2.valor === '' && c2.opciones === nPartes && c2.grupos === nRegiones && c2.tinta === 0,
+      'C2 ?vista=priorizacion abre Riesgo sin comuna y sin manchas',
+      `h1 «${c2?.h1}» · select «${c2?.valor}» · ${c2?.opciones}/${nPartes} comunas en ${c2?.grupos}/${nRegiones} regiones · tinta ${c2?.tinta}`,
+    )
+
+    // ---- C3 · la grafía antigua elige la comuna y cruza iconos por CUT -------
+    // Se entra con el nombre que usaba el modelo anterior y que sigue usando la
+    // infraestructura («Coyhaique»): la app tiene que resolverlo al CUT por su
+    // alias, pintar A A LA PRIMERA -- el bug del efecto que nace neutro sólo
+    // aparece entrando por URL -- y mostrar TODOS los puntos de su CUT. Por nombre
+    // saldrían 0. Después, T escrita sin tildes y en mayúsculas: el otro camino
+    // por el que un enlace tiene que casar (ver T en comunasDeRiesgo).
+    await ir(`?vista=riesgo&comuna=${encodeURIComponent(R.a.nombreInfra)}`)
+    await esperar(`document.querySelectorAll('.leaflet-marker-icon').length >= ${R.a.puntos}`, `iconos de ${R.a.parte.comuna}`)
+    await esperar(`/[1-9]/.test(document.querySelector('.kpi')?.textContent ?? '')`, 'manchas contadas')
+    await espera(1500)
+    const c3 = await evaluar(`
+      const t = [...document.querySelectorAll('.kpi')].map(e => e.textContent).join(' ')
+      const m = t.match(/([\\d.]+) manchas de riesgo/)
+      return {
+        sel: document.querySelector('.panel select')?.value ?? '',
+        manchas: m ? m[1] : null,
+        iconos: document.querySelectorAll('.leaflet-marker-icon').length,
+      }`)
+    const pintado = await evaluar(coloresDeAreas)
+    comprobar(
+      c3 && c3.sel === R.a.cut && c3.manchas === esCL(R.a.parte.features) && c3.iconos === R.a.puntos && pintado?.distintos >= 2,
+      'C3 ?comuna= con la grafía antigua elige la comuna y cruza iconos por CUT',
+      `?comuna=${R.a.nombreInfra} · select=${c3?.sel} · ${c3?.manchas} manchas (esperadas ${esCL(R.a.parte.features)}) · ${c3?.iconos}/${R.a.puntos} iconos · ${pintado?.distintos} colores`,
+    )
+    const gritado = sinTildes(R.t.parte.comuna).toUpperCase()
+    await ir(`?vista=riesgo&comuna=${encodeURIComponent(gritado)}`)
+    await esperar(`document.querySelector('.panel select')?.value === ${JSON.stringify(R.t.cut)}`, `select en ${R.t.cut}`, 8000)
+    const selT = await evaluar(`return document.querySelector('.panel select')?.value ?? ''`)
+    comprobar(
+      selT === R.t.cut,
+      'C3 ?comuna= sin tildes ni mayúsculas elige la comuna',
+      `?comuna=${gritado} · select=${selT} (esperado ${R.t.cut}, ${R.t.parte.comuna})`,
+    )
+    // C15 y C4 miden sobre A: se vuelve a ella.
+    await ir(`?vista=riesgo&comuna=${R.a.cut}`)
+    await esperar(`document.querySelectorAll('.leaflet-marker-icon').length >= ${R.a.puntos}`, `iconos de ${R.a.parte.comuna}`)
+    await espera(1500)
+
+    // ---- C15 · el mapa pinta con los colores de la leyenda --------------------
+    // El fallo que vigila es mudo: si la etiqueta de clase del dato no casa con
+    // la del color (las claves en femenino del modelo anterior contra las clases
+    // en masculino de este), cada mancha cae al gris por omisión y el mapa se ve
+    // «bien», sólo que sin clases. Se exige: la leyenda rotula exactamente las
+    // clases del manifest, de mayor a menor y con sus cortes en es-CL; sus fichas
+    // tienen tantos colores distintos como clases; y la MAYOR parte de la tinta
+    // del canvas es de esos colores. Medido el 2026-09-15 en escala absoluta:
+    // 97,1 % en Mulchén, 96,2 % en Los Angeles, 93,8 % en Coihaique, 99,5 % en
+    // Santiago y 88,0 % en Natales (el resto son bordes y mezclas). El umbral es
+    // la mitad, por definición de «mayor parte», no una cifra ajustada.
+    const clasesEsperadas = R.riesgo.clases.slice().reverse().map((c) => ({
+      clase: c.clase,
+      rango: c.desde == null
+        ? `< ${esCL(c.hasta, { min: 0, max: 3 })}`
+        : c.hasta == null
+          ? `≥ ${esCL(c.desde, { min: 0, max: 3 })}`
+          : `${esCL(c.desde, { min: 0, max: 3 })} – ${esCL(c.hasta, { min: 0, max: 3 })}`,
+    }))
+    const c15 = await evaluar(`
+      const filas = [...document.querySelectorAll('.panel .leyenda')]
+      const rgb = (x) => x.replace(/[^0-9,]/g, '').split(',').slice(0, 3).map(Number)
+      const leyenda = filas.map((f) => ({
+        clase: [...f.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join('').trim(),
+        rango: f.querySelector('.leyenda-rango')?.textContent.trim() ?? '',
+        color: rgb(getComputedStyle(f.querySelector('.chip')).backgroundColor),
+      }))
+      const c = document.querySelector('.leaflet-overlay-pane canvas')
+      if (!c) return { leyenda, error: 'sin canvas' }
+      const d = c.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, c.width, c.height).data
+      let pintados = 0, deLeyenda = 0
+      for (let i = 0; i < d.length; i += 4) {
+        if (d[i + 3] < 40) continue
+        pintados++
+        if (leyenda.some(({ color: [r, g, b] }) => Math.abs(d[i] - r) <= 12 && Math.abs(d[i + 1] - g) <= 12 && Math.abs(d[i + 2] - b) <= 12)) deLeyenda++
+      }
+      return { leyenda, pintados, deLeyenda }`)
+    const rotulos = (c15?.leyenda ?? []).map(({ clase, rango }) => ({ clase, rango }))
+    const colores = new Set((c15?.leyenda ?? []).map((x) => x.color.join(','))).size
+    const fraccion = c15?.pintados ? c15.deLeyenda / c15.pintados : 0
+    comprobar(
+      c15 && !c15.error && JSON.stringify(rotulos) === JSON.stringify(clasesEsperadas)
+        && colores === clasesEsperadas.length && fraccion > 0.5,
+      'C15 el mapa pinta con los colores de la leyenda del modelo',
+      c15?.error
+        ?? `leyenda ${JSON.stringify(rotulos) === JSON.stringify(clasesEsperadas) ? 'igual al manifest' : `DISTINTA ${JSON.stringify(rotulos)}`} · ${colores} colores · ${(100 * fraccion).toFixed(1)} % de la tinta con color de leyenda`,
+    )
+
+    // ---- C4 · normalizar reparte de verdad -------------------------------
+    // Medido el 2026-09-15: en Coihaique 31 -> 45 colores y el dominante de
+    // 59.644 a 52.857 px; en Mulchén 17 -> 33 y de 82.728 a 78.674. El margen de
+    // C4b es estrecho por los datos: el rango reparte MANCHAS, no superficie, y
+    // unas pocas manchas grandes comparten escalón.
+    const antes = await evaluar(coloresDeAreas)
+    await evaluar(`
+      const b = [...document.querySelectorAll('button')].find(x => x.className.includes('normalizar'))
+      if (!b) return false
+      b.click()
+      return true`)
+    await espera(900)
+    const despues = await evaluar(coloresDeAreas)
+    comprobar(
+      antes && despues && despues.distintos > antes.distintos,
+      'C4 normalizar usa más colores que la escala del modelo',
+      `${antes?.distintos} → ${despues?.distintos} colores`,
+    )
+    comprobar(
+      antes && despues && despues.mayor < antes.mayor,
+      'C4b ningún color acapara más que en la escala del modelo',
+      `color dominante ${antes?.mayor} → ${despues?.mayor} px`,
+    )
+
+    // ---- C5 · la leyenda declara el modo y los valores absolutos ---------
+    // Los extremos se calculan del GeoJSON de A, a 3 decimales y en es-CL.
+    const d3 = { min: 3, max: 3 }
+    const minA = `mín. ${esCL(R.a.min, d3)}`
+    const maxA = `máx. ${esCL(R.a.max, d3)}`
+    const ley = await evaluar(`
+      const t = document.querySelector('.panel')?.textContent ?? ''
+      return {
+        relativo: t.includes('RELATIVO'),
+        min: t.includes(${JSON.stringify(minA)}),
+        max: t.includes(${JSON.stringify(maxA)}),
+        aviso: t.includes('posición relativa'),
+        cien: /\\b100\\s*%/.test(t),
+      }`)
+    comprobar(
+      ley?.relativo && ley.min && ley.max && ley.aviso && !ley.cien,
+      'C5 la leyenda relativa rotula min/max absolutos',
+      `RELATIVO=${ley?.relativo} «${minA}»=${ley?.min} «${maxA}»=${ley?.max} aviso=${ley?.aviso} sin-0a100=${!ley?.cien}`,
+    )
+
+    // ---- C6 · cambiar de comuna no hereda la escala anterior -------------
+    const maxB = `máx. ${esCL(R.b.max, d3)}`
+    await evaluar(`
+      const s = document.querySelector('.panel select')
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLSelectElement.prototype, 'value').set
+      setter.call(s, ${JSON.stringify(R.b.cut)})
+      s.dispatchEvent(new Event('change', { bubbles: true }))
+      return true`)
+    await esperar(`(document.querySelector('.kpi')?.textContent ?? '').startsWith(${JSON.stringify(esCL(R.b.parte.features) + ' ')})`, `manchas de ${R.b.parte.comuna}`)
+    await espera(1500)
+    const tras = await evaluar(`
+      const t = document.querySelector('.panel')?.textContent ?? ''
+      return { a: t.includes(${JSON.stringify(maxA)}), b: t.includes(${JSON.stringify(maxB)}) }`)
+    comprobar(
+      tras && !tras.a && tras.b,
+      'C6 al cambiar de comuna se recalculan los anclajes',
+      `«${maxA}» de ${R.a.parte.comuna}=${tras?.a} · «${maxB}» de ${R.b.parte.comuna}=${tras?.b}`,
+    )
+
+    // ---- C7 · el umbral de zoom oculta y devuelve los iconos -------------
+    // Se vuelve a A: C6 dejó B, y los iconos se miden donde se contaron en C3.
+    // Se usan los botones de zoom de Leaflet, que es por donde pasa el usuario.
+    await ir(`?vista=riesgo&comuna=${R.a.cut}`)
+    await esperar(`document.querySelectorAll('.leaflet-marker-icon').length >= ${R.a.puntos}`, 'iconos para el zoom')
+    await espera(1500)
+    const zoom = await evaluar(`
+      const menos = document.querySelector('.leaflet-control-zoom-out')
+      const mas = document.querySelector('.leaflet-control-zoom-in')
+      if (!menos || !mas) return null
+      const pulsar = async (b, n) => {
+        for (let i = 0; i < n; i++) { b.click(); await new Promise(r => setTimeout(r, 420)) }
+        await new Promise(r => setTimeout(r, 700))
+      }
+      await pulsar(menos, 5)
+      const lejos = document.querySelectorAll('.leaflet-marker-icon').length
+      await pulsar(mas, 5)
+      const cerca = document.querySelectorAll('.leaflet-marker-icon').length
+      return { lejos, cerca }`)
+    comprobar(
+      zoom && zoom.lejos === 0 && zoom.cerca > 0,
+      'C7 los iconos se ocultan al alejar y vuelven al acercar',
+      `alejado: ${zoom?.lejos} · acercado: ${zoom?.cerca}`,
+    )
+
+    // ---- C8 · el PNG exportado lleva los iconos --------------------------
+    // Medir el DOM no es mirar el PNG: los marcadores son nodos del DOM y el
+    // exportador sólo recorría <canvas>, así que salían invisibles mientras
+    // B20 seguía en verde. Se cuentan píxeles del color de una familia.
+    // Se vuelve a encuadrar una comuna antes de exportar: C7 deja el mapa donde
+    // lo dejaron los botones de zoom, que no es donde están los datos. Los
+    // marcadores siguen en el DOM aunque queden fuera de la vista, así que
+    // contar nodos NO basta -- hay que contar los que caen dentro del mapa.
+    await ir(`?vista=riesgo&comuna=${R.a.cut}`)
+    await esperar(`document.querySelectorAll('.leaflet-marker-icon').length > 10`, 'iconos para exportar')
+    await espera(2000)
+
+    const png = await evaluar(`
+      window.__blob = null
+      const orig = URL.createObjectURL
+      URL.createObjectURL = (b) => { window.__blob = b; return orig(b) }
+      const caja = document.querySelector('.leaflet-container').getBoundingClientRect()
+      const enPantalla = [...document.querySelectorAll('.leaflet-marker-icon')].filter((e) => {
+        const r = e.getBoundingClientRect()
+        return r.right > caja.left && r.left < caja.right && r.bottom > caja.top && r.top < caja.bottom
+      }).length
+      if (!enPantalla) return { error: 'ningún icono dentro del encuadre' }
+      const b = [...document.querySelectorAll('button')].find(x => x.textContent.includes('Imagen del mapa'))
+      if (!b) return { error: 'sin botón' }
+      b.click()
+      for (let i = 0; i < 80 && !window.__blob; i++) await new Promise(r => setTimeout(r, 150))
+      if (!window.__blob) return { error: 'sin blob', enPantalla }
+      window.__b64 = await new Promise((ok) => {
+        const fr = new FileReader(); fr.onload = () => ok(fr.result); fr.readAsDataURL(window.__blob)
+      })
+      const bm = await createImageBitmap(window.__blob)
+      const c = new OffscreenCanvas(bm.width, bm.height)
+      const g = c.getContext('2d')
+      g.drawImage(bm, 0, 0)
+      const d = g.getImageData(0, 0, bm.width, bm.height).data
+      // #DC2626 (salud) y #1F6FEB (educación): dos familias que siempre están.
+      let salud = 0, educacion = 0
+      for (let i = 0; i < d.length; i += 4) {
+        if (Math.abs(d[i] - 220) < 12 && Math.abs(d[i+1] - 38) < 12 && Math.abs(d[i+2] - 38) < 12) salud++
+        if (Math.abs(d[i] - 31) < 12 && Math.abs(d[i+1] - 111) < 12 && Math.abs(d[i+2] - 235) < 12) educacion++
+      }
+      return { w: bm.width, h: bm.height, salud, educacion, enPantalla }`)
+    comprobar(
+      png && !png.error && png.salud > 50 && png.educacion > 50,
+      'C8 el PNG exportado contiene los iconos',
+      png?.error
+        ? png.error
+        : `${png?.w}×${png?.h} · ${png?.enPantalla} iconos en pantalla · salud ${png?.salud} px · educación ${png?.educacion} px`,
+    )
+    // ---- C9 · el mapa base se puede cambiar en esta vista ----------------
+    // La vista de riesgo no monta PanelLateral, que es donde vivía el
+    // único selector de mapa base: al ocultarlo se fue con él, y la pestaña se
+    // quedó atada al fondo «Claro». Las claves de BASEMAPS son contrato
+    // público (?base= en la URL), así que las dos vistas ofrecen las mismas.
+    const mb = await evaluar(`
+      const sels = [...document.querySelectorAll('.panel select')]
+      // El de mapa base es el que ofrece «Satelital»; el otro es el de comuna.
+      const s = sels.find(x => [...x.options].some(o => o.value === 'Satelital'))
+      if (!s) return { error: 'no hay selector de mapa base' }
+      const antes = document.querySelector('.leaflet-tile-pane img')?.src ?? ''
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLSelectElement.prototype, 'value').set
+      setter.call(s, 'Satelital')
+      s.dispatchEvent(new Event('change', { bubbles: true }))
+      await new Promise(r => setTimeout(r, 2500))
+      const despues = document.querySelector('.leaflet-tile-pane img')?.src ?? ''
+      return { n: s.options.length, valor: s.value, cambio: antes !== despues, despues }`)
+    comprobar(
+      mb && !mb.error && mb.n >= 7 && mb.valor === 'Satelital' && mb.cambio,
+      'C9 el mapa base se puede cambiar en la vista de riesgo',
+      mb?.error ? mb.error : `${mb?.n} opciones · ${mb?.valor} · teselas cambiaron: ${mb?.cambio}`,
+    )
+
+    // ---- C11 · el CSV trae la comuna del mapa, con su CUT ------------------
+    // El archivo circula suelto: cada fila tiene que decir de qué comuna es por
+    // CÓDIGO, porque el nombre no basta (el modelo escribe «Mulchén» y la
+    // infraestructura «Mulchen»). Se exige una fila por mancha de A, todas con
+    // el CUT y el nombre de A, y el BOM. Se lee el mismo blob que recibe el
+    // usuario, interceptando createObjectURL, y el BOM se comprueba sobre los
+    // BYTES: Blob.text() decodifica en UTF-8 y el decodificador se come el BOM.
+    const csv = await evaluar(`
+      window.__d = null
+      if (!window.__origCOU) window.__origCOU = URL.createObjectURL
+      URL.createObjectURL = (b) => { window.__d = b; return window.__origCOU(b) }
+      const b = [...document.querySelectorAll('button')].find(x => x.textContent.trim() === 'Manchas (CSV)')
+      if (!b) return { error: 'sin botón de descarga' }
+      b.click()
+      for (let i = 0; i < 40 && !window.__d; i++) await new Promise(z => setTimeout(z, 100))
+      if (!window.__d) return { error: 'sin blob' }
+      const txt = await window.__d.text()
+      const b0 = new Uint8Array(await window.__d.slice(0, 3).arrayBuffer())
+      const lineas = txt.trim().split('\\r\\n')
+      const cab = lineas[0].split(';')
+      const filas = lineas.slice(1).map((l) => l.split(';'))
+      return {
+        filas: filas.length,
+        cuts: [...new Set(filas.map((f) => f[cab.indexOf('cod_comuna')]))],
+        nombres: [...new Set(filas.map((f) => f[cab.indexOf('comuna')]))],
+        bom: b0[0] === 0xef && b0[1] === 0xbb && b0[2] === 0xbf,
+      }`)
+    comprobar(
+      csv && !csv.error && csv.filas === R.a.parte.features && csv.cuts.length === 1 && csv.cuts[0] === R.a.cut
+        && csv.nombres.length === 1 && csv.nombres[0] === R.a.parte.comuna && csv.bom,
+      'C11 el CSV trae sólo la comuna del mapa, con su CUT y BOM',
+      csv?.error ? csv.error : `${csv?.filas}/${R.a.parte.features} filas · cod_comuna ${JSON.stringify(csv?.cuts)} · comuna ${JSON.stringify(csv?.nombres)} · BOM: ${csv?.bom}`,
+    )
+
+    // ---- C10 · el deslizador de opacidad ---------------------------------
+    // Se mide la TINTA del canvas (alfa acumulado), no el estado de React: lo
+    // que se quiere probar es que el mapa se repinta, y para eso hay que mirar
+    // lo pintado. A 0 % la tinta tiene que ser 0 exacto — bordes incluidos, o
+    // «completamente transparente» sería mentira.
+    const tinta = `
+      const c = document.querySelector('.leaflet-overlay-pane canvas')
+      const g = c.getContext('2d', { willReadFrequently: true })
+      const d = g.getImageData(0, 0, c.width, c.height).data
+      let a = 0
+      for (let i = 3; i < d.length; i += 4) a += d[i]
+      return Math.round(a / 1000)`
+
+    const mover = async (pct) => {
+      const r = await evaluar(`
+        const s = document.querySelector('#opacidad-manchas')
+        if (!s) return null
+        const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set
+        setter.call(s, '${pct}')
+        s.dispatchEvent(new Event('change', { bubbles: true }))
+        await new Promise(z => requestAnimationFrame(() => requestAnimationFrame(z)))
+        return { etiqueta: document.querySelector('.fila-opacidad output')?.textContent ?? '' }`)
+      if (!r) return null
+      return { ...r, tinta: await evaluar(tinta) }
+    }
+
+    const op100 = await mover(100)
+    const op30 = await mover(30)
+    const op0 = await mover(0)
+    comprobar(
+      op100 && op30 && op0 && op100.tinta > op30.tinta && op30.tinta > 0 && op0.tinta === 0,
+      'C10 la opacidad de las manchas se regula en el mapa',
+      op100
+        ? `tinta 100 %: ${op100.tinta} · 30 %: ${op30.tinta} · 0 %: ${op0.tinta}`
+        : 'no hay deslizador',
+    )
+    comprobar(
+      op30?.etiqueta.includes('30'),
+      'C10b el control dice en qué opacidad está',
+      `etiqueta "${op30?.etiqueta}"`,
+    )
+    await mover(65)
+
+    // El PNG se guarda SIEMPRE, falle o no: la aserción cuenta píxeles, pero
+    // quien decide si un icono se ve es alguien mirando el archivo.
+    const b64 = await evaluar('return window.__b64 ?? null')
+    if (b64) {
+      // mkdir recursivo y no se da por hecho: en local .verificacion/ ya existe
+      // porque lo crean verify:banner y verify:panel, pero en CI este arnés
+      // corre dentro del job `build`, donde esos dos no pasan. Sin esto el
+      // paso reventaría en el runner y en ningún sitio más.
+      const dir = join(FRONT, '.verificacion')
+      mkdirSync(dir, { recursive: true })
+      writeFileSync(join(dir, 'priorizacion-png-exportado.png'), Buffer.from(b64.split(',')[1], 'base64'))
+      console.log('    · .verificacion/priorizacion-png-exportado.png')
+    }
+
+    if (bloque === 'vista') return
+    await comprobarFicha()
+  } finally {
+    proc.kill()
+    chromeVivo = null
+    s.close()
+    cdp.ws.close()
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Controles negativos (--negativas)
+// ---------------------------------------------------------------------------
+// Cada mutación reintroduce UN defecto concreto y nombra la aserción que tiene
+// que ponerse roja. Sin esto, una aserción verde no prueba nada: es la regla
+// que da sentido a --negativas en todo el repo.
+//
+// PARCHEA EL REPO, y ahora sobre archivos con cambios SIN COMMITEAR: la fase
+// F0 del 2026-09-14 deja ModalFicha.jsx y fichas.js modificados a propósito
+// (el commit lo decide Luis). Antes cada mutante se restauraba desde una copia
+// en memoria y nada más: un Ctrl+C durante el build o la suite dejaba el
+// mutante dentro, y el original sólo vivía en la memoria del proceso muerto.
+// Las guardas, con el patrón de scripts/mutaciones.mjs:
+//
+//   1. Antes de tocar nada: cada ancla tiene que aparecer EXACTAMENTE una vez;
+//      se leen en memoria los bytes de cada archivo con su sha256 y se deja
+//      copia en DISCO en .verificacion/respaldo-priorizacion/ (ignorado por
+//      git) con pendiente.json.
+//   2. Cada mutante se restaura desde memoria en un `finally`; al terminar se
+//      compara el sha256 de cada archivo con el de antes, y sólo si todos
+//      coinciden se borra el respaldo.
+//   3. Una señal de corte: se restaura, se mata el build o Chrome en curso
+//      con su arbol, se comparan las huellas y, si coinciden, se BORRA el
+//      respaldo (segun la revision que cita scripts/mutaciones.mjs, la guarda
+//      gemela de verify-electrico.mjs lo dejaba, y la corrida siguiente no
+//      sabia si venia de un corte limpio).
+//      Son CUATRO señales y no dos: SIGINT (Ctrl+C), SIGTERM y las que
+//      Windows usa para lo mismo segun la documentacion de Node, que no medi:
+//      SIGHUP al cerrar la ventana de la consola y SIGBREAK con Ctrl+Break.
+//      Con solo las dos primeras, cerrar la terminal durante los ~160 s dejaba
+//      el mutante en fichas.js o ModalFicha.jsx sin que corriera ni el
+//      manejador ni el `finally` (revision adversarial de F0, 2026-09-14).
+//      Con SIGHUP, segun esa documentacion, Windows mata el proceso unos 10 s
+//      despues pase lo que pase: por eso se restaura ANTES de matar a los
+//      hijos, que es lo lento (taskkill), y no despues.
+//   4. LA RED DE SEGURIDAD es el respaldo en disco con pendiente.json. Si el
+//      proceso muere sin que corra ningun manejador (taskkill /F, corte de
+//      luz, o Windows cerrandolo antes de que termine el de SIGHUP), el
+//      respaldo queda en disco y la corrida SIGUIENTE lo detecta: se niega a
+//      arrancar mientras algun archivo no coincida con su huella, y dice
+//      donde esta el original. Si ya coinciden, limpia y sigue.
+//
+// `--simular-ctrl-c <ms> [--senal SIGHUP|SIGBREAK|SIGTERM]` existe SOLO para
+// probar la guarda 3: un Ctrl+C de consola no se puede teclear desde un
+// agente, asi que la señal se emite desde dentro (process.emit). Eso prueba
+// que hay manejador para esa señal y que restaura, NO que Windows la entregue.
+// Un Ctrl+C real no lo he medido.
+const MUTACIONES = [
+  {
+    id: 'C1',
+    archivo: CAPA_PUNTOS,
+    titulo: 'dar un canvas propio a cada capa de puntos, con la tolerancia intacta',
+    // Un canvas POR CAPA (useMemo, no uno por marcador) y con `tolerance: 8`:
+    // así lo único que cambia respecto de producción es que el renderer deja
+    // de ser compartido, que es exactamente el defecto de §H. Una versión
+    // anterior de este mutante usaba `L.canvas()` sin opciones, y perder la
+    // tolerancia ya basta para poner C1 roja: medido, no probaba §H.
+    ancla: '  const grupo = useMemo(() => L.layerGroup(), [])',
+    mutar: (t, a) =>
+      t
+        .replace(a, `${a}\n  const rendererPropio = useMemo(() => L.canvas({ padding: 0.5, tolerance: 8 }), [])`)
+        .replace('        radius: radio ?? 4,', '        renderer: rendererPropio,\n        radius: radio ?? 4,'),
+    bloque: 'C1',
+  },
+  {
+    id: 'C2',
+    archivo: CONFIG_JS,
+    titulo: 'olvidar el alias ?vista=priorizacion -> riesgo',
+    // Los enlaces que ya circulan caerían a la pestaña de incendios.
+    ancla: "export const ALIAS_VISTA = { priorizacion: 'riesgo' }",
+    mutar: (t, a) => t.replace(a, 'export const ALIAS_VISTA = {}'),
+    bloque: 'vista',
+  },
+  {
+    id: 'C3',
+    archivo: APP_JSX,
+    titulo: 'cruzar los iconos con la comuna por NOMBRE y no por CUT',
+    // El defecto real que dejó el cambio de insumo: «Mulchen» contra «Mulchén».
+    ancla: '(p) => p.cut === cutRiesgo',
+    mutar: (t, a) => t.replace(a, "(p) => p.comuna === (parteRiesgo?.comuna ?? '')"),
+    bloque: 'vista',
+  },
+  {
+    id: 'C3',
+    archivo: APP_JSX,
+    titulo: 'no resolver los alias de comuna de los enlaces viejos',
+    ancla: '(p.alias ?? []).some((a) => clave(a) === buscado)',
+    mutar: (t, a) => t.replace(a, 'false'),
+    bloque: 'vista',
+  },
+  {
+    id: 'C3',
+    archivo: APP_JSX,
+    titulo: 'comparar el nombre de la URL tal cual, sin quitar tildes ni mayúsculas',
+    ancla: 'if (clave(p.comuna) === buscado ||',
+    mutar: (t, a) => t.replace(a, 'if (p.comuna === valor ||'),
+    bloque: 'vista',
+  },
+  {
+    id: 'C4',
+    archivo: ESCALAS,
+    titulo: 'que el modo normalizado siga pintando la clase del modelo',
+    ancla: 'const t = normalizar(props.nivel_medio, ctx)',
+    mutar: (t, a) => t.replace(a, 'const t = null'),
+    bloque: 'vista',
+  },
+  {
+    id: 'C5',
+    archivo: PANEL_RIESGO,
+    titulo: 'volver a toFixed en el máximo de la leyenda relativa',
+    ancla: 'máx. {fmt3.format(ctx.max)}',
+    mutar: (t, a) => t.replace(a, 'máx. {ctx.max.toFixed(3)}'),
+    bloque: 'vista',
+  },
+  {
+    id: 'C6',
+    archivo: APP_JSX,
+    titulo: 'memorizar la escala sin depender de la comuna ni de sus datos',
+    ancla: '[riesgo.data, comunaRiesgo, modoEscala],',
+    mutar: (t, a) => t.replace(a, '[modoEscala],'),
+    bloque: 'vista',
+  },
+  {
+    id: 'C15',
+    archivo: APP_JSX,
+    titulo: 'pintar todas las manchas con el color por omisión',
+    // Lo que pasaba con las claves en femenino: ninguna clase casa y todo gris.
+    ancla: "return (clase) => porClase.get(clase) ?? '#CCCCCC'",
+    mutar: (t, a) => t.replace(a, "return () => '#CCCCCC'"),
+    bloque: 'vista',
+  },
+  {
+    id: 'C10',
+    archivo: APP_JSX,
+    titulo: 'clavar la opacidad e ignorar el deslizador',
+    // El defecto realista: el control existe y mueve el estado, pero el estilo
+    // no lo lee, así que el mapa nunca cambia. Un vistazo al panel no lo
+    // delata -- el número sube y baja igual.
+    ancla: 'fillOpacity: opacidad,',
+    mutar: (t, a) => t.replace(a, 'fillOpacity: 0.65,'),
+    bloque: 'vista',
+  },
+  {
+    id: 'C11',
+    archivo: PANEL_RIESGO,
+    titulo: 'escribir el nombre de la comuna donde va su código CUT',
+    ancla: 'csvRiesgo(datosAreas?.features, { region: parte?.region, cut })',
+    mutar: (t, a) => t.replace(a, 'csvRiesgo(datosAreas?.features, { region: parte?.region, cut: comuna })'),
+    bloque: 'vista',
+  },
+  {
+    id: 'C9',
+    archivo: PANEL_RIESGO,
+    titulo: 'dejar el selector de mapa base sin opciones',
+    // Se vacía la lista en vez de borrar el bloque: así el JSX sigue siendo
+    // válido y lo que falla es lo que C9 mide, no el build.
+    ancla: 'Object.keys(basemaps ?? {}).map((k) => (',
+    mutar: (t, a) => t.replace(a, '[].map((k) => ('),
+    bloque: 'vista',
+  },
+  {
+    id: 'C12',
+    archivo: MODAL_FICHA,
+    titulo: 'volver a la URL de cámara de Earth (/web/@…,1200d), la que no marca el punto',
+    ancla: '`https://earth.google.com/web/search/${ficha.coord[0]},${ficha.coord[1]}`',
+    mutar: (t, a) => t.replace(a, () => '`https://earth.google.com/web/@${ficha.coord[0]},${ficha.coord[1]},0a,1200d,35y,0h,0t,0r`'),
+    bloque: 'ficha',
+  },
+  {
+    // Sin este mutante la mitad de C12 que compara con la geometría no se
+    // había visto roja: el anterior sólo cambia la FORMA del enlace.
+    id: 'C12',
+    archivo: MODAL_FICHA,
+    titulo: 'invertir latitud y longitud en el enlace de Maps',
+    ancla: 'query=${ficha.coord[0]}%2C${ficha.coord[1]}',
+    mutar: (t, a) => t.replace(a, () => 'query=${ficha.coord[1]}%2C${ficha.coord[0]}'),
+    bloque: 'ficha',
+  },
+  {
+    // La tolerancia de C12 es media unidad de la quinta cifra: con 3 decimales
+    // (~110 m) el enlace apunta a otro sitio y tiene que ponerse roja.
+    id: 'C12',
+    archivo: APP_JSX,
+    titulo: 'redondear la coordenada de la ficha a 3 decimales',
+    ancla: 'coord: [+ll.lat.toFixed(5), +ll.lng.toFixed(5)]',
+    mutar: (t, a) => t.replace(a, 'coord: [+ll.lat.toFixed(3), +ll.lng.toFixed(3)]'),
+    bloque: 'ficha',
+  },
+  {
+    id: 'C13',
+    archivo: FICHAS,
+    titulo: 'volver a toFixed en el nivel medio de la mancha',
+    ancla: 'num(fmt3, p.nivel_medio)',
+    mutar: (t, a) => t.replace(a, 'p.nivel_medio.toFixed(3)'),
+    bloque: 'ficha',
+  },
+  {
+    // pct_alto ya viene en 0..100: un formateador de porcentaje lo multiplica.
+    id: 'C13',
+    archivo: FICHAS,
+    titulo: "formatear pct_alto con style:'percent' (multiplica por 100)",
+    ancla: '`${fmtPct1.format(p.pct_alto)} %`',
+    mutar: (t, a) => t.replace(a, () => "new Intl.NumberFormat('es-CL', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(p.pct_alto)"),
+    bloque: 'ficha',
+  },
+  {
+    id: 'C13',
+    archivo: FICHAS,
+    titulo: 'redondear la superficie de la mancha a hectáreas enteras',
+    ancla: '`${fmt2.format(p.area_ha)} ha`',
+    mutar: (t, a) => t.replace(a, () => '`${fmt.format(Math.round(p.area_ha))} ha`'),
+    bloque: 'ficha',
+  },
+  {
+    id: 'C13',
+    archivo: FICHAS,
+    titulo: 'invertir mínimo y máximo del rango interno',
+    ancla: '`${fmt3.format(p.nivel_medio_min)} – ${fmt3.format(p.nivel_medio_max)}`',
+    mutar: (t, a) => t.replace(a, () => '`${fmt3.format(p.nivel_medio_max)} – ${fmt3.format(p.nivel_medio_min)}`'),
+    bloque: 'ficha',
+  },
+  {
+    id: 'C14',
+    archivo: FICHAS,
+    titulo: 'volver a escribir los metros UTM tal cual, con punto decimal',
+    ancla: '`${metros(p.utm_x)} E · ${metros(p.utm_y)} N',
+    mutar: (t, a) => t.replace(a, () => '`${p.utm_x} E · ${p.utm_y} N'),
+    bloque: 'ficha',
+  },
+  {
+    id: 'C14',
+    archivo: FICHAS,
+    titulo: 'volver a toFixed en la superficie del incendio',
+    ancla: 'fmt1.format(p.superficie_ha)',
+    mutar: (t, a) => t.replace(a, 'p.superficie_ha.toFixed(1)'),
+    bloque: 'ficha',
+  },
+]
+
+const RESPALDO = join(FRONT, '.verificacion', 'respaldo-priorizacion')
+const PENDIENTE = join(RESPALDO, 'pendiente.json')
+const sha = (b) => createHash('sha256').update(b).digest('hex')
+const relativa = (ruta) => relative(FRONT, ruta).replaceAll('\\', '/')
+const nombreRespaldo = (ruta) => relativa(ruta).replaceAll('/', '__')
+
+// Con shell:true el pid es el del cmd.exe: kill() mataría el shell y dejaría
+// vivos a vite o a Chrome. taskkill /T se lleva el árbol entero.
+function matarArbol(proc) {
+  if (!proc?.pid || proc.exitCode !== null) return
+  if (process.platform === 'win32') {
+    spawnSync('taskkill', ['/pid', String(proc.pid), '/T', '/F'], { stdio: 'ignore', timeout: 10000 })
+  } else {
+    proc.kill('SIGKILL')
+  }
+}
+
+const construir = () =>
+  new Promise((ok, mal) => {
+    const p = spawn('npm', ['run', 'build'], { cwd: FRONT, stdio: 'ignore', shell: true })
+    buildVivo = p
+    p.on('exit', (c) => {
+      buildVivo = null
+      if (c === 0) ok()
+      else mal(new Error(`build falló (${c})`))
+    })
+  })
+
+async function negativas() {
+  if (SOLO) {
+    // Un --solo con un id que no existe correría CERO mutaciones y terminaría
+    // con «las 0 mutaciones se pusieron rojas»: un verde que no probó nada.
+    const desconocidos = [...SOLO].filter((id) => !MUTACIONES.some((m) => m.id === id))
+    if (desconocidos.length) {
+      console.error(`✘ --solo con ids que no existen: ${desconocidos.join(', ')}`)
+      console.error(`  Los que hay: ${[...new Set(MUTACIONES.map((m) => m.id))].join(', ')}`)
+      process.exit(1)
+    }
+  }
+  const elegidas = MUTACIONES.filter((m) => !SOLO || SOLO.has(m.id))
+
+  // ---- 4 · una corrida anterior que murió sin limpiar ---------------------
+  if (existsSync(PENDIENTE)) {
+    const previo = JSON.parse(readFileSync(PENDIENTE, 'utf8'))
+    const distintos = Object.entries(previo).filter(([rel, h]) => {
+      const ruta = join(FRONT, rel)
+      return !existsSync(ruta) || sha(readFileSync(ruta)) !== h
+    })
+    if (distintos.length) {
+      console.error('✘ una corrida anterior de --negativas quedó a medias y estos archivos NO son los que había antes de ella:')
+      for (const [rel] of distintos) console.error(`    ${rel}\n      original en ${join(RESPALDO, rel.replaceAll('/', '__'))}`)
+      console.error('  Copia cada original encima de su archivo y vuelve a correr.')
+      process.exit(1)
+    }
+    console.log('· había un respaldo de una corrida interrumpida y los archivos ya coinciden: se limpia')
+    rmSync(RESPALDO, { recursive: true, force: true })
+  }
+
+  // ---- 1 · anclas, instantánea en memoria y respaldo en disco ---------------
+  for (const m of elegidas) {
+    const veces = readFileSync(m.archivo, 'utf8').split(m.ancla).length - 1
+    if (veces !== 1) {
+      console.error(`✘ ${m.id}: «${m.ancla}» aparece ${veces} veces en ${relativa(m.archivo)}, se esperaba 1.`)
+      console.error('   El fuente cambió: arregla la mutación antes de seguir fiándote de ella.')
+      process.exit(1)
+    }
+  }
+  const tocados = [...new Set(elegidas.map((m) => m.archivo))]
+  const originales = new Map(tocados.map((a) => [a, readFileSync(a)]))
+  const huellas = new Map(tocados.map((a) => [a, sha(originales.get(a))]))
+  mkdirSync(RESPALDO, { recursive: true })
+  for (const a of tocados) writeFileSync(join(RESPALDO, nombreRespaldo(a)), originales.get(a))
+  writeFileSync(PENDIENTE, JSON.stringify(Object.fromEntries(tocados.map((a) => [relativa(a), huellas.get(a)])), null, 1))
+  const restaurar = () => {
+    for (const [a, b] of originales) writeFileSync(a, b)
+  }
+  const cambiados = () => tocados.filter((a) => sha(readFileSync(a)) !== huellas.get(a))
+
+  // ---- 3 · interrupción -----------------------------------------------------
+  const alInterrumpir = (senal) => {
+    // Restaurar primero: son unos pocos writeFileSync, y con SIGHUP Windows
+    // mata el proceso ~10 s despues (documentacion de Node, no medido).
+    // matarArbol espera a taskkill, que puede tardar. Ni el build ni Chrome
+    // escriben en src/, asi que restaurar con ellos vivos no deja nada a medias.
+    restaurar()
+    matarArbol(buildVivo)
+    matarArbol(chromeVivo)
+    const quedan = cambiados()
+    if (quedan.length) {
+      console.error(`\n✘ interrumpido (${senal}) y ${quedan.length} archivo(s) no coinciden con su huella:`)
+      for (const a of quedan) console.error(`    ${relativa(a)}\n      original en ${join(RESPALDO, nombreRespaldo(a))}`)
+    } else {
+      rmSync(RESPALDO, { recursive: true, force: true })
+      console.error(`\n  interrumpido (${senal}): ${tocados.length} archivo(s) restaurados byte a byte y respaldo borrado`)
+      console.error('  dist/ puede haber quedado con un mutante: `npm run build` antes del siguiente verify:*')
+    }
+    process.exit(SENALES[senal] ?? 130)
+  }
+  for (const s of Object.keys(SENALES)) process.on(s, alInterrumpir)
+  if (SIMULAR_CTRL_C != null) setTimeout(() => process.emit(SENAL_SIMULADA, SENAL_SIMULADA), SIMULAR_CTRL_C)
+
+  console.log('\n── controles negativos ──────────────────────────────────────')
+  console.log(`  ${elegidas.length} mutaciones; cada una debe poner roja SU aserción`)
+  console.log(`  respaldo de ${tocados.length} archivo(s) en ${RESPALDO}\n`)
+
+  // ---- 2 · las mutaciones ---------------------------------------------------
+  let mal = 0
+  for (const m of elegidas) {
+    const original = originales.get(m.archivo)
+    let bien = false
+    let detalle = ''
+    try {
+      const mutado = m.mutar(original.toString('utf8'), m.ancla)
+      if (mutado === original.toString('utf8')) throw new Error('la mutación no cambió nada')
+      writeFileSync(m.archivo, mutado, 'utf8')
+      await construir()
+      fallos = 0
+      resultados.length = 0
+      await correr({ bloque: m.bloque })
+      // TODAS las comprobaciones con ese id, no la primera: C12..C14 tienen
+      // una sola cada una, pero find() se quedaba con la primera y un id
+      // repetido podía ocultar la roja.
+      const rs = resultados.filter((x) => x.id === m.id)
+      bien = rs.length > 0 && rs.some((x) => !x.ok)
+      if (!rs.length) detalle = ' (la aserción ni siquiera corrió)'
+    } catch (e) {
+      // Un mutante que no compila o una suite que revienta no prueban nada.
+      detalle = ` (${e.message}: el mutante no llegó a medirse)`
+    } finally {
+      writeFileSync(m.archivo, original)
+    }
+    if (!bien) mal++
+    console.log(
+      `\n  ${bien ? '✔' : '✘'} ${m.id} ${m.titulo} — ${
+        bien ? 'se puso roja' : `NO se inmutó: no está probando nada${detalle}`
+      }\n`,
+    )
+  }
+
+  restaurar()
+  for (const s of Object.keys(SENALES)) process.off(s, alInterrumpir)
+
+  // El repo tiene que quedar como estaba: se comprueba contra la huella.
+  for (const a of tocados) {
+    console.log(`  · ${sha(readFileSync(a)) === huellas.get(a) ? 'igual' : 'DISTINTO'} ${huellas.get(a).slice(0, 16)}… ${relativa(a)}`)
+  }
+  const quedan = cambiados()
+  if (quedan.length) {
+    console.error(`✘ ${quedan.length} archivo(s) no quedaron como estaban; originales en ${RESPALDO}`)
+    process.exitCode = 1
+    return
+  }
+  rmSync(RESPALDO, { recursive: true, force: true })
+
+  // dist/ coherente con el fuente restaurado: el último build fue de un mutante.
+  await construir()
+  console.log('  · fuentes restaurados byte a byte y reconstruidos')
+  console.log('─────────────────────────────────────────────────────────────')
+  console.log(mal === 0 ? `✔ las ${elegidas.length} mutaciones se pusieron rojas\n` : `✘ ${mal} mutación(es) no se inmutaron\n`)
+  process.exitCode = mal ? 1 : 0
+}
+
+if (!existsSync(DIST)) {
+  console.error('No hay dist/. Corre `npm run build` antes: este arnés NO construye.')
+  process.exit(1)
+}
+
+if (NEGATIVAS) {
+  await negativas()
+} else {
+  console.log('\n── vista de riesgo ──────────────────────────────────────────')
+  await correr()
+  console.log('─────────────────────────────────────────────────────────────')
+  console.log(fallos === 0 ? '✔ la vista pasa todas las comprobaciones\n' : `✘ ${fallos} comprobación(es) fallaron\n`)
+  process.exit(fallos ? 1 : 0)
+}

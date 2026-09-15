@@ -17,6 +17,17 @@ Antofagasta y Tarapaca.
 Lo que se hace: probar AMBOS husos y quedarse con el que cae dentro de la franja
 de longitudes de la region declarada en la propia fila (geo.LON_REGION). Solo
 cuando la region falta o ambos husos encajan se recurre a la regla del easting.
+
+Ademas de la capa, emite dos DERIVADOS que van a `manifest.derivados` y no a
+`manifest.capas` (el panel suma los dominios de todas las capas y el mapa une sus
+bbox: una copia de incendios ahi duplicaria los filtros):
+
+  bbdd_uad_completa.geojson  las 23 columnas con las cabeceras reales del Excel,
+                             sin codificar y con todas las claves presentes
+  lineas_electricas.geojson  el subconjunto 'Causa general 2023' == CAUSA_ELECTRICA
+
+Salen de las MISMAS features ya parseadas, no de un segundo lector: asi no hay dos
+normalizaciones del mismo Excel que puedan divergir.
 """
 
 from __future__ import annotations
@@ -31,6 +42,25 @@ from geo import canon_region, en_chile, huso_por_region, to_wgs84
 from gj_io import codificar, feature, humano, write_geojson
 
 XLSX = "BBDD INVESTIGACIÓN UAD CONSOLIDADA COMPLETA.xlsx"
+FUENTE = f"{XLSX} · Hoja 1"
+
+# Literal de 'Causa general 2023' que define el derivado de lineas electricas, en
+# NFC. Medido el 2026-09-14: 1.270 filas, 1.248 con coordenadas. Si el Excel lo
+# reescribe (otra tilde, otra forma Unicode) el filtro daria 0 features: por eso
+# build() revienta en vez de publicar un archivo vacio.
+CAUSA_ELECTRICA = "Líneas eléctricas"
+
+# Propiedades que los derivados anaden a las 23 columnas, en este orden.
+EXTRA_DERIVADOS = ["lat", "lon", "utm_epsg"]
+
+# Campo del dict `c` de build() -> clave en las props de incendios.geojson, solo
+# donde difieren. X/Y se publican como utm_x/utm_y porque la geometria ya es WGS84.
+PROP_DE_CAMPO = {"x": "utm_x", "y": "utm_y"}
+
+# Codigo de la causa investigada: 'seccion.apartado' con un tercer nivel opcional.
+# El prefijo de dos niveles ES el codigo general (4.10.2 -> 4.10). Medido el
+# 2026-09-14: 14.982 filas con tres niveles y 3 con dos ('4.6').
+RE_CAUSA = re.compile(r"^(\d+\.\d+)(?:\.\d+)?$")
 
 # Campos con pocos valores distintos que se emiten como indice entero contra una
 # tabla del manifest. El frontend resuelve la etiqueta con tablas[campo][codigo].
@@ -109,16 +139,129 @@ def parse_coord(v) -> float | None:
 
 
 def fmt_codigo(v) -> str | None:
-    """Codigo jerarquico que Excel entrego como float.
+    """Codigo jerarquico que Excel entrego como float. Solo es el RESPALDO.
 
-    '%g' y no round(): 4.1 y 4.11 son codigos DISTINTOS --seccion 4 apartado 1
-    contra seccion 4 apartado 11-- y redondear a un decimal los fundiria.
+    '%g' y no round(): 4.1 y 4.11 son floats distintos y redondear a un decimal
+    los fundiria. Pero ningun formato separa 4.1 de 4.10: como float son el MISMO
+    numero, y la distincion se perdio al guardar la celda como numero. Hasta el
+    2026-09-14 esto fundio 'Otras causas' (4.10, 1.011 filas del Excel) con el 4.1
+    de 'Faenas forestales' (919), y 1.10 (51) con 1.1 (103). El codigo bueno se
+    recupera de la causa investigada: ver _codigo_general.
     """
     if v is None or (isinstance(v, float) and pd.isna(v)):
         return None
     if isinstance(v, (int, float)):
         return f"{v:g}"
     return norm_txt(v)
+
+
+def _codigo_general(causa_codigo: str | None, float_excel) -> tuple[str | None, str | None]:
+    """'Codigo causa general 2023' sin el defecto del float. Devuelve (codigo, motivo).
+
+    El codigo general es el prefijo de dos niveles de la causa investigada
+    ('4.10.2' -> '4.10'). Se toma SOLO si como float coincide con la celda del
+    Excel: asi el prefijo decide la grafia ('4.10' y no '4.1') pero no puede
+    inventar un codigo que la fuente no declara. OJO: esa igualdad de floats NO
+    detecta una fila 4.10.x cuya celda diga 4.1, porque 4.1 == 4.10 como numero;
+    esa garantia la da D16b de verify.py (una etiqueta por codigo). Si no coinciden, gana el Excel
+    formateado con fmt_codigo y el motivo 'conflicto' lo cuenta el log. Medido el
+    2026-09-14: 0 conflictos sobre 14.985 filas.
+
+    motivo: None | 'dos_niveles' (la causa investigada no tiene tercer nivel,
+    medido: 3 filas '4.6') | 'conflicto'.
+    """
+    try:
+        fl = None if float_excel is None or pd.isna(float_excel) else float(float_excel)
+    except (TypeError, ValueError):
+        fl = None
+    m = RE_CAUSA.match(causa_codigo or "")
+    if m and fl is not None and float(m.group(1)) == fl:
+        return m.group(1), ("dos_niveles" if m.group(0) == m.group(1) else None)
+    if causa_codigo is None and fl is None:
+        return None, None
+    return fmt_codigo(float_excel), "conflicto"
+
+
+def _region_provincia(fila: dict, lookup: dict) -> tuple[str | None, str | None]:
+    """Region canonica y provincia de una fila, completadas con el catalogo.
+
+    Va aparte porque la necesitan TAMBIEN las filas sin coordenadas: el derivado
+    declara cuantas faltan por region, y antes el `continue` de la fila sin X/Y
+    saltaba esta resolucion.
+    """
+    comuna = norm_txt(fila["comuna"])
+    # norm_txt ANTES de canon_region: una celda vacia llega de pandas como NaN,
+    # canon_region solo filtra None y '' y devolvia la cadena 'nan', que ademas
+    # es truthy y le impedia al catalogo completar la region. Encontrado en la
+    # revision del 2026-09-14 (latente: el Excel actual no trae la celda vacia).
+    region = canon_region(norm_txt(fila["region"]))
+    provincia = norm_txt(fila["provincia"])
+    if comuna and (not region or not provincia):
+        hit = lookup.get(comuna.lower())
+        if hit:
+            provincia = provincia or hit[0]
+            region = region or hit[1]
+    return region, provincia
+
+
+def _txt_coma(v) -> str | None:
+    """norm_txt + el espacio antes de coma. Dos variantes del mismo valor difieren
+    solo en eso ('Parcelaciones, edificaciones residenciales , industriales')."""
+    return (norm_txt(v) or "").replace(" ,", ",") or None
+
+
+def _columnas_excel(df: pd.DataFrame, c: dict) -> list[tuple[str, str]]:
+    """[(cabecera normalizada, campo de c)] en el ORDEN del Excel.
+
+    Revienta si la hoja trae una columna que `c` no lee: el derivado promete TODAS
+    las columnas, y una columna nueva que no llega es indistinguible, desde el
+    visor, de una columna que la fuente no tiene.
+    """
+    campo_de = {}
+    for k, col in c.items():
+        if col in campo_de:
+            raise ValueError(f"la columna {col!r} la leen dos campos: {campo_de[col]} y {k}")
+        campo_de[col] = k
+    sin_leer = [col for col in df.columns if col not in campo_de]
+    if sin_leer:
+        raise ValueError(
+            f"Hoja 1 trae columnas que el ETL no lee: {sin_leer}. Anadelas al dict `c` "
+            "de build() para que lleguen a los derivados."
+        )
+    salida = [(" ".join(str(col).split()), campo_de[col]) for col in df.columns]
+    cabeceras = [cab for cab, _ in salida]
+    if len(set(cabeceras)) != len(cabeceras):
+        raise ValueError(f"cabeceras repetidas tras normalizar espacios: {cabeceras}")
+    return salida
+
+
+def _meta_derivado(titulo: str, st: dict, columnas: list[str], leidos: int, sin: list[tuple], **extra) -> dict:
+    """Entrada de manifest.derivados (contrato 1). `sin` = [(id, region, causa)]."""
+    if st["features"] + len(sin) != leidos:
+        raise ValueError(
+            f"{st['archivo']}: {st['features']} features + {len(sin)} sin coordenadas "
+            f"!= {leidos} filas leidas; alguna fila se perdio sin contarse"
+        )
+    por_region: dict[str, int] = {}
+    for _, region, _ in sin:
+        k = region or "Sin región"
+        por_region[k] = por_region.get(k, 0) + 1
+    return {
+        "titulo": titulo,
+        "archivo": st["archivo"],
+        "formato": "geojson",
+        "geometria": "Point",
+        "fuente": FUENTE,
+        **extra,
+        "columnas": columnas,
+        "extra": list(EXTRA_DERIVADOS),
+        "leidos": leidos,
+        "features": st["features"],
+        "bytes": st["bytes"],
+        "vertices": st["vertices"],
+        "bbox": st["bbox"],
+        "sin_coordenadas": {"n": len(sin), "ids": [i for i, _, _ in sin], "por_region": por_region},
+    }
 
 
 def norm_fecha(v) -> str | None:
@@ -256,27 +399,40 @@ def build(cfg: Cfg) -> dict:
     if faltan:
         raise ValueError(f"columnas no encontradas en Hoja 1: {faltan}")
 
+    # Antes de leer una sola fila: la hoja no puede traer columnas que no lleguen
+    # a los derivados.
+    columnas_excel = _columnas_excel(df, c)
+
     feats: list[dict] = []
     husos = {32718: 0, 32719: 0}
     sin_coord = 0
     inseguros = 0
     fuera = []
+    # Filas que no llegan a feature --sin X/Y o fuera de Chile--, en orden de fila:
+    # (id, region, causa_general). Son el `sin_coordenadas` de los derivados.
+    sin_fila: list[tuple] = []
+    conflictos: list[tuple] = []
+    dos_niveles = 0
+    # Filas sin ID: el Excel anterior traia 6. Se publican con ID null (es lo que
+    # dice la fuente) pero se cuentan en el log, para que no pasen en silencio.
+    sin_id = 0
 
     for _, row in df.iterrows():
-        x = parse_coord(row[c["x"]])
-        y = parse_coord(row[c["y"]])
+        fila = {k: row[col] for k, col in c.items()}
+        ident = int(fila["id"]) if pd.notna(fila["id"]) else None
+        if ident is None:
+            sin_id += 1
+        region, provincia = _region_provincia(fila, lookup)
+        causa_general = _txt_coma(fila["causa_general"])
+
+        x = parse_coord(fila["x"])
+        y = parse_coord(fila["y"])
         if x is None or y is None:
             sin_coord += 1
+            sin_fila.append((ident, region, causa_general))
             continue
 
-        comuna = norm_txt(row[c["comuna"]])
-        region = canon_region(row[c["region"]])
-        provincia = norm_txt(row[c["provincia"]])
-        if comuna and (not region or not provincia):
-            hit = lookup.get(comuna.lower())
-            if hit:
-                provincia = provincia or hit[0]
-                region = region or hit[1]
+        comuna = norm_txt(fila["comuna"])
 
         # El huso se decide probando ambos contra la franja de longitudes de la
         # region declarada; la regla del easting solo es el respaldo.
@@ -285,42 +441,48 @@ def build(cfg: Cfg) -> dict:
             inseguros += 1
         lon, lat = to_wgs84({"type": "Point", "coordinates": [x, y]}, epsg)["coordinates"]
         if not en_chile(lon, lat):
-            fuera.append((row[c["id"]], comuna, x, y, round(lon, 4), round(lat, 4)))
+            fuera.append((fila["id"], comuna, x, y, round(lon, 4), round(lat, 4)))
+            sin_fila.append((ident, region, causa_general))
             continue
         husos[epsg] += 1
 
-        sup = row[c["superficie_ha"]]
+        sup = fila["superficie_ha"]
         sup = None if es_nulo(sup) else parse_coord(sup)
 
+        causa_codigo = norm_txt(fila["causa_codigo"])
+        codigo_general, motivo = _codigo_general(causa_codigo, fila["causa_general_codigo"])
+        if motivo == "conflicto":
+            conflictos.append((ident, causa_codigo, fila["causa_general_codigo"], codigo_general))
+        elif motivo == "dos_niveles":
+            dos_niveles += 1
+
         props = {
-            "id": int(row[c["id"]]) if pd.notna(row[c["id"]]) else None,
+            "id": ident,
             "region": region,
             "provincia": provincia,
             "comuna": comuna,
-            "temporada": norm_txt(row[c["temporada"]]),
-            # Dos variantes del mismo valor difieren por un espacio antes de la
-            # coma ('Parcelaciones, edificaciones residenciales , industriales').
-            "causa_grupo": norm_txt(row[c["causa_grupo"]]),
-            "causa_general": (norm_txt(row[c["causa_general"]]) or "").replace(" ,", ",") or None,
-            "causa_especifica": (norm_txt(row[c["causa_especifica"]]) or "").replace(" ,", ",") or None,
+            "temporada": norm_txt(fila["temporada"]),
+            "causa_grupo": norm_txt(fila["causa_grupo"]),
+            "causa_general": causa_general,
+            "causa_especifica": _txt_coma(fila["causa_especifica"]),
             "superficie_ha": round(sup, 2) if sup is not None else None,
-            "n_incendio": norm_txt(row[c["n_incendio"]]),
-            "nombre": norm_txt(row[c["nombre"]]),
+            "n_incendio": norm_txt(fila["n_incendio"]),
+            "nombre": norm_txt(fila["nombre"]),
             # --- las diez que faltaban -------------------------------------
-            "causa_codigo": norm_txt(row[c["causa_codigo"]]),
-            "causa_general_codigo": fmt_codigo(row[c["causa_general_codigo"]]),
-            "jefe_brigada": norm_txt(row[c["jefe_brigada"]]),
-            "mes_investigacion": norm_mes(row[c["mes_investigacion"]]),
-            "investigado_por": norm_txt(row[c["investigado_por"]]),
-            "inicio_r20": norm_fecha(row[c["inicio_r20"]]),
-            "hora_r20": norm_hora(row[c["hora_r20"]]),
-            "inv_inicio": norm_fecha(row[c["inv_inicio"]]),
-            "inv_fin": norm_fecha(row[c["inv_fin"]]),
+            "causa_codigo": causa_codigo,
+            "causa_general_codigo": codigo_general,
+            "jefe_brigada": norm_txt(fila["jefe_brigada"]),
+            "mes_investigacion": norm_mes(fila["mes_investigacion"]),
+            "investigado_por": norm_txt(fila["investigado_por"]),
+            "inicio_r20": norm_fecha(fila["inicio_r20"]),
+            "hora_r20": norm_hora(fila["hora_r20"]),
+            "inv_inicio": norm_fecha(fila["inv_inicio"]),
+            "inv_fin": norm_fecha(fila["inv_fin"]),
             # 'Sin informe' se CONSERVA: dice que la investigacion no produjo
             # informe, que es un dato. Lo que se descarta son los centinelas de
             # ausencia ('Sin info', 'Sin informacion'), que solo dicen que nadie
             # lleno la celda.
-            "informe": None if es_nulo(row[c["informe"]]) else norm_txt(row[c["informe"]]),
+            "informe": None if es_nulo(fila["informe"]) else norm_txt(fila["informe"]),
             # Las coordenadas de origen, tal como vienen en el Excel. La
             # geometria ya lleva el punto en WGS84, pero quien trabaja en
             # terreno usa UTM y son dos columnas de la fuente como cualquier
@@ -345,6 +507,19 @@ def build(cfg: Cfg) -> dict:
         for f in fuera[:10]:
             log(cfg, "incendios", f"    id={f[0]} comuna={f[1]!r} X={f[2]} Y={f[3]} -> {f[4]},{f[5]}")
 
+    log(
+        cfg,
+        "incendios",
+        f"codigo causa general: {len(conflictos)} conflictos prefijo/Excel · "
+        f"{dos_niveles} filas con causa investigada de dos niveles",
+    )
+    for ident, cc, fl, cg in conflictos[:10]:
+        log(cfg, "incendios", f"    conflicto id={ident} causa investigada={cc!r} Excel={fl!r} -> {cg!r}")
+
+    # Los derivados se arman AQUI, antes de codificar(): codificar muta las props
+    # en su sitio y los derivados van con las etiquetas, no con indices.
+    derivados = _derivados(cfg, df, c, columnas_excel, feats, sin_fila, n_filas)
+
     # Los categoricos son el 59% del archivo pese a tener <=351 valores unicos.
     tablas, doms = codificar(feats, CATEGORICOS)
 
@@ -355,6 +530,7 @@ def build(cfg: Cfg) -> dict:
         "incendios",
         f"{n_filas} filas -> {len(feats)} features ({pct:.1f} %) · "
         f"{sin_coord} sin coord + {len(fuera)} fuera de Chile · "
+        f"{sin_id} sin ID · "
         f"{inseguros} con huso por regla de respaldo · "
         f"18S {husos[32718]} / 19S {husos[32719]} · {humano(st['bytes'])}",
     )
@@ -373,7 +549,64 @@ def build(cfg: Cfg) -> dict:
         "tablas": tablas,
         "dominios": doms,
         **st,
+        # La '_' inicial lo deja fuera de manifest.capas; run.py lo mueve a
+        # manifest.derivados.
+        "_derivados": derivados,
     }
+
+
+def _derivados(cfg: Cfg, df: pd.DataFrame, c: dict, columnas_excel: list[tuple[str, str]],
+               feats: list[dict], sin_fila: list[tuple], n_filas: int) -> dict:
+    """Escribe bbdd_uad_completa.geojson y lineas_electricas.geojson (contrato 1).
+
+    `feats` todavia SIN codificar. El feature se arma a mano y no con
+    gj_io.feature, que descarta las props nulas: aqui cada feature lleva las 23
+    columnas siempre, con null donde falta el dato, para que quien abra el archivo
+    en QGIS o pandas vea la columna vacia en vez de no ver la columna.
+    """
+    columnas = [cab for cab, _ in columnas_excel]
+    completa = []
+    for f in feats:
+        p = f["properties"]
+        lon, lat = f["geometry"]["coordinates"]
+        props = {cab: p.get(PROP_DE_CAMPO.get(k, k)) for cab, k in columnas_excel}
+        props["lat"] = lat
+        props["lon"] = lon
+        props["utm_epsg"] = p.get("utm_epsg")
+        completa.append(
+            {"type": "Feature", "geometry": {"type": "Point", "coordinates": [lon, lat]}, "properties": props}
+        )
+
+    cab_causa = next(cab for cab, k in columnas_excel if k == "causa_general")
+    lineas = [f for f in completa if f["properties"][cab_causa] == CAUSA_ELECTRICA]
+    if not lineas:
+        raise ValueError(
+            f"ninguna feature con {cab_causa!r} == {CAUSA_ELECTRICA!r}: el literal cambio en el "
+            "Excel y lineas_electricas.geojson saldria vacio"
+        )
+    # Leidas de esa causa contadas sobre el DataFrame, no sumando lo emitido: asi
+    # _meta_derivado puede comprobar que ninguna fila se perdio por el camino.
+    leidas_lineas = sum(1 for v in df[c["causa_general"]] if _txt_coma(v) == CAUSA_ELECTRICA)
+    sin_lineas = [s for s in sin_fila if s[2] == CAUSA_ELECTRICA]
+
+    st_completa = write_geojson(cfg.out / "bbdd_uad_completa.geojson", completa)
+    st_lineas = write_geojson(cfg.out / "lineas_electricas.geojson", lineas)
+    derivados = {
+        "bbdd_uad_completa": _meta_derivado(
+            "BBDD de investigación UAD, todas las columnas", st_completa, columnas, n_filas, sin_fila
+        ),
+        "lineas_electricas": _meta_derivado(
+            "Incendios por líneas eléctricas", st_lineas, columnas, leidas_lineas, sin_lineas,
+            filtro={"campo": cab_causa, "valor": CAUSA_ELECTRICA},
+        ),
+    }
+    for nombre, st, sin in (("bbdd_uad_completa", st_completa, sin_fila), ("lineas_electricas", st_lineas, sin_lineas)):
+        log(
+            cfg,
+            "incendios",
+            f"derivado {nombre}: {st['features']} features · {len(sin)} sin coordenadas · {humano(st['bytes'])}",
+        )
+    return derivados
 
 
 if __name__ == "__main__":
