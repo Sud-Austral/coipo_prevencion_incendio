@@ -1200,7 +1200,8 @@ select {
   letter-spacing: -0.01em;
 }
 
-.ficha-cerrar {
+.ficha-cerrar,
+.vista-google-cerrar {
   position: absolute;
   top: -4px;
   right: -4px;
@@ -1215,7 +1216,8 @@ select {
   cursor: pointer;
 }
 
-.ficha-cerrar:hover {
+.ficha-cerrar:hover,
+.vista-google-cerrar:hover {
   background: var(--panel);
   color: var(--text-h);
 }
@@ -1263,17 +1265,23 @@ select {
   margin: 0 0 12px;
 }
 
-.ficha-acciones a {
+/* Botones de la ficha y enlace a Earth del modal de Google: mismo aspecto. Un
+   <button> no hereda la fuente, de ahi el font: inherit. */
+.ficha-acciones button,
+.vista-google-pie a {
   padding: 6px 10px;
+  font: inherit;
   font-size: 12px;
   color: var(--accent);
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 5px;
   text-decoration: none;
+  cursor: pointer;
 }
 
-.ficha-acciones a:hover {
+.ficha-acciones button:hover,
+.vista-google-pie a:hover {
   border-color: var(--accent);
 }
 
@@ -1281,6 +1289,135 @@ select {
   margin: 0;
   font-size: 13px;
   color: var(--text-2);
+}
+
+/* ---------- el punto visto en Google (ModalVistaGoogle) ---------- */
+
+/* Segundo <dialog> modal, encima de la ficha. La hoja de Chrome le pone a
+   `dialog:modal` max-width y max-height de calc(100% - 6px - 2em), que le
+   ganarian al width y al height de aqui en una pantalla chica; se anulan y el
+   tamaño lo fijan solo width y height, que ya dejan su margen. */
+.vista-google {
+  width: min(960px, calc(100vw - 32px));
+  height: min(80dvh, 720px);
+  max-width: none;
+  max-height: none;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  overflow: auto;
+  margin: auto;
+}
+
+/* EL FLEX SOLO CON [open]. La hoja del navegador oculta el dialogo cerrado con
+   `dialog:not([open]) { display: none }`; un `display: flex` sin [open] le
+   gana, y el dialogo cerrado pasaria a ser un item de la rejilla de .app que
+   empuja el mapa hacia abajo (A7 de verify-banner y B2 de verify-panel). */
+.vista-google[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Encima de la ficha, que ya oscurece 0,45: con otro 0,45 el fondo quedaria en
+   0,70; con 0,35, en 0,64. */
+.vista-google::backdrop {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+/* La caja llena el dialogo entero: un clic en un hueco de dentro no puede
+   tener como target el <dialog>, que es lo que el visor lee como «fondo». */
+.vista-google-caja {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 16px;
+}
+
+.vista-google header {
+  position: relative;
+  padding-right: 28px;
+  margin-bottom: 8px;
+}
+
+.vista-google h2 {
+  font-size: 16px;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.vista-google-sub {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--text-2);
+  overflow-wrap: anywhere;
+}
+
+/* Mismo idioma que las pestañas del banner (.pestana): subrayado de 2 px
+   reservado siempre y acento en la activa, nunca blanco sobre acento (2,09:1
+   en oscuro, DECISIONES.md §R). */
+.vista-google-pestanas {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--border);
+}
+
+.vista-google-pestana {
+  appearance: none;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  padding: 8px 14px;
+  white-space: nowrap;
+}
+
+.vista-google-pestana:hover {
+  color: var(--text-h);
+}
+
+.vista-google-pestana[aria-selected='true'] {
+  border-bottom-color: var(--accent);
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.vista-google-pestana:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+/* El marco se lleva todo el alto que sobra. min-height para que en un movil
+   apaisado (360 px de alto) el dialogo desplace en vez de aplastar el mapa. */
+.vista-google-marco {
+  flex: 1 1 auto;
+  min-height: 200px;
+  margin-top: 8px;
+}
+
+.vista-google-marco iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 6px;
+  background: var(--panel);
+}
+
+.vista-google-nota {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.vista-google-pie {
+  margin: 10px 0 0;
 }
 
 /* ---------- plegar, desplegar y pasar a cajon ---------- */
@@ -1799,7 +1936,8 @@ a:focus-visible {
 
   .panel .cerrar,
   .panel-kpi .cerrar,
-  .ficha-cerrar {
+  .ficha-cerrar,
+  .vista-google-cerrar {
     width: 44px;
     height: 44px;
   }
@@ -1822,7 +1960,8 @@ a:focus-visible {
 
   /* La «×» de la ficha va en right:-4px, asi que sobresale 4 px del <header>:
      44 - 4 = 40 de boton, mas 4 de aire. */
-  .ficha header {
+  .ficha header,
+  .vista-google header {
     padding-right: 44px;
   }
 
@@ -1874,10 +2013,15 @@ a:focus-visible {
     min-height: 44px;
   }
 
-  .ficha-acciones a {
+  .ficha-acciones button,
+  .vista-google-pie a {
     min-height: 44px;
     display: inline-flex;
     align-items: center;
+  }
+
+  .vista-google-pestana {
+    min-height: 44px;
   }
 
   /* .leaflet-touch .leaflet-bar a y NO .leaflet-bar a: leaflet.css ya declara

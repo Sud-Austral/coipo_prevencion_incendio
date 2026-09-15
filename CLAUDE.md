@@ -33,10 +33,11 @@ deliberado — el sitio es estático, las capas se precomputan y **se commitean*
 
 ### Dos documentos mandan sobre este
 
-- **`DECISIONES.md`** manda sobre los DATOS, la simbología y la interfaz. Veinte
-  secciones (A–S, la Ñ incluida) con por qué cada decisión es como es, con las cifras
+- **`DECISIONES.md`** manda sobre los DATOS, la simbología y la interfaz. Veintiuna
+  secciones (A–T, la Ñ incluida) con por qué cada decisión es como es, con las cifras
   medidas. §R fija la alineación de la interfaz con `coipo_vista_catastro` (acento azul,
-  Líneas eléctricas como vista, orden F0→F6); §S, el riesgo nacional partido por comuna.
+  Líneas eléctricas como vista, orden F0→F6); §S, el riesgo nacional partido por comuna;
+  §T, el punto de la ficha visto en Google dentro del visor.
   **Léelo antes de
   tocar `ETL/` o `frontend/src/config.js`**: casi todo lo que parece un error ahí está
   explicado y medido.
@@ -115,7 +116,7 @@ npm run build                              # ~1,3 s
 npm run verify:banner                      # ~5 s, necesita Chrome
 npm run verify:panel                       # ~1 min, necesita Chrome
 npm run verify:priorizacion                # ~40 s, necesita Chrome (mide la vista Riesgo)
-npm run verify:priorizacion -- --negativas # ~10 min, 21 mutaciones, PARCHEA 7 archivos de src/
+npm run verify:priorizacion -- --negativas # ~11 min, 27 mutaciones, PARCHEA 9 archivos de src/
 npm run verify:electrico                   # ~15 s, pagina de lineas electricas
 npm run verify:electrico -- --negativas    # ~1 min, 6 mutaciones, PARCHEA src/electrico/
 npm run verify:mutantes                    # ~16 min, 17 mutantes, PARCHEA 7 archivos de src/
@@ -220,7 +221,7 @@ npm run verify:mutantes                    # ~16 min, 17 mutantes, PARCHEA 7 arc
 | Aserciones de datos (D1–D20, D16b) | 21 distintas, **81 ejecuciones**, y **31 controles negativos** en rojo · ~22 s + ~2 min | `python ETL/verify.py --negativas` |
 | Arnés del banner (A1–A10) | 10 distintas, **49 ejecuciones** · ~4 s | `npm run verify:banner` |
 | Arnés del panel (B1–B28) | 28 distintas, **199 ejecuciones** con datos reales (195 con el fixture) · ~1 min | `npm run verify:panel` |
-| Arnés de la vista Riesgo (C1–C15, C4b, C10b) | 17 distintas, **18 ejecuciones** · ~40 s, y **21 controles negativos** en rojo · ~10 min | `npm run verify:priorizacion` |
+| Arnés de la vista Riesgo (C1–C16, C4b, C10b) | 18 distintas, **19 ejecuciones** · ~40 s, y **27 controles negativos** en rojo · ~11 min | `npm run verify:priorizacion` |
 | Arnés de Líneas eléctricas (E1–E12) | 12 distintas · ~15 s, y **6 controles negativos** en rojo · ~1 min | `npm run verify:electrico` |
 | Mutantes de los arneses | **17**, todos en rojo · ~16 min | `npm run verify:mutantes` |
 | Humo contra lo publicado | base path + manifest + capas y derivados por bytes + Range en 2 teselas + `lineas-electricas.html` | job `humo` de `deploy.yml` |
@@ -305,8 +306,17 @@ con código de salida 0.
   el 2026-09-14 se publicaron 1.056 incendios de «Otras causas» con el código de «Faenas
   forestales». El código sale del prefijo de «Causa investigada 2023». `DECISIONES.md` §Q,
   vigilado por D16 y D16b.
-- **Google Earth se enlaza con `/web/search/lat,lon`, no con la URL de cámara `/web/@…`**,
-  que aterriza sin ninguna marca del punto (visto en captura). Lo vigila C12.
+- **La ficha muestra el punto en Google DENTRO del visor, en un segundo `<dialog>` hermano
+  de la ficha** (`ModalVistaGoogle.jsx`): satélite y Street View con las formas sin clave
+  `google.com/maps?…&output=embed` y `…&output=svembed` (`src/enlacesGoogle.js`). Tres
+  reglas:
+  - **Nunca un dialog hijo, ni por portal**: el `close` de React subiría y cerraría la ficha.
+  - **El iframe sólo existe con el modal abierto**: C1 abre ~150 fichas.
+  - **Earth no se puede incrustar** (`X-Frame-Options: SAMEORIGIN`). Se enlaza con
+    `/web/search/lat,lon` y nunca con la URL de cámara `/web/@…`, que aterriza sin ninguna
+    marca del punto.
+
+  Lo vigilan C12 y C16. `DECISIONES.md` §T.
 - **La fecha del manifest se arma con los componentes del ISO**, nunca con `new Date(iso)`:
   en Chile eso retrocede un día todo lo generado antes de las 03:00 UTC.
 - **PMTiles exige HTTP Range.** Sin respuestas `206` el visor **no dibuja ninguna

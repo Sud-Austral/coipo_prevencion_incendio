@@ -155,7 +155,7 @@ jobs:
       # rota, no se despliega. El commit de las capas ya ocurrió más arriba, así
       # que un fallo aquí no deja los datos sin versionar.
       #
-      # Sin `--negativas`: son 21 mutaciones con un `npm run build` cada una, y
+      # Sin `--negativas`: son 27 mutaciones con un `npm run build` cada una, y
       # `mejoras.md` §D4 ya decidió que los mutantes de frontend no corren en
       # cada push. El equivalente de los datos —`verify.py --negativas`, 31
       # mutaciones, ~2 min en Windows— sí corre, dos pasos más arriba.

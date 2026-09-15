@@ -1,4 +1,4 @@
-// Arnés de la vista de riesgo · aserciones C1..C15
+// Arnés de la vista de riesgo · aserciones C1..C16
 //
 // Conserva el nombre de cuando la segunda pestaña se llamaba «Priorización»
 // (scripts, CI y documentos lo citan así); desde el 2026-09-15 mide la vista
@@ -6,9 +6,10 @@
 // (DECISIONES.md §S).
 //
 // A está tomado por verify-banner y B por verify-panel, así que esta serie
-// empieza en C. C12..C14 vigilan la ficha (<dialog class="ficha">), que es la
-// misma en las dos vistas: están aquí porque este es el arnés que corre con
-// las capas REALES, y lo que afirman sale de una figura concreta de los datos.
+// empieza en C. C12..C14 y C16 vigilan la ficha (<dialog class="ficha">) y el
+// punto visto en Google (<dialog class="vista-google">), que son los mismos en
+// las dos vistas: están aquí porque este es el arnés que corre con las capas
+// REALES, y lo que afirman sale de una figura concreta de los datos.
 //
 // LAS COMUNAS NO SE ESCRIBEN AQUÍ: se eligen por definición desde dist/data
 // (ver comunasDeRiesgo). «A» es la comuna con infraestructura cuyo nombre en el
@@ -61,6 +62,8 @@ const CONFIG_JS = join(FRONT, 'src', 'config.js')
 const ESCALAS = join(FRONT, 'src', 'escalas.js')
 const APP_JSX = join(FRONT, 'src', 'App.jsx')
 const MODAL_FICHA = join(FRONT, 'src', 'components', 'ModalFicha.jsx')
+const MODAL_VISTA = join(FRONT, 'src', 'components', 'ModalVistaGoogle.jsx')
+const ENLACES_GOOGLE = join(FRONT, 'src', 'enlacesGoogle.js')
 const FICHAS = join(FRONT, 'src', 'fichas.js')
 const BASE = '/coipo_prevencion_incendio/'
 const ARGS = process.argv.slice(2)
@@ -254,6 +257,13 @@ async function lanzarChrome() {
     '--headless=new', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage',
     '--hide-scrollbars', '--force-device-scale-factor=1', '--no-first-run',
     '--no-default-browser-check', '--disable-extensions', '--disable-background-networking',
+    // Google NO RESUELVE: C12 y C16 abren el punto en satélite y Street View,
+    // y afirman el `src` del iframe, no sus píxeles. Así ni CI ni una corrida
+    // local dependen de que Google responda, y ninguna figura de los datos sale
+    // hacia Google. Por DNS y no con Network.setBlockedURLs: el iframe es de
+    // otro sitio y corre en otro proceso, y las reglas del resolvedor valen para
+    // todo el navegador. El visor no usa ningún otro host de Google.
+    '--host-resolver-rules=MAP google.com ~NOTFOUND, MAP *.google.com ~NOTFOUND, MAP *.gstatic.com ~NOTFOUND, MAP *.googleapis.com ~NOTFOUND',
     `--remote-debugging-port=${puerto}`, '--remote-debugging-address=127.0.0.1',
     `--user-data-dir=${perfil}`, 'about:blank',
   ], { stdio: 'ignore' })
@@ -300,7 +310,7 @@ async function conectar(url) {
 
 // ---------------------------------------------------------------------------
 
-// `bloque`: sin él corre todo; 'C1' sólo C1; 'ficha' sólo C12..C14. Los dos
+// `bloque`: sin él corre todo; 'C1' sólo C1; 'ficha' sólo C12..C14 y C16. Los dos
 // últimos existen para que cada mutante de --negativas no pague la suite
 // entera (~45 s) cuando su aserción está en un solo bloque.
 async function correr({ bloque } = {}) {
@@ -415,7 +425,7 @@ async function correr({ bloque } = {}) {
               return {
                 dx, dy, filas,
                 capa: d.querySelector('.ficha-capa')?.textContent.trim() ?? '',
-                enlaces: [...d.querySelectorAll('a')].map((a) => a.getAttribute('href') ?? ''),
+                botones: [...d.querySelectorAll('.ficha-acciones button')].map((b) => b.dataset.vista ?? ''),
                 html: d.innerHTML,
               }
             }
@@ -435,24 +445,31 @@ async function correr({ bloque } = {}) {
 
   // ---- C12..C14 · la ficha ----------------------------------------------
   const comprobarFicha = async () => {
-    console.log('\n▶ C12..C14 · la ficha: enlaces a Maps y Earth, cifras es-CL')
+    console.log('\n▶ C12..C14, C16 · la ficha: satélite, Street View y Earth, cifras es-CL')
     let manifest, incendios, R
     try {
       manifest = JSON.parse(readFileSync(join(DIST, 'data', 'manifest.json'), 'utf8'))
       incendios = JSON.parse(readFileSync(join(DIST, 'data', manifest.capas.incendios.archivo), 'utf8'))
       R = comunasDeRiesgo()
     } catch (e) {
-      for (const id of ['C12', 'C13', 'C14']) comprobar(false, `${id} la ficha`, `no se pudieron leer las capas de dist/data: ${e.message}`)
+      for (const id of ['C12', 'C13', 'C14', 'C16']) comprobar(false, `${id} la ficha`, `no se pudieron leer las capas de dist/data: ${e.message}`)
       return
     }
 
-    // ---- C12 · Maps y Earth marcan la coordenada del registro -------------
+    // ---- C12 · satélite, Street View y Earth marcan la coordenada ---------
+    // Desde el 2026-09-15 la ficha no enlaza a Google: abre el punto en un
+    // segundo <dialog> con satélite y Street View incrustados, y Earth queda
+    // como enlace dentro de él (Earth no se deja incrustar; DECISIONES.md §T).
+    // Se afirma la FORMA de cada dirección y que su coordenada sea la de la
+    // figura, leída por el arnés de su propia geometría. Las direcciones se
+    // desarman con URL y no con una expresión sobre la cadena entera: el orden
+    // de los parámetros de un embed no documentado no significa nada.
+    //
     // Earth estuvo con la URL de cámara /web/@lat,lon,0a,1200d,... que sólo
     // mueve la cámara: capturada a los 40 s el 2026-09-14 con el incendio
     // 1262, bosque y un camino SIN ninguna marca. La de búsqueda
     // /web/search/lat,lon planta la chincheta. El HTTP 200 no discrimina (Earth
-    // es una SPA), así que se afirma la FORMA del enlace y que su coordenada
-    // sea la de la figura, leída por el arnés de su propia geometría.
+    // es una SPA).
     //
     // La figura se elige por definición y no a mano: un incendio con ID, sin
     // otro en la misma coordenada (el clic sería ambiguo) y con décimas de
@@ -473,8 +490,9 @@ async function correr({ bloque } = {}) {
 
     if (!inc) {
       // Sin figura no hay nada que medir, y un verde aquí sería mentira.
-      comprobar(false, 'C12 Maps y Earth marcan la coordenada del registro', 'ningún incendio cumple el criterio de selección')
+      comprobar(false, 'C12 satélite, Street View y Earth marcan la coordenada del registro', 'ningún incendio cumple el criterio de selección')
       comprobar(false, 'C14 la ficha del incendio escribe metros y superficie en es-CL', 'ningún incendio con décimas de metro en X e Y')
+      comprobar(false, 'C16 Google sólo carga al pulsar, sobre la ficha, y se suelta al cerrar', 'ningún incendio cumple el criterio de selección')
     } else {
       const [lon, lat] = inc.geometry.coordinates
       const p = inc.properties
@@ -491,28 +509,109 @@ async function correr({ bloque } = {}) {
       const fi = await abrirFichaDe('ID', String(p.id))
       if (fi && !fi.error) await capturar('priorizacion-ficha-incendio.png')
 
-      const num = '(-?\\d+(?:\\.\\d+)?)'
-      const reMaps = new RegExp(`^https://www\\.google\\.com/maps/search/\\?api=1&query=${num}%2C${num}$`)
-      const reEarth = new RegExp(`^https://earth\\.google\\.com/web/search/${num},${num}$`)
-      const enlaces = fi?.enlaces ?? []
-      const mMaps = enlaces.map((h) => reMaps.exec(h)).find(Boolean)
-      const mEarth = enlaces.map((h) => reEarth.exec(h)).find(Boolean)
+      // ---- el recorrido de C12 y C16: pulsar, cambiar de pestaña, cerrar ----
+      // Todo por el DOM, con los mismos elementos que usaría una persona: el
+      // botón de la ficha, la pestaña del modal y su ×. Nada de src/.
+      const leerVista = `
+        const v = document.querySelector('dialog.vista-google')
+        const f = document.querySelector('dialog.ficha')
+        return {
+          abierta: !!v?.open,
+          fichaAbierta: !!f?.open,
+          iframes: document.querySelectorAll('iframe').length,
+          src: v?.querySelector('iframe')?.getAttribute('src') ?? '',
+          enlaces: [...(v?.querySelectorAll('a') ?? [])].map((a) => a.getAttribute('href') ?? ''),
+          html: (v?.innerHTML ?? '') + (f?.innerHTML ?? ''),
+        }`
+      const pulsar = (selector) => evaluar(`
+        const b = document.querySelector(${JSON.stringify(selector)})
+        if (!b) return false
+        b.focus()
+        b.click()
+        return true`)
+      let antes = null
+      let sat = null
+      let sv = null
+      let despues = null
+      if (fi && !fi.error) {
+        antes = await evaluar(leerVista)
+        if (await pulsar('dialog.ficha .ficha-acciones button[data-vista="satelite"]')
+          && await esperar(`document.querySelector('dialog.vista-google[open] iframe')`, 'la vista satelital', 5000)) {
+          sat = await evaluar(leerVista)
+          await capturar('priorizacion-vista-google.png')
+          if (await pulsar('dialog.vista-google [role="tab"][data-vista="streetview"]')
+            && await esperar(
+              `document.querySelector('dialog.vista-google [role="tab"][data-vista="streetview"][aria-selected="true"]')`
+                + ` && document.querySelector('dialog.vista-google iframe')`,
+              'la pestaña Street View', 5000,
+            )) {
+            sv = await evaluar(leerVista)
+          }
+          if (await pulsar('dialog.vista-google .vista-google-cerrar')) {
+            await esperar(`!document.querySelector('dialog.vista-google')?.open`, 'el cierre de la vista', 5000)
+            await espera(150)
+            despues = await evaluar(leerVista)
+          }
+        }
+      }
+
+      const reEarth = new RegExp('^https://earth\\.google\\.com/web/search/(-?\\d+(?:\\.\\d+)?),(-?\\d+(?:\\.\\d+)?)$')
       // La ficha publica 5 decimales (~1 m, App.jsx): ninguna cifra de más, y
       // la tolerancia es media unidad de la quinta.
       const cerca = (txt, ref) => (txt.split('.')[1] ?? '').length <= 5 && Math.abs(Number(txt) - ref) <= 0.5e-5 + 1e-9
-      const okMaps = !!mMaps && cerca(mMaps[1], lat) && cerca(mMaps[2], lon)
+      // «lat,lon» con la latitud PRIMERO: invertidas, las dos caen fuera.
+      const enElPunto = (txt) => {
+        const m = /^(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)$/.exec(txt ?? '')
+        return !!m && cerca(m[1], lat) && cerca(m[2], lon)
+      }
+      const desarmar = (src) => {
+        try {
+          const u = new URL(src)
+          return u.origin === 'https://www.google.com' && u.pathname === '/maps' ? u.searchParams : null
+        } catch {
+          return null
+        }
+      }
+      const qSat = desarmar(sat?.src)
+      // t=k es satélite: sin él el embed abre el mapa de calles.
+      const okSat = !!qSat && qSat.get('output') === 'embed' && qSat.get('t') === 'k'
+        && enElPunto(qSat.get('q')) && enElPunto(qSat.get('ll'))
+      const qSv = desarmar(sv?.src)
+      const okSv = !!qSv && qSv.get('output') === 'svembed' && qSv.get('layer') === 'c' && enElPunto(qSv.get('cbll'))
+      const mEarth = (sat?.enlaces ?? []).map((h) => reEarth.exec(h)).find(Boolean)
       const okEarth = !!mEarth && cerca(mEarth[1], lat) && cerca(mEarth[2], lon)
-      // En TODA la ficha, no sólo en el enlace de Earth: la URL de cámara no
-      // puede volver por ningún sitio.
-      const conCamara = !fi?.html || fi.html.includes('/web/@')
+      // En TODA la ficha y en todo el modal, no sólo en el enlace de Earth: la
+      // URL de cámara no puede volver por ningún sitio.
+      const conCamara = !fi?.html || [fi.html, sat?.html, sv?.html].some((h) => h?.includes('/web/@'))
       comprobar(
-        fi && !fi.error && okMaps && okEarth && !conCamara,
-        'C12 Maps y Earth marcan la coordenada del registro',
+        fi && !fi.error && okSat && okSv && okEarth && !conCamara,
+        'C12 satélite, Street View y Earth marcan la coordenada del registro',
         fi?.error
           ? `incendio ${p.id}: ${fi.error} · vistas ${JSON.stringify(fi.vistas)}`
-          : `incendio ${p.id} en ${lat},${lon} · Maps ${okMaps ? 'ok' : `MAL ${enlaces[0]}`} · Earth ${
-            okEarth ? 'ok' : `MAL ${enlaces.find((h) => h.includes('earth')) ?? 'sin enlace'}`
-          } · /web/@ ${conCamara ? 'PRESENTE' : 'ausente'}`,
+          : `incendio ${p.id} en ${lat},${lon} · satélite ${okSat ? 'ok' : `MAL ${sat?.src || 'sin iframe'}`}`
+            + ` · Street View ${okSv ? 'ok' : `MAL ${sv?.src || 'sin iframe'}`}`
+            + ` · Earth ${okEarth ? 'ok' : `MAL ${sat?.enlaces?.find((h) => h.includes('earth')) ?? 'sin enlace'}`}`
+            + ` · /web/@ ${conCamara ? 'PRESENTE' : 'ausente'}`,
+      )
+
+      // ---- C16 · Google sólo carga al pulsar, sobre la ficha, y se suelta ----
+      // Tres defectos que no se ven en una captura:
+      //   · un iframe montado con la ficha pediría Google con cada clic en el
+      //     mapa (C1 abre y cierra ~150 fichas en segundos);
+      //   · un modal que REEMPLAZA a la ficha obliga a volver a pinchar el mapa;
+      //   · un modal que se cierra sin desmontar su iframe deja Street View
+      //     cargando detrás de la ficha.
+      const okBotones = ['satelite', 'streetview'].every((v) => fi?.botones?.includes(v))
+      comprobar(
+        !!(fi && !fi.error && okBotones && antes?.iframes === 0
+          && sat?.abierta && sat.fichaAbierta && sat.iframes === 1 && sv?.iframes === 1
+          && despues && !despues.abierta && despues.fichaAbierta && despues.iframes === 0),
+        'C16 Google sólo carga al pulsar, sobre la ficha, y se suelta al cerrar',
+        `botones ${JSON.stringify(fi?.botones)} · iframes con la ficha sola ${antes?.iframes}`
+          + ` · con satélite ${sat?.iframes} (ficha ${sat?.fichaAbierta ? 'abierta' : 'CERRADA'})`
+          + ` · con Street View ${sv?.iframes}`
+          + ` · tras la × ${despues?.iframes} (modal ${despues?.abierta ? 'ABIERTO' : 'cerrado'},`
+          + ` ficha ${despues?.fichaAbierta ? 'abierta' : 'CERRADA'})`,
       )
 
       // ---- C14 · metros UTM y superficie en es-CL ---------------------------
@@ -1312,20 +1411,46 @@ const MUTACIONES = [
   },
   {
     id: 'C12',
-    archivo: MODAL_FICHA,
+    archivo: ENLACES_GOOGLE,
     titulo: 'volver a la URL de cámara de Earth (/web/@…,1200d), la que no marca el punto',
-    ancla: '`https://earth.google.com/web/search/${ficha.coord[0]},${ficha.coord[1]}`',
-    mutar: (t, a) => t.replace(a, () => '`https://earth.google.com/web/@${ficha.coord[0]},${ficha.coord[1]},0a,1200d,35y,0h,0t,0r`'),
+    ancla: '`https://earth.google.com/web/search/${lat},${lon}`',
+    mutar: (t, a) => t.replace(a, () => '`https://earth.google.com/web/@${lat},${lon},0a,1200d,35y,0h,0t,0r`'),
     bloque: 'ficha',
   },
   {
-    // Sin este mutante la mitad de C12 que compara con la geometría no se
+    // Sin un mutante así la mitad de C12 que compara con la geometría no se
     // había visto roja: el anterior sólo cambia la FORMA del enlace.
     id: 'C12',
-    archivo: MODAL_FICHA,
-    titulo: 'invertir latitud y longitud en el enlace de Maps',
-    ancla: 'query=${ficha.coord[0]}%2C${ficha.coord[1]}',
-    mutar: (t, a) => t.replace(a, () => 'query=${ficha.coord[1]}%2C${ficha.coord[0]}'),
+    archivo: ENLACES_GOOGLE,
+    titulo: 'invertir latitud y longitud en la vista satelital',
+    ancla: 'q=${lat},${lon}&ll=${lat},${lon}',
+    mutar: (t, a) => t.replace(a, () => 'q=${lon},${lat}&ll=${lon},${lat}'),
+    bloque: 'ficha',
+  },
+  {
+    id: 'C12',
+    archivo: ENLACES_GOOGLE,
+    titulo: 'invertir latitud y longitud en Street View',
+    ancla: 'cbll=${lat},${lon}',
+    mutar: (t, a) => t.replace(a, () => 'cbll=${lon},${lat}'),
+    bloque: 'ficha',
+  },
+  {
+    // Sin t=k el embed abre el mapa de calles: la pestaña dice «Satélite» y
+    // muestra otra cosa, con la coordenada correcta.
+    id: 'C12',
+    archivo: ENLACES_GOOGLE,
+    titulo: 'perder t=k: la pestaña Satélite abre el mapa de calles',
+    ancla: '${lon}&t=k&',
+    mutar: (t, a) => t.replace(a, () => '${lon}&'),
+    bloque: 'ficha',
+  },
+  {
+    id: 'C12',
+    archivo: MODAL_VISTA,
+    titulo: 'que la pestaña Street View siga mostrando el satélite',
+    ancla: "vista === 'streetview' ? urlStreetView(coord) : urlSatelite(coord)",
+    mutar: (t, a) => t.replace(a, 'urlSatelite(coord)'),
     bloque: 'ficha',
   },
   {
@@ -1336,6 +1461,35 @@ const MUTACIONES = [
     titulo: 'redondear la coordenada de la ficha a 3 decimales',
     ancla: 'coord: [+ll.lat.toFixed(5), +ll.lng.toFixed(5)]',
     mutar: (t, a) => t.replace(a, 'coord: [+ll.lat.toFixed(3), +ll.lng.toFixed(3)]'),
+    bloque: 'ficha',
+  },
+  {
+    // El iframe se monta con la ficha, sin que nadie pulse: cada clic en el
+    // mapa pediría Google.
+    id: 'C16',
+    archivo: MODAL_FICHA,
+    titulo: 'cargar la vista satelital en cuanto se abre la ficha',
+    ancla: 'vista?.de === ficha ? vista.pestana : null',
+    mutar: (t, a) => t.replace(a, "ficha?.coord ? vista?.pestana ?? 'satelite' : null"),
+    bloque: 'ficha',
+  },
+  {
+    // El modal se cierra, pero nadie limpia la pestaña: el iframe sigue vivo
+    // dentro de un <dialog> cerrado.
+    id: 'C16',
+    archivo: MODAL_VISTA,
+    titulo: 'cerrar el modal sin desmontar su iframe',
+    ancla: 'onClose={onCerrar}',
+    mutar: (t, a) => t.replace(a, ''),
+    bloque: 'ficha',
+  },
+  {
+    // Cerrar la vista cierra también la ficha: hay que volver a pinchar el mapa.
+    id: 'C16',
+    archivo: MODAL_FICHA,
+    titulo: 'que cerrar la vista de Google cierre también la ficha',
+    ancla: 'onCerrar={() => setVista(null)}',
+    mutar: (t, a) => t.replace(a, 'onCerrar={onCerrar}'),
     bloque: 'ficha',
   },
   {
@@ -1508,7 +1662,7 @@ async function negativas() {
       fallos = 0
       resultados.length = 0
       await correr({ bloque: m.bloque })
-      // TODAS las comprobaciones con ese id, no la primera: C12..C14 tienen
+      // TODAS las comprobaciones con ese id, no la primera: C12..C16 tienen
       // una sola cada una, pero find() se quedaba con la primera y un id
       // repetido podía ocultar la roja.
       const rs = resultados.filter((x) => x.id === m.id)

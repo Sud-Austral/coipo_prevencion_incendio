@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import ModalVistaGoogle from './ModalVistaGoogle'
 
 /**
  * Ficha de la figura seleccionada en el mapa.
@@ -13,6 +14,11 @@ import { useEffect, useRef } from 'react'
  */
 export default function ModalFicha({ ficha, onCerrar }) {
   const ref = useRef(null)
+  // La vista de Google pertenece a UNA ficha: se guarda con cual, y cuando la
+  // ficha se cierra o cambia por cualquier camino la pestana deriva a null y el
+  // iframe se desmonta, sin un efecto que lo sincronice.
+  const [vista, setVista] = useState(null)
+  const pestana = vista?.de === ficha ? vista.pestana : null
 
   useEffect(() => {
     const d = ref.current
@@ -22,91 +28,92 @@ export default function ModalFicha({ ficha, onCerrar }) {
   }, [ficha])
 
   return (
-    <dialog
-      className="ficha"
-      ref={ref}
-      aria-labelledby="ficha-titulo"
-      // 'close' cubre Escape y el boton de cerrar por igual.
-      onClose={onCerrar}
-      // Un clic en el ::backdrop tiene como target el propio <dialog>; en el
-      // contenido, el hijo. Por eso el contenido va envuelto en un <div>.
-      onClick={(e) => e.target === ref.current && onCerrar()}
-    >
-      {ficha && (
-        <div className="ficha-caja">
-          <header>
-            <p className="ficha-capa">
-              {ficha.color && <span className="chip" style={{ background: ficha.color }} />}
-              {ficha.capa}
-            </p>
-            <h2 id="ficha-titulo">{ficha.titulo}</h2>
-            <button type="button" className="ficha-cerrar" onClick={onCerrar} aria-label="Cerrar ficha">
-              ×
-            </button>
-          </header>
+    <>
+      <dialog
+        className="ficha"
+        ref={ref}
+        aria-labelledby="ficha-titulo"
+        // 'close' cubre Escape y el boton de cerrar por igual.
+        onClose={onCerrar}
+        // Un clic en el ::backdrop tiene como target el propio <dialog>; en el
+        // contenido, el hijo. Por eso el contenido va envuelto en un <div>.
+        onClick={(e) => e.target === ref.current && onCerrar()}
+      >
+        {ficha && (
+          <div className="ficha-caja">
+            <header>
+              <p className="ficha-capa">
+                {ficha.color && <span className="chip" style={{ background: ficha.color }} />}
+                {ficha.capa}
+              </p>
+              <h2 id="ficha-titulo">{ficha.titulo}</h2>
+              <button type="button" className="ficha-cerrar" onClick={onCerrar} aria-label="Cerrar ficha">
+                ×
+              </button>
+            </header>
 
-          {/* Origen: coipo_vista_catastro@a1ee125 frontend/src/components/ModalFicha.jsx:48-63
-              (comentario adaptado; los enlaces conservan la clase y el estilo
-              .ficha-acciones de este visor).
+            {/* Origen de la fila de acciones: coipo_vista_catastro@a1ee125
+                frontend/src/components/ModalFicha.jsx:48-63, que la tenia como
+                dos enlaces de ida a Google Maps y Earth.
 
-              Enlaces de ida, no integracion: son deep links publicos que se
-              abren en la sesion del PROPIO usuario. No consumen ninguna API,
-              no requieren clave y no le cuentan nada de este visor a Google
-              mas alla de la coordenada que el usuario decide abrir.
+                Desde el 2026-09-15 (DECISIONES.md §T) no salen a otra pestana:
+                abren el punto en satelite o Street View DENTRO del visor, en
+                ModalVistaGoogle. Google Maps y Earth no se dejan incrustar
+                (X-Frame-Options: SAMEORIGIN, medido); las formas que si, y por
+                que, estan en src/enlacesGoogle.js. Earth queda como enlace
+                dentro de ese modal.
 
-              LOS DOS EN FORMA DE BUSQUEDA, y Earth lo aprendio por las malas.
-              Estaba con la URL de camara --/web/@lat,lon,0a,1200d,...-- que
-              SOLO mueve la camara: aterrizaba a 1,2 km sobre un campo generico,
-              sin nada que marcara el punto, y habia que adivinar cual de todos
-              los claros era. Abiertas las dos y fotografiadas: la de busqueda
-              planta chincheta roja, rotula la coordenada y abre su panel; la de
-              camara no pinta ni una marca y el unico rotulo era un POI ajeno.
-              Repetido aqui el 2026-09-14 con el incendio 1262 (Cuesta
-              Llampaiquillo), capturando a los 40 s: la de camara, bosque y un
-              camino sin ninguna marca; la de busqueda, chincheta roja en el
-              centro rotulada 33°12'37.8"S 71°35'51.7"W y el panel «QCQ2+QWV
-              Casablanca», que es la comuna del registro.
+                Botones y no enlaces: un <a href> que al pulsarlo abre otra cosa
+                dice una al pasar el raton y al lector de pantalla, y hace otra
+                al pulsarlo. Y nada de Google se pide hasta que el usuario pulsa. */}
+            {ficha.coord && (
+              <p className="ficha-acciones">
+                <button
+                  type="button"
+                  data-vista="satelite"
+                  aria-haspopup="dialog"
+                  onClick={() => setVista({ de: ficha, pestana: 'satelite' })}
+                >
+                  Vista satelital
+                </button>
+                <button
+                  type="button"
+                  data-vista="streetview"
+                  aria-haspopup="dialog"
+                  onClick={() => setVista({ de: ficha, pestana: 'streetview' })}
+                >
+                  Street View
+                </button>
+              </p>
+            )}
 
-              Y el HTTP 200 no vale como prueba aqui: Earth es una SPA y
-              devuelve 200 para cualquier ruta, incluida una que no exista. Lo
-              que se comprueba es la CAPTURA. La forma del enlace, y que su
-              coordenada sea la del registro, la vigila C12 de
-              scripts/verify-priorizacion.mjs. */}
-          {ficha.coord && (
-            <p className="ficha-acciones">
-              <a
-                href={`https://www.google.com/maps/search/?api=1&query=${ficha.coord[0]}%2C${ficha.coord[1]}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Ver en Google Maps
-              </a>
-              <a
-                href={`https://earth.google.com/web/search/${ficha.coord[0]},${ficha.coord[1]}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Ver en Google Earth
-              </a>
-            </p>
-          )}
+            {ficha.filas.length ? (
+              <table>
+                <tbody>
+                  {ficha.filas.map(([k, v]) => (
+                    <tr key={k}>
+                      <th scope="row">{k}</th>
+                      <td>{v}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="ficha-vacia">Esta figura no trae más atributos.</p>
+            )}
+          </div>
+        )}
+      </dialog>
 
-          {ficha.filas.length ? (
-            <table>
-              <tbody>
-                {ficha.filas.map(([k, v]) => (
-                  <tr key={k}>
-                    <th scope="row">{k}</th>
-                    <td>{v}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p className="ficha-vacia">Esta figura no trae más atributos.</p>
-          )}
-        </div>
-      )}
-    </dialog>
+      {/* HERMANO de la ficha y no hijo: ver la cabecera de ModalVistaGoogle.
+          Al cerrarse solo suelta la vista; la ficha sigue abierta debajo. */}
+      <ModalVistaGoogle
+        coord={ficha?.coord}
+        titulo={ficha?.titulo}
+        vista={pestana}
+        onVista={(p) => setVista({ de: ficha, pestana: p })}
+        onCerrar={() => setVista(null)}
+      />
+    </>
   )
 }
