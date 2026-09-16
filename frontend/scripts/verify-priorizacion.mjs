@@ -578,18 +578,30 @@ async function correr({ bloque } = {}) {
         && enElPunto(qSat.get('q')) && enElPunto(qSat.get('ll'))
       const qSv = desarmar(sv?.src)
       const okSv = !!qSv && qSv.get('output') === 'svembed' && qSv.get('layer') === 'c' && enElPunto(qSv.get('cbll'))
+      // La salida de la pestaña de Street View cuando no hay imágenes, que es
+      // lo normal: el deep link oficial de Maps, con el punto en viewpoint.
+      const qPano = (sv?.enlaces ?? []).map((h) => {
+        try {
+          const u = new URL(h)
+          return u.pathname === '/maps/@' && u.searchParams.get('map_action') === 'pano' ? u.searchParams : null
+        } catch {
+          return null
+        }
+      }).find(Boolean)
+      const okPano = !!qPano && enElPunto(qPano.get('viewpoint'))
       const mEarth = (sat?.enlaces ?? []).map((h) => reEarth.exec(h)).find(Boolean)
       const okEarth = !!mEarth && cerca(mEarth[1], lat) && cerca(mEarth[2], lon)
       // En TODA la ficha y en todo el modal, no sólo en el enlace de Earth: la
       // URL de cámara no puede volver por ningún sitio.
       const conCamara = !fi?.html || [fi.html, sat?.html, sv?.html].some((h) => h?.includes('/web/@'))
       comprobar(
-        fi && !fi.error && okSat && okSv && okEarth && !conCamara,
+        fi && !fi.error && okSat && okSv && okPano && okEarth && !conCamara,
         'C12 satélite, Street View y Earth marcan la coordenada del registro',
         fi?.error
           ? `incendio ${p.id}: ${fi.error} · vistas ${JSON.stringify(fi.vistas)}`
           : `incendio ${p.id} en ${lat},${lon} · satélite ${okSat ? 'ok' : `MAL ${sat?.src || 'sin iframe'}`}`
             + ` · Street View ${okSv ? 'ok' : `MAL ${sv?.src || 'sin iframe'}`}`
+            + ` · buscar alrededor ${okPano ? 'ok' : `MAL ${qPano?.get('viewpoint') ?? 'sin enlace'}`}`
             + ` · Earth ${okEarth ? 'ok' : `MAL ${sat?.enlaces?.find((h) => h.includes('earth')) ?? 'sin enlace'}`}`
             + ` · /web/@ ${conCamara ? 'PRESENTE' : 'ausente'}`,
       )
@@ -1443,6 +1455,14 @@ const MUTACIONES = [
     titulo: 'perder t=k: la pestaña Satélite abre el mapa de calles',
     ancla: '${lon}&t=k&',
     mutar: (t, a) => t.replace(a, () => '${lon}&'),
+    bloque: 'ficha',
+  },
+  {
+    id: 'C12',
+    archivo: ENLACES_GOOGLE,
+    titulo: 'invertir latitud y longitud en «buscar alrededor en Maps»',
+    ancla: 'viewpoint=${lat},${lon}',
+    mutar: (t, a) => t.replace(a, () => 'viewpoint=${lon},${lat}'),
     bloque: 'ficha',
   },
   {

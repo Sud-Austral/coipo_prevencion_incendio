@@ -48,6 +48,16 @@ export const urlSatelite = ([lat, lon]) =>
 export const urlStreetView = ([lat, lon]) =>
   `https://www.google.com/maps?layer=c&cbll=${lat},${lon}&cbp=11,0,0,0,0&hl=es&output=svembed`
 
+// La salida cuando el embed de arriba no encuentra nada, que es lo normal: el
+// deep link OFICIAL de Maps (map_action=pano, sin clave) abre Street View en
+// Google Maps, donde si se puede arrastrar el monigote hasta el camino mas
+// proximo. Medido el 2026-09-15 con el incendio 4229, que en el embed no tiene
+// imagenes: esta forma resuelve a una vista con miniatura de panorama, senal de
+// que Maps si encontro uno cerca. En Chrome headless la imagen sale negra, asi
+// que lo que se vea al final no esta comprobado.
+export const urlMapsPano = ([lat, lon]) =>
+  `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`
+
 // Earth EN FORMA DE BUSQUEDA, y lo aprendio por las malas. Estuvo con la URL de
 // camara --/web/@LAT,LON,0a,1200d,...-- que SOLO mueve la camara: aterrizaba a
 // 1,2 km sobre un campo generico, sin nada que marcara el punto. Abiertas las

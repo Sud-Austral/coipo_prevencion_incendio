@@ -54,6 +54,7 @@ commitear y publicar cada una.
 - **«No muestra incendios activos»:** vigilado como VISIBLE en el encabezado del panel, en el cartel, en el GeoJSON descargado y en el informe (B28). `getClientRects` solo no basta: con el cajón cerrado devuelve un rectángulo oculto.
 - **Google en la ficha:**
   - la ficha abre el punto en satélite y Street View dentro de un modal del visor, y el iframe sólo existe mientras está abierto;
+  - Street View sólo tiene imágenes pegado a una calle recorrida por Google, y ninguna URL sin clave salta al panorama más cercano: el aviso va encima del recuadro y ofrece «buscar alrededor en Google Maps»;
   - Earth, que no se deja incrustar, sale a otra pestaña con `/web/search/lat,lon` y planta la chincheta (la URL de cámara aterrizaba sin ninguna marca);
   - lo vigilan C12 y C16 (`DECISIONES.md` §T).
 - **Fichas en es-CL:** además corrigió 46 porcentajes de 2.288 que `toFixed(1)` redondeaba mal. Lo vigilan C13 y C14.

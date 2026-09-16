@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { urlEarth, urlSatelite, urlStreetView } from '../enlacesGoogle'
+import { urlEarth, urlMapsPano, urlSatelite, urlStreetView } from '../enlacesGoogle'
 
 const PESTANAS = [
   { id: 'satelite', etiqueta: 'Satélite', titulo: 'Vista satelital de Google Maps en el punto de la ficha' },
@@ -107,6 +107,21 @@ export default function ModalVistaGoogle({ coord, titulo, vista, onVista, onCerr
             ))}
           </div>
 
+          {/* EL AVISO VA ANTES DEL RECUADRO, no debajo: lo normal es que no
+              haya imagenes --el embed no busca el panorama mas cercano, exige
+              que este pegado al punto-- y debajo se lee despues de mirar el
+              negro, cuando ya parece que el visor falla. */}
+          {vista === 'streetview' && (
+            <p className="vista-google-nota">
+              Street View solo muestra imágenes si el punto está junto a una calle o camino
+              recorrido por Google. Si no hay,{' '}
+              <a href={urlMapsPano(coord)} target="_blank" rel="noopener noreferrer">
+                buscar alrededor en Google Maps ↗
+              </a>
+              .
+            </p>
+          )}
+
           <div
             className="vista-google-marco"
             id="vista-google-marco"
@@ -126,14 +141,6 @@ export default function ModalVistaGoogle({ coord, titulo, vista, onVista, onCerr
               allowFullScreen
             />
           </div>
-
-          {vista === 'streetview' && (
-            <p className="vista-google-nota">
-              Street View solo muestra imágenes si el punto está junto a una calle o camino
-              recorrido por Google. Si queda dentro de un predio o de un bosque, lo normal es que no
-              haya imágenes.
-            </p>
-          )}
 
           <p className="vista-google-pie">
             <a href={urlEarth(coord)} target="_blank" rel="noopener noreferrer">

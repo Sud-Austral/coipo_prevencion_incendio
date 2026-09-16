@@ -762,17 +762,31 @@ arnés):
 **Street View sólo encuentra panorama muy cerca del punto**, no busca el camino más próximo.
 Hay panorama en una calle de Los Ángeles y en el 1262. No lo hay en un punto forestal
 (-37.80,-72.10) ni en el incendio 4229 («Hospital», Los Ángeles), urbano pero dentro del
-predio. El modal lo avisa en la pestaña.
+predio.
+
+**Se probaron otras tres formas de URL para que saltara al panorama más cercano, y ninguna
+sirve:** `q=` vacío con `layer=c` abre el mapamundi; `q=lat,lon&layer=c` abre el **mapa** con
+la chincheta, no Street View; y el `pb` de calle no muestra imágenes. Sin clave, o el
+panorama está pegado al punto o no hay nada.
+
+**Decisión de Luis, ya viéndolo funcionar:** conservar la pestaña y **avisar antes**. El aviso
+va **encima** del recuadro, no debajo, porque debajo se lee después de mirar el negro, cuando
+ya parece que el visor falla; y lleva un enlace **«buscar alrededor en Google Maps ↗»**
+(`map_action=pano`, el deep link oficial y sin clave), que abre Street View en Maps, donde sí
+se puede arrastrar hasta el camino más próximo. Medido con el incendio 4229, que en el embed
+no tiene imágenes: esa forma resuelve a una vista con miniatura de panorama, señal de que Maps
+sí encontró uno cerca; en Chrome headless la imagen sale negra, así que lo que se vea al final
+no está comprobado.
 
 **Qué lo vigila.**
 - **C12** afirma la forma y la coordenada del iframe satelital (`t=k`, `q` y `ll`), la del
-  iframe de Street View (`layer=c`, `cbll`) y la del enlace a Earth (`/web/search/`, nunca
-  `/web/@`).
+  iframe de Street View (`layer=c`, `cbll`), la del enlace «buscar alrededor»
+  (`map_action=pano`, `viewpoint`) y la del enlace a Earth (`/web/search/`, nunca `/web/@`).
 - **C16** afirma el ciclo de vida:
   - 0 iframes con la ficha sola;
   - la ficha sigue abierta debajo;
   - 0 iframes tras la ×.
-- **6 mutantes nuevos**, 27 en total.
+- **7 mutantes nuevos**, 28 en total.
 - El arnés **no resuelve los dominios de Google** (`--host-resolver-rules`): afirma atributos, no
   píxeles, así que CI no depende de Google.
 

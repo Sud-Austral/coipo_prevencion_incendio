@@ -116,7 +116,7 @@ npm run build                              # ~1,3 s
 npm run verify:banner                      # ~5 s, necesita Chrome
 npm run verify:panel                       # ~1 min, necesita Chrome
 npm run verify:priorizacion                # ~40 s, necesita Chrome (mide la vista Riesgo)
-npm run verify:priorizacion -- --negativas # ~11 min, 27 mutaciones, PARCHEA 9 archivos de src/
+npm run verify:priorizacion -- --negativas # ~11 min, 28 mutaciones, PARCHEA 9 archivos de src/
 npm run verify:electrico                   # ~15 s, pagina de lineas electricas
 npm run verify:electrico -- --negativas    # ~1 min, 6 mutaciones, PARCHEA src/electrico/
 npm run verify:mutantes                    # ~16 min, 17 mutantes, PARCHEA 7 archivos de src/
@@ -221,7 +221,7 @@ npm run verify:mutantes                    # ~16 min, 17 mutantes, PARCHEA 7 arc
 | Aserciones de datos (D1–D20, D16b) | 21 distintas, **81 ejecuciones**, y **31 controles negativos** en rojo · ~22 s + ~2 min | `python ETL/verify.py --negativas` |
 | Arnés del banner (A1–A10) | 10 distintas, **49 ejecuciones** · ~4 s | `npm run verify:banner` |
 | Arnés del panel (B1–B28) | 28 distintas, **199 ejecuciones** con datos reales (195 con el fixture) · ~1 min | `npm run verify:panel` |
-| Arnés de la vista Riesgo (C1–C16, C4b, C10b) | 18 distintas, **19 ejecuciones** · ~40 s, y **27 controles negativos** en rojo · ~11 min | `npm run verify:priorizacion` |
+| Arnés de la vista Riesgo (C1–C16, C4b, C10b) | 18 distintas, **19 ejecuciones** · ~40 s, y **28 controles negativos** en rojo · ~11 min | `npm run verify:priorizacion` |
 | Arnés de Líneas eléctricas (E1–E12) | 12 distintas · ~15 s, y **6 controles negativos** en rojo · ~1 min | `npm run verify:electrico` |
 | Mutantes de los arneses | **17**, todos en rojo · ~16 min | `npm run verify:mutantes` |
 | Humo contra lo publicado | base path + manifest + capas y derivados por bytes + Range en 2 teselas + `lineas-electricas.html` | job `humo` de `deploy.yml` |
