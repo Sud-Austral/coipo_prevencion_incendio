@@ -22,7 +22,6 @@ import { COLOR_FAMILIA, COLOR_NIVEL, RAMPA_NORMALIZADA, fmt } from '../config'
 // Decimales FIJOS en es-CL: los cortes y los niveles viajan con 3 como maximo.
 const fmtCorte = new Intl.NumberFormat('es-CL', { maximumFractionDigits: 3 })
 const fmt3 = new Intl.NumberFormat('es-CL', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
-const fmtMb = new Intl.NumberFormat('es-CL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
 const rangoDeClase = ({ desde, hasta }) => {
   if (desde == null) return `< ${fmtCorte.format(hasta)}`
@@ -58,6 +57,9 @@ export default function PanelRiesgo({
   abierto,
   onCerrar,
   datosAreas,
+  // La geometria COMPLETA de la comuna, publicada: la descarga GeoJSON sale de
+  // aqui y no de lo dibujado, que son teselas.
+  urlGeojson,
   datosPuntos,
   pasaPuntos,
   map,
@@ -86,14 +88,27 @@ export default function PanelRiesgo({
 
   const avisar = (nombre, n) => setEstadoPng(`${nombre} · ${fmt.format(n)} registros`)
 
-  const bajarManchas = (formato) => {
-    const r =
-      formato === 'csv'
-        ? csvRiesgo(datosAreas?.features, { region: parte?.region, cut })
-        : geojsonDe('riesgo', datosAreas?.features, null, { meta: procedencia })
+  const bajarManchas = async (formato) => {
     const nombre = nombreArchivo('riesgo', { comuna }, formato)
-    guardar(nombre, r.texto, formato === 'csv' ? 'text/csv;charset=utf-8' : 'application/geo+json')
-    avisar(nombre, r.n)
+    if (formato === 'csv') {
+      const r = csvRiesgo(datosAreas?.features, { region: parte?.region, cut })
+      guardar(nombre, r.texto, 'text/csv;charset=utf-8')
+      avisar(nombre, r.n)
+      return
+    }
+    // La geometria sin simplificar vive en el GeoJSON publicado de la comuna; se
+    // baja al pedirla y se le agrega la procedencia, como a toda descarga.
+    setEstadoPng(`Descargando la geometría de ${comuna}…`)
+    try {
+      const r = await fetch(urlGeojson)
+      if (!r.ok) throw new Error(`HTTP ${r.status}`)
+      const gj = await r.json()
+      const salida = geojsonDe('riesgo', gj.features, null, { meta: procedencia })
+      guardar(nombre, salida.texto, 'application/geo+json')
+      avisar(nombre, salida.n)
+    } catch (e) {
+      setEstadoPng(`No se pudo descargar la geometría (${e.message}).`)
+    }
   }
 
   // El mismo predicado que filtra los iconos filtra el archivo: una sola regla.
@@ -172,18 +187,17 @@ export default function PanelRiesgo({
 
         {!cut && (
           <p className="pista">
-            El modelo cubre {fmt.format(meta?.regiones?.length ?? 0)} regiones y{' '}
-            {fmt.format(Object.keys(meta?.partes ?? {}).length)} comunas. Se dibuja una comuna a
-            la vez.
+            El mapa muestra las {fmt.format(meta?.regiones?.length ?? 0)} regiones y{' '}
+            {fmt.format(Object.keys(meta?.partes ?? {}).length)} comunas del modelo. Elige una comuna,
+            o toca una mancha, para normalizar, ver su ficha o descargarla.
           </p>
         )}
 
-        {/* Natales pesa 36,8 MB: quien la elige en un telefono tiene que saber
-            por que tarda, antes de concluir que no pasó nada. */}
-        {parte && parte.bytes > 2e6 && (
-          <p className="pista">
-            {cargando ? 'Descargando' : 'Descarga de'} {fmtMb.format(parte.bytes / 1048576)} MB
-            · {fmt.format(parte.features)} manchas
+        {/* Sin teselas el mapa no tiene con qué dibujar: el ETL corrió sin GDAL.
+            Se dice, en vez de mostrar un mapa vacío que se lee como «sin riesgo». */}
+        {meta && !meta.teselas && (
+          <p className="aviso">
+            Esta publicación no trae las teselas de riesgo, así que las manchas no se pueden dibujar.
           </p>
         )}
 
@@ -341,7 +355,7 @@ export default function PanelRiesgo({
           <button className="centrar" disabled={!datosAreas} onClick={() => bajarManchas('csv')}>
             Manchas (CSV)
           </button>
-          <button className="centrar" disabled={!datosAreas} onClick={() => bajarManchas('geojson')}>
+          <button className="centrar" disabled={!urlGeojson} onClick={() => bajarManchas('geojson')}>
             Manchas (GeoJSON)
           </button>
           <button className="centrar" disabled={!hayInfra} onClick={() => bajarPuntos('csv')}>
@@ -378,7 +392,7 @@ export default function PanelRiesgo({
         <p className="kpi">
           {cargando
             ? 'Cargando…'
-            : `${fmt.format(cut ? (cuentaAreas ?? 0) : 0)} manchas de riesgo`}
+            : `${fmt.format(cuentaAreas ?? 0)} manchas de riesgo${cut ? '' : ' en el país'}`}
         </p>
         <p className="kpi">
           {fmt.format(cuentaPuntos ?? 0)} elementos de infraestructura

@@ -111,6 +111,47 @@ def norm_txt(v) -> str | None:
     return s or None
 
 
+def clave_comuna(s: str) -> str:
+    """Clave para reconocer la MISMA comuna escrita distinto: sin mayusculas, sin
+    tildes y con los espacios colapsados."""
+    s = unicodedata.normalize("NFD", s)
+    s = "".join(ch for ch in s if unicodedata.category(ch) != "Mn")
+    return " ".join(s.casefold().split())
+
+
+def canonizar_comunas(feats: list[dict]) -> dict[str, str]:
+    """Unifica las grafias de una misma comuna en la mas frecuente. Muta `feats`.
+
+    Decidido por Luis el 2026-09-15: «Cabrero», no «CABRERO». Medido ese dia sobre
+    los 14.705 incendios: 332 etiquetas de comuna para 308 comunas, 18 de ellas con
+    variantes que sólo difieren en mayusculas (CABRERO/Cabrero, seis grafias de San
+    Pedro de la Paz), y el visor las contaba como comunas distintas.
+
+    La forma que queda es la MAS FRECUENTE en el propio dato (a igualdad, la
+    primera en orden alfabetico): no se escribe aqui ninguna lista de nombres, y
+    una comuna nueva mal escrita se une sola a su grafia mayoritaria. Devuelve
+    {variante: canonica} para publicarlo en el manifest: unir etiquetas es
+    tocar lo que se muestra, y tiene que constar.
+    """
+    from collections import Counter
+
+    cuenta = Counter(f["properties"]["comuna"] for f in feats if f["properties"].get("comuna"))
+    grupos: dict[str, list[str]] = {}
+    for v in cuenta:
+        grupos.setdefault(clave_comuna(v), []).append(v)
+    cambio: dict[str, str] = {}
+    for variantes in grupos.values():
+        if len(variantes) < 2:
+            continue
+        canonica = sorted(variantes, key=lambda v: (-cuenta[v], v))[0]
+        cambio.update({v: canonica for v in variantes if v != canonica})
+    for f in feats:
+        v = f["properties"].get("comuna")
+        if v in cambio:
+            f["properties"]["comuna"] = cambio[v]
+    return dict(sorted(cambio.items()))
+
+
 def es_nulo(v) -> bool:
     s = norm_txt(v)
     return s is None or s.lower() in NULOS
@@ -516,6 +557,16 @@ def build(cfg: Cfg) -> dict:
     for ident, cc, fl, cg in conflictos[:10]:
         log(cfg, "incendios", f"    conflicto id={ident} causa investigada={cc!r} Excel={fl!r} -> {cg!r}")
 
+    # Antes de los derivados: la BBDD completa y lineas electricas se arman de
+    # estas mismas features, y D17/D18 exigen que digan lo mismo fila a fila.
+    comunas_unidas = canonizar_comunas(feats)
+    log(
+        cfg,
+        "incendios",
+        f"comunas: {len(comunas_unidas)} grafias unidas a su forma mas frecuente"
+        + (f" ({', '.join(f'{k!r}->{v!r}' for k, v in list(comunas_unidas.items())[:4])}...)" if comunas_unidas else ""),
+    )
+
     # Los derivados se arman AQUI, antes de codificar(): codificar muta las props
     # en su sitio y los derivados van con las etiquetas, no con indices.
     derivados = _derivados(cfg, df, c, columnas_excel, feats, sin_fila, n_filas)
@@ -546,6 +597,7 @@ def build(cfg: Cfg) -> dict:
         "husos": {"32718": husos[32718], "32719": husos[32719]},
         "filtros": ["temporada", "region", "provincia", "causa_grupo", "causa_general"],
         "codificados": CATEGORICOS,
+        "comunas_unidas": comunas_unidas,
         "tablas": tablas,
         "dominios": doms,
         **st,

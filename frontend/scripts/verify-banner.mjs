@@ -660,8 +660,23 @@ async function main() {
       /* ya cerrado en el caso A10 */
     }
     cdp.ws.close()
-    proc.kill()
-    await rm(perfil, { recursive: true, force: true }).catch(() => {})
+    // Se espera a que Chrome SALGA antes de borrar el perfil: borrarlo justo
+    // tras kill() fallaba en silencio (Chrome y sus hijos retienen archivos) y
+    // el 2026-09-15 habia 137 perfiles de verify-panel y 44 de verify-banner en
+    // %TEMP%. Si aun asi no se puede, se dice.
+    if (proc.exitCode === null && proc.signalCode === null) {
+      await new Promise((ok) => {
+        const t = setTimeout(ok, 5000)
+        proc.once('exit', () => {
+          clearTimeout(t)
+          ok()
+        })
+        proc.kill()
+      })
+    }
+    await rm(perfil, { recursive: true, force: true, maxRetries: 10, retryDelay: 300 }).catch((e) =>
+      console.error(`  · no se pudo borrar el perfil de Chrome ${perfil} (${e.code})`),
+    )
   }
 
   for (const a of avisos) console.log(`  ! ${a}`)

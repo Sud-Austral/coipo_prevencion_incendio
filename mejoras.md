@@ -33,7 +33,7 @@ commitear y publicar cada una.
 | Fase | Qué | Estado |
 |---|---|---|
 | **F0** | Defectos y vigilantes, sin rediseño | **HECHA, sin commitear** (detalle abajo) |
-| F1 | Piel común: token de control, radios, sombra por tema, un solo anillo de foco, ficha con cabecera sticky y pista de scroll, botón de acento con contraste en oscuro | pendiente |
+| F1 | Piel común: token de control, radios, sombra por tema, un solo anillo de foco, ficha con cabecera sticky y pista de scroll, botón de acento con contraste en oscuro | **HECHA el 2026-09-15, sin commitear** (`DECISIONES.md` §U) |
 | F2 | Incendios: filtros en botonera con modal anclado (copiado de catastro con origen), Territorio región › provincia › comuna, Capas, Mapa base, Información · Descargar · Compartir | pendiente |
 | F3 | Riesgo (antes Priorización) con la misma botonera. Su leyenda ya está en es-CL desde el 2026-09-15, al cambiar el insumo (`DECISIONES.md` §S) | pendiente |
 | F4 | Indicadores en secciones plegables (`<details>` con el h2 dentro del `summary`) | pendiente |
@@ -66,22 +66,22 @@ commitear y publicar cada una.
 
 ### Hallazgos abiertos que destapó F0 (defectos previos, no introducidos)
 
-- **El informe se titula con la fecha UTC.** `SeccionDescargas.jsx` usa
-  `new Date().toISOString()`: generado a las 21:54 del 14, decía «15 de septiembre» mientras
-  el CSV se llamaba `…_2026-09-14.csv`. Es el mismo error que `DECISIONES.md` §K. *Hipótesis
-  por lectura de código, no aislada.*
-- **Una cifra escrita a mano que es falsa con filtro.** Con `?temporada=2025-2026`, la nota
-  fija «Líneas eléctricas es cuarta por recuento y segunda por superficie» no se cumple: esa
-  temporada tiene 317 incendios (quinta) y 20.565,4 ha (primera). Viola «las cifras salen del
-  manifest».
-- **«0 % de los incendios investigados son de causa humana» con 0 incendios** en el ámbito.
-- **Pestañas por teclado.** Tras ir con las flechas de Priorización a Incendios, el foco se queda en
-  «Priorización», que ya no es la activa; el patrón tablist pide enfocar la nueva. → F1.
+- ~~**El informe se titula con la fecha UTC.**~~ **CERRADO el 2026-09-15**: la fecha sale de
+  la hora local (`fechaLarga(hoy())`). Lo vigila B31, que emula Pago Pago y Kiritimati
+  (UTC−11 y UTC+14) y exige el mismo día que el nombre del CSV.
+- ~~**Una cifra escrita a mano que es falsa con filtro.**~~ **CERRADO el 2026-09-15**: el
+  puesto de Líneas eléctricas por recuento y por superficie se calcula de los incendios del
+  ámbito. Lo vigila B29, con un oráculo propio en el país y en una temporada distinta.
+- ~~**«0 % de los incendios investigados son de causa humana» con 0 incendios**~~ **CERRADO
+  el 2026-09-15**: dice «Ningún incendio investigado cumple los filtros actuales». Lo vigila
+  B30 con `?temporada=0000-0000`.
+- ~~**Pestañas por teclado.**~~ **CERRADO en F1**: el foco va con la selección, y Inicio y Fin
+  completan el patrón. Lo vigila B32.
 - **`?vista=priorizacion` ignora `?lat=&lon=&z=`**: reencuadra a la comuna. Un enlace
   compartido desde esa vista perdería su encuadre. *Deducido del efecto `encuadradoPrior` y
   medido con una URL a mano; no generado desde el botón «Compartir».*
-- **La ficha de un incendio se corta a 1440×900.** `max-height` 630 px contra `scrollHeight` 658: la
-  fila «Informe» queda a medias, sin pista de scroll, con el cartel asomando. → F1.
+- ~~**La ficha de un incendio se corta a 1440×900.**~~ **CERRADO en F1**: cabecera fija, pista de
+  desvanecido y `scroll-padding` para el foco. Lo vigila C17.
 - **Filtros cortados a 287 px.** 6 de las 14 causas generales y 2 de las 7 carpetas se cortan en la lista. → F2,
   con filas que envuelven el texto.
 - **Un filtro puesto en la URL cuyas capas están todas apagadas** sigue aplicándose, pero no
@@ -92,37 +92,50 @@ commitear y publicar cada una.
   estados mutados.** Medido el 2026-09-15: tras `verify:priorizacion -- --negativas` la ficha
   capturada decía «2532.0 ha» (el último mutante de C14) y se leyó como un defecto que no
   existía. Conviene que las corridas con mutante escriban sus capturas en otra carpeta.
-- **Los arneses no fijan `prefers-color-scheme`.** En este equipo capturan en oscuro, y el tema
-  claro queda sin mirar salvo que alguien lo emule. → F1: pasada en los dos temas.
-- **Perfiles de Chrome que los arneses dejan en `%TEMP%`**: 21 de verify-banner, 26 de
-  verify-electrico, 19 de verify-panel y 30 de verify-priorizacion, contados el 2026-09-14.
+- **Un arnés que necesite otros datos no tiene dónde ponerlos**, salvo `verify:priorizacion`,
+  que acepta `VERIFY_DATOS=<carpeta>` desde el 2026-09-15. Los demás sirven `dist/data`, que
+  es copia de `public/data`: la tentación de componer ahí ya se pagó dos veces
+  (`DECISIONES.md`, fallos 8 y 10).
+- **Los arneses no fijan `prefers-color-scheme`.** En parte cerrado en F1: el de riesgo arranca
+  en claro y captura los dos temas (C18). Falta `verify:electrico`, que se reescribe en F5.
+- ~~**Perfiles de Chrome que los arneses dejan en `%TEMP%`**~~ **CERRADO el 2026-09-15.** Ya
+  eran 381 perfiles y 8,7 GB: verify-priorizacion y verify-electrico no borraban el suyo, y
+  panel y banner lo borraban justo tras `kill()`, con Chrome reteniendo archivos y el error
+  silenciado. Ahora los cuatro esperan a que Chrome salga y reintentan; si no pueden, lo
+  dicen. Comprobado: tras correr los cuatro arneses quedan 0. Un corte por señal sí deja el
+  perfil de esa corrida (el proceso sale desde el manejador).
 - **`src/index.css` y `src/fichas.js` tienen CRLF en la copia de trabajo** (git normaliza a LF).
   Por eso las anclas de sus mutantes son de una sola línea.
 
+### Decisiones de Luis del 2026-09-15
+
+- **`INSUMO_ELECTRICO/` y `doble_ponderacion.md` se mantienen.**
+- **Riesgo: no se simplifica ninguna geometría, pero se trabaja en formato web optimizado
+  (teselas), separadas por región.** **Hecho el mismo día**: `DECISIONES.md` §T. Queda por
+  decidir si las teselas se versionan (~150 MB en la historia por cada cambio del insumo de
+  riesgo) o viven sólo en el artefacto de Pages.
+- **Los datos de subcausa se muestran tal como vienen.** Los datos son de otro departamento
+  y Luis construye la herramienta: no hay tabla de «nombres cortos» que revisar. Deja sin
+  efecto ese punto de `DECISIONES.md` §R.
+- **Filtros en cascada**: cada filtro ofrece sólo lo que existe con los demás filtros
+  puestos. Resuelve las opciones «(0 obras)» y va con F2.
+- **La grafía de las comunas se canoniza** a la forma «Cabrero» (no «CABRERO»). **Hecho el
+  2026-09-15**: 24 grafías unidas en `comunas_unidas`, vigilado por D21.
+- **F1–F4 antes que F5**, como dice el plan.
+
 ### Pendientes de datos
 
-- **Las 5 comunas de riesgo de más de 10 MB son lentas en un equipo modesto.** Medido el
-  2026-09-15 con la CPU a ×4: Natales (36,8 MB, 25.278 manchas) tarda 8,4 s en cargar y
-  2,1 s por cada repintado de opacidad; Punta Arenas, 4,4 s y 1,3 s. Tres salidas, de menos
-  a más invasiva: (a) no hacer nada y avisar del peso, que es lo que hace hoy el panel;
-  (b) repintar la opacidad sin `setStyle` por polígono (la opacidad del canvas entero, que
-  en esta vista sólo lleva manchas); (c) simplificar esas comunas con
-  `shapely.coverage_simplify`, que respeta los bordes compartidos pero **cambia la geometría
-  publicada**: es una decisión sobre el dato y la toma Luis. Simplificar mancha por mancha
-  no sirve: a 25 m abre 13.627 solapes (`DECISIONES.md` §S).
+- ~~**Las 5 comunas de riesgo de más de 10 MB son lentas en un equipo modesto.**~~ **CERRADO
+  el 2026-09-15 con teselas por región** (`DECISIONES.md` §T): la vista ya no descarga
+  geometría para dibujar; Natales encuadrada son 4,6 MB de rangos contra 36,8 MB. **Sin
+  comprobar:** el workflow con GDAL en Actions.
+- **9 astillas de riesgo de 0 ha no tienen figura en las teselas** (una unidad de tesela en
+  z14 mide ~2 m). Siguen en atributos, CSV y GeoJSON; D26 las cuenta.
 - **La región 12 de riesgo se publica simplificada**, con 5 geometrías inválidas y 1.231
   manchas sin geometría (9,24 ha, contadas en el manifest). Si el lab registra cómo se
   simplificó, o produce el `.json` de forma reproducible, se puede verificar; hoy no.
-- **`doble_ponderacion.md` y `.tex` describen el modelo de priorización retirado** (pesos,
-  Spearman y peso efectivo sobre las 572 manchas). Qué hacer con ellos lo decide Luis: nota
-  de alcance, mover a un archivo histórico o borrar.
 
-- **Canonizar la grafía de las comunas en el ETL.** El subconjunto eléctrico trae 226 etiquetas
-  para 220 comunas (CABRERO/Cabrero y otras cinco). El visor las publica como comunas
-  distintas en sus tablas (`DECISIONES.md` §Q).
-- **`INSUMO_ELECTRICO/` quedó versionado en `18ff9db`.** Trae la copia «(2)» del Excel,
-  idéntica byte a byte a la de `INSUMO_INCENDIO/`, y la vista de referencia. Qué hacer con
-  esa carpeta lo decide Luis.
+- ~~**Canonizar la grafía de las comunas en el ETL.**~~ **HECHO el 2026-09-15** (D21).
 
 ### Para F5 (salió de la revisión adversarial de la página de Líneas eléctricas)
 
@@ -134,7 +147,10 @@ commitear y publicar cada una.
 - **Huecos del arnés actual (`verify-electrico.mjs`).**
   - Ninguna aserción vigila §H: el clic se hace con las comunas apagadas y no cuenta canvas.
   - El mutante de E5 se pone rojo por el formato de la clave, no por la agrupación.
-  - Sus guardas no atienden SIGHUP ni SIGBREAK.
+  - ~~Sus guardas no atienden SIGHUP ni SIGBREAK.~~ **CERRADO el 2026-09-15**: las cuatro
+    señales, matan build y Chrome, y borran el respaldo tras un corte limpio. Probado con
+    `--solo E11 --simular-ctrl-c 6000 --senal SIGHUP`: salida 129, fuente igual byte a byte y
+    sin respaldo.
 
 ### Para `coipo_vista_catastro` (vistos al relevarlo; no se tocan desde este repo)
 
@@ -175,8 +191,8 @@ commitear y publicar cada una.
   el fuente de Leaflet, no comprobado con un mutante**, y C1 no lo cazaría tal como está.
 - ~~**Llevar `python ETL/verify.py --negativas` al job `build` del CI.**~~ **HECHO**: es el
   paso «Controles negativos de los datos» de `deploy.yml`, que corre D12 y D13 porque allí
-  tippecanoe puebla `ETL/_build/`. Hoy son 31 mutaciones: 12 de ellas, de la capa de riesgo
-  (2026-09-15).
+  tippecanoe puebla `ETL/_build/`. Hoy son 45 mutaciones: 20 de ellas, de la capa de riesgo
+  y sus teselas (2026-09-15).
 
 ### Prioridad media
 
@@ -189,8 +205,7 @@ commitear y publicar cada una.
 
 ### Prioridad baja
 
-- **`.vscode/extensions.json`.** El `.gitignore` ya lo prevé (`!.vscode/extensions.json`) y
-  no existe.
+- ~~**`.vscode/extensions.json`.**~~ **HECHO el 2026-09-15** (oxc y Python).
 
 ---
 
@@ -198,31 +213,25 @@ commitear y publicar cada una.
 
 ### Prioridad alta
 
-- **El corrimiento de campos del `.dbf` no tiene vigilante de contenido** (`DECISIONES.md`
-  §D). D10 caza que falte un campo de filtro, no que su valor esté desplazado. Un
-  `Inst='OP  F'` pasaría hoy. Bastaría afirmar que los valores de un puñado de campos
-  categóricos pertenecen a su dominio del manifest.
-- **El cruce contra `KM_OFICIAL_NACIONAL` sólo vive en `analisis/leer_capas.py`**
-  (`DECISIONES.md` §G), que nadie ejecuta en CI. Si las longitudes geodésicas se
-  desincronizan de la cifra oficial, no se entera nadie.
+- ~~**El corrimiento de campos del `.dbf` no tiene vigilante de contenido.**~~ **HECHO en
+  parte el 2026-09-15**: D23 caza los síntomas (doble espacio, bordes, U+FFFD, mojibake) y una
+  titularidad OECV fuera del Memo 3045/2025, y su mutación `'OP  F'` se pone roja. Un valor
+  desplazado que parezca limpio sigue pasando.
+- ~~**El cruce contra `KM_OFICIAL_NACIONAL` sólo vive en `analisis/leer_capas.py`.**~~
+  **HECHO el 2026-09-15**: D22, con tolerancia del 12 % y dos mutaciones.
 
 ### Prioridad media
 
-- **`analisis/README.md` da mal la ruta del intérprete.** Dice
-  `C:\ProgramData\anaconda3\python.exe`; el que responde a `python` en este equipo es
-  `C:\Users\luis.monsalve\AppData\Local\anaconda3\python.exe` (medido el 2026-09-10). Y el
-  que está roto es `python3`, que es el stub del Store y termina con código 49.
-- **`INSUMO_GRAFICO/README.md` nombra un asset que no existe.** Dice
-  `banner-conaf-uia.jpg`; el real es `frontend/src/assets/banner-conaf-incendios.jpg`.
-- **`npm audit`: 1 vulnerabilidad alta en `nanoid`**, transitiva de la cadena de build. No
-  llega a lo publicado, pero conviene subirla cuando se toquen las dependencias.
+- ~~**`analisis/README.md` da mal la ruta del intérprete.**~~ **HECHO el 2026-09-15.**
+- ~~**`INSUMO_GRAFICO/README.md` nombra un asset que no existe.**~~ **HECHO el 2026-09-15.**
+- ~~**`npm audit`: 1 vulnerabilidad alta en `nanoid`.**~~ **HECHO el 2026-09-15**: 3.3.19.
 
 ### Prioridad baja
 
 - **Tres identidades git para la misma persona** (`Luis`, `lmonsalve22`, `Luis Monsalve`,
   todas con el mismo correo) y convención de mensajes mixta: conviven `docs:`, `ci:` y
-  `datos:` con mensajes sueltos (`rutas`, `google`, `vamos por el 100`). Un
-  `.mailmap` arregla lo primero sin tocar la historia.
+  `datos:` con mensajes sueltos (`rutas`, `google`, `vamos por el 100`). **El `.mailmap`
+  está puesto desde el 2026-09-15**; la convención de mensajes sigue mixta.
 
 ---
 
@@ -232,15 +241,19 @@ commitear y publicar cada una.
   sola capa de datos.
 - Un control negativo del **corrimiento del `.dbf`**. La referencia lee de DuckDB y no
   tiene lectores de shapefile escritos a mano.
-- Un vigilante del **modo degradado**: hoy nada impide commitear una corrida de Windows
-  salvo el aviso por stderr y la disciplina. Una aserción que compare el `formato` del
-  manifest contra lo esperado en `main` lo cerraría.
+- ~~Un vigilante del **modo degradado**.~~ **HECHO el 2026-09-15**: D24, que `run.py`
+  exige en Actions (viales en PMTiles con tippecanoe y riesgo con teselas de GDAL).
 
 ---
 
 ## 4. Dificultades, con tres formas de resolver cada una
 
 ### D1. La carga inerte ya se borró; la cuestión jurídica sigue abierta
+
+> **Decidido y hecho el 2026-09-15: opción C para las actas.** Luis pidió eliminarlas. Ver
+> `CLAUDE.md` §7.1: purgadas de las 4 ramas y verificado con un clon nuevo. **Queda
+> abierto:** los PR #1 y #2 y las URL de commits viejos las siguen sirviendo hasta que
+> GitHub Support purgue esas referencias; la solicitud la hace Luis.
 
 **Hecho el 2026-09-10.** Se borraron de `INSUMO_INCENDIO/` **241 archivos, 492,1 MB**, todo
 lo que ningún paso del pipeline abre: 70 PDF (329,8 MB), 16 `.docx` (81,0 MB), 40 fotos
@@ -275,8 +288,12 @@ Para recuperar cualquier archivo borrado: `git checkout HEAD -- <ruta>`.
 
 ### D2. El cruce espacial no corre en Windows
 
+> **Hecho el 2026-09-15: opción B.** `tiles.py` escribe el intermedio también en modo
+> degradado. Comprobado ejecutando `run.py --layers rutas,redvial` sin tippecanoe: 32 s, los
+> dos intermedios en `_build/` y el cruce igual que en CI (mediana 0,36 km, 500/500).
+
 D12 y D13 —las dos aserciones que cazan un huso UTM invertido— necesitan
-`ETL/_build/*.geojson`, que sólo se puebla cuando corre tippecanoe.
+`ETL/_build/*.geojson`, que sólo se poblaba cuando corría tippecanoe.
 
 | | Pros | Contras |
 |---|---|---|

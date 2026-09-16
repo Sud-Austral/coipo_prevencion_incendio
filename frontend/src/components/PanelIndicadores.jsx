@@ -7,6 +7,7 @@ import {
   coberturaStandby,
   cruceCoberturaPresion,
   resumenDesdeManifest,
+  CAUSA_ELECTRICA,
   resumenIncendios,
   riesgoElectrico,
   topConOtras,
@@ -26,6 +27,27 @@ import {
 const ha = (v) => `${fmt1.format(v)} ha`
 const km = (v) => `${fmt1.format(v)} km`
 const pc = (v) => `${fmt1.format(v)} %`
+
+const ORDINALES = ['primera', 'segunda', 'tercera', 'cuarta', 'quinta', 'sexta', 'séptima', 'octava', 'novena', 'décima']
+const ordinal = ({ puesto, empate }) => `${ORDINALES[puesto - 1] ?? `${puesto}.ª`}${empate ? ' (empatada)' : ''}`
+
+/**
+ * Puesto de una causa general entre todas, por numero y por superficie, con el
+ * criterio de competicion: 1 + cuantas tienen MAS. Un empate se dice, porque
+ * «tercera» a secas es falso cuando otra causa tiene la misma cifra.
+ */
+function puestoDe(lista, v) {
+  const e = (lista ?? []).find((d) => d.v === v)
+  if (!e || !e.n) return null
+  const en = (clave) =>
+    e[clave] == null
+      ? null
+      : {
+          puesto: 1 + lista.filter((d) => d[clave] > e[clave]).length,
+          empate: lista.some((d) => d !== e && d[clave] === e[clave]),
+        }
+  return { n: en('n'), ha: en('ha') }
+}
 
 // Los mismos colores que usa el mapa para el grupo de causa: si la leyenda del
 // panel y la del mapa discreparan, el color dejaria de significar nada.
@@ -99,6 +121,10 @@ export default function PanelIndicadores({
     [manifest, nacional, filtros?.region],
   )
   const causas = useMemo(() => topConOtras(resumen?.porGeneral, 6), [resumen])
+  // Se calcula sobre el AMBITO FILTRADO. Era una frase fija, «cuarta por recuento
+  // y segunda por superficie», cierta para el pais entero y falsa con filtro:
+  // con ?temporada=2025-2026 la causa es quinta y primera (medido el 2026-09-14).
+  const puestoElectrico = useMemo(() => puestoDe(resumen?.porGeneral, CAUSA_ELECTRICA), [resumen])
 
   // Conductas detras de los incendios por negligencia. k=5 y no 6 porque la
   // fila de quemas lleva un rotulo largo y agrupado.
@@ -201,18 +227,26 @@ export default function PanelIndicadores({
           <p className="bajada">
             Cuántos de estos incendios los inició una persona, por descuido o a propósito.
           </p>
-          <Cifra
-            valor={fmt1.format(resumen.evitables.pct)}
-            unidad="%"
-            etiqueta="de los incendios investigados son de causa humana"
-            detalle={
-              resumen.evitables.pctHa != null
-                ? `${pc(resumen.evitables.pctHa)} de la superficie quemada · ${fmt.format(
-                    resumen.evitables.n,
-                  )} de ${fmt.format(resumen.n)} incendios`
-                : `${fmt.format(resumen.evitables.n)} de ${fmt.format(resumen.n)} incendios`
-            }
-          />
+          {/* Con 0 incendios en el ambito no hay porcentaje: pct() devuelve 0 y la
+              cifra afirmaba «0 % de los incendios investigados son de causa
+              humana», que es una afirmacion sobre el dato salida de dividir por
+              cero. */}
+          {resumen.n > 0 ? (
+            <Cifra
+              valor={fmt1.format(resumen.evitables.pct)}
+              unidad="%"
+              etiqueta="de los incendios investigados son de causa humana"
+              detalle={
+                resumen.evitables.pctHa != null
+                  ? `${pc(resumen.evitables.pctHa)} de la superficie quemada · ${fmt.format(
+                      resumen.evitables.n,
+                    )} de ${fmt.format(resumen.n)} incendios`
+                  : `${fmt.format(resumen.evitables.n)} de ${fmt.format(resumen.n)} incendios`
+              }
+            />
+          ) : (
+            <p className="apagada sin-evitables">Ningún incendio investigado cumple los filtros actuales.</p>
+          )}
           {['Negligentes', 'Intencionales'].map((g) => {
             const d = resumen.porGrupo.find((x) => x.v === g)
             if (!d) return null
@@ -730,8 +764,10 @@ export default function PanelIndicadores({
           ))}
           {conFeatures && (
             <p className="nota">
-              La barra ordena por número y la segunda cifra son hectáreas: no coinciden. Líneas
-              eléctricas es cuarta por recuento y segunda por superficie.
+              La barra ordena por número y la segunda cifra son hectáreas: no coinciden.
+              {puestoElectrico?.n &&
+                puestoElectrico.ha &&
+                ` ${CAUSA_ELECTRICA} es ${ordinal(puestoElectrico.n)} por recuento y ${ordinal(puestoElectrico.ha)} por superficie.`}
             </p>
           )}
         </section>

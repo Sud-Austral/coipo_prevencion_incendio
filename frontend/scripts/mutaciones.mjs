@@ -236,6 +236,64 @@ const MUTANTES = [
     a: 'aviso: null,\n        temporadas:',
     porque: 'quitar el aviso del informe',
   },
+  {
+    // La frase fija de antes: cierta para el pais, falsa con filtro. Por eso B29
+    // mide tambien una temporada donde el puesto cambia.
+    id: 'B29',
+    suite: 'verify-panel.mjs',
+    archivo: 'src/components/PanelIndicadores.jsx',
+    de: '` ${CAUSA_ELECTRICA} es ${ordinal(puestoElectrico.n)} por recuento y ${ordinal(puestoElectrico.ha)} por superficie.`',
+    a: '` ${CAUSA_ELECTRICA} es cuarta por recuento y segunda por superficie.`',
+    porque: 'volver a la frase fija del puesto de Líneas eléctricas',
+  },
+  {
+    id: 'B30',
+    suite: 'verify-panel.mjs',
+    archivo: 'src/components/PanelIndicadores.jsx',
+    de: '{resumen.n > 0 ? (',
+    a: '{resumen.n >= 0 ? (',
+    porque: 'volver a pintar «0 %» con 0 incendios en el ámbito',
+  },
+  {
+    id: 'B31',
+    suite: 'verify-panel.mjs',
+    archivo: 'src/components/SeccionDescargas.jsx',
+    de: 'fechaInforme: fechaLarga(hoy()),',
+    a: 'fechaInforme: fechaLarga(new Date().toISOString().slice(0, 10)),',
+    porque: 'volver a fechar el informe con el día UTC',
+  },
+  {
+    id: 'B32',
+    suite: 'verify-panel.mjs',
+    archivo: 'src/components/Pestanas.jsx',
+    de: '    document.getElementById(`pestana-${VISTAS[j].id}`)?.focus()',
+    a: '',
+    porque: 'volver a cambiar la pestaña sin llevar el foco: queda en la vieja, con tabIndex -1',
+  },
+  {
+    id: 'B33',
+    suite: 'verify-panel.mjs',
+    archivo: 'src/App.css',
+    de: '.pestana:focus-visible {\n  outline: var(--anillo-foco);',
+    a: '.pestana:focus-visible {\n  outline: 2px solid var(--accent);',
+    porque: 'volver al anillo de 2 px de las pestañas',
+  },
+  {
+    id: 'B34',
+    suite: 'verify-panel.mjs',
+    archivo: 'src/App.css',
+    de: '.limpiar {\n  width: 100%;\n  min-height: var(--alto-control);',
+    a: '.limpiar {\n  width: 100%;',
+    porque: 'que «Limpiar filtros» vuelva a su alto propio, por debajo del token',
+  },
+  {
+    id: 'B34',
+    suite: 'verify-panel.mjs',
+    archivo: 'src/App.css',
+    de: '  border-radius: var(--radio-control);\n  cursor: pointer;\n}\n\n.compartir:hover {',
+    a: '  border-radius: 5px;\n  cursor: pointer;\n}\n\n.compartir:hover {',
+    porque: 'que «Compartir» vuelva a su radio de 5 px',
+  },
 ]
 
 if (SOLO) {
@@ -379,6 +437,14 @@ for (const m of elegidos) {
       primeraRoja = rojas.find((l) => !m.nombra || l.includes(m.nombra)) ?? rojas[0] ?? ''
       if (rojas.length && !roja) detalle = `se puso roja, pero ninguna línea nombra «${m.nombra}»`
       else if (!roja && suite.status !== 0) detalle = 'la suite falló, pero no por esta aserción'
+      // Un superviviente sin el POR QUE obliga a reproducirlo a mano. El
+      // 2026-09-15 B26 salio «la suite falló, pero no por esta aserción» y el log
+      // no decia que habia fallado: se imprimen las rojas ajenas y el final.
+      if (!roja) {
+        const lineas = suite.salida.split('\n').map((l) => l.trimEnd()).filter(Boolean)
+        const ajenas = lineas.filter((l) => /✘/.test(l)).slice(0, 6)
+        for (const l of [...ajenas, '…', ...lineas.slice(-6)]) console.log(`         │ ${l.trim().slice(0, 220)}`)
+      }
     }
   } finally {
     writeFileSync(ruta, original)

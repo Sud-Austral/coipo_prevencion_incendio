@@ -126,6 +126,13 @@ def construir_capa_vial(cfg: Cfg, capa: str, titulo: str, feats: list[dict]) -> 
     if cfg.no_tiles or not tippecanoe_disponible():
         motivo = "--no-tiles" if cfg.no_tiles else "tippecanoe no disponible"
         log(cfg, capa, f"modo degradado ({motivo}): GeoJSON simplificado a {cfg.simplify:.0f} m")
+        # El intermedio de _build/ se escribe TAMBIEN sin tippecanoe: es la
+        # geometria completa contra la que D12 y D13 cruzan los incendios, y sin
+        # el esas dos aserciones -las que cazan un huso UTM invertido- no corrian
+        # nunca en Windows (mejoras.md §D2, opcion B). emitir_para_tippecanoe no
+        # muta `feats`, asi que degradado() recibe las mismas features.
+        inter, nbytes = emitir_para_tippecanoe(cfg, capa, feats)
+        log(cfg, capa, f"intermedio {humano(nbytes)} en {inter.parent.name}/ para el cruce espacial")
         st = degradado(cfg, capa, feats)
         log(cfg, capa, f"{st['features']} f · {st['vertices']} v · {humano(st['bytes'])}")
         return st

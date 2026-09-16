@@ -12,7 +12,7 @@ aterrizarlo aquí es la tabla de rutas de este README, porque las del proyecto a
 ⚠️ **`banner3.jpg` se rediseñó conservando el nombre de archivo.** El asset actual es un banner
 de cabecera web (17,13:1); el anterior era un membrete de documento (10,39:1). **El nombre no te
 avisa de nada**: si heredas un CSS o unas medidas escritas contra el membrete, sus números están
-todos mal. Por eso la copia que usa la app se llama `banner-conaf-uia.jpg`.
+todos mal.
 
 ## Qué hay aquí
 
@@ -24,24 +24,26 @@ todos mal. Por eso la copia que usa la app se llama `banner-conaf-uia.jpg`.
 | `derivados/apple-touch-icon-180.png` | 180 × 180, mismo recorte. |
 | `verificacion/` | Salida de `npm run verify:banner` en este repo: los seis anchos, el caso sin imagen, la marca ampliada ×4 a 390 px, las dos capturas de la app real y `medidas.json`. Línea base visual. |
 
-No hay copia del banner en `derivados/`: la que usa la app es `frontend/src/assets/banner-conaf-uia.jpg`
-y tiene los mismos bytes que `banner3.jpg` (SHA-256 `2f5d01a9…22f70`). Tres copias del mismo archivo
-son 150 KB de lo mismo.
+La que usa la app es `frontend/src/assets/banner-conaf-incendios.jpg`: 3032 × 177, **37 596 B**
+(SHA-256 `8ac22446…93b90`). **No tiene los mismos bytes** que ningún JPG de esta carpeta. Mide lo
+mismo que `3_banner_INCENDIOS.jpg` (73 858 B), que es sobre el que `frontend/src/index.css` dice
+haber medido. Cómo se derivó de él no quedó registrado. Comprobado el 2026-09-15; antes este
+párrafo nombraba `banner-conaf-uia.jpg`, que no existe.
 
 ## Dónde vive cada cosa en el proyecto
 
+Rehecha el 2026-09-15 contra el árbol real: la tabla anterior venía del proyecto donde el
+banner se integró primero (`AppLayout`, `/login`, `styles/tokens.css`) y ninguna de sus rutas
+existe aquí.
+
 | Qué | Dónde |
 | --- | --- |
-| El asset que compila Vite | `frontend/src/assets/banner-conaf-uia.jpg` (importado desde JS: hash de contenido y base resuelta sola) |
-| El componente | `frontend/src/components/layout/Banner.jsx` |
-| Dónde sale y dónde no | El banner cuelga de `AppLayout`, y en `App.jsx` `/login` y `/registro` viven **fuera** de él: sale en el panel autenticado, no en las pantallas públicas. No hay condicional; es el árbol de rutas |
-| El isotipo de login y registro | `frontend/src/components/ui/IsotipoConaf.jsx` + `frontend/src/assets/isotipo-conaf.png` (mismo recorte que el apple-touch-icon) |
-| Los números de la maqueta | `frontend/src/styles/tokens.css` → `--banner-ratio`, `--banner-min-height`, `--banner-bg` |
-| La decisión de paleta, escrita | comentario de `.app-banner` en `frontend/src/styles/components.css` |
-| El apilado banner + shell | `frontend/src/styles/base.css` → `.app-frame` / `.app-shell` |
-| Los iconos que se publican | `frontend/public/favicon.png`, `frontend/public/apple-touch-icon.png` |
-| Cómo se generan los iconos | **A mano**, con la caja de recorte de la tabla de abajo. No hay script: los PNG entregados ya están aceptados y el asset está congelado, así que un generador solo produciría archivos idénticos. |
-| Cómo se verifica | `frontend/scripts/verify-banner.mjs` (`npm run verify:banner`). No corre en CI: el único workflow del repo (`deploy-prod.yml`) delega en un reusable externo y no hay job de frontend. |
+| El asset que compila Vite | `frontend/src/assets/banner-conaf-incendios.jpg`, importado desde `Banner.jsx` (hash de contenido y base resuelta sola) |
+| El componente | `frontend/src/components/Banner.jsx` (lleva también las pestañas de vista) |
+| Los números de la maqueta | `frontend/src/index.css` → `--razon-banner`, `--alto-minimo-banner`, `--alto-banner`, `--verde-institucional` |
+| El estilo | `.banner` en `frontend/src/App.css` |
+| Los iconos que se publican | `frontend/public/favicon-32.png` y `frontend/public/apple-touch-icon-180.png`, byte a byte iguales a los de `derivados/` |
+| Cómo se verifica | `frontend/scripts/verify-banner.mjs` (`npm run verify:banner`), que corre en CI en el job `verificar-visual` de `.github/workflows/deploy.yml` |
 
 ## Medidas, en una tabla
 
@@ -90,9 +92,9 @@ adentro del remate decorativo, y «se ve bien» no es un juicio fiable sobre eso
 ## Si el banner cambia
 
 1. Reemplazar `banner3.jpg` y **volver a medirlo** (§1 de `implementacion_banner.md`).
-2. Copiarlo a `frontend/src/assets/banner-conaf-uia.jpg`.
-3. Actualizar `--banner-ratio` y `--banner-min-height` en `frontend/src/styles/tokens.css`, y las
-   constantes `RATIO` / `MIN_H` / `FILETE_*` de `frontend/scripts/verify-banner.mjs`.
+2. Copiarlo a `frontend/src/assets/banner-conaf-incendios.jpg`.
+3. Actualizar `--razon-banner` y `--alto-minimo-banner` en `frontend/src/index.css`, y las
+   constantes medidas de `frontend/scripts/verify-banner.mjs` (entre ellas `ZONA_SEGURA`).
 4. Regenerar los dos PNG de `derivados/` con la caja de recorte de la tabla de arriba (sharp o
    Pillow; hay que tapar la palabra «conaf» con `#064928` **antes** de reducir, no después) y
    copiarlos a `frontend/public/`.

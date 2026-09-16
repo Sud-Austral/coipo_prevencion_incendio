@@ -38,12 +38,12 @@
 //     entrega el evento a ESE elemento aunque el canvas del calor este encima,
 //     asi que no puede ver el defecto que E8 vigila.
 
-import { spawn } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import {
   createReadStream, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync,
 } from 'node:fs'
-import { mkdtemp } from 'node:fs/promises'
+import { mkdtemp, rm } from 'node:fs/promises'
 import { createServer } from 'node:http'
 import net from 'node:net'
 import { basename, dirname, extname, join, normalize, resolve } from 'node:path'
@@ -62,6 +62,21 @@ const SOLO = (() => {
   const i = process.argv.indexOf('--solo')
   return i > 0 && process.argv[i + 1] ? new Set(process.argv[i + 1].split(',')) : null
 })()
+const valorDe = (flag) => (process.argv.includes(flag) ? process.argv[process.argv.indexOf(flag) + 1] : null)
+// Las cuatro senales de corte de --negativas y su codigo de salida, 128 + n como
+// hace un shell. Hasta el 2026-09-15 este arnes solo atendia SIGINT y SIGTERM:
+// cerrar la ventana de la consola (SIGHUP) o Ctrl+Break (SIGBREAK) dejaba el
+// mutante dentro sin que corriera ningun manejador. SIGBREAK es la 21 en Windows.
+const SENALES = { SIGINT: 130, SIGTERM: 143, SIGHUP: 129, SIGBREAK: 149 }
+const SIMULAR_CTRL_C = valorDe('--simular-ctrl-c') ? Number(valorDe('--simular-ctrl-c')) : null
+const SENAL_SIMULADA = valorDe('--senal') ?? 'SIGINT'
+if (!(SENAL_SIMULADA in SENALES)) {
+  console.error(`✘ --senal ${SENAL_SIMULADA}: se esperaba una de ${Object.keys(SENALES).join(', ')}`)
+  process.exit(1)
+}
+// Procesos vivos, para que un corte durante --negativas pueda matarlos.
+let chromeVivo = null
+let buildVivo = null
 
 const MIME = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
@@ -319,6 +334,29 @@ function puertoLibre() {
   })
 }
 
+// Borra el perfil DESPUES de que Chrome salga. Borrarlo justo tras kill() falla
+// en Windows porque Chrome y sus procesos hijos siguen reteniendo archivos unos
+// instantes; con el error silenciado, el 2026-09-15 habia en %TEMP% 155 perfiles
+// de verify-priorizacion, 137 de verify-panel, 44 de verify-banner y 36 de
+// verify-electrico. Si aun asi no se puede, se dice.
+async function cerrarChrome(proc, perfil) {
+  if (proc.exitCode === null && proc.signalCode === null) {
+    await new Promise((ok) => {
+      const t = setTimeout(ok, 5000)
+      proc.once('exit', () => {
+        clearTimeout(t)
+        ok()
+      })
+      proc.kill()
+    })
+  }
+  try {
+    await rm(perfil, { recursive: true, force: true, maxRetries: 10, retryDelay: 300 })
+  } catch (e) {
+    console.error(`    · no se pudo borrar el perfil de Chrome ${perfil} (${e.code})`)
+  }
+}
+
 async function lanzarChrome() {
   // --user-data-dir propio: sin el Chrome se adjunta a la sesion ya abierta,
   // termina de inmediato y no genera ninguna captura.
@@ -331,13 +369,14 @@ async function lanzarChrome() {
     `--remote-debugging-port=${puerto}`, '--remote-debugging-address=127.0.0.1',
     `--user-data-dir=${perfil}`, 'about:blank',
   ], { stdio: 'ignore' })
+  chromeVivo = proc
   for (let i = 0; i < 400; i++) {
     if (proc.exitCode !== null) throw new Error(`Chrome terminó con código ${proc.exitCode}`)
     try {
       const r = await fetch(`http://127.0.0.1:${puerto}/json/version`)
       if (r.ok) {
         const j = await r.json()
-        if (j.webSocketDebuggerUrl) return { proc, ws: j.webSocketDebuggerUrl }
+        if (j.webSocketDebuggerUrl) return { proc, ws: j.webSocketDebuggerUrl, perfil }
       }
     } catch { /* arrancando */ }
     await espera(50)
@@ -539,7 +578,7 @@ async function correr({ capturas = true } = {}) {
   if (capturas) mkdirSync(SALIDA, { recursive: true })
 
   const { s, puerto } = await servidor()
-  const { proc, ws: wsUrl } = await lanzarChrome()
+  const { proc, ws: wsUrl, perfil } = await lanzarChrome()
   const cdp = await conectar(wsUrl)
   const { targetId } = await cdp.enviar('Target.createTarget', { url: 'about:blank' })
   const { sessionId } = await cdp.enviar('Target.attachToTarget', { targetId, flatten: true })
@@ -898,9 +937,10 @@ async function correr({ capturas = true } = {}) {
       writeFileSync(join(SALIDA, 'informe.json'), JSON.stringify(informe, null, 1))
     }
   } finally {
-    proc.kill()
-    s.close()
     cdp.ws.close()
+    s.close()
+    await cerrarChrome(proc, perfil)
+    chromeVivo = null
   }
 }
 
@@ -981,13 +1021,28 @@ const MUTACIONES = [
 
 const sha = (b) => createHash('sha256').update(b).digest('hex')
 
+// Con shell:true el pid es el del cmd.exe: kill() mataria el shell y dejaria
+// vivos a vite o a Chrome. taskkill /T se lleva el arbol entero.
+function matarArbol(proc) {
+  if (!proc?.pid || proc.exitCode !== null) return
+  if (process.platform === 'win32') {
+    spawnSync('taskkill', ['/pid', String(proc.pid), '/T', '/F'], { stdio: 'ignore', timeout: 10000 })
+  } else {
+    proc.kill('SIGKILL')
+  }
+}
+
 const construir = () =>
   new Promise((ok, mal) => {
     const p = spawn('npm', ['run', 'build'], { cwd: FRONT, stdio: ['ignore', 'pipe', 'pipe'], shell: true })
+    buildVivo = p
     let salida = ''
     p.stdout.on('data', (d) => { salida += d })
     p.stderr.on('data', (d) => { salida += d })
-    p.on('exit', (c) => (c === 0 ? ok() : mal(new Error(`build falló (${c})\n${salida.slice(-2000)}`))))
+    p.on('exit', (c) => {
+      buildVivo = null
+      return c === 0 ? ok() : mal(new Error(`build falló (${c})\n${salida.slice(-2000)}`))
+    })
   })
 
 async function negativas() {
@@ -1018,13 +1073,30 @@ async function negativas() {
   writeFileSync(pendiente, JSON.stringify(huellas, null, 1))
 
   const restaurarTodo = () => { for (const [a, b] of originales) writeFileSync(a, b) }
-  const alInterrumpir = () => {
+  const alInterrumpir = (senal) => {
+    // Restaurar PRIMERO: son unos pocos writeFileSync, y con SIGHUP Windows mata
+    // el proceso ~10 s despues (documentacion de Node, no medido). Matar a los
+    // hijos es lo lento. Y si las huellas coinciden se BORRA el respaldo: dejarlo
+    // obligaba a la corrida siguiente a adivinar si venia de un corte limpio.
     restaurarTodo()
-    console.error('\n  interrumpido: fuentes restaurados desde memoria')
-    process.exit(130)
+    matarArbol(buildVivo)
+    matarArbol(chromeVivo)
+    const quedan = archivos.filter((a) => sha(readFileSync(a)) !== huellas[a])
+    if (quedan.length) {
+      console.error(`\n✘ interrumpido (${senal}) y ${quedan.length} archivo(s) no coinciden con su huella:`)
+      for (const a of quedan) console.error(`    ${a}\n      original en ${join(RESPALDO, nombreRespaldo(a))}`)
+    } else {
+      rmSync(RESPALDO, { recursive: true, force: true })
+      console.error(`\n  interrumpido (${senal}): ${archivos.length} archivo(s) restaurados byte a byte y respaldo borrado`)
+      console.error('  dist/ puede haber quedado con un mutante: `npm run build` antes del siguiente verify:*')
+    }
+    process.exit(SENALES[senal] ?? 130)
   }
-  process.on('SIGINT', alInterrumpir)
-  process.on('SIGTERM', alInterrumpir)
+  for (const senal of Object.keys(SENALES)) process.on(senal, alInterrumpir)
+  // SOLO para probar esta guarda: un Ctrl+C de consola no se puede teclear desde
+  // un agente, asi que la senal se emite desde dentro. Prueba que hay manejador y
+  // que restaura, NO que Windows la entregue.
+  if (SIMULAR_CTRL_C != null) setTimeout(() => process.emit(SENAL_SIMULADA, SENAL_SIMULADA), SIMULAR_CTRL_C)
 
   console.log('\n── controles negativos ──────────────────────────────────────')
   console.log(`  ${mutaciones.length} mutaciones; cada una debe poner roja SU aserción\n`)
@@ -1064,8 +1136,7 @@ async function negativas() {
     }
   } finally {
     restaurarTodo()
-    process.off('SIGINT', alInterrumpir)
-    process.off('SIGTERM', alInterrumpir)
+    for (const senal of Object.keys(SENALES)) process.off(senal, alInterrumpir)
   }
 
   await construir()

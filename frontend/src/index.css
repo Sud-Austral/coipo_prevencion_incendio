@@ -24,8 +24,24 @@
   --border: #e5e4e7;
   --accent: #1f6feb;
   --accent-bg: rgba(31, 111, 235, 0.1);
+  /* Texto SOBRE el acento lleno (el boton «Normalizar» activo). No es siempre
+     blanco: #fff sobre el acento claro da 4,63:1, pero sobre el acento oscuro
+     #58a6ff da 2,53:1 (medido el 2026-09-15). Catastro tiene el mismo defecto
+     con 2,09:1 y no se copio (DECISIONES.md §R). */
+  --sobre-acento: #fff;
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+
+  /* ---- piel comun (F1, DECISIONES.md §U) --------------------------------
+     Antes cada control declaraba lo suyo: medido a 1440 px, los <select> median
+     30 px de alto, .limpiar 31, los botones del cartel 33, .compartir 35 y
+     .normalizar 36, con radios de 5 y 6 px mezclados. Un solo token por cosa. */
+  --radio-control: 6px;
+  --radio-caja: 10px;
+  --alto-control: 32px;
+  /* UN anillo de foco. Habia dos: 3 px en botones, enlaces y selects, y 2 px en
+     las pestañas y el deslizador de opacidad. */
+  --anillo-foco: 3px solid var(--accent);
 
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
@@ -95,6 +111,12 @@
     --border: #2e303a;
     --accent: #58a6ff;
     --accent-bg: rgba(88, 166, 255, 0.12);
+    /* 7,49:1 sobre #58a6ff. */
+    --sobre-acento: #0d1117;
+    /* La sombra clara (alfa 0,1 y 0,05) no se ve sobre #16171d: la ficha y el
+       cartel quedaban sin borde de elevacion en oscuro. */
+    --shadow:
+      rgba(0, 0, 0, 0.5) 0 10px 15px -3px, rgba(0, 0, 0, 0.35) 0 4px 6px -2px;
   }
 }
 

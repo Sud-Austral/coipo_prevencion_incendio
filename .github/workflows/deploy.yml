@@ -73,7 +73,29 @@ jobs:
           make -C /tmp/tippecanoe -j"$(nproc)"
           sudo make -C /tmp/tippecanoe install
           tippecanoe --version || true
-          
+
+      # GDAL dibuja las teselas de las manchas de riesgo (ETL/teselas_riesgo.py),
+      # una por region. De conda-forge y con la version FIJA: 3.12.3 es la que se
+      # midio en local el 2026-09-15 (16 regiones, 149,8 MiB, ningun aviso de
+      # tesela reducida, bytes iguales entre dos corridas). El gdal-bin de apt en
+      # ubuntu-24.04 es la 3.8, con la que no se midio nada. Sin GDAL el ETL emite
+      # riesgo SIN teselas y D24 pone el job en rojo: no se publica un mapa vacio.
+      - name: GDAL
+        uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-name: gdal
+          create-args: gdal=3.12.3
+          cache-environment: true
+          init-shell: none
+
+      # teselas_riesgo.py busca $OGR2OGR antes que el PATH: asi el python del
+      # runner no hereda las bibliotecas del entorno de conda.
+      - name: Localizar ogr2ogr
+        run: |
+          set -euo pipefail
+          exe="$(micromamba run -n gdal which ogr2ogr)"
+          "$exe" --version
+          echo "OGR2OGR=$exe" >> "$GITHUB_ENV"
 
       # Genera las capas Y las valida. Si verify.py falla, el workflow falla y
       # no se publica nada roto.
@@ -143,7 +165,7 @@ jobs:
 
       # La vista de riesgo (el arnés conserva su nombre de «priorización») se
       # verifica AQUÍ y no en `verificar-visual`, al revés que el banner y el
-      # panel. La razón es la contraria a la de aquel job: C2..C15 afirman cifras
+      # panel. La razón es la contraria a la de aquel job: C2..C16 afirman cifras
       # de las capas REALES —las manchas y los puntos de la comuna que eligen por
       # definición, sus extremos de nivel, las clases del manifest—, y
       # `verificar-visual` excluye `/frontend/public/data/` de su sparse-checkout
@@ -155,10 +177,10 @@ jobs:
       # rota, no se despliega. El commit de las capas ya ocurrió más arriba, así
       # que un fallo aquí no deja los datos sin versionar.
       #
-      # Sin `--negativas`: son 21 mutaciones con un `npm run build` cada una, y
+      # Sin `--negativas`: son 24 mutaciones con un `npm run build` cada una, y
       # `mejoras.md` §D4 ya decidió que los mutantes de frontend no corren en
-      # cada push. El equivalente de los datos —`verify.py --negativas`, 31
-      # mutaciones, ~2 min en Windows— sí corre, dos pasos más arriba.
+      # cada push. El equivalente de los datos —`verify.py --negativas`, 43
+      # mutaciones, ~3 min en Windows— sí corre, dos pasos más arriba.
       - name: Verificación visual de la vista de riesgo
         run: npm run verify:priorizacion
         working-directory: frontend
@@ -352,6 +374,13 @@ jobs:
           # recorra una a una. Si riesgo esta declarada y no trae partes, FALLA:
           # la vista no tendria nada que cargar.
           python3 -c "import json, sys; m=json.load(open('manifest.json', encoding='utf-8')); r=m['capas'].get('riesgo'); r is None or r.get('partes') or sys.exit('FALLA: capas.riesgo sin partes'); [print(n + '/' + k, p['archivo'], p['bytes'], 'geojson') for n, c in m['capas'].items() for k, p in (c.get('partes') or {}).items()]" | sed 's/[[:space:]]*$//' >> capas.txt
+
+          # Lo que la vista de riesgo carga DE VERDAD: las teselas por region (lo
+          # que dibuja) y los atributos por comuna (la ficha y el CSV). Las
+          # teselas entran como `pmtiles`, asi que pasan tambien por el bucle de
+          # Range. Si riesgo esta declarada sin teselas, FALLA: el mapa saldria
+          # vacio, y un mapa vacio se lee como «sin riesgo».
+          python3 -c "import json, sys; m=json.load(open('manifest.json', encoding='utf-8')); r=m['capas'].get('riesgo') or {}; t=r.get('teselas') or {}; (not r) or t.get('regiones') or sys.exit('FALLA: capas.riesgo sin teselas'); [print('riesgo/teselas/' + nn, x['archivo'], x['bytes'], 'pmtiles') for nn, x in (t.get('regiones') or {}).items()]; [print('riesgo/atributos/' + k, p['atributos']['archivo'], p['atributos']['bytes'], 'json') for k, p in (r.get('partes') or {}).items()]" | sed 's/[[:space:]]*$//' >> capas.txt
 
           # Los derivados van en `manifest.derivados` y no en `capas` (si no, el
           # visor duplicaria los filtros), asi que la linea de arriba no los ve.

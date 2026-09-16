@@ -210,7 +210,11 @@ def main() -> int:
 
     import verify
 
-    return 0 if verify.verificar(cfg.out, muestra=500) else 1
+    # En GitHub Actions las viales TIENEN que salir en teselas (D24): el runner es
+    # el unico productor valido de frontend/public/data/, y si su tippecanoe falta
+    # el modo degradado commitearia GeoJSON sin que nada se pusiera rojo.
+    en_ci = os.environ.get("GITHUB_ACTIONS") == "true"
+    return 0 if verify.verificar(cfg.out, muestra=500, exigir_teselas=en_ci) else 1
 
 
 if __name__ == "__main__":

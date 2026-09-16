@@ -149,9 +149,11 @@
   font-weight: 600;
 }
 
+/* Hacia DENTRO: la barra vive dentro del <header> del banner y un anillo hacia
+   fuera se dibujaria sobre la imagen. El grosor y el color son los de todos. */
 .pestana:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
+  outline: var(--anillo-foco);
+  outline-offset: -3px;
 }
 
 /* ---------- paneles laterales ---------- */
@@ -404,17 +406,19 @@
 
 select {
   width: 100%;
+  min-height: var(--alto-control);
   padding: 5px 6px;
   font: inherit;
   font-size: 12px;
   color: var(--text-h);
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 5px;
+  border-radius: var(--radio-control);
 }
 
 .limpiar {
   width: 100%;
+  min-height: var(--alto-control);
   margin: 4px 0 12px;
   padding: 6px;
   font: inherit;
@@ -422,7 +426,7 @@ select {
   color: var(--text);
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 5px;
+  border-radius: var(--radio-control);
   cursor: pointer;
 }
 
@@ -430,6 +434,7 @@ select {
    bajo su desplegable, para que se lea como parte de ese control. */
 .centrar {
   width: 100%;
+  min-height: var(--alto-control);
   margin: -4px 0 12px;
   padding: 6px;
   font: inherit;
@@ -437,7 +442,7 @@ select {
   color: var(--accent);
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 5px;
+  border-radius: var(--radio-control);
   cursor: pointer;
 }
 
@@ -459,13 +464,14 @@ select {
 
 .compartir {
   width: 100%;
-  padding: 8px;
+  min-height: var(--alto-control);
+  padding: 6px 8px;
   font: inherit;
   font-size: 12px;
   color: var(--text-h);
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 5px;
+  border-radius: var(--radio-control);
   cursor: pointer;
 }
 
@@ -482,7 +488,7 @@ select {
   color: var(--text-h);
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 5px;
+  border-radius: var(--radio-control);
 }
 
 .aviso-copia {
@@ -580,7 +586,7 @@ select {
 }
 
 .deslizador:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: var(--anillo-foco);
   outline-offset: 2px;
 }
 
@@ -593,14 +599,15 @@ select {
 
 .normalizar {
   width: 100%;
+  min-height: var(--alto-control);
   margin: 10px 0 0;
-  padding: 8px;
+  padding: 6px 8px;
   font: inherit;
   font-size: 12.5px;
   color: var(--accent);
   background: var(--bg);
   border: 1px solid var(--accent);
-  border-radius: 6px;
+  border-radius: var(--radio-control);
   cursor: pointer;
 }
 
@@ -614,7 +621,7 @@ select {
 .normalizar.activo {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--sobre-acento);
 }
 
 /* Distintivo del modo relativo. Va junto al título de la leyenda para que sea
@@ -1104,7 +1111,7 @@ select {
   padding: 12px 14px;
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radio-caja);
   box-shadow: var(--shadow);
   font-size: 12px;
   line-height: 1.4;
@@ -1132,12 +1139,13 @@ select {
 }
 
 .cartel-botones button {
+  min-height: var(--alto-control);
   font: inherit;
-  padding: 7px 10px;
+  padding: 6px 10px;
   color: var(--text-h);
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radio-control);
   cursor: pointer;
 }
 
@@ -1159,11 +1167,15 @@ select {
   max-height: min(70dvh, 640px);
   padding: 0;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radio-caja);
   background: var(--bg);
   color: var(--text);
   box-shadow: var(--shadow);
   overflow: auto;
+  /* Lo que se enfoca con Tab no puede quedar debajo de la cabecera fija.
+     Medido: la cabecera mide 66,4 px, y sin esto «Ver en Google Maps» recibia el
+     foco en y=173 con la cabecera terminando en y=202. 76 = 66,4 + aire. */
+  scroll-padding-top: 76px;
   /* El agente de usuario centra los dialogos modales, pero no en todos los
      navegadores con el mismo margen; se fija. */
   margin: auto;
@@ -1177,10 +1189,40 @@ select {
   padding: 16px 18px 18px;
 }
 
+/* CABECERA FIJA. El dialogo es el que desplaza, y a 1440x900 la ficha de un
+   incendio no cabe: medido el 2026-09-15 con el 1262, 658 px de contenido en
+   628 de caja. Al bajar hasta «Informe» se perdia de vista QUE figura era.
+   El margen negativo la lleva al borde de .ficha-caja para que su fondo tape lo
+   que pasa por debajo, y el padding devuelve el aire. */
 .ficha header {
-  position: relative;
-  padding-right: 28px;
-  margin-bottom: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: -16px -18px 12px;
+  padding: 16px 46px 10px 18px;
+  background: var(--bg);
+}
+
+/* Con contenido pasando por debajo, una linea separa la cabecera: sin ella el
+   borde de los botones de Maps y Earth asomaba cortado bajo el titulo (visto en
+   captura). Arriba del todo no hace falta y no se pinta. */
+.ficha.desplazada header {
+  box-shadow: 0 1px 0 var(--border);
+}
+
+/* PISTA DE QUE HAY MAS. Con la barra de scroll oculta (macOS, moviles) una fila
+   cortada al pie se lee como la ultima. Solo se ve mientras queda contenido por
+   debajo: ModalFicha.jsx la oculta al llegar al final. Margen negativo igual a
+   su alto, para que mostrarla u ocultarla no cambie el alto del contenido --
+   si lo cambiara, llegar al final la ocultaria, el contenido creceria y
+   volveria a aparecer. */
+.ficha-pista {
+  position: sticky;
+  bottom: 0;
+  height: 28px;
+  margin: -28px -18px 0;
+  background: linear-gradient(to bottom, transparent, var(--bg));
+  pointer-events: none;
 }
 
 .ficha-capa {
@@ -1202,15 +1244,15 @@ select {
 
 .ficha-cerrar {
   position: absolute;
-  top: -4px;
-  right: -4px;
+  top: 12px;
+  right: 14px;
   width: 28px;
   height: 28px;
   font-size: 20px;
   line-height: 1;
   background: none;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radio-control);
   color: var(--text);
   cursor: pointer;
 }
@@ -1264,12 +1306,15 @@ select {
 }
 
 .ficha-acciones a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--alto-control);
   padding: 6px 10px;
   font-size: 12px;
   color: var(--accent);
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 5px;
+  border-radius: var(--radio-control);
   text-decoration: none;
 }
 
@@ -1484,13 +1529,16 @@ select {
   flex: none;
 }
 
+/* Chica a proposito y fuera de --alto-control: son pares CSV/GeoJSON en linea
+   con su rotulo, y a 32 px la seccion de descargas duplicaba su alto. En tactil
+   suben a 44 como todo lo demas (bloque pointer: coarse). */
 .fila-descarga button {
   font: 11px var(--mono);
   padding: 3px 8px;
   color: var(--text-h);
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 5px;
+  border-radius: var(--radio-control);
   cursor: pointer;
 }
 
@@ -1697,7 +1745,7 @@ input:focus-visible,
 select:focus-visible,
 summary:focus-visible,
 a:focus-visible {
-  outline: 3px solid var(--accent);
+  outline: var(--anillo-foco);
   outline-offset: 2px;
 }
 
@@ -1705,7 +1753,7 @@ a:focus-visible {
    y es un <label>--, no la casilla de 13 px. El anillo se traslada a la fila y
    se retira de la casilla para no dibujar dos. */
 .fila-capa:has(input:focus-visible) {
-  outline: 3px solid var(--accent);
+  outline: var(--anillo-foco);
   outline-offset: 2px;
 }
 
@@ -1717,7 +1765,7 @@ a:focus-visible {
    se dibujaria fuera del viewport. No se toca el outline-offset:1px que Leaflet
    declara para .leaflet-container. */
 .leaflet-container:focus-visible {
-  outline: 3px solid var(--accent);
+  outline: var(--anillo-foco);
   outline-offset: -3px;
 }
 
@@ -1820,10 +1868,10 @@ a:focus-visible {
     padding-right: 46px;
   }
 
-  /* La «×» de la ficha va en right:-4px, asi que sobresale 4 px del <header>:
-     44 - 4 = 40 de boton, mas 4 de aire. */
+  /* La «×» de la ficha va a right:14px dentro del <header>: 14 + 44 de boton
+     + 4 de aire. Con la de 28 px el mismo calculo da los 46 de la regla base. */
   .ficha header {
-    padding-right: 44px;
+    padding-right: 62px;
   }
 
   /* LA PASTILLA DE DESCARGA CAE DENTRO DE LA BARRA DE ZOOM CON PUNTERO GRUESO.
@@ -1865,8 +1913,12 @@ a:focus-visible {
     min-width: 44px;
   }
 
+  /* .centrar y .normalizar son los botones de la vista de riesgo: hasta F1
+     este bloque no los nombraba y en un telefono median 31 y 36 px. */
   .limpiar,
-  .compartir {
+  .compartir,
+  .centrar,
+  .normalizar {
     min-height: 44px;
   }
 

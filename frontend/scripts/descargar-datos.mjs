@@ -53,11 +53,17 @@ try {
 // Las capas partidas por comuna (riesgo) no declaran `archivo` sino `partes`:
 // 343 archivos y ~163 MB. Sin la tercera linea el visor local mostraba la lista
 // de comunas y ninguna cargaba.
+//
+// Y riesgo trae dos cosas mas que la vista carga DE VERDAD: las teselas por
+// region (lo unico que dibuja, ~150 MB) y los atributos por comuna (la ficha y
+// el CSV, ~8 MB). Sin ellas el visor local muestra el pais vacio.
 const archivos = [
   'manifest.json',
   'kpis.json',
   ...Object.values(manifest.capas).map((c) => c.archivo).filter(Boolean),
   ...Object.values(manifest.capas).flatMap((c) => Object.values(c.partes ?? {}).map((p) => p.archivo)),
+  ...Object.values(manifest.capas).flatMap((c) => Object.values(c.partes ?? {}).map((p) => p.atributos?.archivo)).filter(Boolean),
+  ...Object.values(manifest.capas).flatMap((c) => Object.values(c.teselas?.regiones ?? {}).map((r) => r.archivo)),
   ...Object.values(manifest.derivados ?? {}).map((c) => c.archivo),
 ]
 

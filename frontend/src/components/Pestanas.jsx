@@ -23,12 +23,24 @@ export default function Pestanas({ vista, onVista }) {
   // Flechas para moverse entre pestanas: es lo que el patron de tablist exige y
   // lo que un lector de pantalla anuncia. Sin esto la barra es navegable por
   // tabulacion pero no se comporta como las pestanas que dice ser.
+  //
+  // Y EL FOCO VA CON LA SELECCION. Sin eso, tras ArrowRight la pestaña nueva
+  // quedaba activa pero el foco seguia en la vieja, que ya tiene tabIndex -1:
+  // el siguiente Tab salia de la barra desde un sitio que no es el seleccionado
+  // (medido en F0, mejoras.md). Home y End son parte del mismo patron.
   const alTeclado = (e) => {
     const i = VISTAS.findIndex((v) => v.id === vista)
-    if (e.key === 'ArrowRight') onVista(VISTAS[(i + 1) % VISTAS.length].id)
-    else if (e.key === 'ArrowLeft') onVista(VISTAS[(i - 1 + VISTAS.length) % VISTAS.length].id)
+    let j
+    if (e.key === 'ArrowRight') j = (i + 1) % VISTAS.length
+    else if (e.key === 'ArrowLeft') j = (i - 1 + VISTAS.length) % VISTAS.length
+    else if (e.key === 'Home') j = 0
+    else if (e.key === 'End') j = VISTAS.length - 1
     else return
     e.preventDefault()
+    onVista(VISTAS[j].id)
+    // Los botones de todas las vistas estan siempre montados: se puede enfocar
+    // ya, sin esperar al render que cambia aria-selected.
+    document.getElementById(`pestana-${VISTAS[j].id}`)?.focus()
   }
 
   return (

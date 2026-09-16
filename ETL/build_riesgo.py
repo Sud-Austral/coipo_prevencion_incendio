@@ -17,10 +17,17 @@ ES OTRO MODELO, NO UNA VERSION DEL ANTERIOR. El de 3 comunas
 comunidades preparadas. Este mide solo la amenaza: no hay exposicion. Por eso la
 vista se llama «Riesgo» y no «Priorizacion» (DECISIONES.md §S).
 
-Por que un archivo por comuna y no uno nacional: 111.939 manchas y 6,0 M de
-vertices. Un GeoJSON nacional pesa ~154 MB (medido): GitHub rechaza archivos de
-mas de 100 MB y el canvas de Leaflet no dibuja eso. Por comuna la mediana pesa
-~140 KB y la mayor (Natales) ~33 MB, y el visor solo carga la que se elige.
+Tres salidas por cada corrida (DECISIONES.md §S y §T):
+
+  riesgo/teselas/<NN>.pmtiles  lo que DIBUJA el visor, una por region, con GDAL
+                               (ver teselas_riesgo.py). Sin GDAL no se emiten y
+                               el manifest lo dice; en CI D24 lo pone rojo.
+  riesgo/atributos/<CUT>.json  los 9 campos de cada mancha sin geometria: la
+                               ficha, la normalizacion y el CSV. Natales pesa
+                               ~2 MB aqui y 36,8 MB con geometria.
+  riesgo/<CUT>.geojson         la geometria COMPLETA, sin simplificar, para
+                               descargar. Por comuna porque un GeoJSON nacional
+                               pesa ~154 MB y GitHub rechaza mas de 100 MB.
 
 Cuatro trampas del insumo, todas medidas el 2026-09-15:
 
@@ -51,6 +58,7 @@ from __future__ import annotations
 import csv
 import json
 import re
+import sys
 import unicodedata
 from bisect import bisect_right
 from collections import Counter
@@ -59,11 +67,21 @@ from pathlib import Path
 from cfg import Cfg, log
 from geo import REGIONES, bbox_of, bbox_union, canon_region, en_chile
 from gj_io import humano, write_geojson
+import teselas_riesgo
 
 PREFIJO = "manchas_riesgo_h3r8_"
 CSV = "manchas_riesgo_h3r8.csv"
 PARAMETROS = "parametros.json"
 SUBDIR = "riesgo"
+
+# Tamano maximo de una tesela antes de que GDAL la codifique a menor resolucion.
+# Ver DECISIONES.md §T: con el valor por omision (500 KB) GDAL avisaba de al
+# menos una tesela reducida en la corrida nacional.
+MAX_SIZE_TESELA = 500_000
+
+# Lo que viaja en cada figura de las teselas: lo justo para dibujar y para saber
+# que se toco. El resto de los campos esta en riesgo/atributos/<CUT>.json.
+CAMPOS_TESELA = ["mancha_id", "cut", "nivel", "nivel_medio"]
 
 # Los 9 campos de CAMPOS_WEB del notebook. Se exige el conjunto EXACTO: el
 # constructor anterior copiaba `if c in props` y un campo ausente desaparecia del
@@ -187,6 +205,23 @@ def _caja_hacia_afuera(caja: list[float]) -> list[float]:
     ]
 
 
+def _escribir_atributos(ruta: Path, cut: str, comuna: str, feats: list[dict]) -> dict:
+    """Los campos de cada mancha de una comuna, sin geometria, en tabla compacta.
+
+    Filas en el MISMO orden que el GeoJSON de la comuna: D25 lo exige, y asi un
+    indice de fila vale para los dos archivos.
+    """
+    campos = [c for c in CAMPOS if c != "comuna"]
+    doc = {"cut": cut, "comuna": comuna, "campos": campos,
+           "filas": [[x["properties"][c] for c in campos] for x in feats]}
+    texto = json.dumps(doc, ensure_ascii=False, separators=(",", ":"))
+    ruta.parent.mkdir(parents=True, exist_ok=True)
+    tmp = ruta.with_suffix(".json.tmp")
+    tmp.write_bytes(texto.encode("utf-8"))
+    tmp.replace(ruta)
+    return {"archivo": f"{SUBDIR}/atributos/{cut}.json", "bytes": len(texto.encode("utf-8"))}
+
+
 def build(cfg: Cfg) -> dict:
     raiz = cfg.insumo_riesgo
     if not raiz.exists():
@@ -214,6 +249,13 @@ def build(cfg: Cfg) -> dict:
 
     salida = cfg.out / SUBDIR
     salida.mkdir(parents=True, exist_ok=True)
+    (salida / "atributos").mkdir(exist_ok=True)
+    # Entradas de GDAL, una por region, en el intermedio que no se versiona.
+    intermedio = cfg.build / SUBDIR
+    intermedio.mkdir(parents=True, exist_ok=True)
+    entradas_tesela: dict[str, Path] = {}
+    manchas_region: dict[str, int] = {}
+    cajas_region: dict[str, list] = {}
 
     partes: dict[str, dict] = {}
     vistos: set[str] = set()
@@ -290,9 +332,25 @@ def build(cfg: Cfg) -> dict:
             )
 
         del fc
+        seq = intermedio / f"{nn}.geojsonl"
+        with open(seq, "w", encoding="utf-8", newline="\n") as fh_seq:
+            for cut, feats in sorted(por_comuna.items()):
+                for x in feats:
+                    q = x["properties"]
+                    fh_seq.write(json.dumps({
+                        "type": "Feature",
+                        "geometry": x["geometry"],
+                        "properties": {"mancha_id": q["mancha_id"], "cut": cut,
+                                       "nivel": etiquetas.index(q["clase"]), "nivel_medio": q["nivel_medio"]},
+                    }, separators=(",", ":")) + "\n")
+        entradas_tesela[nn] = seq
+        manchas_region[nn] = sum(len(v) for v in por_comuna.values())
+
         for cut, feats in sorted(por_comuna.items()):
             caja = _caja_hacia_afuera(bbox_union([bbox_of(x["geometry"]) for x in feats]))
             st = write_geojson(salida / f"{cut}.geojson", feats, bbox=caja)
+            atr = _escribir_atributos(salida / "atributos" / f"{cut}.json", cut, nombres[cut], feats)
+            cajas_region[nn] = bbox_union([cajas_region.get(nn), caja])
             partes[cut] = {
                 "comuna": nombres[cut],
                 "region": region_de[nn],
@@ -302,6 +360,7 @@ def build(cfg: Cfg) -> dict:
                 "bytes": st["bytes"],
                 "bbox": caja,
                 "clases": dict(Counter(x["properties"]["clase"] for x in feats)),
+                "atributos": atr,
             }
             total_feats += st["features"]
             total_vertices += st["vertices"]
@@ -313,6 +372,45 @@ def build(cfg: Cfg) -> dict:
     for p in salida.glob("*.geojson"):
         if re.fullmatch(r"\d{5}\.geojson", p.name) and p.stem not in partes:
             p.unlink()
+    for p in (salida / "atributos").glob("*.json"):
+        if re.fullmatch(r"\d{5}\.json", p.name) and p.stem not in partes:
+            p.unlink()
+
+    # --- teselas, con GDAL si esta ---
+    gdal = teselas_riesgo.version()
+    teselas = None
+    if gdal:
+        hechas = teselas_riesgo.teselar(entradas_tesela, salida / "teselas", MAX_SIZE_TESELA)
+        avisos = {nn: t["avisos"] for nn, t in hechas.items() if t["avisos"]}
+        teselas = {
+            "formato": "pmtiles",
+            "capa_mvt": teselas_riesgo.CAPA_MVT,
+            "minzoom": teselas_riesgo.MIN_ZOOM,
+            "maxzoom": teselas_riesgo.MAX_ZOOM,
+            "gdal": gdal,
+            "max_size": MAX_SIZE_TESELA,
+            "regiones": {
+                nn: {
+                    "region": region_de[nn],
+                    "archivo": f"{SUBDIR}/teselas/{nn}.pmtiles",
+                    "bytes": t["bytes"],
+                    "manchas": manchas_region[nn],
+                    "bbox": cajas_region[nn],
+                }
+                for nn, t in hechas.items()
+            },
+            # Los avisos de GDAL se publican: una tesela reducida de resolucion
+            # es una perdida de detalle, y no puede quedar sólo en un log.
+            "avisos": avisos,
+        }
+        log(cfg, "riesgo", f"teselas: {len(hechas)} regiones · {humano(sum(t['bytes'] for t in hechas.values()))} · {gdal}"
+            + (f" · avisos en {sorted(avisos)}" if avisos else ""))
+    else:
+        for linea in (
+            "  ⚠ sin GDAL (ogr2ogr): las manchas de riesgo salen SIN teselas y el visor",
+            "    no puede dibujarlas. Define OGR2OGR o pon ogr2ogr en el PATH (GDAL >= 3.8).",
+        ):
+            print(linea, file=sys.stderr, flush=True)
 
     colapsadas = sorted(set(filas_csv) - vistos)
 
@@ -351,6 +449,7 @@ def build(cfg: Cfg) -> dict:
         "geometria": "Polygon",
         "carga": "por_comuna",
         "partes": dict(sorted(partes.items())),
+        "teselas": teselas,
         "regiones": regiones,
         "clases": [
             {

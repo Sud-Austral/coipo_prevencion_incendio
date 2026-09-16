@@ -40,6 +40,14 @@
  *        panel y en el cartel, y viaja en el GeoJSON y en el informe. El
  *        literal esta duplicado aqui a proposito, igual que MIN_PANEL.
  *
+ * Y desde F1 (2026-09-15), la piel comun:
+ *
+ *   B32  en la barra de vistas, las flechas e Inicio llevan el FOCO con la
+ *        seleccion, no solo aria-selected.
+ *   B33  un solo anillo de foco: todo lo que se alcanza con Tab en la vista
+ *        de incendios lo dibuja con el mismo grosor, estilo y color.
+ *   B34  los controles del panel y del cartel comparten radio y alto minimo.
+ *
  * DOS MODOS DE DATOS. Con datos reales se afirman las cifras de produccion;
  * con el fixture, cifras calculadas a mano sobre 12 features.
  *
@@ -78,6 +86,13 @@ const ANCHO_KPI = 320
 const MIN_PANEL = 280
 const MAX_PANEL = 560
 const MIN_MAPA = 520
+// Duplicados a proposito de la piel comun de src/index.css (--radio-control,
+// --alto-control y el color de --anillo-foco en claro): leerlos de la hoja
+// compararia el token consigo mismo, y un control que declare su propio valor
+// saldria verde si la hoja entera cambiara con el.
+const RADIO_CONTROL = '6px'
+const ALTO_CONTROL = 32
+const ANILLO = { ancho: '3px', estilo: 'solid', color: 'rgb(31, 111, 235)' }
 // A ambos lados de los dos cortes a proposito: los limites de breakpoint son
 // donde se cuelan estos fallos.
 const ANCHOS = [1920, 1440, 1366, 1201, 1200, 1165, 901, 900, 768, 390]
@@ -1032,6 +1047,41 @@ function esperado() {
     const dom = meta.dominios?.[campo]
     return dom ? { cuenta: new Map(dom.map((d) => [d.v, d.n])), oraculo: `dominio del manifest de ${capa} (teselas)` } : null
   }
+  // ---- B29 · puesto de Lineas electricas entre las causas generales ---------
+  // Recontado aqui sobre las features, por numero y por superficie, con el
+  // criterio de competicion (1 + cuantas tienen MAS) y diciendo el empate.
+  // Los ordinales van DUPLICADOS a proposito del panel, como MIN_PANEL.
+  // Ademas del pais entero, se elige POR DEFINICION la primera temporada en la
+  // que la frase cambia: la frase fija que habia era cierta para el pais y falsa
+  // con filtro, asi que mirar solo el pais no la habria cazado nunca.
+  const ORD = ['primera', 'segunda', 'tercera', 'cuarta', 'quinta', 'sexta', 'séptima', 'octava', 'novena', 'décima']
+  const fraseElectrica = (pasa) => {
+    const tot = new Map()
+    for (const f of inc.features) {
+      const p = f.properties
+      if (!pasa(p)) continue
+      const k = T.causa_general[p.causa_general]
+      if (k == null) continue
+      const a = tot.get(k) ?? { n: 0, ha: 0 }
+      a.n++
+      a.ha += p.superficie_ha ?? 0
+      tot.set(k, a)
+    }
+    const e = tot.get('Líneas eléctricas')
+    if (!e) return null
+    const lista = [...tot.values()]
+    const puesto = (c) => {
+      const pu = 1 + lista.filter((d) => d[c] > e[c]).length
+      const emp = lista.some((d) => d !== e && d[c] === e[c])
+      return `${ORD[pu - 1] ?? `${pu}.ª`}${emp ? ' (empatada)' : ''}`
+    }
+    return `Líneas eléctricas es ${puesto('n')} por recuento y ${puesto('ha')} por superficie.`
+  }
+  const fraseNacional = fraseElectrica(() => true)
+  const temporadaDistinta = [...T.temporada]
+    .map((t, i) => ({ t, frase: fraseElectrica((p) => p.temporada === i) }))
+    .find((x) => x.frase && x.frase !== fraseNacional) ?? null
+
   // Opciones que el panel tiene que ofrecer: la union de los dominios de TODAS
   // las capas que el filtro recorta, esten encendidas o no.
   const valoresFiltro = Object.fromEntries(
@@ -1042,6 +1092,8 @@ function esperado() {
   )
 
   return {
+    fraseNacional,
+    temporadaDistinta,
     temporadaUnica,
     composicionUnica: tN ? { neg: n1.format((100 * tNeg) / tN), int: n1.format((100 * tInt) / tN) } : null,
     oraculoCuenta,
@@ -1551,6 +1603,37 @@ async function main() {
     dice('región de mayor presión', E.nacional.primeraRegion)
     dice('brecha de esa región', E.nacional.brechaPrimera)
 
+    // ---- B29 · el puesto de Líneas eléctricas sale del ámbito filtrado ------
+    comprobar(
+      !!E.fraseNacional && t.includes(E.fraseNacional),
+      'B29 el puesto eléctrico entre las causas (país)',
+      `«${E.fraseNacional}»`,
+    )
+    if (E.temporadaDistinta) {
+      // Espera propia y no la de ir(), por lo mismo que B26 y B30: con una sola
+      // temporada, un regreso del defecto de B26 deja «Enciende la capa» para
+      // siempre, la espera de ir() se agota y el script MUERE antes de llegar a
+      // B26. Medido el 2026-09-15: el mutante de B26 sobrevivia por esto.
+      await ir(cdp, pagina, {
+        ancho: 1920, puerto, query: `?temporada=${encodeURIComponent(E.temporadaDistinta.t)}`, sinEspera: true,
+      })
+      const listo = await esperarHasta(
+        cdp,
+        pagina,
+        `(() => { const p = document.querySelector('.panel-kpi')
+                  return !!p && !!p.querySelector('.cifra b') && !p.textContent.includes('Enciende la capa') })()`,
+        20000,
+      )
+      const tt = listo ? (await evaluar(cdp, pagina, MEDIR)).texto : ''
+      comprobar(
+        listo && tt.includes(E.temporadaDistinta.frase) && !tt.includes(E.fraseNacional),
+        `B29 el puesto eléctrico recalcula con filtro (${E.temporadaDistinta.t})`,
+        listo ? `«${E.temporadaDistinta.frase}»` : 'el panel no terminó de cargar sus capas en 20 s',
+      )
+    } else {
+      console.log('    · B29: ninguna temporada cambia el puesto; sólo se mide el país')
+    }
+
     // ---- B9 · reactividad al filtro y degradado --------------------------
     console.log('\n▶ reactividad')
     await ir(cdp, pagina, { ancho: 1920, puerto, query: `?region=${encodeURIComponent(E.filtro)}` })
@@ -1578,6 +1661,32 @@ async function main() {
       `«${E.nacional.evitables}» + aviso de capa apagada`,
     )
     await capturar('captura-kpi-sin-capas.png', { x: 1920 - ANCHO_KPI, y: 0, width: ANCHO_KPI, height: ALTO_VENTANA, scale: 1 })
+
+    // ---- B30 · con 0 incendios no hay porcentaje que afirmar ---------------
+    // Una temporada que no existe deja el ámbito en 0 incendios en los dos
+    // modos de datos. La cifra decía «0 % de los incendios investigados son de
+    // causa humana»: una afirmación sobre el dato salida de dividir por cero.
+    await ir(cdp, pagina, { ancho: 1920, puerto, query: '?temporada=0000-0000', sinEspera: true })
+    const hayVacio = await esperarHasta(
+      cdp,
+      pagina,
+      `(() => { const s = [...document.querySelectorAll('.panel-kpi section')].find((x) => x.querySelector('h2')?.textContent.trim() === 'Incendios evitables')
+                return !!s && (s.querySelector('.cifra') || s.textContent.includes('Ningún incendio')) && !document.querySelector('.panel-kpi').textContent.includes('Enciende la capa') })()`,
+      20000,
+    )
+    const vacio = hayVacio
+      ? await evaluar(
+          cdp,
+          pagina,
+          `(() => { const s = [...document.querySelectorAll('.panel-kpi section')].find((x) => x.querySelector('h2')?.textContent.trim() === 'Incendios evitables')
+                    return { texto: s.textContent, cifra: !!s.querySelector('.cifra') } })()`,
+        )
+      : null
+    comprobar(
+      !!vacio && !vacio.cifra && vacio.texto.includes('Ningún incendio investigado cumple los filtros actuales') && !vacio.texto.includes('%'),
+      'B30 con 0 incendios no afirma un porcentaje',
+      vacio ? `cifra ${vacio.cifra} · «${vacio.texto.slice(0, 90)}»` : 'la sección no llegó a pintarse',
+    )
 
     // ---- B26 · una sola temporada no es «capa apagada» --------------------
     // Plazo propio y sin ir(): el defecto consiste en que «Enciende la capa» no
@@ -1976,6 +2085,33 @@ async function main() {
     )
     comprobar(informeAvisa, 'B28 el informe lleva el aviso', informeAvisa ? 'presente' : 'AUSENTE del HTML del informe')
 
+    // -- B31 · el informe se fecha con el día LOCAL, no con el UTC --
+    // Se emula una zona donde el día local NO es el UTC en este instante:
+    // Pago Pago (UTC-11) antes de las 10:00 UTC y Kiritimati (UTC+14) desde las
+    // 10:00. Así el defecto --toISOString()-- se ve a cualquier hora y no sólo
+    // de noche en Chile. El día esperado se calcula con la zona, antes y
+    // después, por si la corrida cruza la medianoche de esa zona.
+    const zona = new Date().getUTCHours() < 10 ? 'Pacific/Pago_Pago' : 'Pacific/Kiritimati'
+    const diaEn = (tz) => new Intl.DateTimeFormat('es-CL', { day: 'numeric', month: 'long', year: 'numeric', timeZone: tz }).format(new Date())
+    const localAntes = diaEn(zona)
+    const utcAntes = diaEn('UTC')
+    await cdp.enviar('Emulation.setTimezoneOverride', { timezoneId: zona }, pagina)
+    let tituloZona = ''
+    try {
+      await ir(cdp, pagina, { ancho: 1600, puerto, ganchos: GANCHOS_DESCARGA, teselasFalsas: true })
+      await pulsarPorTexto(cdp, pagina, 'Informe con el mapa (PDF)')
+      await sondear(cdp, pagina, `!!window.__informe`, 'el informe en otra zona horaria')
+      tituloZona = await evaluar(cdp, pagina, `(window.__informe.match(/<title>([^<]*)<\\/title>/) || [])[1] ?? ''`)
+    } finally {
+      await cdp.enviar('Emulation.setTimezoneOverride', { timezoneId: '' }, pagina)
+    }
+    const localDespues = diaEn(zona)
+    comprobar(
+      localAntes !== utcAntes && (tituloZona.includes(localAntes) || tituloZona.includes(localDespues)) && !tituloZona.includes(utcAntes),
+      'B31 el informe lleva la fecha local y no la UTC',
+      `zona ${zona} · local «${localAntes}» · UTC «${utcAntes}» · título «${tituloZona.slice(-40)}»`,
+    )
+
     // -- B21 · degradacion honesta si el lienzo se contamina --
     conCORS = false
     await ir(cdp, pagina, { ancho: 1600, puerto, ganchos: GANCHOS_DESCARGA, teselasFalsas: true })
@@ -2092,6 +2228,72 @@ async function main() {
       }
     }
 
+    // ---- B32..B34 · piel comun (F1) ----------------------------------------
+    console.log('\n▶ piel común (F1)')
+    await ir(cdp, pagina, { ancho: 1920, puerto })
+    const quienFoco = `(() => { const a = document.activeElement
+      return { id: a?.id ?? '', sel: a?.getAttribute('aria-selected') ?? '' } })()`
+    await evaluar(cdp, pagina, `document.getElementById('pestana-incendios')?.focus()`)
+    await tecla(cdp, pagina, 'ArrowRight', 39)
+    await espera(200)
+    const trasFlecha = await evaluar(cdp, pagina, quienFoco)
+    await tecla(cdp, pagina, 'Home', 36)
+    await espera(200)
+    const trasInicio = await evaluar(cdp, pagina, quienFoco)
+    comprobar(
+      trasFlecha.id === 'pestana-riesgo' && trasFlecha.sel === 'true'
+        && trasInicio.id === 'pestana-incendios' && trasInicio.sel === 'true',
+      'B32 las flechas llevan el foco con la pestaña',
+      `→ foco en «${trasFlecha.id}» (aria-selected ${trasFlecha.sel}) · Inicio → «${trasInicio.id}» (${trasInicio.sel})`,
+    )
+
+    // B33: con Tab REAL (Input.dispatchKeyEvent), que es lo que activa
+    // :focus-visible. De una casilla de capa se mide su fila, que es donde vive
+    // el anillo.
+    await ir(cdp, pagina, { ancho: 1920, puerto })
+    const anillos = []
+    for (let i = 0; i < 14; i++) {
+      await tecla(cdp, pagina, 'Tab', 9)
+      await espera(40)
+      const a = await evaluar(
+        cdp,
+        pagina,
+        `(() => { const a = document.activeElement
+                  if (!a || a === document.body) return null
+                  const o = a.closest('.fila-capa') ?? a
+                  const c = getComputedStyle(o)
+                  return { que: (a.id || a.getAttribute('aria-label') || a.textContent || a.tagName).trim().slice(0, 24),
+                           ancho: c.outlineWidth, estilo: c.outlineStyle, color: c.outlineColor } })()`,
+      )
+      if (a) anillos.push(a)
+    }
+    const distintos = anillos.filter((a) => a.ancho !== ANILLO.ancho || a.estilo !== ANILLO.estilo || a.color !== ANILLO.color)
+    comprobar(
+      anillos.length >= 8 && anillos.some((a) => a.que === 'pestana-incendios') && !distintos.length,
+      'B33 un solo anillo de foco',
+      distintos.length
+        ? `${distintos.length} distintos: ${distintos.slice(0, 3).map((a) => `«${a.que}» ${a.ancho} ${a.estilo} ${a.color}`).join(' · ')}`
+        : `${anillos.length} paradas de Tab, todas ${ANILLO.ancho} ${ANILLO.estilo} ${ANILLO.color}`,
+    )
+
+    const controles = await evaluar(
+      cdp,
+      pagina,
+      `[...document.querySelectorAll('.panel select, .panel .limpiar, .panel .compartir, .cartel-botones button')]
+         .filter((e) => e.getClientRects().length)
+         .map((e) => { const c = getComputedStyle(e)
+                       return { que: (e.textContent || e.tagName).trim().slice(0, 20), radio: c.borderRadius,
+                                alto: Math.round(e.getBoundingClientRect().height * 10) / 10 } })`,
+    )
+    const fuera = controles.filter((c) => c.radio !== RADIO_CONTROL || c.alto < ALTO_CONTROL - 0.5)
+    comprobar(
+      controles.length >= 6 && !fuera.length,
+      'B34 los controles comparten radio y alto',
+      fuera.length
+        ? `${fuera.length} fuera: ${fuera.slice(0, 3).map((c) => `«${c.que}» ${c.radio} · ${c.alto} px`).join(' · ')}`
+        : `${controles.length} controles con ${RADIO_CONTROL} y al menos ${ALTO_CONTROL} px`,
+    )
+
     // Paneles plegados y tirador: los estados nuevos, que ninguna asercion
     // juzga en cuanto a legibilidad.
     for (const tema of ['light', 'dark']) {
@@ -2173,8 +2375,23 @@ async function main() {
       /* ya cerrado */
     }
     cdp.ws.close()
-    proc.kill()
-    await rm(perfil, { recursive: true, force: true }).catch(() => {})
+    // Se espera a que Chrome SALGA antes de borrar el perfil: borrarlo justo
+    // tras kill() fallaba en silencio (Chrome y sus hijos retienen archivos) y
+    // el 2026-09-15 habia 137 perfiles de verify-panel y 44 de verify-banner en
+    // %TEMP%. Si aun asi no se puede, se dice.
+    if (proc.exitCode === null && proc.signalCode === null) {
+      await new Promise((ok) => {
+        const t = setTimeout(ok, 5000)
+        proc.once('exit', () => {
+          clearTimeout(t)
+          ok()
+        })
+        proc.kill()
+      })
+    }
+    await rm(perfil, { recursive: true, force: true, maxRetries: 10, retryDelay: 300 }).catch((e) =>
+      console.error(`  · no se pudo borrar el perfil de Chrome ${perfil} (${e.code})`),
+    )
   }
 
   console.log(`\n▶ ${capturas} capturas en ${SALIDA}`)

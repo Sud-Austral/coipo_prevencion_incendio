@@ -11,8 +11,10 @@ cd frontend && npm run datos          # 1. traer la capa publicada (~35 MB)
 python analisis/leer_capas.py         # 2. resumen + 37 chequeos de reconciliación
 ```
 
-En este equipo `python` a secas es el stub del Microsoft Store y falla con
-exit 49. El intérprete real es `C:\ProgramData\anaconda3\python.exe`.
+En este equipo el stub del Microsoft Store es `python3`, que falla con exit 49.
+El intérprete real responde a `python` y es
+`C:\Users\luis.monsalve\AppData\Local\anaconda3\python.exe` (medido el 2026-09-10 y
+de nuevo el 2026-09-15; la ruta `C:\ProgramData\anaconda3` que decía antes no existe).
 
 ```python
 import sys; sys.path.insert(0, "analisis")
@@ -70,7 +72,7 @@ sobre `frontend/public/data`.
 
 ```powershell
 $env:PYTHONUTF8 = "1"
-& "C:\ProgramData\anaconda3\python.exe" -m jupyter nbconvert `
+& "C:\Users\luis.monsalve\AppData\Local\anaconda3\python.exe" -m jupyter nbconvert `
     --to notebook --execute --inplace `
     --ExecutePreprocessor.timeout=900 `
     --ExecutePreprocessor.kernel_name=python3 `

@@ -183,7 +183,11 @@ export default function SeccionDescargas({
         capas: CAPAS.filter((c) => capasActivas.includes(c.id)).map((c) => c.etiqueta),
         url: window.location.href,
         fechaDatos: fechaLarga(manifest?.generado),
-        fechaInforme: fechaLarga(new Date().toISOString().slice(0, 10)) ?? hoy(),
+        // hoy() y no toISOString(): la fecha UTC adelanta un dia todo informe
+        // generado despues de las 20:00/21:00 en Chile (el 14 a las 21:54 salia
+        // «15 de septiembre» con un CSV `..._2026-09-14`). El mismo error que
+        // DECISIONES.md §K ya evita para la fecha del manifest.
+        fechaInforme: fechaLarga(hoy()),
         aviso: NO_ACTIVOS,
         temporadas: temps ? `${temps.primera} a ${temps.ultima}` : null,
         mapa,

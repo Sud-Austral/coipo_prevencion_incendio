@@ -20,6 +20,7 @@ import {
   MAX_PANEL,
   MIN_MAPA,
   MIN_PANEL,
+  DATA,
   VISTA_INICIAL,
   vistaValida,
   fmt,
@@ -37,7 +38,7 @@ import {
 } from './fichas'
 import { colorDeMancha, contextoEscala, rangoComunal } from './escalas'
 import CapaIconos from './components/CapaIconos'
-import CapaPoligonos from './components/CapaPoligonos'
+import CapaRiesgoTeselas from './components/CapaRiesgoTeselas'
 import PanelRiesgo from './components/PanelRiesgo'
 import Banner from './components/Banner'
 import CartelContexto from './components/CartelContexto'
@@ -411,16 +412,17 @@ export default function App() {
     esGeoJSON(capaMeta('redvial')) ? capaMeta('redvial')?.archivo : null,
     activa('redvial'),
   )
-  // Las capas de la vista de riesgo se descargan al entrar en SU pestaña y no
-  // antes. Las manchas, ademas, de a UNA comuna: son 343 archivos y 163 MiB, y
-  // solo se pide el de la comuna elegida (Natales, la mayor, pesa 36,8 MB).
+  // La vista de riesgo DIBUJA con teselas (una por region, todo el pais) y
+  // CARGA de a una comuna solo sus atributos: los 9 campos de cada mancha, sin
+  // geometria, para la ficha, la normalizacion y el CSV. Natales son ~2 MB de
+  // atributos contra 36,8 MB de GeoJSON (DECISIONES.md §T).
   // La comuna viaja dentro de `filtros` y no en un estado aparte: asi urlState
   // la serializa sola como ?comuna=, sin tocar nada mas.
   const enRiesgo = vista === 'riesgo'
   const metaRiesgo = capaMeta('riesgo')
   const cutRiesgo = cutDeComuna(metaRiesgo, filtros.comuna)
   const parteRiesgo = cutRiesgo ? metaRiesgo.partes[cutRiesgo] : null
-  const riesgo = useGeoJSON(parteRiesgo?.archivo, enRiesgo && !!parteRiesgo, { cachear: false })
+  const riesgo = useGeoJSON(parteRiesgo?.atributos?.archivo, enRiesgo && !!parteRiesgo, { cachear: false })
   const infraPuntos = useGeoJSON(capaMeta('infra_puntos')?.archivo, enRiesgo)
 
   const cargando = {
@@ -560,11 +562,26 @@ export default function App() {
     if (!comunaRiesgo && modoEscala !== 'absoluta') setModoEscala('absoluta')
   }, [comunaRiesgo, modoEscala])
 
+  // Los atributos llegan como tabla (campos + filas). Se pasan a la forma
+  // {properties} que ya usan escalas.js, la ficha y el CSV, una sola vez por
+  // comuna, con un indice por mancha_id para el clic sobre las teselas.
+  const filasRiesgo = useMemo(() => {
+    const d = riesgo.data
+    if (!d?.filas) return null
+    return d.filas.map((fila) => ({
+      properties: { comuna: d.comuna, ...Object.fromEntries(d.campos.map((c, i) => [c, fila[i]])) },
+    }))
+  }, [riesgo.data])
+  const porIdRiesgo = useMemo(
+    () => (filasRiesgo ? new Map(filasRiesgo.map((f) => [f.properties.mancha_id, f.properties])) : null),
+    [filasRiesgo],
+  )
+
   // Los anclajes se recalculan al cambiar de comuna o de modo. NO se guarda
   // nada en las properties: `ctx` es el unico portador de la normalizacion.
   const ctxEscala = useMemo(
-    () => contextoEscala(riesgo.data?.features, comunaRiesgo, modoEscala),
-    [riesgo.data, comunaRiesgo, modoEscala],
+    () => contextoEscala(filasRiesgo, comunaRiesgo, modoEscala),
+    [filasRiesgo, comunaRiesgo, modoEscala],
   )
 
   // Etiqueta de clase -> color. Las etiquetas y su nivel vienen del manifest y
@@ -575,26 +592,26 @@ export default function App() {
     return (clase) => porClase.get(clase) ?? '#CCCCCC'
   }, [metaRiesgo])
 
-  // El estilo se pasa ya construido a la capa, que no sabe de escalas ni de
-  // opacidad: normalizar o mover el slider repinta sin reconstruir ningun
-  // poligono. Es la UNICA definicion del estilo de una mancha -- antes el valor
-  // de arranque estaba tambien en CapaPoligonos y las dos copias podian divergir.
-  const estiloMancha = useCallback(
-    (p) => ({
-      fillColor: colorDeMancha(p, ctxEscala, colorClase),
-      // El CONTORNO conserva siempre el color absoluto de la clase, tambien en
-      // modo relativo: doble codificacion sin coste de espacio, y la lectura
-      // del modelo no desaparece nunca del mapa.
-      color: colorClase(p.clase),
-      weight: 0.6,
-      fillOpacity: opacidad,
-      // El borde acompaña al relleno pero mas marcado, para que al bajar la
-      // opacidad se siga viendo DONDE estan las manchas mientras se lee el
-      // mapa base de debajo. En 0 desaparecen las dos: «completamente
-      // transparente» tiene que serlo de verdad, o el control miente.
-      opacity: Math.min(1, opacidad * 1.4),
-    }),
-    [ctxEscala, opacidad, colorClase],
+  // Estilo de una figura de tesela, que solo trae mancha_id, cut, nivel y
+  // nivel_medio. La normalizacion aplica SOLO a la comuna elegida: el resto del
+  // pais conserva el color de su clase, para que no parezca recalculado lo que
+  // no se recalculo. Es la UNICA definicion del estilo de una mancha.
+  const clasePorNivel = useMemo(
+    () => new Map((metaRiesgo?.clases ?? []).map((c) => [c.nivel, c.clase])),
+    [metaRiesgo],
+  )
+  const estiloTesela = useCallback(
+    (p) => {
+      const clase = clasePorNivel.get(p.nivel)
+      const mancha = { comuna: p.cut === cutRiesgo ? comunaRiesgo : null, clase, nivel_medio: p.nivel_medio }
+      return {
+        relleno: colorDeMancha(mancha, ctxEscala, colorClase),
+        // El CONTORNO conserva siempre el color absoluto de la clase, tambien en
+        // modo relativo: doble codificacion sin coste de espacio.
+        contorno: colorClase(clase),
+      }
+    },
+    [clasePorNivel, cutRiesgo, comunaRiesgo, ctxEscala, colorClase],
   )
 
   // Los iconos se cruzan con la comuna por CODIGO CUT, no por nombre: la
@@ -731,21 +748,43 @@ export default function App() {
       abrirFicha(conCoord(fichaRuta(p, etiqueta, COLOR_REDVIAL), ll)),
     [abrirFicha],
   )
-  const selMancha = useCallback(
-    (p, ll) =>
+  // La ficha sale de los ATRIBUTOS de la comuna, no de la tesela, que solo lleva
+  // lo necesario para dibujar. Un clic en una mancha de OTRA comuna la elige
+  // --se descargan sus atributos y el mapa la encuadra-- y la ficha se abre
+  // cuando llegan: sin eso habria que pedir dos clics para ver una mancha.
+  const [fichaPendiente, setFichaPendiente] = useState(null)
+  const abrirFichaMancha = useCallback(
+    (id, ll) => {
+      const p = porIdRiesgo?.get(id)
+      if (!p) return false
       abrirFicha(
         conCoord(
-          fichaMancha(
-            p,
-            rangoComunal(riesgo.data?.features, p),
-            colorDeMancha(p, ctxEscala, colorClase),
-            parteRiesgo?.region,
-          ),
+          fichaMancha(p, rangoComunal(filasRiesgo, p), colorDeMancha(p, ctxEscala, colorClase), parteRiesgo?.region),
           ll,
         ),
-      ),
-    [abrirFicha, riesgo.data, ctxEscala, colorClase, parteRiesgo],
+      )
+      return true
+    },
+    [abrirFicha, porIdRiesgo, filasRiesgo, ctxEscala, colorClase, parteRiesgo],
   )
+  const selMancha = useCallback(
+    (tp, ll) => {
+      if (tp.cut !== cutRiesgo) {
+        acierto.current = true
+        setFiltros((f) => ({ ...f, comuna: tp.cut }))
+        setFichaPendiente({ id: tp.mancha_id, ll })
+        return
+      }
+      if (!abrirFichaMancha(tp.mancha_id, ll)) setFichaPendiente({ id: tp.mancha_id, ll })
+    },
+    [cutRiesgo, abrirFichaMancha],
+  )
+  useEffect(() => {
+    if (fichaPendiente && porIdRiesgo?.has(fichaPendiente.id)) {
+      abrirFichaMancha(fichaPendiente.id, fichaPendiente.ll)
+      setFichaPendiente(null)
+    }
+  }, [fichaPendiente, porIdRiesgo, abrirFichaMancha])
   const selPunto = useCallback(
     (p, ll) => abrirFicha(conCoord(fichaPunto(p, COLOR_FAMILIA[p.familia] ?? '#4B5563'), ll)),
     [abrirFicha],
@@ -1169,14 +1208,15 @@ export default function App() {
               a.includes(f) ? a.filter((x) => x !== f) : [...a, f],
             )
           }
-          cuentaAreas={cuentas.riesgo}
+          cuentaAreas={cutRiesgo ? parteRiesgo?.features : metaRiesgo?.features}
           cuentaPuntos={cutRiesgo ? cuentas.infra_puntos : 0}
           iconosLejos={iconosLejos}
           cargando={cargando.riesgo}
           error={errores.riesgo}
           onReintentar={() => reintentos.riesgo?.()}
           onEncuadrar={encuadrarComuna}
-          datosAreas={riesgo.data}
+          datosAreas={filasRiesgo ? { features: filasRiesgo } : null}
+          urlGeojson={parteRiesgo ? `${DATA}/${parteRiesgo.archivo}` : null}
           datosPuntos={infraPuntos.data}
           pasaPuntos={pasaPunto}
           map={map}
@@ -1345,20 +1385,15 @@ export default function App() {
         </>
       )}
 
-      {/* Las areas van las PRIMERAS del arbol y ademas la capa hace
-          bringToBack() al montar: el orden del JSX no basta porque en canvas
-          manda el orden en que terminan de descargarse los archivos. Ver la
-          regla 2 de CapaPoligonos.jsx. */}
       {enRiesgo && (
         <>
-          {/* Sin `pasa`: el archivo cargado YA es solo la comuna elegida. */}
-          <CapaPoligonos
+          <CapaRiesgoTeselas
             map={map}
-            data={riesgo.data}
+            teselas={metaRiesgo?.teselas}
             visible
-            estilo={estiloMancha}
+            estilo={estiloTesela}
+            opacidad={opacidad}
             onSeleccion={selMancha}
-            onCuenta={setCuenta('riesgo')}
           />
           <CapaIconos
             map={map}

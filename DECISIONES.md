@@ -554,8 +554,9 @@ ficha que manda el punto a Google Maps y Earth.
 - **Puntos por subcausa en las familias de `COLOR_CAUSA`**: 4.9.x derivados de Negligentes
   `#E69F00` y 1.9.x de Accidentales `#0072B2`. Así un incendio negligente es naranjo en las dos vistas.
 - **Calor en rampa amarillo→rojo**, sin tramo azul, que se confundiría con los accidentales. Los puntos llevan borde blanco.
-- **Público general.** Nombres cortos de subcausa en lenguaje simple, en una tabla atada a los
-  códigos oficiales. La ficha muestra el nombre oficial y el código. **Luis revisa los nombres cortos antes de publicarlos.**
+- ~~**Público general.** Nombres cortos de subcausa en lenguaje simple, en una tabla atada a los
+  códigos oficiales.~~ **Sin efecto desde el 2026-09-15**: los datos son de otro departamento
+  y se muestran tal como vienen (decisión de Luis). No hay nombres cortos.
 - **Ventana horaria 13:00–17:59 fija**, rotulada «ventana propuesta» y no como norma.
 - **Filtros**: región, comuna, temporada, subcausa y negligente/accidental.
 - **Acento de selección y foco: el azul del visor, no el verde de catastro.** En prevención el
@@ -703,8 +704,180 @@ anteriores seguían vivas en la caché atrás/adelante y el heap se leía sin re
   tolerancia de esa simplificación no quedaron registradas en el lab.
 - **`mancha_id` no es estable entre corridas del modelo** (lleva el menor índice H3 de la
   mancha y un sufijo): no sirve para enlazar una mancha concreta desde fuera.
-- **`doble_ponderacion.md` y `.tex` describen el modelo retirado.** Qué hacer con ellos lo
-  decide Luis.
+- **`doble_ponderacion.md` y `.tex` describen el modelo retirado.** Se mantienen (decisión de
+  Luis, 2026-09-15).
+- **Decidido el 2026-09-15: las comunas pesadas no se simplifican; la capa pasa a teselas.**
+  Luis descartó simplificar la geometría y pidió formatos web optimizados. **Hecho el mismo
+  día: §T.** La tabla de rendimiento de arriba y la tercera decisión («navegar por comuna»)
+  describen la versión con GeoJSON, que ya no es la que dibuja.
+
+---
+
+## T. Las manchas de riesgo se dibujan con teselas PMTiles de GDAL, una por región (2026-09-15)
+
+**Lo que pidió Luis.** «No simplificar nada, pero sí trabajar en formatos web optimizados
+como tile», y ante el tamaño de una tesela nacional: «¿y si los separas por regiones como
+estaba originalmente y listo?». La vista muestra **el país entero** y ya no hace falta elegir
+comuna para ver el modelo; elegirla sigue sirviendo para normalizar, la ficha y las
+descargas.
+
+**Tres salidas por corrida** (`ETL/build_riesgo.py`, medido el 2026-09-15):
+
+| salida | para qué | tamaño |
+|---|---|---|
+| `riesgo/teselas/<NN>.pmtiles` | lo único que dibuja el visor | 16 archivos, **149,8 MiB**; Magallanes 60,9 MB, Arica 1,6 MB |
+| `riesgo/atributos/<CUT>.json` | ficha, normalización y CSV (los 8 campos, sin geometría) | 343 archivos, 7,6 MB; Natales 1,6 MB contra 36,8 MB con geometría |
+| `riesgo/<CUT>.geojson` | la descarga «Manchas (GeoJSON)», geometría completa | 343 archivos, 163 MiB, igual que en §S |
+
+**Por qué GDAL y no tippecanoe.** tippecanoe no corre en Windows y esta capa tenía que poder
+generarse y verificarse en el equipo de desarrollo. GDAL escribe PMTiles desde la 3.8; aquí
+es la **3.12.3 de conda-forge** (entorno `mapa`, se le pasa con `OGR2OGR`), y CI instala la
+misma versión con micromamba en vez del `gdal-bin` 3.8 de Ubuntu, con el que no se midió
+nada. Sin GDAL el ETL escribe `teselas: null`, avisa por stderr y el panel lo dice.
+
+**Por qué por región, medido.** Una tesela nacional z4–14 pesa **154,64 MB** (GitHub rechaza
+más de 100 MB) y tardó 546 s; bajando a z13, 97,05 MB y GDAL avisa de teselas reducidas de
+resolución. Por región, la mayor es Magallanes con **60,87 MB y ningún aviso**. GitHub
+advierte por encima de 50 MB pero lo acepta.
+
+**Los parámetros, cada uno con su motivo** (`ETL/teselas_riesgo.py`):
+- `SIMPLIFICATION_MAX_ZOOM=0`: en z14 la geometría no se simplifica. En los zooms menores
+  GDAL la ajusta a la rejilla de la tesela, como cualquier tesela.
+- `MINZOOM=4 MAXZOOM=14`; más allá de z14 el visor sobreamplía.
+- **`NAME=riesgo` fijo.** Sin él GDAL escribe el nombre del archivo en los metadatos y dos
+  corridas idénticas diferían en 1.196 bytes; con él los bytes son iguales, y una corrida sin
+  cambios en el insumo no commitea nada.
+- `MAX_SIZE=500000`, y los avisos de GDAL se **publican** en `teselas.avisos` (hoy `{}`): una
+  tesela reducida es detalle perdido y no puede quedar sólo en un log.
+- Cada figura lleva sólo `mancha_id`, `cut`, `nivel` (índice de la clase en
+  `parametros.json`) y `nivel_medio`. El resto está en los atributos.
+
+**En el visor** (`CapaRiesgoTeselas.jsx`):
+- **Una capa de protomaps-leaflet con 16 fuentes**, no 16 capas: un solo clic pregunta a
+  todas las regiones (§H).
+- **`levelDiff: 0`.** protomaps pide por omisión los datos de un zoom menos que el que dibuja.
+  El país se ve a z4 y las teselas empiezan en z4, así que la vista nacional pedía z3 y **no
+  pintaba nada**: visto en captura, con 24 lienzos de tesela vacíos y ningún error.
+- El estilo y la opacidad se leen de refs y se aplican con `rerenderTiles()`, sin recrear la
+  capa. La opacidad va **dentro** del dibujo y no como opacidad CSS: el PNG exportado y el
+  arnés leen los píxeles del lienzo.
+- El clic usa `queryTileFeaturesDebug` (punto en polígono sobre la tesela en memoria). **Una
+  mancha de otra comuna elige esa comuna** y la ficha se abre cuando llegan sus atributos.
+- La normalización recolorea **sólo la comuna elegida**; las vecinas conservan el color de su
+  clase, para que no parezca recalculado lo que no se recalculó.
+
+**Dos cosas que parecen fallos y no lo son, comprobadas contra el dato.**
+- **El mapa sale lleno.** En Mulchén las manchas suman 192.005 ha y la comuna mide unas
+  192.500: el modelo reparte todo el territorio en manchas, así que no hay huecos entre ellas.
+- **Un rectángulo vacío en Natales** es el Campo de Hielo Sur, la zona de límite no definido
+  que el mapa base dibuja como rectángulo: no tiene celdas con dato.
+
+**Lo que no llega a las teselas, y se cuenta.** De las 394 manchas con `area_ha` 0 (astillas
+de un hexágono recortado, cajas de ~1 m), **9 no tienen figura en z14**: una unidad de
+tesela mide ~2 m y GDAL las reduce a nada. Ninguna mancha con superficie falta. Siguen en los
+atributos, el CSV y el GeoJSON; lo que no se puede es pinchar una figura de un metro. D26 lo
+tolera **sólo** para `area_ha` 0 y dice cuántas son.
+
+**Red, medido con el servidor del arnés:** la vista nacional pide 50 rangos y 2,1 MB;
+Natales encuadrada, 97 rangos y 4,6 MB acumulados, contra 36,8 MB del GeoJSON que se
+descargaba antes.
+
+**Qué lo vigila.**
+- `verify.py`: **D24** (en CI riesgo tiene que traer teselas), **D25** (los atributos son el
+  GeoJSON de su comuna fila a fila, por huella y en el mismo orden; cada PMTiles regional
+  con los bytes, los zooms y la caja del manifest, y ninguno sin declarar) y **D26** (con
+  GDAL, el contenido de las teselas en z14: cada mancha una vez, con su CUT, el nivel de su
+  clase según el manifest y su nivel medio).
+- `verify-priorizacion.mjs`: su servidor responde **Range** (sin 206, PMTiles no dibuja);
+  la lectura de píxeles **compone las teselas del zoom vigente y espera a que dejen de
+  cambiar**. **C2** pasa a exigir el país pintado sin comuna (68,5 % de la tinta con color
+  de leyenda a z4), **C8b** que el PNG exportado lleve las manchas (57,6 % de píxeles
+  cálidos) y **C16** que tocar una mancha de otra comuna la elija y abra su ficha.
+- `humo`: los bytes de las 16 teselas y los 343 atributos, y Range con magic en cada tesela.
+
+**Qué NO está resuelto.**
+- **No comprobé el workflow en Actions**: ni la instalación de GDAL con micromamba, ni el
+  tiempo del ETL en el runner (en este equipo, 408 s para riesgo e infraestructura), ni que
+  los bytes de CI coincidan con los de aquí.
+- **Commitear las teselas pesa en la historia**: ~150 MB en la primera publicación y otros
+  tantos cada vez que cambie el insumo de riesgo. Los bytes deterministas evitan el commit
+  cuando nada cambia. La alternativa es no versionarlas y dejarlas sólo en el artefacto de
+  Pages; afecta a la historia del repositorio y **la decide Luis**.
+- **A z4 Magallanes se ve pálida**: 50.615 manchas, casi todas por debajo del píxel.
+- **El PNG exportado no rotula «CONAF · modelo de riesgo»**: su atribución es la del mapa base.
+
+---
+
+## U. Piel común (F1): un token por cosa, un anillo de foco y una ficha que no se corta (2026-09-15)
+
+Primera fase de la alineación con catastro (§R). No cambia la disposición: unifica lo que
+cada control declaraba por su cuenta y cierra tres defectos que se habían visto en captura.
+
+**Lo que había, medido a 1440 px antes de tocar nada.** Los `<select>` medían 30 px de alto,
+«Limpiar filtros» 31, los botones del cartel 33, «Compartir» 35 y «Normalizar» 36, con radios
+de 5 y 6 px mezclados. El foco se dibujaba con 3 px en botones, enlaces y `<select>`, y con
+2 px en las pestañas y el deslizador de opacidad.
+
+**Los tokens** (`src/index.css`):
+
+| token | valor | por qué |
+|---|---|---|
+| `--radio-control` | 6 px | el de los botones del cartel y «Normalizar»; los 5 px eran restos |
+| `--radio-caja` | 10 px | la ficha y el cartel, que ya lo usaban |
+| `--alto-control` | 32 px | el alto medio de lo medido; en táctil sigue mandando el mínimo de 44 px |
+| `--anillo-foco` | 3 px sólido del acento | el que ya tenían los botones |
+| `--sobre-acento` | `#fff` claro · `#0d1117` oscuro | ver abajo |
+| `--shadow` (oscuro) | alfa 0,5 y 0,35 | la sombra clara (0,1 y 0,05) no se ve sobre `#16171d` |
+
+Los pares CSV/GeoJSON de «Descargar» quedan **fuera** de `--alto-control` a propósito: van en
+línea con su rótulo y a 32 px la sección duplicaba su alto. En táctil suben a 44 como todo.
+
+**El botón de acento en oscuro.** «Normalizar» activo era blanco sobre el acento. En claro da
+4,63:1; en oscuro, sobre `#58a6ff`, **2,53:1** (medido). Catastro tiene el mismo defecto con
+2,09:1 y por eso no se copió (§R). El texto sobre el acento pasa a ser un token: 7,49:1 en
+oscuro.
+
+**La ficha.** A 1440×900 la del incendio 1262 tenía 658 px de contenido en 628 de caja: la
+fila «Informe» quedaba cortada al pie, sin pista, y al bajar se perdía de vista qué figura
+era. Ahora:
+- la **cabecera es fija** (`position: sticky` dentro del `<dialog>`, que es quien desplaza), con
+  una línea debajo sólo cuando hay contenido pasando por detrás: sin ella el borde de los
+  botones de Maps y Earth asomaba cortado bajo el título (visto en captura);
+- una **pista de desvanecido** al pie mientras queda contenido, que `ModalFicha.jsx` apaga al
+  llegar al final. Su margen negativo es igual a su alto, para que mostrarla u ocultarla no
+  cambie el alto del contenido: si lo cambiara, llegar al final la ocultaría, el contenido
+  crecería y volvería a aparecer;
+- **`scroll-padding-top: 76px`**: sin él, un Tab dejaba «Ver en Google Maps» enfocado en
+  y=173 con la cabecera terminando en y=202 (medido);
+- cada ficha nueva empieza arriba: el `<dialog>` es el mismo nodo y conservaba el desplazamiento
+  de la anterior.
+
+**Pestañas por teclado.** Con las flechas la pestaña nueva quedaba seleccionada pero el foco
+seguía en la vieja, que ya tiene `tabIndex -1`. El foco va ahora con la selección, y Inicio y
+Fin completan el patrón de `tablist`.
+
+**Táctil.** «Centrar» y «Normalizar», los botones de la vista de riesgo, no estaban en el
+bloque `pointer: coarse` y en un teléfono medían 31 y 36 px.
+
+**Qué lo vigila, cada una con su mutante:**
+- **B32** las flechas e Inicio llevan el foco con la pestaña.
+- **B33** con Tab real, 14 paradas en la vista de incendios, todas con el mismo anillo.
+- **B34** los controles del panel y del cartel con radio de 6 px y al menos 32 px de alto (dos
+  mutantes: el alto de «Limpiar» y el radio de «Compartir»).
+- **C17** con la ventana a 700 px, la ficha del 1262 desborda por definición: pista visible
+  arriba y apagada al final, cabecera arriba tras bajar, última fila visible y el Tab deja el
+  enlace debajo de la cabecera (tres mutantes: sin `sticky`, sin pista, sin `scroll-padding`).
+- **C18** «Normalizar» activo con al menos 4,5:1 en claro y en oscuro, calculado en el arnés
+  con la fórmula de luminancia relativa.
+
+El arnés de riesgo fija ahora el tema claro al empezar y captura la vista en los dos temas
+(`priorizacion-riesgo-claro.png` y `-oscuro.png`): antes cada equipo capturaba con el suyo.
+
+**Qué NO está hecho de lo que F1 prometía:**
+- El deslizador de opacidad usa el anillo común, pero **ningún arnés lo enfoca**: B33 recorre la
+  vista de incendios, donde no existe.
+- Las otras superficies con texto sobre color (las fichas de color de la leyenda, los iconos de
+  infraestructura) no se midieron en oscuro; C18 mira sólo el botón de acento.
 
 ---
 
@@ -763,3 +936,24 @@ Se dejan escritos porque el diagnóstico falso fue plausible y podría repetirse
    el `.ipynb` ejecutado; lo regeneré, no corrí `nbconvert` y quedó publicado sin una sola salida
    (de 42 a 0). Se reejecutó el mismo día contra los datos de CI: 43 salidas, 0 errores y las 7
    figuras miradas.
+
+10. **Repetí el fallo 8 un día después.** Para verificar las teselas de §T compuse los datos
+    nuevos directamente en `frontend/public/data`, porque los arneses sirven `dist/` y cada
+    mutante reconstruye desde ahí. Lo vi al releer este mismo apartado, con el árbol todavía
+    sin commitear. Se restauró a HEAD y el arnés de riesgo aceptó `VERIFY_DATOS=<carpeta>`
+    para servir los datos desde una copia fuera del árbol. Tener escrita la lección no
+    bastó: estaba en un documento que no volví a leer antes de tocar la carpeta.
+
+11. **Escribí una mutación y no la ejecuté.** La de D24 (viales en GeoJSON) entró en
+    `verify.py` sin correr `--negativas`. La primera vez que corrió, el 2026-09-15, tumbó el
+    verificador con un `UnicodeDecodeError`: marcaba el formato como GeoJSON y dejaba el
+    `.pmtiles`, y `verificar()` intentaba parsearlo. Ahora un archivo que no parsea es un D5
+    rojo, y la mutación imita de verdad a un runner sin tippecanoe.
+
+12. **Una aserción nueva dejó sin prueba a una vieja.** B29 (el puesto de Líneas eléctricas
+    con filtro de temporada) navegaba con la espera normal de `ir()`, que exige que no quede
+    «Enciende la capa». El mutante de B26 consiste justo en que no se vaya nunca: la espera
+    se agotaba en B29 y la suite moría antes de llegar a B26, que salió **superviviente** en
+    `verify:mutantes`. B29 pasa a una espera propia que se pone roja en vez de reventar, y
+    `mutaciones.mjs` imprime ahora las rojas ajenas y el final de la suite de todo
+    superviviente: el primer informe sólo decía «la suite falló, pero no por esta aserción».

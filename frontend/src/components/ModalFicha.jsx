@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 /**
  * Ficha de la figura seleccionada en el mapa.
@@ -13,17 +13,41 @@ import { useEffect, useRef } from 'react'
  */
 export default function ModalFicha({ ficha, onCerrar }) {
   const ref = useRef(null)
+  // ¿Queda contenido por debajo de lo visible? Gobierna la pista del pie.
+  const [hayMas, setHayMas] = useState(false)
+  // ¿Hay contenido pasando por debajo de la cabecera fija? Le pone la linea.
+  const [desplazada, setDesplazada] = useState(false)
+  const medir = useCallback(() => {
+    const d = ref.current
+    // 2 px de tolerancia: el zoom del navegador deja scrollTop fraccionario y la
+    // pista no se apagaba nunca en el ultimo pixel.
+    setHayMas(!!d && d.scrollTop + d.clientHeight < d.scrollHeight - 2)
+    setDesplazada(!!d && d.scrollTop > 0)
+  }, [])
 
   useEffect(() => {
     const d = ref.current
     if (!d) return
     if (ficha && !d.open) d.showModal()
     else if (!ficha && d.open) d.close()
-  }, [ficha])
+    // Cada ficha empieza arriba: el dialogo es el mismo nodo y conservaba el
+    // desplazamiento de la anterior.
+    if (ficha) d.scrollTop = 0
+    medir()
+  }, [ficha, medir])
+
+  // Un cambio de tamaño de la ventana cambia lo que cabe sin que haya scroll.
+  useEffect(() => {
+    const d = ref.current
+    if (!d || !ficha || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(medir)
+    ro.observe(d)
+    return () => ro.disconnect()
+  }, [ficha, medir])
 
   return (
     <dialog
-      className="ficha"
+      className={desplazada ? 'ficha desplazada' : 'ficha'}
       ref={ref}
       aria-labelledby="ficha-titulo"
       // 'close' cubre Escape y el boton de cerrar por igual.
@@ -31,6 +55,7 @@ export default function ModalFicha({ ficha, onCerrar }) {
       // Un clic en el ::backdrop tiene como target el propio <dialog>; en el
       // contenido, el hijo. Por eso el contenido va envuelto en un <div>.
       onClick={(e) => e.target === ref.current && onCerrar()}
+      onScroll={medir}
     >
       {ficha && (
         <div className="ficha-caja">
@@ -105,6 +130,7 @@ export default function ModalFicha({ ficha, onCerrar }) {
           ) : (
             <p className="ficha-vacia">Esta figura no trae más atributos.</p>
           )}
+          <div className="ficha-pista" hidden={!hayMas} aria-hidden="true" />
         </div>
       )}
     </dialog>

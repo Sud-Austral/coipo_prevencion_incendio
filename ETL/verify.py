@@ -33,6 +33,34 @@ asercion que no se ha visto roja no esta probando nada.
     D18       derivado lineas_electricas == filtro de la BBDD completa
     D19       riesgo: rangos del modelo (0 <= min <= medio <= max <= 4, pct_alto
               0..100) y clase coherente con los cortes del manifest
+    D21       incendios: una sola etiqueta por comuna (sin variantes de mayusculas,
+              tildes ni espacios), y cada union declarada en comunas_unidas apunta
+              a una etiqueta que existe
+    D22       OECV: la suma de longitud_km de las features cuadra con el manifest
+              (total y por region) y el total esta dentro del 12 % de la cifra
+              oficial de la planilla (KM_OFICIAL_NACIONAL)
+    D23       campos de texto de las capas que salen de .dbf: sin los sintomas de
+              un corrimiento (doble espacio, bordes, U+FFFD, mojibake) y la
+              titularidad OECV solo toma los valores del Memo 3045/2025
+    D24       con --exigir-teselas (lo activa run.py en GitHub Actions): el
+              manifest declara tippecanoe, las capas viales son PMTiles y riesgo
+              trae sus teselas de GDAL. Sin esto, una cache de tippecanoe rota o
+              un runner sin GDAL publicaba en silencio un mapa degradado -- o, en
+              riesgo, uno sin manchas
+    D25       riesgo: los atributos de cada comuna son el GeoJSON de esa comuna
+              sin geometria (mismas filas, mismo orden, mismos valores), y cada
+              region declarada en `teselas` tiene su PMTiles con los bytes, los
+              zooms y la caja que dice el manifest, y ninguno sobra
+    D26       riesgo, con GDAL: el CONTENIDO de las teselas en el zoom maximo. Cada
+              mancha de los atributos esta en la tesela de su region, una sola vez
+              con su CUT, su nivel (el de su clase en el manifest) y su nivel_medio,
+              y no hay figuras que no sean manchas. D25 mira los archivos por fuera;
+              sin D26 una mancha perdida al teselar, o pintada con el color de otra
+              clase, quedaba publicada con todo en verde. Unica tolerancia: una
+              mancha de area_ha 0 (una astilla de ~1 m) puede no tener figura,
+              porque en z14 una unidad de tesela mide ~2 m y GDAL la reduce a
+              nada; se cuentan en la linea. Sin GDAL se dice y no cuenta, salvo
+              con --exigir-teselas, donde es rojo
     D20       riesgo: las cuentas cuadran -- partes = total, leidas = publicadas +
               sin geometria, CSV = leidas + solo en CSV, las 16 regiones, y ningun
               mancha_id repetido entre comunas
@@ -44,12 +72,15 @@ D5-D9 archivo por archivo, con UNA linea por asercion para las 343 comunas.
 from __future__ import annotations
 
 import argparse
+import concurrent.futures as cf
 import contextlib
+import csv
 import hashlib
 import io
 import json
 import shutil
 import struct
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -102,6 +133,35 @@ EXTRA_DERIVADOS = ["lat", "lon", "utm_epsg"]
 # Tambien duplicado del ETL, por lo mismo: D18 no puede leer del manifest el filtro
 # que esta verificando.
 CAUSA_ELECTRICA = "Líneas eléctricas"
+
+# Kilometros planificados segun la planilla oficial de OECV. DUPLICADO A PROPOSITO
+# de ETL/build_oecv.py: es la unica cifra del pipeline que no sale de la geometria,
+# y D22 la usa como referencia externa; importarla del ETL no cambiaria el
+# numero, pero dejaria de ser un cruce entre dos lugares.
+KM_OFICIAL_NACIONAL = 4898.595
+TOLERANCIA_KM_PCT = 12.0
+
+# La titularidad del terreno de OECV tiene exactamente estos tres valores, los del
+# Memo N 3045/2025 (DECISIONES.md §M). Un corrimiento de campos del .dbf
+# (DECISIONES.md §D: 'OP  F' en vez de 'MOP') mete en `tipo` el texto de otra
+# columna, y eso solo lo ve un vocabulario que no salga de los propios datos.
+TITULARIDAD_OECV = {"Fiscal", "Privado", "Sin determinar"}
+
+# Campos de texto que salen de .dbf, por capa. Las capas de teselas solo tienen
+# sus dominios en el manifest; las GeoJSON se miran feature a feature.
+CAMPOS_DBF = {
+    "oecv": ["tipo", "inst"],
+    "oecv_verificado": ["inst"],
+    "rutas": ["clasificacion", "carpeta", "origen"],
+    "redvial": ["clasificacion", "carpeta"],
+}
+
+# Columnas de riesgo/atributos/<CUT>.json, en orden. DUPLICADO A PROPOSITO de
+# build_riesgo.py (CAMPOS sin `comuna`, que va una vez por archivo): el visor lee
+# las filas por posicion, asi que un orden cambiado en el ETL pondria el area en
+# la casilla del porcentaje con todo en verde si D25 importara la lista.
+CAMPOS_ATRIBUTOS = ["mancha_id", "clase", "nivel_medio", "nivel_medio_min", "nivel_medio_max",
+                    "pct_alto", "n_hexagonos", "area_ha"]
 
 OK = "✔"
 NO = "✘"
@@ -170,6 +230,7 @@ def _resumen_parte(ruta: Path, clases: list[dict]) -> dict:
     malas = fuera = vacias = 0
     ext = [float("inf"), float("inf"), float("-inf"), float("-inf")]
     cuts, nombres, ids, problemas = set(), set(), [], []
+    filas = hashlib.sha1()
     cortes = [c["desde"] for c in clases[1:]]
     etiquetas = [c["clase"] for c in clases]
     for f in feats:
@@ -193,10 +254,207 @@ def _resumen_parte(ruta: Path, clases: list[dict]) -> dict:
             ext[0], ext[1] = min(ext[0], lon), min(ext[1], lat)
             ext[2], ext[3] = max(ext[2], lon), max(ext[3], lat)
         problemas.extend(f"{mid}: {x}" for x in _problemas_riesgo(p, cortes, etiquetas))
+        filas.update(_fila_canon([p.get(c) for c in CAMPOS_ATRIBUTOS]))
     res.update(malas=malas, fuera=fuera, vacias=vacias, extension=ext, cuts=cuts,
-               nombres=nombres, ids=ids, problemas=problemas)
+               nombres=nombres, ids=ids, problemas=problemas, huella=filas.hexdigest())
     _RESUMENES[clave] = res
     return res
+
+
+def _fila_canon(valores: list) -> bytes:
+    """Una fila serializada igual venga del GeoJSON o de los atributos: los dos
+    lados pasan por json.loads, asi que el mismo numero da el mismo repr."""
+    return json.dumps(valores, ensure_ascii=False, separators=(",", ":")).encode("utf-8") + b"\n"
+
+
+def _atributos_riesgo(data: Path, meta: dict, resumenes: dict[str, dict]) -> list[str]:
+    """Problemas de D25 en riesgo/atributos/. Cada archivo se compara contra el
+    GeoJSON de SU comuna por la huella de las filas: la ficha y el CSV salen de
+    aqui, y una fila corrida da una ficha plausible de otra mancha."""
+    malas = []
+    for cut, pm in (meta.get("partes") or {}).items():
+        at = pm.get("atributos") or {}
+        ruta = data / str(at.get("archivo"))
+        if not isinstance(at.get("archivo"), str) or not ruta.exists():
+            malas.append(f"{cut}: falta {at.get('archivo')}")
+            continue
+        datos = ruta.read_bytes()
+        if len(datos) != at.get("bytes"):
+            malas.append(f"{cut}: {len(datos)} bytes y el manifest dice {at.get('bytes')}")
+        try:
+            doc = json.loads(datos.decode("utf-8"))
+        except ValueError:
+            malas.append(f"{cut}: no parsea")
+            continue
+        if not isinstance(doc, dict) or doc.get("cut") != cut or doc.get("comuna") != pm.get("comuna"):
+            malas.append(f"{cut}: se declara {doc.get('cut') if isinstance(doc, dict) else doc!r}"
+                         f"/{doc.get('comuna') if isinstance(doc, dict) else ''}")
+            continue
+        if doc.get("campos") != CAMPOS_ATRIBUTOS:
+            malas.append(f"{cut}: campos {doc.get('campos')}")
+            continue
+        filas = doc.get("filas") if isinstance(doc.get("filas"), list) else []
+        if len(filas) != pm.get("features"):
+            malas.append(f"{cut}: {len(filas)} filas y {pm.get('features')} manchas")
+        h = hashlib.sha1()
+        for fila in filas:
+            h.update(_fila_canon(fila))
+        res = resumenes.get(cut) or {}
+        if res.get("huella") and h.hexdigest() != res["huella"]:
+            ids = [str(f[0]) if isinstance(f, list) and f else None for f in filas]
+            orden = "otro orden de mancha_id" if sorted(ids) == sorted(res.get("ids", [])) and ids != res.get("ids") else "valores distintos"
+            malas.append(f"{cut}: las filas no son las del GeoJSON ({orden})")
+    return malas
+
+
+# Figuras de un PMTiles regional leidas con GDAL, por sha1 de sus bytes. La
+# lectura de las 16 regiones tarda ~1 min (Magallanes, 34 s): --negativas llama
+# a verificar() 45 veces y solo tiene que releer el archivo que muto.
+_FIGURAS: dict[str, dict] = {}
+
+
+def _figuras_tesela(ruta: Path, capa: str, zoom: int) -> dict:
+    """{'figuras': {mancha_id: {(cut, nivel, nivel_medio)}}} o {'error': texto}."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import teselas_riesgo
+
+    exe = teselas_riesgo.ogr2ogr()
+    datos = ruta.read_bytes()
+    clave = hashlib.sha1(datos).hexdigest() + f"|{capa}|{zoom}"
+    if clave in _FIGURAS:
+        return _FIGURAS[clave]
+    with tempfile.TemporaryDirectory(prefix="verify-d26-") as tmp:
+        salida = Path(tmp) / "figuras.csv"
+        r = subprocess.run(
+            [exe, "-f", "CSV", str(salida), str(ruta), "-oo", f"ZOOM_LEVEL={zoom}",
+             "-select", "mancha_id,cut,nivel,nivel_medio", capa],
+            capture_output=True, text=True, env=teselas_riesgo._entorno(exe),
+        )
+        if r.returncode != 0 or not salida.exists():
+            res = {"error": (r.stderr or "sin salida")[-300:]}
+        else:
+            figuras: dict[str, set] = {}
+            with open(salida, encoding="utf-8", newline="") as fh:
+                for fila in csv.DictReader(fh):
+                    figuras.setdefault(fila.get("mancha_id"), set()).add(
+                        (fila.get("cut"), fila.get("nivel"), fila.get("nivel_medio")))
+            res = {"figuras": figuras}
+    _FIGURAS[clave] = res
+    return res
+
+
+def _contenido_teselas(data: Path, meta: dict) -> tuple[list[str], int] | None:
+    """(problemas de D26, astillas de 0 ha sin figura), o None sin GDAL.
+
+    Medido el 2026-09-15: de 394 manchas con area_ha 0, 9 no tienen figura en z14
+    (cajas de ~1e-5 grados, un solo hexagono recortado); ninguna mancha con
+    superficie falta. Por eso la tolerancia se define por el dato publicado
+    (area_ha == 0) y no por un umbral ajustado a lo que se vio.
+    """
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import teselas_riesgo
+
+    t = meta.get("teselas") or {}
+    if not t.get("regiones"):
+        return [], 0
+    if not teselas_riesgo.ogr2ogr():
+        return None
+    # Lo esperado sale de los ATRIBUTOS y de las clases del manifest, que es con
+    # lo que el visor traduce `nivel` a color: no de las teselas mismas.
+    nivel_de = {c.get("clase"): c.get("nivel") for c in meta.get("clases") or []}
+    esperado: dict[str, dict[str, tuple]] = {}
+    for cut, pm in (meta.get("partes") or {}).items():
+        try:
+            doc = json.loads((data / pm["atributos"]["archivo"]).read_text(encoding="utf-8"))
+            i_id, i_cl, i_nm, i_ha = (doc["campos"].index(c) for c in ("mancha_id", "clase", "nivel_medio", "area_ha"))
+        except (OSError, ValueError, KeyError, TypeError):
+            continue  # D25 ya lo pone rojo
+        region = esperado.setdefault(pm.get("region"), {})
+        for fila in doc.get("filas") or []:
+            region[fila[i_id]] = (cut, nivel_de.get(fila[i_cl]), fila[i_nm], fila[i_ha])
+
+    malas: list[str] = []
+    astillas = 0
+    regiones = {nn: x for nn, x in t["regiones"].items() if (data / str(x.get("archivo"))).exists()}
+    with cf.ThreadPoolExecutor(max_workers=4) as pool:
+        leidas = dict(zip(regiones, pool.map(
+            lambda x: _figuras_tesela(data / x["archivo"], t.get("capa_mvt"), t.get("maxzoom")), regiones.values())))
+    for nn, x in sorted(regiones.items()):
+        res = leidas[nn]
+        if "error" in res:
+            malas.append(f"{nn}: GDAL no pudo leerla: {res['error']}")
+            continue
+        figuras, quiero = res["figuras"], esperado.get(x.get("region"), {})
+        ausentes = set(quiero) - set(figuras)
+        faltan = sorted(m for m in ausentes if quiero[m][3] != 0)
+        astillas += len(ausentes) - len(faltan)
+        sobran = sorted(map(str, set(figuras) - set(quiero)))
+        if faltan:
+            malas.append(f"{nn}: {len(faltan)} manchas sin figura en z{t.get('maxzoom')}: {faltan[:2]}")
+        if sobran:
+            malas.append(f"{nn}: {len(sobran)} figuras que no son manchas de {x.get('region')}: {sobran[:2]}")
+        distintas = []
+        for mid, (cut, nivel, medio, _ha) in quiero.items():
+            vistas = figuras.get(mid)
+            if not vistas:
+                continue
+            ok = len(vistas) == 1
+            if ok:
+                (c, nv, nm), = vistas
+                try:
+                    ok = c == cut and int(nv) == nivel and abs(float(nm) - float(medio)) <= 1e-6
+                except (TypeError, ValueError):
+                    ok = False
+            if not ok:
+                distintas.append(f"{mid}: {sorted(vistas)} y los atributos dicen {(cut, nivel, medio)}")
+        if distintas:
+            malas.append(f"{nn}: {len(distintas)} con cut/nivel/nivel_medio distintos: {distintas[:2]}")
+    return malas, astillas
+
+
+def _teselas_riesgo(data: Path, meta: dict) -> list[str]:
+    """Problemas de D25 en riesgo/teselas/. Sin `teselas` no hay nada que mirar
+    aqui: que falten en CI lo dice D24."""
+    t = meta.get("teselas")
+    if t is None:
+        return []
+    malas = []
+    partes = meta.get("partes") or {}
+    regiones = t.get("regiones") or {}
+    if {x.get("region") for x in regiones.values()} != {p.get("region") for p in partes.values()}:
+        malas.append(f"teselas de {len(regiones)} regiones y partes de {len({p.get('region') for p in partes.values()})}")
+    suma = sum(x.get("manchas") or 0 for x in regiones.values())
+    if suma != meta.get("features"):
+        malas.append(f"las teselas declaran {suma} manchas y la capa {meta.get('features')}")
+    for nn, x in sorted(regiones.items()):
+        esperado = f"riesgo/teselas/{nn}.pmtiles"
+        manchas = sum(p.get("features") or 0 for p in partes.values() if p.get("region") == x.get("region"))
+        if x.get("manchas") != manchas:
+            malas.append(f"{nn}: declara {x.get('manchas')} manchas y sus comunas suman {manchas}")
+        ruta = data / str(x.get("archivo"))
+        if x.get("archivo") != esperado or not ruta.exists():
+            malas.append(f"{nn}: falta {x.get('archivo')}")
+            continue
+        if ruta.stat().st_size != x.get("bytes"):
+            malas.append(f"{nn}: {ruta.stat().st_size} bytes y el manifest dice {x.get('bytes')}")
+        h = _leer_header_pmtiles(ruta)
+        if h is None:
+            malas.append(f"{nn}: no es un PMTiles")
+            continue
+        if (h["minzoom"], h["maxzoom"]) != (t.get("minzoom"), t.get("maxzoom")):
+            malas.append(f"{nn}: header z{h['minzoom']}-{h['maxzoom']} y el manifest z{t.get('minzoom')}-{t.get('maxzoom')}")
+        # La caja del header la calcula GDAL de las mismas geometrias; la del
+        # manifest es la union de las cajas comunales redondeadas hacia afuera.
+        # Margen de 0,01 grados para el redondeo de GDAL a 1e-7 y a pixel.
+        b, c, m = h["bbox"], x.get("bbox") or [0, 0, 0, 0], 0.01
+        if not (c[0] - m <= b[0] and c[1] - m <= b[1] and b[2] <= c[2] + m and b[3] <= c[3] + m):
+            malas.append(f"{nn}: caja del header {[round(v, 3) for v in b]} fuera de {c}")
+    carpeta = data / "riesgo" / "teselas"
+    declarados = {Path(str(x.get("archivo"))).name for x in regiones.values()}
+    sobran = sorted(p.name for p in carpeta.glob("*.pmtiles") if p.name not in declarados) if carpeta.exists() else []
+    if sobran:
+        malas.append(f"PMTiles no declarados: {sobran}")
+    return malas
 
 
 def _problemas_riesgo(p: dict, cortes: list[float], etiquetas: list[str]) -> list[str]:
@@ -334,7 +592,7 @@ def _leer_header_pmtiles(p: Path) -> dict | None:
     }
 
 
-def verificar(data: Path, muestra: int = 500, res: Res | None = None) -> bool:
+def verificar(data: Path, muestra: int = 500, res: Res | None = None, exigir_teselas: bool = False) -> bool:
     data = Path(data)
     r = res if res is not None else Res()
     man_path = data / "manifest.json"
@@ -397,9 +655,16 @@ def verificar(data: Path, muestra: int = 500, res: Res | None = None) -> bool:
                     print(f"  · {nombre}: sin intermedio en _build/, queda fuera del cruce")
             continue
 
-        gj = json.loads(archivo.read_text(encoding="utf-8"))
+        # Un archivo que no parsea es un D5 rojo, no un verificador muerto: la
+        # mutacion de D24 (formato geojson sobre un .pmtiles) lo tumbaba con un
+        # UnicodeDecodeError el 2026-09-15, la primera vez que se ejecuto.
+        try:
+            gj = json.loads(archivo.read_text(encoding="utf-8"))
+        except (ValueError, UnicodeDecodeError) as e:
+            r.check(False, "D5", f"{nombre}: FeatureCollection", f"no parsea: {type(e).__name__}")
+            continue
         parseados[meta["archivo"]] = gj
-        r.check(gj.get("type") == "FeatureCollection", "D5", f"{nombre}: FeatureCollection")
+        r.check(isinstance(gj, dict) and gj.get("type") == "FeatureCollection", "D5", f"{nombre}: FeatureCollection")
         n = len(gj["features"])
         r.check(
             n == meta["features"],
@@ -478,6 +743,28 @@ def verificar(data: Path, muestra: int = 500, res: Res | None = None) -> bool:
     meta_riesgo = capas.get("riesgo")
     if meta_riesgo is not None:
         _cuentas_riesgo(r, meta_riesgo, riesgo_resumenes or {})
+        malas = _atributos_riesgo(data, meta_riesgo, riesgo_resumenes or {}) + _teselas_riesgo(data, meta_riesgo)
+        t = meta_riesgo.get("teselas")
+        r.check(
+            not malas,
+            "D25",
+            f"riesgo: atributos de {len(meta_riesgo.get('partes') or {})} comunas = su GeoJSON; "
+            + (f"teselas de {len(t.get('regiones') or {})} regiones = manifest" if t else "sin teselas"),
+            f"{len(malas)}: {malas[:3]}" if malas else "",
+        )
+        if t and t.get("regiones"):
+            leido = _contenido_teselas(data, meta_riesgo)
+            if leido is None and not exigir_teselas:
+                print("  · D26 no verificable: sin GDAL (define OGR2OGR) no se leen las teselas por dentro")
+            else:
+                d26, astillas = leido if leido is not None else (None, 0)
+                r.check(
+                    d26 is not None and not d26,
+                    "D26",
+                    f"riesgo: cada mancha en su tesela z{t.get('maxzoom')}, una vez, con su CUT, nivel y nivel medio"
+                    + (f" ({astillas} astillas de 0 ha sin figura)" if astillas else ""),
+                    "sin GDAL con que leerlas (exigido en CI)" if d26 is None else (f"{len(d26)}: {d26[:3]}" if d26 else ""),
+                )
 
     # --- infraestructura: cada punto dentro de la caja de riesgo de SU CUT ---
     # Cruza las dos capas, asi que caza de una vez tres fallos distintos: un huso
@@ -507,6 +794,120 @@ def verificar(data: Path, muestra: int = 500, res: Res | None = None) -> bool:
             "infra_puntos: cada punto dentro de la caja de riesgo de su CUT",
             f"{len(malos)} fuera: {malos[:3]}" if malos else "",
         )
+
+    # --- D21: una etiqueta por comuna en incendios ---
+    # La clave va DUPLICADA a proposito de build_incendios.clave_comuna: importarla
+    # comprobaria que la funcion es igual a si misma.
+    if "incendios" in capas:
+        import unicodedata
+
+        def _clave(s):
+            s = "".join(ch for ch in unicodedata.normalize("NFD", s) if unicodedata.category(ch) != "Mn")
+            return " ".join(s.casefold().split())
+
+        meta_inc = capas["incendios"]
+        etiquetas = (meta_inc.get("tablas") or {}).get("comuna") or []
+        por_clave = {}
+        for v in etiquetas:
+            por_clave.setdefault(_clave(str(v)), []).append(v)
+        dobles = [v for v in por_clave.values() if len(v) > 1]
+        unidas = meta_inc.get("comunas_unidas")
+        huerfanas = [f"{k}->{v}" for k, v in (unidas or {}).items() if v not in etiquetas or k in etiquetas]
+        r.check(
+            bool(etiquetas) and isinstance(unidas, dict) and not dobles and not huerfanas,
+            "D21",
+            f"incendios: una etiqueta por comuna ({len(etiquetas)} comunas, {len(unidas or {})} grafías unidas)",
+            (f"variantes: {dobles[:3]}" if dobles else "")
+            + (f" · uniones que no cuadran: {huerfanas[:3]}" if huerfanas else "")
+            + ("" if isinstance(unidas, dict) else " · el manifest no declara comunas_unidas"),
+        )
+
+    # --- D24: en CI, las capas viales tienen que salir en teselas ---
+    if exigir_teselas:
+        degradadas = [n for n in CAPAS_VIALES if (capas.get(n) or {}).get("formato") != "pmtiles"]
+        # Riesgo sin teselas es un mapa sin manchas: el visor solo dibuja teselas.
+        if "riesgo" in capas and not (capas["riesgo"].get("teselas") or {}).get("regiones"):
+            degradadas.append("riesgo (sin teselas de GDAL)")
+        r.check(
+            bool(manifest.get("tippecanoe")) and not degradadas,
+            "D24",
+            "capas viales en PMTiles con tippecanoe y riesgo con teselas (exigido en CI)",
+            f"tippecanoe={manifest.get('tippecanoe')!r} · degradadas {degradadas}" if degradadas or not manifest.get("tippecanoe") else "",
+        )
+
+    # --- D22: kilometros de OECV contra el manifest y la planilla oficial ---
+    meta_oecv = capas.get("oecv")
+    if meta_oecv is not None:
+        gj = _leer_gj(data, meta_oecv.get("archivo"), parseados)
+        feats = _features(gj) if gj is not None else []
+        suma = sum((f.get("properties") or {}).get("longitud_km") or 0 for f in feats)
+        por_region: dict[str, float] = {}
+        for f in feats:
+            pr = f.get("properties") or {}
+            por_region[pr.get("region")] = por_region.get(pr.get("region"), 0) + (pr.get("longitud_km") or 0)
+        declarado = meta_oecv.get("longitud_km")
+        malas = []
+        if not feats or not isinstance(declarado, (int, float)):
+            malas.append("sin features o sin longitud_km en el manifest")
+        else:
+            if abs(suma - declarado) > 0.05:
+                malas.append(f"features suman {suma:.2f} km y el manifest dice {declarado}")
+            for reg, km in (meta_oecv.get("km_por_region") or {}).items():
+                if abs(por_region.get(reg, 0) - km) > 0.06:
+                    malas.append(f"{reg}: {por_region.get(reg, 0):.2f} vs {km}")
+            desvio = 100.0 * (declarado - KM_OFICIAL_NACIONAL) / KM_OFICIAL_NACIONAL
+            if abs(desvio) > TOLERANCIA_KM_PCT:
+                malas.append(f"{declarado} km contra {KM_OFICIAL_NACIONAL} oficiales ({desvio:+.1f} %)")
+        r.check(
+            not malas,
+            "D22",
+            f"oecv: {suma:.1f} km = manifest, y dentro del {TOLERANCIA_KM_PCT:.0f} % de los {KM_OFICIAL_NACIONAL} oficiales",
+            "; ".join(malas[:3]),
+        )
+
+    # --- D23: sintomas de corrimiento de campos del .dbf ---
+    import re as _re
+
+    def _sintoma(v):
+        if not isinstance(v, str):
+            return None
+        if v != v.strip():
+            return "espacios en el borde"
+        if "  " in v:
+            return "doble espacio"
+        if "\ufffd" in v:
+            return "caracter de reemplazo"
+        if _re.search("[\u00c2\u00c3][\u0080-\u00bf]", v):
+            return "mojibake"
+        if any(ord(ch) < 32 for ch in v):
+            return "caracter de control"
+        return None
+
+    raros = []
+    for capa, campos in CAMPOS_DBF.items():
+        meta_c = capas.get(capa)
+        if meta_c is None:
+            continue
+        valores: dict[str, set] = {c: {d.get("v") for d in (meta_c.get("dominios") or {}).get(c, [])} for c in campos}
+        if meta_c.get("formato") != "pmtiles":
+            for f in _features(_leer_gj(data, meta_c.get("archivo"), parseados)):
+                for c in campos:
+                    valores[c].add((f.get("properties") or {}).get(c))
+        for c, vs in valores.items():
+            for v in vs:
+                motivo = _sintoma(v)
+                if motivo:
+                    raros.append(f"{capa}.{c} {v!r}: {motivo}")
+        if capa == "oecv":
+            ajenos = sorted(map(str, valores["tipo"] - TITULARIDAD_OECV - {None}))
+            if ajenos:
+                raros.append(f"oecv.tipo fuera del Memo 3045/2025: {ajenos[:3]}")
+    r.check(
+        not raros,
+        "D23",
+        "campos de texto de los .dbf sin síntomas de corrimiento",
+        f"{len(raros)}: {raros[:3]}" if raros else "",
+    )
 
     # --- D16-D18: codigo de causa general y derivados de incendios ---
     # Como D14 y D15, solo exigen algo cuando la capa de la que dependen esta en
@@ -921,6 +1322,7 @@ def _mutaciones(data: Path) -> list[tuple[str, str, str, object]]:
     der = man.get("derivados") or {}
     arch_bbdd = (der.get("bbdd_uad_completa") or {}).get("archivo", "bbdd_uad_completa.geojson")
     arch_lineas = (der.get("lineas_electricas") or {}).get("archivo", "lineas_electricas.geojson")
+    arch_oecv = ((man["capas"].get("oecv") or {}).get("archivo")) or "oecv.geojson"
 
     def fundir_codigo_general(p: Path):
         # El defecto real publicado hasta el 2026-09-14: 4.10 leido como float es
@@ -1009,6 +1411,69 @@ def _mutaciones(data: Path) -> list[tuple[str, str, str, object]]:
     def falta_un_feature_si_existe(p: Path):
         if p.exists():
             falta_un_feature(p)
+
+    def degradar_viales(p: Path):
+        # Lo que publicaria un runner sin tippecanoe: el manifest sin version y las
+        # dos viales como GeoJSON simplificado, con su nombre .geojson (tiles.py).
+        # El espejo no tiene esos .geojson: D1 tambien se pone roja, y da igual,
+        # porque lo que se exige es que lo este D24.
+        def degradar(d):
+            d["tippecanoe"] = None
+            for n in CAPAS_VIALES:
+                if n in d.get("capas", {}):
+                    d["capas"][n]["formato"] = "geojson"
+                    d["capas"][n]["archivo"] = f"{n}.geojson"
+
+        _mut_json(p, degradar)
+
+    def escalar_km_oecv(p: Path):
+        # Lo que dejaria un CRS mal leido: todas las longitudes a la mitad, con el
+        # manifest regenerado en coherencia. Solo la cifra oficial lo delata.
+        def escalar(d):
+            o = (d.get("capas") or {}).get("oecv") or {}
+            if isinstance(o.get("longitud_km"), (int, float)):
+                o["longitud_km"] = round(o["longitud_km"] * 0.5, 1)
+                o["km_por_region"] = {k: round(v * 0.5, 1) for k, v in (o.get("km_por_region") or {}).items()}
+
+        _mut_json(p, escalar)
+
+    def inflar_una_obra(p: Path):
+        # Una obra con su longitud multiplicada: el total del manifest ya no cuadra.
+        def inflar(d):
+            fs = d.get("features") or []
+            if fs:
+                fs[0]["properties"]["longitud_km"] = (fs[0]["properties"].get("longitud_km") or 0) + 50
+
+        _mut_json(p, inflar)
+
+    def corrimiento_dbf(p: Path):
+        # El sintoma real de DECISIONES.md §D: 'OP  F' donde iba 'MOP'.
+        def correr(d):
+            fs = d.get("features") or []
+            if fs:
+                fs[0]["properties"]["inst"] = "OP  F"
+
+        _mut_json(p, correr)
+
+    def titularidad_ajena(p: Path):
+        # Otra columna cayendo en `tipo`, sin dejar espacios raros: solo la ve el
+        # vocabulario del Memo.
+        def correr(d):
+            fs = d.get("features") or []
+            if fs:
+                fs[0]["properties"]["tipo"] = "Municipio"
+
+        _mut_json(p, correr)
+
+    def colar_variante_de_comuna(p: Path):
+        # Lo que habia antes del 2026-09-15: «CABRERO» junto a «Cabrero» en la
+        # tabla, dos opciones del filtro para la misma comuna.
+        def colar(d):
+            t = ((d.get("capas") or {}).get("incendios") or {}).get("tablas", {}).get("comuna")
+            if t:
+                t.append(t[0].upper() if t[0].upper() != t[0] else t[0].lower())
+
+        _mut_json(p, colar)
 
     # --- riesgo. Se muta la comuna con MENOS manchas que tenga al menos dos, y
     # la mutacion de D14 por nombre usa otra, para no depender de una sola.
@@ -1103,6 +1568,107 @@ def _mutaciones(data: Path) -> list[tuple[str, str, str, object]]:
 
         _mut_json(p, cambiar)
 
+    teselas = (man["capas"].get("riesgo") or {}).get("teselas") or {}
+    regiones_t = teselas.get("regiones") or {}
+    nn_chica = min(regiones_t, key=lambda k: regiones_t[k].get("bytes") or 0) if regiones_t else None
+    arch_tesela = regiones_t[nn_chica]["archivo"] if nn_chica else "riesgo/teselas/sin-teselas.pmtiles"
+    arch_atr_a = (partes.get(cut_a) or {}).get("atributos", {}).get("archivo", "riesgo/atributos/sin-partes.json")
+    arch_atr_b = (partes.get(cut_b) or {}).get("atributos", {}).get("archivo", arch_atr_a)
+
+    def _mut_atributos(p: Path, fn):
+        # Se reescribe con el MISMO formato del ETL y sin cambiar la longitud: la
+        # mutacion tiene que ponerse roja por las filas, no por los bytes.
+        if not p.exists():
+            return
+        d = json.loads(p.read_text(encoding="utf-8"))
+        fn(d)
+        p.write_bytes(json.dumps(d, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
+
+    def atributos_en_otro_orden(p: Path):
+        # Dos filas intercambiadas: mismo tamano, mismos valores, y la ficha de
+        # una mancha mostrando los datos de su vecina.
+        def cambiar(d):
+            f = d.get("filas") or []
+            if len(f) >= 2:
+                f[0], f[1] = f[1], f[0]
+
+        _mut_atributos(p, cambiar)
+
+    def atributo_alterado(p: Path):
+        # Un digito de area_ha cambiado sin cambiar la longitud del archivo.
+        def cambiar(d):
+            f = (d.get("filas") or [[]])[0]
+            i = CAMPOS_ATRIBUTOS.index("n_hexagonos")
+            if len(f) > i and isinstance(f[i], int):
+                f[i] = f[i] + 1 if f[i] % 10 != 9 else f[i] - 1
+
+        _mut_atributos(p, cambiar)
+
+    def borrar_tesela(p: Path):
+        if p.exists():
+            p.unlink()
+
+    def manchas_de_region_descuadradas(p: Path):
+        def tocar(d):
+            reg = (((d["capas"].get("riesgo") or {}).get("teselas") or {}).get("regiones") or {})
+            if nn_chica in reg:
+                reg[nn_chica]["manchas"] += 1
+
+        _mut_json(p, tocar)
+
+    def tesela_sobrante(p: Path):
+        # Un PMTiles de una region que ya no se declara: se sirve igual y nadie lo
+        # mira. Se copia uno real con otro nombre; `p` es el archivo NUEVO, que
+        # negativas() borra al terminar porque antes no existia.
+        real = p.parent / Path(arch_tesela).name
+        if real.exists():
+            p.write_bytes(real.read_bytes())
+
+    def _reteselar(p: Path, cambiar):
+        # Vuelve a teselar la region mas chica desde el intermedio de GDAL, con una
+        # mancha tocada. Sin GDAL o sin ETL/_build/riesgo/ no muta, y la mutacion
+        # sale como SUPERVIVIENTE, que es ruidoso.
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import teselas_riesgo
+
+        entrada = BUILD / "riesgo" / f"{nn_chica}.geojsonl"
+        if not (teselas_riesgo.ogr2ogr() and entrada.exists() and p.exists()):
+            return
+        lineas = entrada.read_text(encoding="utf-8").splitlines()
+        lineas = cambiar(lineas)
+        with tempfile.TemporaryDirectory(prefix="verify-mut-") as tmp:
+            mutada = Path(tmp) / f"{nn_chica}.geojsonl"
+            mutada.write_text("\n".join(lineas) + "\n", encoding="utf-8", newline="\n")
+            teselas_riesgo.teselar_region(mutada, p, teselas.get("max_size") or 500_000)
+
+    # La mancha tocada es la de geometria mas larga: una astilla de 0 ha puede
+    # faltar por tolerancia, y quitar justo una la dejaria sobrevivir.
+    def _mayor(ls):
+        return max(range(len(ls)), key=lambda i: len(ls[i]))
+
+    def tesela_sin_una_mancha(p: Path):
+        # Lo que dejaria un MAX_SIZE que descarta figuras, o un filtro en el ETL:
+        # el PMTiles sigue perfecto por fuera.
+        _reteselar(p, lambda ls: ls[:_mayor(ls)] + ls[_mayor(ls) + 1:])
+
+    def tesela_con_otro_nivel(p: Path):
+        # Una mancha pintada con el color de otra clase: `nivel` desplazado dos.
+        def cambiar(ls):
+            i = _mayor(ls)
+            f = json.loads(ls[i])
+            f["properties"]["nivel"] = (f["properties"]["nivel"] + 2) % 5
+            return ls[:i] + [json.dumps(f, separators=(",", ":"))] + ls[i + 1:]
+
+        _reteselar(p, cambiar)
+
+    def riesgo_sin_teselas(p: Path):
+        # Lo que publicaria un runner sin GDAL: todo lo demas perfecto.
+        def quitar(d):
+            if "riesgo" in d.get("capas", {}):
+                d["capas"]["riesgo"]["teselas"] = None
+
+        _mut_json(p, quitar)
+
     return [
         ("D1", "borrar el archivo de una capa", arch_geo, borrar_archivo),
         ("D2", "corromper el magic 'PMTiles' del header", arch_pm, magic_corrupto),
@@ -1127,6 +1693,12 @@ def _mutaciones(data: Path) -> list[tuple[str, str, str, object]]:
         ("D19", "subir dos clases una mancha sin cambiar su nivel", arch_a, clase_incoherente),
         ("D19", "pct_alto = 150 en una mancha", arch_b, pct_alto_fuera_de_rango),
         ("D20", "olvidar en el manifest las manchas sin geometría", "manifest.json", descuadrar_sin_geometria),
+        ("D21", "colar «CABRERO» junto a «Cabrero» en la tabla de comunas", "manifest.json", colar_variante_de_comuna),
+        ("D24", "publicar las viales degradadas, como un runner sin tippecanoe", "manifest.json", degradar_viales),
+        ("D22", "longitudes de OECV a la mitad, con el manifest coherente", "manifest.json", escalar_km_oecv),
+        ("D22", "inflar la longitud de una obra sin tocar el manifest", arch_oecv, inflar_una_obra),
+        ("D23", "correr los campos del .dbf: 'OP  F' en inst", arch_oecv, corrimiento_dbf),
+        ("D23", "meter otra columna en la titularidad de OECV", arch_oecv, titularidad_ajena),
         ("D20", "quitar del manifest una región entera de riesgo", "manifest.json", quitar_una_region),
         ("D16", "volver a fundir 4.10 en 4.1 en la tabla del manifest", "manifest.json", fundir_codigo_general),
         ("D16b", "etiquetar como 'Faenas forestales' una fila de 4.10", "incendios.geojson", etiqueta_falsa_bajo_4_10),
@@ -1135,6 +1707,14 @@ def _mutaciones(data: Path) -> list[tuple[str, str, str, object]]:
         ("D17", "quitar la columna Informe de un feature de la BBDD completa", arch_bbdd, quitar_columna_informe),
         ("D18", "colar un incendio de otra causa en lineas eléctricas", arch_lineas, colar_otra_causa),
         ("D6", "quitar un feature de un derivado sin tocar el manifest", arch_lineas, falta_un_feature_si_existe),
+        ("D25", "intercambiar dos filas de los atributos de una comuna", arch_atr_a, atributos_en_otro_orden),
+        ("D25", "cambiar n_hexagonos de una mancha en los atributos", arch_atr_b, atributo_alterado),
+        ("D25", "borrar el PMTiles de una región", arch_tesela, borrar_tesela),
+        ("D25", "sumar una mancha a una región de teselas en el manifest", "manifest.json", manchas_de_region_descuadradas),
+        ("D25", "dejar un PMTiles de región que el manifest no declara", "riesgo/teselas/99.pmtiles", tesela_sobrante),
+        ("D24", "publicar riesgo sin teselas, como un runner sin GDAL", "manifest.json", riesgo_sin_teselas),
+        ("D26", "teselar la región más chica sin una de sus manchas", arch_tesela, tesela_sin_una_mancha),
+        ("D26", "teselar una mancha con el nivel de otra clase", arch_tesela, tesela_con_otro_nivel),
     ]
 
 
@@ -1153,6 +1733,13 @@ def negativas(data: Path, muestra: int = 500) -> bool:
         print("       El cruce espacial no corre sin el intermedio de tippecanoe.")
         print("       Corre `python ETL/run.py` antes de exigir estos controles.\n")
 
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import teselas_riesgo
+
+    hay_gdal = bool(teselas_riesgo.ogr2ogr())
+    if not hay_gdal:
+        print(f"  {NO} D26 no verificable: sin GDAL (OGR2OGR) no se leen ni se reteselan las teselas.\n")
+
     sobreviven = []
     with tempfile.TemporaryDirectory(prefix="verify-negativas-") as tmp:
         espejo = Path(tmp) / "data"
@@ -1170,11 +1757,17 @@ def negativas(data: Path, muestra: int = 500) -> bool:
                 # La salida de verificar() aqui es ruido: solo interesa que la
                 # asercion mutada figure entre las rojas.
                 with contextlib.redirect_stdout(io.StringIO()):
-                    verificar(espejo, muestra, res=r)
+                    # exigir_teselas en TODAS: D24 solo existe con la bandera, y sin
+                    # ella su mutacion no tendria asercion que poner roja.
+                    verificar(espejo, muestra, res=r, exigir_teselas=True)
                 roja = ident in r.rojos
             finally:
                 if antes is not None:
                     objetivo.write_bytes(antes)
+                elif objetivo.exists():
+                    # Una mutacion que CREA un archivo (un PMTiles sobrante) lo
+                    # deja creado: sin borrarlo contaminaria las siguientes.
+                    objetivo.unlink()
 
             if not roja:
                 sobreviven.append((ident, desc))
@@ -1190,6 +1783,9 @@ def negativas(data: Path, muestra: int = 500) -> bool:
     if not hay_cruce:
         print(f"{NO} las {len(muts)} mutaciones se pusieron rojas, pero D12/D13 quedaron sin verificar\n")
         return False
+    if not hay_gdal:
+        print(f"{NO} las {len(muts)} mutaciones se pusieron rojas, pero D26 quedó sin verificar\n")
+        return False
     print(f"{OK} las {len(muts)} mutaciones se pusieron rojas\n")
     return True
 
@@ -1199,10 +1795,11 @@ def main() -> int:
     ap.add_argument("--data", type=Path, default=Path(__file__).resolve().parent.parent / "frontend" / "public" / "data")
     ap.add_argument("--muestra", type=int, default=500)
     ap.add_argument("--negativas", action="store_true", help="reintroduce cada defecto y exige que su aserción se ponga roja")
+    ap.add_argument("--exigir-teselas", action="store_true", help="D24: las capas viales tienen que ser PMTiles (CI)")
     a = ap.parse_args()
     if a.negativas:
         return 0 if negativas(a.data, a.muestra) else 1
-    return 0 if verificar(a.data, a.muestra) else 1
+    return 0 if verificar(a.data, a.muestra, exigir_teselas=a.exigir_teselas) else 1
 
 
 if __name__ == "__main__":
