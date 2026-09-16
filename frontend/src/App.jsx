@@ -718,8 +718,8 @@ export default function App() {
   // Adjunta a la ficha la coordenada seleccionada, redondeada a 5 decimales
   // (~1 m): mas precision en una URL publica es falsa exactitud. Para un punto
   // es el punto mismo; para una linea, el lugar tocado. Con ella la ficha
-  // ofrece abrir el sitio en Google Maps y Google Earth como enlaces planos --
-  // sin API y sin clave; ver el comentario en ModalFicha.jsx.
+  // ofrece ver el sitio en satelite y Street View dentro del visor, y abrirlo
+  // en Google Earth -- sin API y sin clave; ver src/enlacesGoogle.js.
   const conCoord = (f, ll) => (ll ? { ...f, coord: [+ll.lat.toFixed(5), +ll.lng.toFixed(5)] } : f)
 
   const selIncendio = useCallback(
@@ -1013,9 +1013,9 @@ export default function App() {
     if (!hayCajonAbierto) return
     const alPulsar = (e) => {
       if (e.key !== 'Escape') return
-      // ModalFicha es un <dialog> modal: el navegador ya cierra con Escape y su
-      // keydown burbujea hasta aqui. Sin esta guarda, un Escape cerraria la
-      // ficha Y el cajon de debajo de una vez.
+      // ModalFicha y ModalVistaGoogle son <dialog> modales: el navegador ya
+      // cierra con Escape y su keydown burbujea hasta aqui. Sin esta guarda, un
+      // Escape cerraria la ficha Y el cajon de debajo de una vez.
       if (document.querySelector('dialog[open]')) return
       if (!kpiAnclado && kpiVisible) cerrarKpi()
       else cerrarPanel()

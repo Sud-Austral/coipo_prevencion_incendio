@@ -16,12 +16,11 @@ las obras OECV planificadas y verificadas, los puntos stand-by, las rutas de des
 la red vial MOP.
 
 La segunda pestaña, **Riesgo**, muestra el nivel de riesgo de incendio forestal del modelo
-nacional de `lab/priorizacion` (notebook 4): **110.708 manchas en 343 comunas**, dibujadas
-con **teselas PMTiles de GDAL, una por región**, que muestran el país entero; al elegir una
-comuna se descargan sólo sus atributos (ficha, normalización y CSV). Encima va la
-infraestructura crítica de 3 comunas. Reemplazó el 2026-09-15 a la pestaña «Priorización» de
-3 comunas, y `?vista=priorizacion` sigue abriéndola. Es otro modelo, no una versión del
-anterior: mide la amenaza y no la exposición. `DECISIONES.md` §S y §T.
+nacional de `lab/priorizacion` (notebook 4): **110.708 manchas en 343 comunas**, publicadas
+en **un archivo por comuna** que sólo se descarga al elegirla, con la infraestructura
+crítica de 3 comunas encima. Reemplazó el 2026-09-15 a la pestaña «Priorización» de 3
+comunas, y `?vista=priorizacion` sigue abriéndola. Es otro modelo, no una versión del
+anterior: mide la amenaza y no la exposición. `DECISIONES.md` §S.
 
 Además publica dos **derivados** del Excel de la UAD —`bbdd_uad_completa.geojson` (las 23
 columnas con sus cabeceras reales) y `lineas_electricas.geojson`— y, por ahora, una página
@@ -34,11 +33,11 @@ deliberado — el sitio es estático, las capas se precomputan y **se commitean*
 
 ### Dos documentos mandan sobre este
 
-- **`DECISIONES.md`** manda sobre los DATOS, la simbología y la interfaz. Veintidós
-  secciones (A–U, la Ñ incluida) con por qué cada decisión es como es, con las cifras
+- **`DECISIONES.md`** manda sobre los DATOS, la simbología y la interfaz. Veintiuna
+  secciones (A–T, la Ñ incluida) con por qué cada decisión es como es, con las cifras
   medidas. §R fija la alineación de la interfaz con `coipo_vista_catastro` (acento azul,
   Líneas eléctricas como vista, orden F0→F6); §S, el riesgo nacional partido por comuna;
-  §T, sus teselas por región; §U, la piel común (F1).
+  §T, el punto de la ficha visto en Google dentro del visor.
   **Léelo antes de
   tocar `ETL/` o `frontend/src/config.js`**: casi todo lo que parece un error ahí está
   explicado y medido.
@@ -63,10 +62,9 @@ ETL/                     produce las capas publicadas
   kml_reader.py          KMZ/KML con zipfile + xml.etree
   geo.py                 reproyeccion, simplificacion, husos, nombres de region
   tiles.py               tippecanoe -> .pmtiles, con modo degradado
-  build_riesgo.py        valida INSUMO_RIESGO: GeoJSON y atributos por comuna, teselas por region
-  teselas_riesgo.py      ogr2ogr -> PMTiles de riesgo (GDAL >= 3.8; aqui 3.12.3, via OGR2OGR)
-  verify.py              D1-D26 y D16b sobre lo PUBLICADO (capas y derivados), con --negativas
-  _build/                intermedios de tippecanoe y de GDAL (riesgo/<NN>.geojsonl). NO se versiona
+  build_riesgo.py        valida INSUMO_RIESGO y lo parte en un GeoJSON por comuna
+  verify.py              D1-D20 y D16b sobre lo PUBLICADO (capas y derivados), con --negativas
+  _build/                intermedio de tippecanoe. NO se versiona (ver §3)
 frontend/
   src/config.js          LAS DECISIONES de simbologia y mapas base, con sus mediciones
   src/App.jsx            unico dueño del estado
@@ -76,8 +74,7 @@ frontend/
   scripts/mutaciones.mjs los mutantes de los arneses de banner y panel
   lineas-electricas.html pagina aparte TEMPORAL (src/electrico/): vista en F5, redireccion en F6
   public/data/           GENERADO Y COMMITEADO (capas + derivados). No se edita a mano.
-  public/data/riesgo/    teselas/<NN>.pmtiles (16, 150 MiB), atributos/<CUT>.json (343, 8 MB)
-                         y <CUT>.geojson (343, 163 MiB, solo para descargar). Generado
+  public/data/riesgo/    343 GeoJSON por codigo CUT, 163 MiB. Tambien generado
   .verificacion/         salida de los arneses. NO se versiona
 analisis/                contraparte Python del visor
   construir_notebook.py  GENERA el .ipynb. El notebook no se edita a mano
@@ -106,8 +103,8 @@ commit hecho desde un portátil cambia el formato publicado.
 ```bash
 # --- ETL -------------------------------------------------------------------
 python ETL/run.py -v                       # 6 capas en paralelo + manifest + verify
-python ETL/verify.py                       # sobre lo publicado: ~22 s, ~70 s con GDAL (D26)
-python ETL/verify.py --negativas           # 45 mutaciones, cada una debe ponerse roja (~4 min)
+python ETL/verify.py                       # comprobaciones sobre lo publicado (~22 s)
+python ETL/verify.py --negativas           # 31 mutaciones, cada una debe ponerse roja (~2 min)
 
 # --- frontend --------------------------------------------------------------
 cd frontend
@@ -118,11 +115,11 @@ npm run lint                               # oxlint. Verde en el estado base (0 
 npm run build                              # ~1,3 s
 npm run verify:banner                      # ~5 s, necesita Chrome
 npm run verify:panel                       # ~1 min, necesita Chrome
-npm run verify:priorizacion                # ~1 min, necesita Chrome (mide la vista Riesgo)
-npm run verify:priorizacion -- --negativas # ~18 min (estimado), 28 mutaciones, PARCHEA 10 archivos de src/
+npm run verify:priorizacion                # ~40 s, necesita Chrome (mide la vista Riesgo)
+npm run verify:priorizacion -- --negativas # ~11 min, 28 mutaciones, PARCHEA 9 archivos de src/
 npm run verify:electrico                   # ~15 s, pagina de lineas electricas
 npm run verify:electrico -- --negativas    # ~1 min, 6 mutaciones, PARCHEA src/electrico/
-npm run verify:mutantes                    # ~24 min (estimado), 24 mutantes, PARCHEA 8 archivos de src/
+npm run verify:mutantes                    # ~16 min, 17 mutantes, PARCHEA 7 archivos de src/
 ```
 
 - **LOS ARNESES NO CONSTRUYEN: sirven `dist/` tal como esté.** Medido el 2026-09-10 (a
@@ -137,27 +134,10 @@ npm run verify:mutantes                    # ~24 min (estimado), 24 mutantes, PA
 
 **Trampas que cuestan tiempo si no las sabes:**
 
-- **`capas.riesgo` no tiene `archivo`: tiene 343 `partes`, cada una con su `atributos`, y
-  un bloque `teselas` con 16 `regiones`.** Todo lo que recorra `manifest.capas` leyendo
-  `c.archivo` tiene que contemplarlo; hoy lo hacen `verify.py`, el job `humo`, `npm run datos`
-  y `analisis/leer_capas.py`. `npm run datos` baja ~320 MB, y `npm run build` los copia a
-  `dist/`.
-
-- **Las teselas de riesgo necesitan GDAL, y aquí no está en el PATH.** Es el `ogr2ogr` del
-  entorno de conda `mapa`: `OGR2OGR=C:\Users\luis.monsalve\AppData\Local\anaconda3\envs\mapa\Library\bin\ogr2ogr.exe`.
-  Sin esa variable el ETL escribe `teselas: null` (aviso por stderr), el visor muestra el país
-  vacío con un aviso, D26 no corre y `--negativas` falla diciendo por qué. Las teselas de las
-  16 regiones tardan ~6 min de los 408 s de `--layers riesgo,infra_puntos`.
-
-- **NUNCA compongas datos de prueba dentro de `frontend/public/data`**: está versionado y un
-  commit se los lleva (`DECISIONES.md`, fallos 8 y 10: pasó dos veces). Para que el arnés de
-  riesgo mida otros datos, `VERIFY_DATOS=<carpeta> npm run verify:priorizacion`: su servidor
-  sirve `/data/` desde esa carpeta y las comunas se eligen de ella, también en `--negativas`,
-  que reconstruye `dist/` en cada mutante.
-
-- **El servidor de un arnés tiene que responder `Range`.** PMTiles pide trozos y con un `200`
-  completo se niega a seguir: la vista de riesgo sale sin una mancha y sin error en la página.
-  `verify-priorizacion.mjs` lo implementa; los otros tres arneses no lo necesitan hoy.
+- **`capas.riesgo` no tiene `archivo`: tiene 343 `partes`.** Todo lo que recorra
+  `manifest.capas` leyendo `c.archivo` tiene que contemplarlo; hoy lo hacen `verify.py`, el
+  job `humo`, `npm run datos` y `analisis/leer_capas.py`. `npm run datos` baja ~163 MB más
+  que antes, y `npm run build` los copia a `dist/`.
 
 - **La comuna de riesgo se cruza por código CUT, nunca por nombre.** El modelo escribe
   «Coihaique» y «Mulchén»; la infraestructura, «Coyhaique» y «Mulchen». Por nombre, elegir
@@ -180,20 +160,22 @@ npm run verify:mutantes                    # ~24 min (estimado), 24 mutantes, PA
   simplificados a 25 m en vez de los `.pmtiles`, y lo anota en el manifest. El aviso sale
   por **stderr** al arrancar `run.py`. Para trabajar en local: `npm run datos`.
 
-- **D12 y D13 necesitan el intermedio vial en `ETL/_build/`.** Son las dos aserciones del
-  cruce espacial, las que cazan un huso UTM invertido (`DECISIONES.md` §A). Desde el
-  2026-09-15 `ETL/tiles.py` escribe ese intermedio **también en modo degradado**, así que en
-  Windows basta generar las viales hacia un directorio desechable (comprobado: 32 s, rutas
-  88,8 MiB y redvial 53,7 MiB en `_build/`, y el cruce da lo mismo que en CI):
+- **En Windows, D12 y D13 no corren.** Son las dos aserciones del cruce espacial, las que
+  cazan un huso UTM invertido (`DECISIONES.md` §A), y necesitan el intermedio
+  `ETL/_build/*.geojson`, que **sólo se puebla cuando corre tippecanoe**. `--negativas`
+  **no se lo salta en silencio**: si falta, lo dice y cuenta como fallo. Para producirlo en
+  local sin tocar lo publicado, se genera hacia un directorio desechable y se copia:
 
   ```bash
-  python ETL/run.py --layers rutas,redvial --out /tmp/etl-out --sin-verify -v
+  python ETL/run.py --layers rutas   --out /tmp/etl-out --sin-verify -v
+  python ETL/run.py --layers redvial --out /tmp/etl-out --sin-verify -v
+  cp /tmp/etl-out/rutas.geojson   ETL/_build/
+  cp /tmp/etl-out/redvial.geojson ETL/_build/
   ```
 
-  `--negativas` **no se lo salta en silencio**: si falta, lo dice y cuenta como fallo. **Con
-  una sola de las dos capas viales, D12 se pone roja y no es un defecto de los datos**: con
-  sólo `rutas`, 16 de 500 incendios quedan a más de 25 km de un camino. Producción cruza
-  contra las dos, 19.242 líneas.
+  **Con una sola de las dos capas viales, D12 se pone roja y no es un defecto de los
+  datos**: con sólo `rutas`, 16 de 500 incendios quedan a más de 25 km de un camino.
+  Producción cruza contra las dos, 19.242 líneas.
 
 - **Los arneses necesitan Chrome** y lo manejan por CDP. Dos trampas ya pagadas: el
   **`--user-data-dir` propio es obligatorio** (sin él Chrome se adjunta a la sesión ya
@@ -222,10 +204,9 @@ npm run verify:mutantes                    # ~24 min (estimado), 24 mutantes, PA
   ficha capturada decía «2532.0 ha» porque la última corrida fue la del mutante de C14. **Antes
   de mirar una captura, vuelve a correr el arnés sin mutantes.**
 
-- **Los arneses de banner, panel y riesgo fijan `prefers-color-scheme`; el de Líneas
-  eléctricas no.** En este equipo Chrome headless pinta en oscuro. Desde F1 el de riesgo
-  arranca en claro y captura la vista en los dos temas (C18); `verify:electrico` sigue
-  capturando con el tema del sistema hasta F5.
+- **Los arneses no fijan `prefers-color-scheme`.** En este equipo Chrome headless pinta en
+  oscuro, así que casi todas las capturas salen oscuras y el tema claro queda sin mirar
+  salvo en las que lo emulan a propósito (banner, panel).
 
 - **`verify:panel` elige el modo de datos solo.** Con `frontend/public/data/manifest.json`
   presente afirma cifras de producción; sin él usa un fixture de 12 incendios. En CI el
@@ -237,13 +218,13 @@ npm run verify:mutantes                    # ~24 min (estimado), 24 mutantes, PA
 
 | suite | cuánto | comando |
 |---|---|---|
-| Aserciones de datos (D1–D26, D16b) | 26 distintas (D24 sólo con `--exigir-teselas`; D26 con GDAL), y **45 controles negativos** en rojo · ~70 s + ~4 min | `python ETL/verify.py --negativas` |
+| Aserciones de datos (D1–D20, D16b) | 21 distintas, **81 ejecuciones**, y **31 controles negativos** en rojo · ~22 s + ~2 min | `python ETL/verify.py --negativas` |
 | Arnés del banner (A1–A10) | 10 distintas, **49 ejecuciones** · ~4 s | `npm run verify:banner` |
-| Arnés del panel (B1–B34) | 34 distintas, **206 ejecuciones** con datos reales · ~1 min | `npm run verify:panel` |
-| Arnés de la vista Riesgo (C1–C18, C4b, C8b, C10b) | 21 distintas, **22 ejecuciones** · ~1 min, y **28 controles negativos** en rojo · ~18 min estimados | `npm run verify:priorizacion` |
+| Arnés del panel (B1–B28) | 28 distintas, **199 ejecuciones** con datos reales (195 con el fixture) · ~1 min | `npm run verify:panel` |
+| Arnés de la vista Riesgo (C1–C16, C4b, C10b) | 18 distintas, **19 ejecuciones** · ~40 s, y **28 controles negativos** en rojo · ~11 min | `npm run verify:priorizacion` |
 | Arnés de Líneas eléctricas (E1–E12) | 12 distintas · ~15 s, y **6 controles negativos** en rojo · ~1 min | `npm run verify:electrico` |
-| Mutantes de los arneses de banner y panel | **24**, todos en rojo · ~24 min estimados | `npm run verify:mutantes` |
-| Humo contra lo publicado | base path + manifest + capas, derivados, 343 GeoJSON y 343 atributos de riesgo por bytes + Range en las 2 viales y las 16 teselas de riesgo + `lineas-electricas.html` | job `humo` de `deploy.yml` |
+| Mutantes de los arneses | **17**, todos en rojo · ~16 min | `npm run verify:mutantes` |
+| Humo contra lo publicado | base path + manifest + capas y derivados por bytes + Range en 2 teselas + `lineas-electricas.html` | job `humo` de `deploy.yml` |
 
 Todo verde el 2026-09-15, con el árbol de F0 sin commitear y las fuentes byte a byte iguales
 tras la matriz. El cruce espacial, con las dos capas viales en `_build/`:
@@ -314,10 +295,8 @@ con código de salida 0.
 - **Los colores de riesgo van por NIVEL (0–4), no por etiqueta**, y las etiquetas y los
   cortes salen del manifest. Con claves por etiqueta, el paso de «Muy Alta» a «Muy Alto»
   habría dejado el mapa entero gris sin un error. Lo vigila C15. `DECISIONES.md` §S.
-- **Las manchas de riesgo SÓLO se dibujan con teselas.** Los atributos de la comuna elegida
-  no entran en la caché de módulo (`useGeoJSON(..., { cachear: false })`). La capa usa
-  `levelDiff: 0`: con el valor por omisión la vista nacional (z4) pedía datos z3, que no
-  existen, y no pintaba nada. `DECISIONES.md` §T.
+- **Las manchas de una comuna no entran en la caché de módulo** (`useGeoJSON(..., {
+  cachear: false })`): Natales ocupa 267 MB de heap y la caché no se vacía nunca.
 - **El huso UTM de los incendios no viene declarado y cambia por fila.** Se prueban ambos y
   se elige el que cae en la franja de longitudes de la región de la propia fila. La regla
   `X < 500000` manda Calama 470 km mar adentro. `DECISIONES.md` §A.
@@ -327,8 +306,17 @@ con código de salida 0.
   el 2026-09-14 se publicaron 1.056 incendios de «Otras causas» con el código de «Faenas
   forestales». El código sale del prefijo de «Causa investigada 2023». `DECISIONES.md` §Q,
   vigilado por D16 y D16b.
-- **Google Earth se enlaza con `/web/search/lat,lon`, no con la URL de cámara `/web/@…`**,
-  que aterriza sin ninguna marca del punto (visto en captura). Lo vigila C12.
+- **La ficha muestra el punto en Google DENTRO del visor, en un segundo `<dialog>` hermano
+  de la ficha** (`ModalVistaGoogle.jsx`): satélite y Street View con las formas sin clave
+  `google.com/maps?…&output=embed` y `…&output=svembed` (`src/enlacesGoogle.js`). Tres
+  reglas:
+  - **Nunca un dialog hijo, ni por portal**: el `close` de React subiría y cerraría la ficha.
+  - **El iframe sólo existe con el modal abierto**: C1 abre ~150 fichas.
+  - **Earth no se puede incrustar** (`X-Frame-Options: SAMEORIGIN`). Se enlaza con
+    `/web/search/lat,lon` y nunca con la URL de cámara `/web/@…`, que aterriza sin ninguna
+    marca del punto.
+
+  Lo vigilan C12 y C16. `DECISIONES.md` §T.
 - **La fecha del manifest se arma con los componentes del ISO**, nunca con `new Date(iso)`:
   en Chile eso retrocede un día todo lo generado antes de las 03:00 UTC.
 - **PMTiles exige HTTP Range.** Sin respuestas `206` el visor **no dibuja ninguna
@@ -373,20 +361,12 @@ Comprobadas una a una el 2026-09-10:
    14.705 / 1.863 / 1.114 / 327 / 5.278 / 13.964 features y los mismos KPIs. El directorio
    pasó de 832 MB a **340 MB** y de 775 a **534 archivos**.
 
-   El **2026-09-15**, por decisión de Luis, se **purgaron de la historia** los 11 archivos de
-   actas (9 actas en PDF y `.docx` y 2 fotos de «Reunión Onile», ~3 MB) con `git filter-repo
-   --invert-paths` sobre un clon espejo, y se empujaron con force push atómico y
-   `--force-with-lease` las 4 ramas (`main`, `uat`, `imgbot`, `ai-readme/update-readme`).
-   Verificado después del push con un clon nuevo desde GitHub: **0 rutas de actas** en las
-   ramas, y los árboles finales idénticos salvo esos 11 archivos. Respaldo del estado anterior:
-   un bundle de 774 MB fuera del repo.
-   
-   **Lo que el force push NO alcanza, medido:** los PR #1 (imgbot) y #2 (bot del README)
-   conservan `refs/pull/*` hacia los commits viejos, que GitHub no deja reescribir, y una acta
-   se sigue descargando por la URL de un commit viejo (HTTP 200, 163.559 B). Cerrarlo exige
-   pedir a **GitHub Support** que purgue esas referencias y las vistas en caché. Y **todo clon
-   anterior al 2026-09-15 tiene la historia vieja**: empujar desde él las devuelve.
-   **Estado: purgada de las ramas; falta la solicitud a GitHub Support (Luis).**
+   **Pero `.git` sigue pesando 718 MB y la historia conserva todos los blobs.** Un clon no
+   adelgaza, y **las 9 actas de reunión siguen siendo recuperables por cualquiera** con un
+   `git log`. Si lo que preocupaba era la exposición en un repositorio público, el borrado
+   **no la resuelve**: eso exige hacer el repo privado o reescribir la historia, y lo
+   segundo es peligroso con ramas ya publicadas (`uat`, `imgbot`). `mejoras.md` §D1 tiene
+   las opciones. **Estado: ABIERTA. La decide Luis.**
 
    Lo que sí está comprobado: **la capa publicada no expone nombres de personas.**
    `jefe_brigada` e `investigado_por` viajan como códigos contra las tablas del manifest
@@ -397,27 +377,26 @@ Comprobadas una a una el 2026-09-10:
 2. **La regla §H no tiene vigilante en la página de Líneas eléctricas.** En el visor la vigila
    C1; en `lineas-electricas.html` el clic de E8 se hace con las comunas apagadas y nadie
    cuenta los canvas. Se resuelve al integrarla como vista (F5, `mejoras.md` §0).
-3. **El corrimiento de campos del `.dbf` sólo se vigila por sus síntomas.** Desde el
-   2026-09-15 D23 caza dobles espacios, bordes, U+FFFD, mojibake y una titularidad OECV fuera
-   del Memo 3045/2025; un valor desplazado que parezca limpio sigue pasando
-   (`DECISIONES.md` §D).
-4. **Cerrada el 2026-09-15:** el cruce contra `KM_OFICIAL_NACIONAL` corre también en
-   `verify.py` (D22, tolerancia 12 %), además de en `analisis/leer_capas.py`.
-5. **Cerrada el 2026-09-15:** `analisis/README.md` ya da la ruta real del intérprete.
-6. **Cerrada el 2026-09-15:** `INSUMO_GRAFICO/README.md` nombra el asset real.
-7. **Cerrada el 2026-09-15:** `nanoid` pasó a 3.3.19 en el lockfile (`npm audit`: 0).
-8. **Tres identidades git para la misma persona**: `.mailmap` las une en `git log` y
-   `shortlog` desde el 2026-09-15, pero no reescribe los commits; la convención de mensajes
-   sigue mixta.
-9. **Cerrada el 2026-09-15:** la grafía de las comunas se canoniza en el ETL (clave sin
-   tildes, mayúsculas ni espacios dobles; gana la variante más frecuente, «Cabrero»). Se
-   publican las 24 uniones en `comunas_unidas` y lo vigila D21. `DECISIONES.md` §Q.
+3. **El corrimiento de campos del `.dbf` no tiene vigilante de contenido.** D10 caza que
+   falte un campo, no que su valor esté desplazado (`DECISIONES.md` §D).
+4. **El cruce contra `KM_OFICIAL_NACIONAL` sólo corre en `analisis/leer_capas.py`**, no en
+   `verify.py` (`DECISIONES.md` §G).
+5. **`analisis/README.md` da mal la ruta del intérprete** (ver §3).
+6. **`INSUMO_GRAFICO/README.md` dice que el asset es `banner-conaf-uia.jpg`**; el real es
+   `frontend/src/assets/banner-conaf-incendios.jpg`.
+7. **`npm audit` reporta 1 vulnerabilidad alta** en `nanoid`, dependencia transitiva de la
+   cadena de build. No afecta a lo publicado, pero está anotada.
+8. **Tres identidades git para la misma persona** y convención de mensajes mixta: conviven
+   `docs:`/`ci:`/`datos:` con mensajes sueltos.
+9. **La grafía de las comunas no se canoniza.** CABRERO y Cabrero salen como comunas distintas
+   en las tablas del visor (226 etiquetas para 220 comunas en el subconjunto eléctrico).
+   `DECISIONES.md` §Q.
 10. **`INSUMO_ELECTRICO/` duplica el Excel de `INSUMO_INCENDIO/`** (mismo blob) desde `18ff9db`.
-    **Se mantiene** (decisión de Luis, 2026-09-15), igual que `doble_ponderacion.md`.
-11. **Cerrada el 2026-09-15 con teselas (§T):** las 5 comunas de riesgo de más de 10 MB ya
-    no se descargan para dibujar. Queda abierto que **no comprobé el workflow con GDAL en
-    Actions**, y que commitear las teselas suma ~150 MB a la historia cada vez que cambia el
-    insumo de riesgo (lo decide Luis).
+    Qué hacer con esa carpeta lo decide Luis.
+11. **Las 5 comunas de riesgo de más de 10 MB son lentas en un equipo modesto** (Natales:
+    8,4 s de carga y 2,1 s por repintado con la CPU a ×4, medido el 2026-09-15).
+    Simplificarlas cambia la geometría publicada y lo decide Luis (`mejoras.md`, Pendientes
+    de datos).
 12. **La región 12 de riesgo se publica simplificada**, con 5 geometrías inválidas y 1.231
     manchas sin geometría que el ETL cuenta y no dibuja. Cómo se simplificó no quedó
     registrado en el lab.
@@ -429,13 +408,12 @@ Comprobadas una a una el 2026-09-10:
 - Rama por defecto **`main`**. `.github/workflows/deploy.yml` se dispara con cada push a
   `main` que toque `INSUMO_INCENDIO/**`, `INSUMO_RIESGO/**`, `INSUMO_PRIORIZACION/**`,
   `ETL/**`, `frontend/**` o el propio workflow.
-- **Cuatro trabajos**: **build** (ETL + tippecanoe cacheado + GDAL 3.12.3 de conda-forge +
-  `verify.py --negativas` +
+- **Cuatro trabajos**: **build** (ETL + tippecanoe cacheado + `verify.py --negativas` +
   commit de las capas + `npm run build` + **los arneses de priorización y de Líneas
   eléctricas**) y **verificar-visual** (banner y panel,
   en paralelo, sin pagar los 832 MB de insumos) → **deploy** → **humo**.
 - **`verify:priorizacion` corre en `build` y no en `verificar-visual`, al revés que los
-  otros dos arneses.** No es un descuido: C2–C16 afirman cifras de las capas REALES (las
+  otros dos arneses.** No es un descuido: C2–C15 afirman cifras de las capas REALES (las
   manchas y los puntos de la comuna que eligen por definición, sus extremos de nivel, las
   clases del manifest), y `verificar-visual` excluye `/frontend/public/data/` de su
   sparse-checkout a propósito para bajar menos de 1 MB. Allí no hay datos que afirmar; en
@@ -443,8 +421,8 @@ Comprobadas una a una el 2026-09-10:
 - El job **humo** pide el **sitio ya publicado**, no el artefacto: comprueba el base path en
   `index.html`, que el manifest parsee, que **cada capa se sirva con los bytes que declara**
   —con `Accept-Encoding: identity`, porque Pages comprime `application/octet-stream` y sin
-  esa cabecera el tamaño no cuadra nunca; las 343 comunas de riesgo y sus 343 atributos, uno
-  a uno— y que las teselas, las 16 de riesgo incluidas, respondan **`206` con el magic
+  esa cabecera el tamaño no cuadra nunca; las 343 comunas de riesgo, una a una— y que las
+  teselas respondan **`206` con el magic
   `PMTiles`** a un `Range: bytes=0-126`. Si ninguna capa de teselas entra a ese bucle,
   **falla**: una comprobación que no comprueba nada es peor que no tenerla. Recorre también
   `manifest.derivados` (falla si falta `lineas_electricas`) y pide `lineas-electricas.html`
@@ -459,10 +437,6 @@ Comprobadas una a una el 2026-09-10:
 - **No se commitea** lo que lista `.gitignore`: `node_modules/`, `dist/`, `ETL/_build/`,
   `frontend/.verificacion/`, las salidas del notebook, las reglas de COIPO_ERRORES y
   `.claude/settings.local.json`.
-
-- **La historia se reescribió el 2026-09-15** (purga de actas, §7.1): cambiaron los SHA de
-  todos los commits. Un clon anterior se resincroniza con `git fetch` y `git reset --soft
-  origin/main` (el árbol es idéntico); **nunca se empuja desde él** sin resincronizar.
 
 **El historial y la publicación los decide Luis.** No hagas commit ni push salvo que te lo
 pida explícitamente.

@@ -50,3 +50,8 @@ analisis/salidas/
 # marcaba para revisar.
 .claude/settings.local.json
 descarga.rar
+
+# --- Higiene basica: dependencias, artefactos de build y secretos ---
+.env
+.env.local
+.env.*.local

@@ -6,7 +6,7 @@ aserción la vigila. Si una decisión no tiene vigilante, lo dice.
 
 Reproducir el estado: `python ETL/run.py -v` y después `python ETL/verify.py --negativas`.
 
-Estado a **2026-09-15** (§A–§P medidos el 2026-09-10; §Q y §R, el 2026-09-14; §S, el
+Estado a **2026-09-15** (§A–§P medidos el 2026-09-10; §Q y §R, el 2026-09-14; §S y §T, el
 2026-09-15). Las cifras llevan fecha porque caducan.
 
 > Este documento manda sobre `ETL/` y sobre la simbología de `frontend/src/config.js`.
@@ -590,6 +590,8 @@ anotando su origen `coipo_vista_catastro@a1ee125`: `BotonControl`, `CajaModal`, 
 **La URL de Earth.** La de cámara (`/web/@lat,lon,0a,1200d,…`) aterriza a 1,2 km sobre el
 satélite **sin ninguna marca** del punto: visto en captura. La de búsqueda (`/web/search/lat,lon`) planta
 la chincheta. Catastro ya lo había aprendido; prevención seguía con la de cámara.
+Desde §T la ficha ya no enlaza a Maps: muestra satélite y Street View en un modal, y Earth,
+en forma de búsqueda, es la única salida a otra pestaña.
 
 ---
 
@@ -878,6 +880,97 @@ El arnés de riesgo fija ahora el tema claro al empezar y captura la vista en lo
   vista de incendios, donde no existe.
 - Las otras superficies con texto sobre color (las fichas de color de la leyenda, los iconos de
   infraestructura) no se midieron en oscuro; C18 mira sólo el botón de acento.
+
+---
+
+## T. La ficha muestra el punto en Google dentro del visor, y Earth es la única salida (2026-09-15)
+
+**Lo que se pidió.** La ficha traía dos enlaces a otra pestaña, «Ver en Google Maps» y «Ver
+en Google Earth» (§R). Luis pidió verlos en un modal, sin salir del visor.
+
+**Qué se deja incrustar, medido el 2026-09-15** con `curl` y con Chrome:
+
+| dirección | respuesta | ¿se incrusta? |
+|---|---|---|
+| `earth.google.com/web/search/lat,lon` | `X-Frame-Options: SAMEORIGIN`; en un iframe, «403» | **no** |
+| `google.com/maps/search/?api=1&query=…` (el enlace anterior) | `X-Frame-Options: SAMEORIGIN` | **no** |
+| `google.com/maps?q=…&t=k&output=embed` | 301 a `/maps/embed?origin=mfe&pb=…`, sin `X-Frame-Options` | **sí**, satélite con chincheta |
+| `google.com/maps?layer=c&cbll=…&output=svembed` | 301 a `/maps/embed`, igual | **sí**, Street View |
+| `google.com/maps/embed/v1/…` (Embed API oficial) | 401 sin clave | necesita clave |
+
+**Decisiones de Luis (2026-09-15):**
+- el modal tiene dos pestañas, **Satélite** y **Street View**;
+- **Earth queda como enlace dentro del modal**, la única salida a otra pestaña;
+- aplica a **todas las capas**, porque la ficha es la misma.
+
+**Cómo está hecho, y por qué:**
+
+- **Formas sin clave.** El visor no tiene API ni clave, y una clave en un sitio estático sería
+  pública. La contrapartida: esas formas no están documentadas por Google.
+- **Botones y no enlaces en la ficha.** Un `<a href>` que al pulsarlo abre otra cosa dice una
+  al pasar el ratón y al lector de pantalla, y hace otra. El enlace de búsqueda de Maps
+  desaparece.
+- **Un segundo `<dialog>` hermano de la ficha**, abierto con `showModal()` encima de ella. **No
+  puede ser hijo**, ni por portal: en React 19.2 el evento `close` sube por el árbol de
+  componentes (`react-dom-client.development.js:19410-19413`) y cerraría la ficha con él.
+- **El iframe sólo existe mientras el modal está abierto.** Abrir una ficha no le pide nada a
+  Google: C1 abre y cierra ~150 fichas en segundos.
+- **`referrerPolicy="no-referrer"`**: Google recibe la coordenada que el usuario pidió ver, no
+  la dirección del visor.
+- **`display: flex` sólo con `[open]`**: sin esa condición el `<dialog>` cerrado sería un ítem de la
+  rejilla de `.app` y empujaría el mapa (A7, B2).
+- **Un iframe por pestaña** (`key`): cambiar el `src` del mismo iframe apila historial.
+
+**Comprobado en Chrome, con Google de verdad y servido por http** (script aparte, no un
+arnés):
+- **Satélite:** el incendio 1262 sale con la chincheta roja en el centro.
+- **Street View:** el 1262, que cae sobre la ruta F-800, muestra el panorama.
+- **Sin `Referer`:** la petición sale sin esa cabecera y el embed carga igual.
+- **Antes de pulsar:** 0 iframes.
+- **Escape y fondo:** el primer Escape cierra sólo el modal y devuelve el foco al botón; el
+  segundo cierra la ficha. Un clic en el fondo cierra sólo el modal.
+- **A 400 px y en tema claro:** el modal mide 368×640, sin desplazamiento horizontal. A 1440 px
+  se miró en oscuro.
+
+**Street View sólo encuentra panorama muy cerca del punto**, no busca el camino más próximo.
+Hay panorama en una calle de Los Ángeles y en el 1262. No lo hay en un punto forestal
+(-37.80,-72.10) ni en el incendio 4229 («Hospital», Los Ángeles), urbano pero dentro del
+predio.
+
+**Se probaron otras tres formas de URL para que saltara al panorama más cercano, y ninguna
+sirve:** `q=` vacío con `layer=c` abre el mapamundi; `q=lat,lon&layer=c` abre el **mapa** con
+la chincheta, no Street View; y el `pb` de calle no muestra imágenes. Sin clave, o el
+panorama está pegado al punto o no hay nada.
+
+**Decisión de Luis, ya viéndolo funcionar:** conservar la pestaña y **avisar antes**. El aviso
+va **encima** del recuadro, no debajo, porque debajo se lee después de mirar el negro, cuando
+ya parece que el visor falla; y lleva un enlace **«buscar alrededor en Google Maps ↗»**
+(`map_action=pano`, el deep link oficial y sin clave), que abre Street View en Maps, donde sí
+se puede arrastrar hasta el camino más próximo. Medido con el incendio 4229, que en el embed
+no tiene imágenes: esa forma resuelve a una vista con miniatura de panorama, señal de que Maps
+sí encontró uno cerca; en Chrome headless la imagen sale negra, así que lo que se vea al final
+no está comprobado.
+
+**Qué lo vigila.**
+- **C12** afirma la forma y la coordenada del iframe satelital (`t=k`, `q` y `ll`), la del
+  iframe de Street View (`layer=c`, `cbll`), la del enlace «buscar alrededor»
+  (`map_action=pano`, `viewpoint`) y la del enlace a Earth (`/web/search/`, nunca `/web/@`).
+- **C16** afirma el ciclo de vida:
+  - 0 iframes con la ficha sola;
+  - la ficha sigue abierta debajo;
+  - 0 iframes tras la ×.
+- **7 mutantes nuevos**, 28 en total.
+- El arnés **no resuelve los dominios de Google** (`--host-resolver-rules`): afirma atributos, no
+  píxeles, así que CI no depende de Google.
+
+**Qué NO está resuelto.**
+- **Nada en CI comprueba que Google siga dejándose incrustar.** Sería una prueba de red,
+  inestable. Si un día el modal sale en blanco, lo primero es repetir el `curl` de la tabla.
+- **Escape y el foco se comprobaron a mano.** Un clic por `Runtime.evaluate` no da activación
+  de usuario, y sin ella Chrome puede agrupar los dos diálogos en un solo Escape.
+- **Google no da la fecha de la imagen satelital**, que puede ser anterior o posterior al
+  registro.
+- **Los enlaces propios del embed** («Ver en Google Maps») siguen abriendo otra pestaña.
 
 ---
 
