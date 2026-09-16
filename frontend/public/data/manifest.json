@@ -1,5 +1,5 @@
 {
-  "generado": "2026-09-16T02:14:50+0000",
+  "generado": "2026-09-16T10:40:30+0000",
   "simplify_m": 25.0,
   "precision": 5,
   "tippecanoe": "tippecanoe v2.78.0",
@@ -36,6 +36,32 @@
         "investigado_por",
         "mes_investigacion"
       ],
+      "comunas_unidas": {
+        "ARAUCO": "Arauco",
+        "CABRERO": "Cabrero",
+        "COINCO": "Coinco",
+        "CasaBlanca": "Casablanca",
+        "Chile chico": "Chile Chico",
+        "CholChol": "Cholchol",
+        "Isla De Maipo": "Isla de Maipo",
+        "LAJA": "Laja",
+        "LEBU": "Lebu",
+        "La serena": "La Serena",
+        "Nueva imperial": "Nueva Imperial",
+        "Padre Las Casas": "Padre las Casas",
+        "Padre las casas": "Padre las Casas",
+        "San Juan de La Costa": "San Juan de la Costa",
+        "San Pedro De La Paz": "San Pedro de la Paz",
+        "San Pedro de La Paz": "San Pedro de la Paz",
+        "San Pedro de la paz": "San Pedro de la Paz",
+        "San pedro de la paz": "San Pedro de la Paz",
+        "TALCAHUANO": "Talcahuano",
+        "lolol": "Lolol",
+        "palmilla": "Palmilla",
+        "quinta DE TILCOCO": "Quinta de Tilcoco",
+        "san pedro de la paz": "San Pedro de la Paz",
+        "talcahuano": "Talcahuano"
+      },
       "tablas": {
         "region": [
           "La Araucanía",
@@ -115,21 +141,21 @@
           "Tomé",
           "Collipulli",
           "Chillán",
+          "Lebu",
           "Victoria",
           "Valparaíso",
           "Melipilla",
           "Lautaro",
-          "Lebu",
+          "Padre las Casas",
           "Cholchol",
           "Cañete",
           "Puerto Montt",
           "Angol",
-          "Padre las Casas",
           "Ovalle",
+          "Nueva Imperial",
           "San Javier",
           "Yumbel",
           "Carahue",
-          "Nueva Imperial",
           "Pitrufquén",
           "Mulchén",
           "Coronel",
@@ -143,6 +169,7 @@
           "Purén",
           "Coihueco",
           "San Antonio",
+          "San Pedro de la Paz",
           "La Unión",
           "Linares",
           "San Nicolás",
@@ -163,7 +190,6 @@
           "Colina",
           "Parral",
           "Mariquina",
-          "San Pedro de la Paz",
           "Lumaco",
           "Laja",
           "Quilpué",
@@ -186,21 +212,21 @@
           "Las Cabras",
           "Paine",
           "Molina",
+          "Arauco",
           "Marchigüe",
           "San Rafael",
           "Retiro",
           "Gorbea",
           "Santa Juana",
-          "Arauco",
           "Paillaco",
           "Castro",
+          "Talcahuano",
           "Concepción",
           "Yerbas Buenas",
           "Coelemu",
           "Perquenco",
           "Teno",
           "Navidad",
-          "Talcahuano",
           "La Estrella",
           "Tirúa",
           "Rengo",
@@ -209,9 +235,9 @@
           "Ránquil",
           "Lota",
           "Sagrada Familia",
+          "La Serena",
           "Paredones",
           "El Carmen",
-          "La Serena",
           "La Calera",
           "Loncoche",
           "Coltauco",
@@ -240,19 +266,18 @@
           "Constitución",
           "Chimbarongo",
           "Panguipulli",
+          "San Juan de la Costa",
           "Ninhue",
           "Negrete",
           "Mostazal",
           "Río Bueno",
           "Quilleco",
-          "San Juan de la Costa",
           "Viña del Mar",
           "Renaico",
           "La Ligua",
           "Natales",
           "Machalí",
           "Nogales",
-          "Padre Las Casas",
           "Pichilemu",
           "Rancagua",
           "Puente Alto",
@@ -270,6 +295,7 @@
           "Buin",
           "Monte Patria",
           "Chanco",
+          "Lolol",
           "Olmué",
           "Los Vilos",
           "Padre Hurtado",
@@ -277,8 +303,6 @@
           "Punta Arenas",
           "Pirque",
           "Codegua",
-          "Lolol",
-          "LEBU",
           "Pucón",
           "Lonquimay",
           "Quilicura",
@@ -290,12 +314,13 @@
           "El Monte",
           "El Quisco",
           "Pumanque",
+          "Coinco",
           "Coquimbo",
           "Curacautín",
           "Rauco",
-          "Coinco",
           "Malloa",
           "Peralillo",
+          "Chile Chico",
           "Vicuña",
           "Maullín",
           "Trehuaco",
@@ -304,6 +329,7 @@
           "Vichuquén",
           "San Pablo",
           "Pelarco",
+          "Isla de Maipo",
           "Chiguayante",
           "Puerto Varas",
           "Corral",
@@ -319,11 +345,11 @@
           "Requínoa",
           "Peumo",
           "Río Negro",
+          "Palmilla",
           "Quintero",
           "La Cruz",
           "Catemu",
           "Colbún",
-          "Palmilla",
           "San Felipe",
           "San Bernardo",
           "Cochrane",
@@ -332,7 +358,6 @@
           "Paihuano",
           "Arica",
           "El Tabo",
-          "Chile Chico",
           "Freirina",
           "Maipú",
           "Tucapel",
@@ -343,29 +368,24 @@
           "Illapel",
           "Cobquecura",
           "Puqueldón",
-          "Isla de Maipo",
           "Quilaco",
           "Puchuncaví",
           "Puerto Octay",
           "Porvenir",
           "Nancagua",
           "Curaco de Vélez",
-          "Chile chico",
           "Torres del Paine",
           "Aysén",
           "Pica",
           "Curarrehue",
           "Huara",
-          "Isla De Maipo",
+          "Quinta de Tilcoco",
           "Concón",
           "Placilla",
           "Licantén",
-          "San Pedro de La Paz",
           "Tierra Amarilla",
-          "San Pedro De La Paz",
           "Renca",
           "Huechuraba",
-          "Quinta de Tilcoco",
           "Cisnes",
           "Futrono",
           "Calera de Tango",
@@ -385,12 +405,8 @@
           "Quemchi",
           "Hualaihué",
           "Huasco",
-          "Padre las casas",
-          "Nueva imperial",
           "Futaleufú",
           "Río Verde",
-          "ARAUCO",
-          "San pedro de la paz",
           "Quinchao",
           "Camiña",
           "Rinconada",
@@ -409,37 +425,23 @@
           "Peñalolén",
           "Punitaqui",
           "San Miguel",
-          "San Pedro de la paz",
           "San Pedro de Atacama",
           "Alto Biobío",
           "Llanquihue",
           "Villa O'Higgins",
           "Pozo Almonte",
           "La Pintana",
-          "CholChol",
           "Cerrillos",
-          "La serena",
-          "CasaBlanca",
-          "talcahuano",
-          "LAJA",
-          "san pedro de la paz",
-          "TALCAHUANO",
-          "CABRERO",
           "Palena",
-          "San Juan de La Costa",
           "Laguna Blanca",
           "Frutillar",
           "Camarones",
           "Putaendo",
           "San Esteban",
-          "COINCO",
-          "quinta DE TILCOCO",
           "General Lagos",
           "Canela",
           "Santa María",
           "Los Andes",
-          "lolol",
-          "palmilla",
           "Puyehue"
         ],
         "temporada": [
@@ -1366,53 +1368,53 @@
           },
           {
             "i": 6,
+            "v": "Lebu",
+            "n": 216
+          },
+          {
+            "i": 7,
             "v": "Victoria",
             "n": 212
           },
           {
-            "i": 7,
+            "i": 8,
             "v": "Valparaíso",
             "n": 204
           },
           {
-            "i": 8,
+            "i": 9,
             "v": "Melipilla",
             "n": 203
           },
           {
-            "i": 9,
+            "i": 10,
             "v": "Lautaro",
             "n": 197
           },
           {
-            "i": 10,
-            "v": "Lebu",
-            "n": 191
-          },
-          {
             "i": 11,
-            "v": "Cholchol",
-            "n": 184
+            "v": "Padre las Casas",
+            "n": 197
           },
           {
             "i": 12,
+            "v": "Cholchol",
+            "n": 186
+          },
+          {
+            "i": 13,
             "v": "Cañete",
             "n": 181
           },
           {
-            "i": 13,
+            "i": 14,
             "v": "Puerto Montt",
             "n": 171
           },
           {
-            "i": 14,
+            "i": 15,
             "v": "Angol",
             "n": 169
-          },
-          {
-            "i": 15,
-            "v": "Padre las Casas",
-            "n": 162
           },
           {
             "i": 16,
@@ -1421,22 +1423,22 @@
           },
           {
             "i": 17,
-            "v": "San Javier",
+            "v": "Nueva Imperial",
             "n": 144
           },
           {
             "i": 18,
+            "v": "San Javier",
+            "n": 144
+          },
+          {
+            "i": 19,
             "v": "Yumbel",
             "n": 141
           },
           {
-            "i": 19,
-            "v": "Carahue",
-            "n": 140
-          },
-          {
             "i": 20,
-            "v": "Nueva Imperial",
+            "v": "Carahue",
             "n": 140
           },
           {
@@ -1506,108 +1508,108 @@
           },
           {
             "i": 34,
-            "v": "La Unión",
+            "v": "San Pedro de la Paz",
             "n": 110
           },
           {
             "i": 35,
+            "v": "La Unión",
+            "n": 110
+          },
+          {
+            "i": 36,
             "v": "Linares",
             "n": 109
           },
           {
-            "i": 36,
+            "i": 37,
             "v": "San Nicolás",
             "n": 109
           },
           {
-            "i": 37,
+            "i": 38,
             "v": "Coyhaique",
             "n": 103
           },
           {
-            "i": 38,
+            "i": 39,
             "v": "Talca",
             "n": 102
           },
           {
-            "i": 39,
+            "i": 40,
             "v": "Penco",
             "n": 102
           },
           {
-            "i": 40,
+            "i": 41,
             "v": "Limache",
             "n": 101
           },
           {
-            "i": 41,
+            "i": 42,
             "v": "San Carlos",
             "n": 101
           },
           {
-            "i": 42,
+            "i": 43,
             "v": "Traiguén",
             "n": 100
           },
           {
-            "i": 43,
+            "i": 44,
             "v": "Quillón",
             "n": 100
           },
           {
-            "i": 44,
+            "i": 45,
             "v": "Hualqui",
             "n": 98
           },
           {
-            "i": 45,
+            "i": 46,
             "v": "Quillota",
             "n": 95
           },
           {
-            "i": 46,
+            "i": 47,
             "v": "Florida",
             "n": 93
           },
           {
-            "i": 47,
+            "i": 48,
             "v": "Los Sauces",
             "n": 91
           },
           {
-            "i": 48,
+            "i": 49,
             "v": "San Clemente",
             "n": 91
           },
           {
-            "i": 49,
+            "i": 50,
             "v": "Nacimiento",
             "n": 91
           },
           {
-            "i": 50,
+            "i": 51,
             "v": "Cabrero",
-            "n": 89
+            "n": 90
           },
           {
-            "i": 51,
+            "i": 52,
             "v": "Colina",
             "n": 89
           },
           {
-            "i": 52,
+            "i": 53,
             "v": "Parral",
             "n": 88
           },
           {
-            "i": 53,
+            "i": 54,
             "v": "Mariquina",
             "n": 88
-          },
-          {
-            "i": 54,
-            "v": "San Pedro de la Paz",
-            "n": 87
           },
           {
             "i": 55,
@@ -1617,7 +1619,7 @@
           {
             "i": 56,
             "v": "Laja",
-            "n": 83
+            "n": 84
           },
           {
             "i": 57,
@@ -1682,7 +1684,7 @@
           {
             "i": 69,
             "v": "Casablanca",
-            "n": 70
+            "n": 71
           },
           {
             "i": 70,
@@ -1721,33 +1723,33 @@
           },
           {
             "i": 77,
-            "v": "Marchigüe",
+            "v": "Arauco",
             "n": 61
           },
           {
             "i": 78,
+            "v": "Marchigüe",
+            "n": 61
+          },
+          {
+            "i": 79,
             "v": "San Rafael",
             "n": 60
           },
           {
-            "i": 79,
+            "i": 80,
             "v": "Retiro",
             "n": 59
           },
           {
-            "i": 80,
+            "i": 81,
             "v": "Gorbea",
             "n": 58
           },
           {
-            "i": 81,
+            "i": 82,
             "v": "Santa Juana",
             "n": 58
-          },
-          {
-            "i": 82,
-            "v": "Arauco",
-            "n": 57
           },
           {
             "i": 83,
@@ -1761,38 +1763,38 @@
           },
           {
             "i": 85,
-            "v": "Concepción",
+            "v": "Talcahuano",
             "n": 55
           },
           {
             "i": 86,
-            "v": "Yerbas Buenas",
+            "v": "Concepción",
             "n": 55
           },
           {
             "i": 87,
-            "v": "Coelemu",
+            "v": "Yerbas Buenas",
             "n": 55
           },
           {
             "i": 88,
+            "v": "Coelemu",
+            "n": 55
+          },
+          {
+            "i": 89,
             "v": "Perquenco",
             "n": 54
           },
           {
-            "i": 89,
+            "i": 90,
             "v": "Teno",
             "n": 54
           },
           {
-            "i": 90,
+            "i": 91,
             "v": "Navidad",
             "n": 54
-          },
-          {
-            "i": 91,
-            "v": "Talcahuano",
-            "n": 53
           },
           {
             "i": 92,
@@ -1836,18 +1838,18 @@
           },
           {
             "i": 100,
-            "v": "Paredones",
+            "v": "La Serena",
             "n": 50
           },
           {
             "i": 101,
-            "v": "El Carmen",
+            "v": "Paredones",
             "n": 50
           },
           {
             "i": 102,
-            "v": "La Serena",
-            "n": 49
+            "v": "El Carmen",
+            "n": 50
           },
           {
             "i": 103,
@@ -1991,32 +1993,32 @@
           },
           {
             "i": 131,
-            "v": "Ninhue",
+            "v": "San Juan de la Costa",
             "n": 34
           },
           {
             "i": 132,
-            "v": "Negrete",
+            "v": "Ninhue",
             "n": 34
           },
           {
             "i": 133,
+            "v": "Negrete",
+            "n": 34
+          },
+          {
+            "i": 134,
             "v": "Mostazal",
             "n": 33
           },
           {
-            "i": 134,
+            "i": 135,
             "v": "Río Bueno",
             "n": 33
           },
           {
-            "i": 135,
-            "v": "Quilleco",
-            "n": 33
-          },
-          {
             "i": 136,
-            "v": "San Juan de la Costa",
+            "v": "Quilleco",
             "n": 33
           },
           {
@@ -2051,92 +2053,92 @@
           },
           {
             "i": 143,
-            "v": "Padre Las Casas",
-            "n": 30
-          },
-          {
-            "i": 144,
             "v": "Pichilemu",
             "n": 30
           },
           {
-            "i": 145,
+            "i": 144,
             "v": "Rancagua",
             "n": 30
           },
           {
-            "i": 146,
+            "i": 145,
             "v": "Puente Alto",
             "n": 29
           },
           {
-            "i": 147,
+            "i": 146,
             "v": "Máfil",
             "n": 29
           },
           {
-            "i": 148,
+            "i": 147,
             "v": "Osorno",
             "n": 28
           },
           {
-            "i": 149,
+            "i": 148,
             "v": "Cartagena",
             "n": 28
           },
           {
-            "i": 150,
+            "i": 149,
             "v": "Teodoro Schmidt",
             "n": 27
           },
           {
-            "i": 151,
+            "i": 150,
             "v": "Alhué",
             "n": 27
           },
           {
-            "i": 152,
+            "i": 151,
             "v": "Peñaflor",
             "n": 27
           },
           {
-            "i": 153,
+            "i": 152,
             "v": "San Rosendo",
             "n": 27
           },
           {
-            "i": 154,
+            "i": 153,
             "v": "Melipeuco",
             "n": 27
           },
           {
-            "i": 155,
+            "i": 154,
             "v": "Villa Alegre",
             "n": 27
           },
           {
-            "i": 156,
+            "i": 155,
             "v": "Ñiquén",
             "n": 27
           },
           {
-            "i": 157,
+            "i": 156,
             "v": "Romeral",
             "n": 26
           },
           {
-            "i": 158,
+            "i": 157,
             "v": "Buin",
             "n": 26
           },
           {
-            "i": 159,
+            "i": 158,
             "v": "Monte Patria",
             "n": 26
           },
           {
-            "i": 160,
+            "i": 159,
             "v": "Chanco",
+            "n": 26
+          },
+          {
+            "i": 160,
+            "v": "Lolol",
             "n": 26
           },
           {
@@ -2176,138 +2178,138 @@
           },
           {
             "i": 168,
-            "v": "Lolol",
-            "n": 25
-          },
-          {
-            "i": 169,
-            "v": "LEBU",
-            "n": 25
-          },
-          {
-            "i": 170,
             "v": "Pucón",
             "n": 24
           },
           {
-            "i": 171,
+            "i": 169,
             "v": "Lonquimay",
             "n": 24
           },
           {
-            "i": 172,
+            "i": 170,
             "v": "Quilicura",
             "n": 24
           },
           {
-            "i": 173,
+            "i": 171,
             "v": "Doñihue",
             "n": 24
           },
           {
-            "i": 174,
+            "i": 172,
             "v": "San José de Maipo",
             "n": 24
           },
           {
-            "i": 175,
+            "i": 173,
             "v": "Hijuelas",
             "n": 24
           },
           {
-            "i": 176,
+            "i": 174,
             "v": "Algarrobo",
             "n": 24
           },
           {
-            "i": 177,
+            "i": 175,
             "v": "Vallenar",
             "n": 23
           },
           {
-            "i": 178,
+            "i": 176,
             "v": "El Monte",
             "n": 23
           },
           {
-            "i": 179,
+            "i": 177,
             "v": "El Quisco",
             "n": 23
           },
           {
-            "i": 180,
+            "i": 178,
             "v": "Pumanque",
             "n": 23
           },
           {
-            "i": 181,
+            "i": 179,
+            "v": "Coinco",
+            "n": 22
+          },
+          {
+            "i": 180,
             "v": "Coquimbo",
             "n": 22
           },
           {
-            "i": 182,
+            "i": 181,
             "v": "Curacautín",
             "n": 22
           },
           {
-            "i": 183,
+            "i": 182,
             "v": "Rauco",
             "n": 22
           },
           {
-            "i": 184,
-            "v": "Coinco",
-            "n": 21
-          },
-          {
-            "i": 185,
+            "i": 183,
             "v": "Malloa",
             "n": 21
           },
           {
-            "i": 186,
+            "i": 184,
             "v": "Peralillo",
             "n": 21
           },
           {
-            "i": 187,
+            "i": 185,
+            "v": "Chile Chico",
+            "n": 21
+          },
+          {
+            "i": 186,
             "v": "Vicuña",
             "n": 21
           },
           {
-            "i": 188,
+            "i": 187,
             "v": "Maullín",
             "n": 21
           },
           {
-            "i": 189,
+            "i": 188,
             "v": "Trehuaco",
             "n": 21
           },
           {
-            "i": 190,
+            "i": 189,
             "v": "Salamanca",
             "n": 21
           },
           {
-            "i": 191,
+            "i": 190,
             "v": "Hualpén",
             "n": 20
           },
           {
-            "i": 192,
+            "i": 191,
             "v": "Vichuquén",
             "n": 20
           },
           {
-            "i": 193,
+            "i": 192,
             "v": "San Pablo",
             "n": 20
           },
           {
-            "i": 194,
+            "i": 193,
             "v": "Pelarco",
             "n": 20
+          },
+          {
+            "i": 194,
+            "v": "Isla de Maipo",
+            "n": 19
           },
           {
             "i": 195,
@@ -2386,27 +2388,27 @@
           },
           {
             "i": 210,
-            "v": "Quintero",
+            "v": "Palmilla",
             "n": 15
           },
           {
             "i": 211,
-            "v": "La Cruz",
+            "v": "Quintero",
             "n": 15
           },
           {
             "i": 212,
-            "v": "Catemu",
+            "v": "La Cruz",
             "n": 15
           },
           {
             "i": 213,
-            "v": "Colbún",
-            "n": 14
+            "v": "Catemu",
+            "n": 15
           },
           {
             "i": 214,
-            "v": "Palmilla",
+            "v": "Colbún",
             "n": 14
           },
           {
@@ -2451,546 +2453,426 @@
           },
           {
             "i": 223,
-            "v": "Chile Chico",
-            "n": 12
-          },
-          {
-            "i": 224,
             "v": "Freirina",
             "n": 12
           },
           {
-            "i": 225,
+            "i": 224,
             "v": "Maipú",
             "n": 12
           },
           {
-            "i": 226,
+            "i": 225,
             "v": "Tucapel",
             "n": 11
           },
           {
-            "i": 227,
+            "i": 226,
             "v": "Fresia",
             "n": 11
           },
           {
-            "i": 228,
+            "i": 227,
             "v": "Providencia",
             "n": 11
           },
           {
-            "i": 229,
+            "i": 228,
             "v": "Panquehue",
             "n": 11
           },
           {
-            "i": 230,
+            "i": 229,
             "v": "Copiapó",
             "n": 11
           },
           {
-            "i": 231,
+            "i": 230,
             "v": "Illapel",
             "n": 11
           },
           {
-            "i": 232,
+            "i": 231,
             "v": "Cobquecura",
             "n": 11
           },
           {
-            "i": 233,
+            "i": 232,
             "v": "Puqueldón",
             "n": 11
           },
           {
-            "i": 234,
-            "v": "Isla de Maipo",
-            "n": 10
-          },
-          {
-            "i": 235,
+            "i": 233,
             "v": "Quilaco",
             "n": 10
           },
           {
-            "i": 236,
+            "i": 234,
             "v": "Puchuncaví",
             "n": 10
           },
           {
-            "i": 237,
+            "i": 235,
             "v": "Puerto Octay",
             "n": 10
           },
           {
-            "i": 238,
+            "i": 236,
             "v": "Porvenir",
             "n": 10
           },
           {
-            "i": 239,
+            "i": 237,
             "v": "Nancagua",
             "n": 10
           },
           {
-            "i": 240,
+            "i": 238,
             "v": "Curaco de Vélez",
             "n": 10
           },
           {
-            "i": 241,
-            "v": "Chile chico",
-            "n": 9
-          },
-          {
-            "i": 242,
+            "i": 239,
             "v": "Torres del Paine",
             "n": 9
           },
           {
-            "i": 243,
+            "i": 240,
             "v": "Aysén",
             "n": 9
           },
           {
-            "i": 244,
+            "i": 241,
             "v": "Pica",
             "n": 9
           },
           {
-            "i": 245,
+            "i": 242,
             "v": "Curarrehue",
             "n": 9
           },
           {
-            "i": 246,
+            "i": 243,
             "v": "Huara",
             "n": 9
           },
           {
-            "i": 247,
-            "v": "Isla De Maipo",
-            "n": 9
+            "i": 244,
+            "v": "Quinta de Tilcoco",
+            "n": 8
           },
           {
-            "i": 248,
+            "i": 245,
             "v": "Concón",
             "n": 8
           },
           {
-            "i": 249,
+            "i": 246,
             "v": "Placilla",
             "n": 8
           },
           {
-            "i": 250,
+            "i": 247,
             "v": "Licantén",
             "n": 8
           },
           {
-            "i": 251,
-            "v": "San Pedro de La Paz",
-            "n": 8
-          },
-          {
-            "i": 252,
+            "i": 248,
             "v": "Tierra Amarilla",
             "n": 8
           },
           {
-            "i": 253,
-            "v": "San Pedro De La Paz",
-            "n": 8
-          },
-          {
-            "i": 254,
+            "i": 249,
             "v": "Renca",
             "n": 7
           },
           {
-            "i": 255,
+            "i": 250,
             "v": "Huechuraba",
             "n": 7
           },
           {
-            "i": 256,
-            "v": "Quinta de Tilcoco",
-            "n": 7
-          },
-          {
-            "i": 257,
+            "i": 251,
             "v": "Cisnes",
             "n": 7
           },
           {
-            "i": 258,
+            "i": 252,
             "v": "Futrono",
             "n": 7
           },
           {
-            "i": 259,
+            "i": 253,
             "v": "Calera de Tango",
             "n": 7
           },
           {
-            "i": 260,
+            "i": 254,
             "v": "Recoleta",
             "n": 6
           },
           {
-            "i": 261,
+            "i": 255,
             "v": "Vitacura",
             "n": 6
           },
           {
-            "i": 262,
+            "i": 256,
             "v": "San Gregorio",
             "n": 6
           },
           {
-            "i": 263,
+            "i": 257,
             "v": "Las Condes",
             "n": 6
           },
           {
-            "i": 264,
+            "i": 258,
             "v": "Calama",
             "n": 6
           },
           {
-            "i": 265,
+            "i": 259,
             "v": "Alto del Carmen",
             "n": 6
           },
           {
-            "i": 266,
+            "i": 260,
             "v": "Lo Barnechea",
             "n": 6
           },
           {
-            "i": 267,
+            "i": 261,
             "v": "Olivar",
             "n": 6
           },
           {
-            "i": 268,
+            "i": 262,
             "v": "San Fabián",
             "n": 6
           },
           {
-            "i": 269,
+            "i": 263,
             "v": "Purranque",
             "n": 6
           },
           {
-            "i": 270,
+            "i": 264,
             "v": "Río Hurtado",
             "n": 5
           },
           {
-            "i": 271,
+            "i": 265,
             "v": "Zapallar",
             "n": 5
           },
           {
-            "i": 272,
+            "i": 266,
             "v": "Putre",
             "n": 5
           },
           {
-            "i": 273,
+            "i": 267,
             "v": "Quemchi",
             "n": 5
           },
           {
-            "i": 274,
+            "i": 268,
             "v": "Hualaihué",
             "n": 5
           },
           {
-            "i": 275,
+            "i": 269,
             "v": "Huasco",
             "n": 5
           },
           {
-            "i": 276,
-            "v": "Padre las casas",
-            "n": 5
-          },
-          {
-            "i": 277,
-            "v": "Nueva imperial",
-            "n": 4
-          },
-          {
-            "i": 278,
+            "i": 270,
             "v": "Futaleufú",
             "n": 4
           },
           {
-            "i": 279,
+            "i": 271,
             "v": "Río Verde",
             "n": 4
           },
           {
-            "i": 280,
-            "v": "ARAUCO",
-            "n": 4
-          },
-          {
-            "i": 281,
-            "v": "San pedro de la paz",
-            "n": 4
-          },
-          {
-            "i": 282,
+            "i": 272,
             "v": "Quinchao",
             "n": 4
           },
           {
-            "i": 283,
+            "i": 273,
             "v": "Camiña",
             "n": 4
           },
           {
-            "i": 284,
+            "i": 274,
             "v": "Rinconada",
             "n": 4
           },
           {
-            "i": 285,
+            "i": 275,
             "v": "Cochamó",
             "n": 3
           },
           {
-            "i": 286,
+            "i": 276,
             "v": "La Florida",
             "n": 3
           },
           {
-            "i": 287,
+            "i": 277,
             "v": "Lago Verde",
             "n": 3
           },
           {
-            "i": 288,
+            "i": 278,
             "v": "Colchane",
             "n": 3
           },
           {
-            "i": 289,
+            "i": 279,
             "v": "Papudo",
             "n": 3
           },
           {
-            "i": 290,
+            "i": 280,
             "v": "Antuco",
             "n": 3
           },
           {
-            "i": 291,
+            "i": 281,
             "v": "Combarbalá",
             "n": 3
           },
           {
-            "i": 292,
+            "i": 282,
             "v": "Cabildo",
             "n": 3
           },
           {
-            "i": 293,
+            "i": 283,
             "v": "Cabo de Hornos",
             "n": 2
           },
           {
-            "i": 294,
+            "i": 284,
             "v": "La Reina",
             "n": 2
           },
           {
-            "i": 295,
+            "i": 285,
             "v": "Timaukel",
             "n": 2
           },
           {
-            "i": 296,
+            "i": 286,
             "v": "Primavera",
             "n": 2
           },
           {
-            "i": 297,
+            "i": 287,
             "v": "Peñalolén",
             "n": 2
           },
           {
-            "i": 298,
+            "i": 288,
             "v": "Punitaqui",
             "n": 2
           },
           {
-            "i": 299,
+            "i": 289,
             "v": "San Miguel",
             "n": 2
           },
           {
-            "i": 300,
-            "v": "San Pedro de la paz",
-            "n": 2
-          },
-          {
-            "i": 301,
+            "i": 290,
             "v": "San Pedro de Atacama",
             "n": 2
           },
           {
-            "i": 302,
+            "i": 291,
             "v": "Alto Biobío",
             "n": 2
           },
           {
-            "i": 303,
+            "i": 292,
             "v": "Llanquihue",
             "n": 2
           },
           {
-            "i": 304,
+            "i": 293,
             "v": "Villa O'Higgins",
             "n": 2
           },
           {
-            "i": 305,
+            "i": 294,
             "v": "Pozo Almonte",
             "n": 2
           },
           {
-            "i": 306,
+            "i": 295,
             "v": "La Pintana",
             "n": 2
           },
           {
-            "i": 307,
-            "v": "CholChol",
-            "n": 2
-          },
-          {
-            "i": 308,
+            "i": 296,
             "v": "Cerrillos",
             "n": 1
           },
           {
-            "i": 309,
-            "v": "La serena",
-            "n": 1
-          },
-          {
-            "i": 310,
-            "v": "CasaBlanca",
-            "n": 1
-          },
-          {
-            "i": 311,
-            "v": "talcahuano",
-            "n": 1
-          },
-          {
-            "i": 312,
-            "v": "LAJA",
-            "n": 1
-          },
-          {
-            "i": 313,
-            "v": "san pedro de la paz",
-            "n": 1
-          },
-          {
-            "i": 314,
-            "v": "TALCAHUANO",
-            "n": 1
-          },
-          {
-            "i": 315,
-            "v": "CABRERO",
-            "n": 1
-          },
-          {
-            "i": 316,
+            "i": 297,
             "v": "Palena",
             "n": 1
           },
           {
-            "i": 317,
-            "v": "San Juan de La Costa",
-            "n": 1
-          },
-          {
-            "i": 318,
+            "i": 298,
             "v": "Laguna Blanca",
             "n": 1
           },
           {
-            "i": 319,
+            "i": 299,
             "v": "Frutillar",
             "n": 1
           },
           {
-            "i": 320,
+            "i": 300,
             "v": "Camarones",
             "n": 1
           },
           {
-            "i": 321,
+            "i": 301,
             "v": "Putaendo",
             "n": 1
           },
           {
-            "i": 322,
+            "i": 302,
             "v": "San Esteban",
             "n": 1
           },
           {
-            "i": 323,
-            "v": "COINCO",
-            "n": 1
-          },
-          {
-            "i": 324,
-            "v": "quinta DE TILCOCO",
-            "n": 1
-          },
-          {
-            "i": 325,
+            "i": 303,
             "v": "General Lagos",
             "n": 1
           },
           {
-            "i": 326,
+            "i": 304,
             "v": "Canela",
             "n": 1
           },
           {
-            "i": 327,
+            "i": 305,
             "v": "Santa María",
             "n": 1
           },
           {
-            "i": 328,
+            "i": 306,
             "v": "Los Andes",
             "n": 1
           },
           {
-            "i": 329,
-            "v": "lolol",
-            "n": 1
-          },
-          {
-            "i": 330,
-            "v": "palmilla",
-            "n": 1
-          },
-          {
-            "i": 331,
+            "i": 307,
             "v": "Puyehue",
             "n": 1
           }
@@ -5677,14 +5559,14 @@
       "archivo": "incendios.geojson",
       "features": 14705,
       "vertices": 14705,
-      "bytes": 7971405,
+      "bytes": 7971288,
       "bbox": [
         -74.95261,
         -55.22347,
         -68.01064,
         -17.92029
       ],
-      "segundos": 14.2
+      "segundos": 11.4
     },
     "oecv": {
       "titulo": "OECV — Obras de Eliminación de Combustible Vegetal",
@@ -5830,7 +5712,7 @@
         -67.59344,
         -19.31068
       ],
-      "segundos": 1.7
+      "segundos": 1.2
     },
     "oecv_verificado": {
       "titulo": "OECV verificado en terreno",
@@ -5911,7 +5793,7 @@
         -70.51471,
         -29.91048
       ],
-      "segundos": 0.9
+      "segundos": 0.6
     },
     "puntos_standby": {
       "titulo": "Puntos stand-by",
@@ -5975,208 +5857,204 @@
       ],
       "segundos": 0.0
     },
-    "rutas": {
-      "titulo": "Rutas de despliegue territorial 25-26",
+    "redvial": {
+      "titulo": "Red vial MOP 2024",
       "carga": "demanda",
-      "leidos": 5278,
-      "vertices_origen": 3843489,
-      "por_archivo": {
-        "Antofagasta": 5,
-        "Arica": 31,
-        "Tarapacá": 24,
-        "Valparaíso": 311,
-        "Metropolitana": 189,
-        "O'Higgins": 463,
-        "Los Ríos": 142,
-        "Aysén": 95,
-        "Magallanes": 58,
-        "CORMA": 1277,
-        "La Araucanía": 480,
-        "Biobío": 382,
-        "Maule": 1288,
-        "Ñuble": 330,
-        "Los Lagos": 203
-      },
+      "leidos": 13964,
+      "vertices_origen": 2191840,
       "filtros": [
         "region",
         "clasificacion",
-        "carpeta",
-        "origen"
+        "carpeta"
       ],
       "dominios": {
         "region": [
           {
-            "v": "Maule",
-            "n": 1455
-          },
-          {
             "v": "La Araucanía",
-            "n": 1005
-          },
-          {
-            "v": "Biobío",
-            "n": 768
-          },
-          {
-            "v": "Ñuble",
-            "n": 474
+            "n": 1775
           },
           {
             "v": "O'Higgins",
-            "n": 465
+            "n": 1558
           },
           {
             "v": "Valparaíso",
-            "n": 305
+            "n": 1483
           },
           {
             "v": "Los Lagos",
-            "n": 208
+            "n": 1473
           },
           {
-            "v": "Metropolitana",
-            "n": 198
+            "v": "Maule",
+            "n": 1433
+          },
+          {
+            "v": "Biobío",
+            "n": 1020
+          },
+          {
+            "v": "Ñuble",
+            "n": 867
           },
           {
             "v": "Los Ríos",
-            "n": 187
+            "n": 819
+          },
+          {
+            "v": "Metropolitana",
+            "n": 775
+          },
+          {
+            "v": "Coquimbo",
+            "n": 761
+          },
+          {
+            "v": "Atacama",
+            "n": 698
           },
           {
             "v": "Aysén",
-            "n": 95
-          },
-          {
-            "v": "Magallanes",
-            "n": 58
-          },
-          {
-            "v": "Arica y Parinacota",
-            "n": 31
+            "n": 318
           },
           {
             "v": "Tarapacá",
-            "n": 24
+            "n": 290
           },
           {
             "v": "Antofagasta",
-            "n": 5
+            "n": 290
+          },
+          {
+            "v": "Arica y Parinacota",
+            "n": 250
+          },
+          {
+            "v": "Magallanes",
+            "n": 154
           }
         ],
         "clasificacion": [
           {
             "v": "Camino Regional Comunal",
-            "n": 2127
-          },
-          {
-            "v": "Sin Información",
-            "n": 994
-          },
-          {
-            "v": "Camino Regional Principal",
-            "n": 488
+            "n": 5722
           },
           {
             "v": "Camino Regional de Acceso",
-            "n": 435
+            "n": 2189
           },
           {
-            "v": "Camino Regional Provincial",
-            "n": 387
+            "v": "Sin Información",
+            "n": 1623
           },
           {
             "v": "Camino Regional Comunal (En Proceso de Enrolamiento)",
-            "n": 336
+            "n": 1293
           },
           {
             "v": "Camino Regional de Acceso (En Proceso de Enrolamiento)",
-            "n": 163
+            "n": 1139
+          },
+          {
+            "v": "Camino Regional Principal",
+            "n": 705
+          },
+          {
+            "v": "Camino Regional Provincial",
+            "n": 639
           },
           {
             "v": "Camino Nacional",
-            "n": 125
+            "n": 182
           },
           {
             "v": "Camino Nacional Longitudinal",
-            "n": 98
+            "n": 158
           },
           {
             "v": "Camino Nacional con Carácter de Internacional",
-            "n": 57
+            "n": 121
           },
           {
             "v": "Camino Regional Comunal (Conexión Vial Urbana)",
-            "n": 34
+            "n": 99
           },
           {
             "v": "Camino Regional Principal (Conexión Vial Urbana)",
-            "n": 13
+            "n": 31
           },
           {
             "v": "Camino Regional Provincial (En Proceso de Enrolamiento)",
-            "n": 12
+            "n": 22
           },
           {
             "v": "Camino Regional Principal (En Proceso de Enrolamiento)",
+            "n": 15
+          },
+          {
+            "v": "Camino Nacional Longitudinal (En Proceso de Enrolamiento)",
+            "n": 8
+          },
+          {
+            "v": "Camino Nacional (Conexión Vial Urbana)",
             "n": 7
           },
           {
             "v": "Camino Regional de Acceso (Conexión Vial Urbana)",
+            "n": 6
+          },
+          {
+            "v": "Camino Regional Provincial (Conexión Vial Urbana)",
+            "n": 3
+          },
+          {
+            "v": "Camino Nacional (En Proceso de Enrolamiento)",
             "n": 1
           },
           {
-            "v": "Camino Nacional Longitudinal (En Proceso de Enrolamiento)",
+            "v": "Camino Privado",
             "n": 1
           }
         ],
         "carpeta": [
           {
             "v": "Ripio",
-            "n": 1892
+            "n": 4916
           },
           {
             "v": "Pavimento Básico",
-            "n": 1350
+            "n": 3826
           },
           {
             "v": "Pavimento",
-            "n": 1315
+            "n": 2438
           },
           {
             "v": "Suelo Natural",
-            "n": 319
-          },
-          {
-            "v": "Pavimento Doble Calzada",
-            "n": 220
+            "n": 1577
           },
           {
             "v": "Grava Tratada",
-            "n": 95
+            "n": 634
+          },
+          {
+            "v": "Pavimento Doble Calzada",
+            "n": 382
           },
           {
             "v": "Sin Información",
-            "n": 87
-          }
-        ],
-        "origen": [
-          {
-            "v": "CONAF",
-            "n": 4001
-          },
-          {
-            "v": "CORMA",
-            "n": 1277
+            "n": 191
           }
         ]
       },
       "formato": "pmtiles",
-      "archivo": "rutas.pmtiles",
-      "capa_mvt": "rutas",
+      "archivo": "redvial.pmtiles",
+      "capa_mvt": "redvial",
       "minzoom": 4,
       "maxzoom": 13,
-      "bytes": 7051850,
-      "features": 5278,
-      "segundos": 43.4
+      "bytes": 18801957,
+      "features": 13964,
+      "segundos": 25.2
     },
     "infra_puntos": {
       "titulo": "Infraestructura crítica",
@@ -6424,204 +6302,208 @@
       ],
       "segundos": 0.1
     },
-    "redvial": {
-      "titulo": "Red vial MOP 2024",
+    "rutas": {
+      "titulo": "Rutas de despliegue territorial 25-26",
       "carga": "demanda",
-      "leidos": 13964,
-      "vertices_origen": 2191840,
+      "leidos": 5278,
+      "vertices_origen": 3843489,
+      "por_archivo": {
+        "Antofagasta": 5,
+        "Arica": 31,
+        "Tarapacá": 24,
+        "Valparaíso": 311,
+        "Metropolitana": 189,
+        "O'Higgins": 463,
+        "Los Ríos": 142,
+        "Aysén": 95,
+        "Magallanes": 58,
+        "CORMA": 1277,
+        "La Araucanía": 480,
+        "Biobío": 382,
+        "Maule": 1288,
+        "Ñuble": 330,
+        "Los Lagos": 203
+      },
       "filtros": [
         "region",
         "clasificacion",
-        "carpeta"
+        "carpeta",
+        "origen"
       ],
       "dominios": {
         "region": [
           {
-            "v": "La Araucanía",
-            "n": 1775
-          },
-          {
-            "v": "O'Higgins",
-            "n": 1558
-          },
-          {
-            "v": "Valparaíso",
-            "n": 1483
-          },
-          {
-            "v": "Los Lagos",
-            "n": 1473
-          },
-          {
             "v": "Maule",
-            "n": 1433
+            "n": 1455
+          },
+          {
+            "v": "La Araucanía",
+            "n": 1005
           },
           {
             "v": "Biobío",
-            "n": 1020
+            "n": 768
           },
           {
             "v": "Ñuble",
-            "n": 867
+            "n": 474
           },
           {
-            "v": "Los Ríos",
-            "n": 819
+            "v": "O'Higgins",
+            "n": 465
+          },
+          {
+            "v": "Valparaíso",
+            "n": 305
+          },
+          {
+            "v": "Los Lagos",
+            "n": 208
           },
           {
             "v": "Metropolitana",
-            "n": 775
+            "n": 198
           },
           {
-            "v": "Coquimbo",
-            "n": 761
-          },
-          {
-            "v": "Atacama",
-            "n": 698
+            "v": "Los Ríos",
+            "n": 187
           },
           {
             "v": "Aysén",
-            "n": 318
-          },
-          {
-            "v": "Tarapacá",
-            "n": 290
-          },
-          {
-            "v": "Antofagasta",
-            "n": 290
-          },
-          {
-            "v": "Arica y Parinacota",
-            "n": 250
+            "n": 95
           },
           {
             "v": "Magallanes",
-            "n": 154
+            "n": 58
+          },
+          {
+            "v": "Arica y Parinacota",
+            "n": 31
+          },
+          {
+            "v": "Tarapacá",
+            "n": 24
+          },
+          {
+            "v": "Antofagasta",
+            "n": 5
           }
         ],
         "clasificacion": [
           {
             "v": "Camino Regional Comunal",
-            "n": 5722
-          },
-          {
-            "v": "Camino Regional de Acceso",
-            "n": 2189
+            "n": 2127
           },
           {
             "v": "Sin Información",
-            "n": 1623
-          },
-          {
-            "v": "Camino Regional Comunal (En Proceso de Enrolamiento)",
-            "n": 1293
-          },
-          {
-            "v": "Camino Regional de Acceso (En Proceso de Enrolamiento)",
-            "n": 1139
+            "n": 994
           },
           {
             "v": "Camino Regional Principal",
-            "n": 705
+            "n": 488
+          },
+          {
+            "v": "Camino Regional de Acceso",
+            "n": 435
           },
           {
             "v": "Camino Regional Provincial",
-            "n": 639
+            "n": 387
+          },
+          {
+            "v": "Camino Regional Comunal (En Proceso de Enrolamiento)",
+            "n": 336
+          },
+          {
+            "v": "Camino Regional de Acceso (En Proceso de Enrolamiento)",
+            "n": 163
           },
           {
             "v": "Camino Nacional",
-            "n": 182
+            "n": 125
           },
           {
             "v": "Camino Nacional Longitudinal",
-            "n": 158
+            "n": 98
           },
           {
             "v": "Camino Nacional con Carácter de Internacional",
-            "n": 121
+            "n": 57
           },
           {
             "v": "Camino Regional Comunal (Conexión Vial Urbana)",
-            "n": 99
+            "n": 34
           },
           {
             "v": "Camino Regional Principal (Conexión Vial Urbana)",
-            "n": 31
+            "n": 13
           },
           {
             "v": "Camino Regional Provincial (En Proceso de Enrolamiento)",
-            "n": 22
+            "n": 12
           },
           {
             "v": "Camino Regional Principal (En Proceso de Enrolamiento)",
-            "n": 15
-          },
-          {
-            "v": "Camino Nacional Longitudinal (En Proceso de Enrolamiento)",
-            "n": 8
-          },
-          {
-            "v": "Camino Nacional (Conexión Vial Urbana)",
             "n": 7
           },
           {
             "v": "Camino Regional de Acceso (Conexión Vial Urbana)",
-            "n": 6
-          },
-          {
-            "v": "Camino Regional Provincial (Conexión Vial Urbana)",
-            "n": 3
-          },
-          {
-            "v": "Camino Nacional (En Proceso de Enrolamiento)",
             "n": 1
           },
           {
-            "v": "Camino Privado",
+            "v": "Camino Nacional Longitudinal (En Proceso de Enrolamiento)",
             "n": 1
           }
         ],
         "carpeta": [
           {
             "v": "Ripio",
-            "n": 4916
+            "n": 1892
           },
           {
             "v": "Pavimento Básico",
-            "n": 3826
+            "n": 1350
           },
           {
             "v": "Pavimento",
-            "n": 2438
+            "n": 1315
           },
           {
             "v": "Suelo Natural",
-            "n": 1577
-          },
-          {
-            "v": "Grava Tratada",
-            "n": 634
+            "n": 319
           },
           {
             "v": "Pavimento Doble Calzada",
-            "n": 382
+            "n": 220
+          },
+          {
+            "v": "Grava Tratada",
+            "n": 95
           },
           {
             "v": "Sin Información",
-            "n": 191
+            "n": 87
+          }
+        ],
+        "origen": [
+          {
+            "v": "CONAF",
+            "n": 4001
+          },
+          {
+            "v": "CORMA",
+            "n": 1277
           }
         ]
       },
       "formato": "pmtiles",
-      "archivo": "redvial.pmtiles",
-      "capa_mvt": "redvial",
+      "archivo": "rutas.pmtiles",
+      "capa_mvt": "rutas",
       "minzoom": 4,
       "maxzoom": 13,
-      "bytes": 18801957,
-      "features": 13964,
-      "segundos": 45.2
+      "bytes": 7051850,
+      "features": 5278,
+      "segundos": 37.4
     },
     "riesgo": {
       "titulo": "Riesgo de incendio forestal",
@@ -6645,6 +6527,10 @@
           ],
           "clases": {
             "Muy Bajo": 40
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/01101.json",
+            "bytes": 2643
           }
         },
         "01107": {
@@ -6662,6 +6548,10 @@
           ],
           "clases": {
             "Muy Bajo": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/01107.json",
+            "bytes": 236
           }
         },
         "01401": {
@@ -6682,6 +6572,10 @@
             "Bajo": 99,
             "Medio": 54,
             "Alto": 15
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/01401.json",
+            "bytes": 12097
           }
         },
         "01402": {
@@ -6703,6 +6597,10 @@
             "Medio": 17,
             "Alto": 7,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/01402.json",
+            "bytes": 4604
           }
         },
         "01403": {
@@ -6724,6 +6622,10 @@
             "Medio": 129,
             "Alto": 39,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/01403.json",
+            "bytes": 26985
           }
         },
         "01404": {
@@ -6745,6 +6647,10 @@
             "Medio": 54,
             "Alto": 32,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/01404.json",
+            "bytes": 15978
           }
         },
         "01405": {
@@ -6765,6 +6671,10 @@
             "Bajo": 204,
             "Medio": 114,
             "Alto": 17
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/01405.json",
+            "bytes": 25610
           }
         },
         "02101": {
@@ -6784,6 +6694,10 @@
             "Muy Bajo": 18,
             "Bajo": 24,
             "Medio": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/02101.json",
+            "bytes": 3033
           }
         },
         "02102": {
@@ -6801,6 +6715,10 @@
           ],
           "clases": {
             "Muy Bajo": 72
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/02102.json",
+            "bytes": 4682
           }
         },
         "02103": {
@@ -6819,6 +6737,10 @@
           "clases": {
             "Muy Bajo": 1,
             "Bajo": 27
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/02103.json",
+            "bytes": 1948
           }
         },
         "02104": {
@@ -6839,6 +6761,10 @@
             "Bajo": 155,
             "Medio": 39,
             "Alto": 10
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/02104.json",
+            "bytes": 18692
           }
         },
         "02201": {
@@ -6859,6 +6785,10 @@
             "Bajo": 147,
             "Medio": 60,
             "Alto": 7
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/02201.json",
+            "bytes": 15330
           }
         },
         "02202": {
@@ -6878,6 +6808,10 @@
             "Muy Bajo": 1,
             "Bajo": 53,
             "Medio": 14
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/02202.json",
+            "bytes": 4509
           }
         },
         "02203": {
@@ -6898,6 +6832,10 @@
             "Bajo": 150,
             "Medio": 78,
             "Alto": 11
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/02203.json",
+            "bytes": 17236
           }
         },
         "02301": {
@@ -6915,6 +6853,10 @@
           ],
           "clases": {
             "Muy Bajo": 15
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/02301.json",
+            "bytes": 1094
           }
         },
         "02302": {
@@ -6935,6 +6877,10 @@
             "Bajo": 15,
             "Medio": 7,
             "Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/02302.json",
+            "bytes": 1764
           }
         },
         "03101": {
@@ -6955,6 +6901,10 @@
             "Bajo": 210,
             "Medio": 68,
             "Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/03101.json",
+            "bytes": 21577
           }
         },
         "03102": {
@@ -6975,6 +6925,10 @@
             "Bajo": 40,
             "Medio": 8,
             "Alto": 5
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/03102.json",
+            "bytes": 15149
           }
         },
         "03103": {
@@ -6995,6 +6949,10 @@
             "Bajo": 327,
             "Medio": 140,
             "Alto": 6
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/03103.json",
+            "bytes": 36629
           }
         },
         "03201": {
@@ -7015,6 +6973,10 @@
             "Bajo": 139,
             "Medio": 28,
             "Alto": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/03201.json",
+            "bytes": 11895
           }
         },
         "03202": {
@@ -7034,6 +6996,10 @@
             "Muy Bajo": 4,
             "Bajo": 103,
             "Medio": 6
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/03202.json",
+            "bytes": 7305
           }
         },
         "03301": {
@@ -7054,6 +7020,10 @@
             "Bajo": 170,
             "Medio": 187,
             "Alto": 10
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/03301.json",
+            "bytes": 33983
           }
         },
         "03302": {
@@ -7074,6 +7044,10 @@
             "Bajo": 213,
             "Medio": 176,
             "Alto": 10
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/03302.json",
+            "bytes": 32739
           }
         },
         "03303": {
@@ -7094,6 +7068,10 @@
             "Bajo": 87,
             "Medio": 68,
             "Alto": 12
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/03303.json",
+            "bytes": 14922
           }
         },
         "03304": {
@@ -7114,6 +7092,10 @@
             "Bajo": 41,
             "Medio": 21,
             "Alto": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/03304.json",
+            "bytes": 8276
           }
         },
         "04101": {
@@ -7135,6 +7117,10 @@
             "Medio": 97,
             "Alto": 17,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/04101.json",
+            "bytes": 17083
           }
         },
         "04102": {
@@ -7155,6 +7141,10 @@
             "Bajo": 50,
             "Medio": 45,
             "Alto": 43
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/04102.json",
+            "bytes": 12277
           }
         },
         "04103": {
@@ -7175,6 +7165,10 @@
             "Bajo": 29,
             "Medio": 13,
             "Alto": 11
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/04103.json",
+            "bytes": 4532
           }
         },
         "04104": {
@@ -7195,6 +7189,10 @@
             "Bajo": 125,
             "Medio": 105,
             "Alto": 18
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/04104.json",
+            "bytes": 27316
           }
         },
         "04105": {
@@ -7215,6 +7213,10 @@
             "Bajo": 61,
             "Medio": 64,
             "Alto": 8
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/04105.json",
+            "bytes": 11472
           }
         },
         "04106": {
@@ -7235,6 +7237,10 @@
             "Bajo": 280,
             "Medio": 145,
             "Alto": 8
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/04106.json",
+            "bytes": 36236
           }
         },
         "04201": {
@@ -7255,6 +7261,10 @@
             "Bajo": 99,
             "Medio": 33,
             "Alto": 60
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/04201.json",
+            "bytes": 13860
           }
         },
         "04202": {
@@ -7275,6 +7285,10 @@
             "Bajo": 112,
             "Medio": 63,
             "Alto": 65
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/04202.json",
+            "bytes": 16146
           }
         },
         "04203": {
@@ -7296,6 +7310,10 @@
             "Medio": 77,
             "Alto": 92,
             "Muy Alto": 4
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/04203.json",
+            "bytes": 20318
           }
         },
         "04204": {
@@ -7316,6 +7334,10 @@
             "Bajo": 157,
             "Medio": 28,
             "Alto": 21
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/04204.json",
+            "bytes": 16103
           }
         },
         "04301": {
@@ -7337,6 +7359,10 @@
             "Medio": 120,
             "Alto": 76,
             "Muy Alto": 16
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/04301.json",
+            "bytes": 27176
           }
         },
         "04302": {
@@ -7357,6 +7383,10 @@
             "Bajo": 71,
             "Medio": 56,
             "Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/04302.json",
+            "bytes": 12633
           }
         },
         "04303": {
@@ -7377,6 +7407,10 @@
             "Bajo": 190,
             "Medio": 75,
             "Alto": 24
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/04303.json",
+            "bytes": 22899
           }
         },
         "04304": {
@@ -7397,6 +7431,10 @@
             "Bajo": 44,
             "Medio": 22,
             "Alto": 27
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/04304.json",
+            "bytes": 6800
           }
         },
         "04305": {
@@ -7417,6 +7455,10 @@
             "Bajo": 84,
             "Medio": 40,
             "Alto": 5
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/04305.json",
+            "bytes": 11096
           }
         },
         "05101": {
@@ -7438,6 +7480,10 @@
             "Medio": 24,
             "Alto": 9,
             "Muy Alto": 20
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05101.json",
+            "bytes": 5351
           }
         },
         "05102": {
@@ -7459,6 +7505,10 @@
             "Medio": 40,
             "Alto": 33,
             "Muy Alto": 7
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05102.json",
+            "bytes": 7116
           }
         },
         "05103": {
@@ -7480,6 +7530,10 @@
             "Medio": 15,
             "Alto": 5,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05103.json",
+            "bytes": 2305
           }
         },
         "05105": {
@@ -7500,6 +7554,10 @@
             "Bajo": 8,
             "Medio": 15,
             "Alto": 22
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05105.json",
+            "bytes": 3322
           }
         },
         "05107": {
@@ -7521,6 +7579,10 @@
             "Medio": 18,
             "Alto": 10,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05107.json",
+            "bytes": 3521
           }
         },
         "05109": {
@@ -7542,6 +7604,10 @@
             "Medio": 18,
             "Alto": 6,
             "Muy Alto": 8
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05109.json",
+            "bytes": 3633
           }
         },
         "05301": {
@@ -7563,6 +7629,10 @@
             "Medio": 30,
             "Alto": 17,
             "Muy Alto": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05301.json",
+            "bytes": 6627
           }
         },
         "05302": {
@@ -7583,6 +7653,10 @@
             "Bajo": 21,
             "Medio": 10,
             "Alto": 10
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05302.json",
+            "bytes": 3043
           }
         },
         "05303": {
@@ -7603,6 +7677,10 @@
             "Bajo": 14,
             "Medio": 9,
             "Alto": 7
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05303.json",
+            "bytes": 2270
           }
         },
         "05304": {
@@ -7624,6 +7702,10 @@
             "Medio": 22,
             "Alto": 17,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05304.json",
+            "bytes": 6285
           }
         },
         "05401": {
@@ -7645,6 +7727,10 @@
             "Medio": 34,
             "Alto": 67,
             "Muy Alto": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05401.json",
+            "bytes": 9799
           }
         },
         "05402": {
@@ -7665,6 +7751,10 @@
             "Bajo": 58,
             "Medio": 36,
             "Alto": 51
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05402.json",
+            "bytes": 10835
           }
         },
         "05403": {
@@ -7686,6 +7776,10 @@
             "Medio": 8,
             "Alto": 14,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05403.json",
+            "bytes": 2363
           }
         },
         "05404": {
@@ -7706,6 +7800,10 @@
             "Bajo": 67,
             "Medio": 20,
             "Alto": 36
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05404.json",
+            "bytes": 10644
           }
         },
         "05405": {
@@ -7727,6 +7825,10 @@
             "Medio": 11,
             "Alto": 13,
             "Muy Alto": 4
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05405.json",
+            "bytes": 2434
           }
         },
         "05501": {
@@ -7748,6 +7850,10 @@
             "Medio": 11,
             "Alto": 17,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05501.json",
+            "bytes": 3500
           }
         },
         "05502": {
@@ -7769,6 +7875,10 @@
             "Medio": 6,
             "Alto": 12,
             "Muy Alto": 5
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05502.json",
+            "bytes": 2218
           }
         },
         "05503": {
@@ -7790,6 +7900,10 @@
             "Medio": 11,
             "Alto": 12,
             "Muy Alto": 9
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05503.json",
+            "bytes": 3340
           }
         },
         "05504": {
@@ -7811,6 +7925,10 @@
             "Medio": 7,
             "Alto": 10,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05504.json",
+            "bytes": 1587
           }
         },
         "05506": {
@@ -7832,6 +7950,10 @@
             "Medio": 20,
             "Alto": 19,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05506.json",
+            "bytes": 4623
           }
         },
         "05601": {
@@ -7853,6 +7975,10 @@
             "Medio": 15,
             "Alto": 31,
             "Muy Alto": 4
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05601.json",
+            "bytes": 5111
           }
         },
         "05602": {
@@ -7874,6 +8000,10 @@
             "Medio": 22,
             "Alto": 12,
             "Muy Alto": 9
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05602.json",
+            "bytes": 4167
           }
         },
         "05603": {
@@ -7895,6 +8025,10 @@
             "Medio": 12,
             "Alto": 24,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05603.json",
+            "bytes": 3318
           }
         },
         "05604": {
@@ -7916,6 +8050,10 @@
             "Medio": 7,
             "Alto": 5,
             "Muy Alto": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05604.json",
+            "bytes": 1730
           }
         },
         "05605": {
@@ -7937,6 +8075,10 @@
             "Medio": 7,
             "Alto": 12,
             "Muy Alto": 6
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05605.json",
+            "bytes": 2300
           }
         },
         "05606": {
@@ -7958,6 +8100,10 @@
             "Medio": 19,
             "Alto": 33,
             "Muy Alto": 9
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05606.json",
+            "bytes": 6514
           }
         },
         "05701": {
@@ -7979,6 +8125,10 @@
             "Medio": 19,
             "Alto": 11,
             "Muy Alto": 4
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05701.json",
+            "bytes": 3467
           }
         },
         "05702": {
@@ -8000,6 +8150,10 @@
             "Medio": 16,
             "Alto": 22,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05702.json",
+            "bytes": 4322
           }
         },
         "05703": {
@@ -8021,6 +8175,10 @@
             "Medio": 15,
             "Alto": 16,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05703.json",
+            "bytes": 3694
           }
         },
         "05704": {
@@ -8041,6 +8199,10 @@
             "Bajo": 7,
             "Medio": 7,
             "Alto": 10
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05704.json",
+            "bytes": 1777
           }
         },
         "05705": {
@@ -8062,6 +8224,10 @@
             "Medio": 29,
             "Alto": 19,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05705.json",
+            "bytes": 7858
           }
         },
         "05706": {
@@ -8082,6 +8248,10 @@
             "Bajo": 8,
             "Medio": 13,
             "Alto": 5
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05706.json",
+            "bytes": 2225
           }
         },
         "05801": {
@@ -8103,6 +8273,10 @@
             "Medio": 46,
             "Alto": 12,
             "Muy Alto": 10
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05801.json",
+            "bytes": 5246
           }
         },
         "05802": {
@@ -8124,6 +8298,10 @@
             "Medio": 29,
             "Alto": 10,
             "Muy Alto": 4
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05802.json",
+            "bytes": 3918
           }
         },
         "05803": {
@@ -8144,6 +8322,10 @@
             "Medio": 14,
             "Alto": 5,
             "Muy Alto": 6
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05803.json",
+            "bytes": 2120
           }
         },
         "05804": {
@@ -8165,6 +8347,10 @@
             "Medio": 5,
             "Alto": 3,
             "Muy Alto": 4
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/05804.json",
+            "bytes": 1344
           }
         },
         "06101": {
@@ -8185,6 +8371,10 @@
             "Bajo": 23,
             "Medio": 15,
             "Alto": 13
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06101.json",
+            "bytes": 3843
           }
         },
         "06102": {
@@ -8205,6 +8395,10 @@
             "Bajo": 15,
             "Medio": 32,
             "Alto": 7
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06102.json",
+            "bytes": 4002
           }
         },
         "06103": {
@@ -8226,6 +8420,10 @@
             "Medio": 4,
             "Alto": 12,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06103.json",
+            "bytes": 1818
           }
         },
         "06104": {
@@ -8246,6 +8444,10 @@
             "Medio": 17,
             "Alto": 7,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06104.json",
+            "bytes": 2539
           }
         },
         "06105": {
@@ -8266,6 +8468,10 @@
             "Bajo": 7,
             "Medio": 8,
             "Alto": 4
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06105.json",
+            "bytes": 1510
           }
         },
         "06106": {
@@ -8286,6 +8492,10 @@
             "Bajo": 5,
             "Medio": 11,
             "Alto": 5
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06106.json",
+            "bytes": 1585
           }
         },
         "06107": {
@@ -8307,6 +8517,10 @@
             "Medio": 49,
             "Alto": 26,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06107.json",
+            "bytes": 8969
           }
         },
         "06108": {
@@ -8328,6 +8542,10 @@
             "Medio": 52,
             "Alto": 25,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06108.json",
+            "bytes": 11615
           }
         },
         "06109": {
@@ -8347,6 +8565,10 @@
             "Bajo": 18,
             "Medio": 12,
             "Alto": 19
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06109.json",
+            "bytes": 3268
           }
         },
         "06110": {
@@ -8367,6 +8589,10 @@
             "Bajo": 17,
             "Medio": 19,
             "Alto": 19
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06110.json",
+            "bytes": 4409
           }
         },
         "06111": {
@@ -8387,6 +8613,10 @@
             "Bajo": 4,
             "Medio": 7,
             "Alto": 5
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06111.json",
+            "bytes": 1516
           }
         },
         "06112": {
@@ -8406,6 +8636,10 @@
             "Bajo": 5,
             "Medio": 17,
             "Alto": 9
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06112.json",
+            "bytes": 2158
           }
         },
         "06113": {
@@ -8425,6 +8659,10 @@
             "Bajo": 33,
             "Medio": 11,
             "Alto": 13
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06113.json",
+            "bytes": 3792
           }
         },
         "06114": {
@@ -8444,6 +8682,10 @@
             "Bajo": 8,
             "Medio": 3,
             "Alto": 6
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06114.json",
+            "bytes": 1254
           }
         },
         "06115": {
@@ -8464,6 +8706,10 @@
             "Bajo": 17,
             "Medio": 27,
             "Alto": 21
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06115.json",
+            "bytes": 4815
           }
         },
         "06116": {
@@ -8484,6 +8730,10 @@
             "Bajo": 23,
             "Medio": 46,
             "Alto": 16
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06116.json",
+            "bytes": 6848
           }
         },
         "06117": {
@@ -8504,6 +8754,10 @@
             "Bajo": 29,
             "Medio": 12,
             "Alto": 22
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06117.json",
+            "bytes": 4270
           }
         },
         "06201": {
@@ -8524,6 +8778,10 @@
             "Bajo": 21,
             "Medio": 26,
             "Alto": 32
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06201.json",
+            "bytes": 5760
           }
         },
         "06202": {
@@ -8544,6 +8802,10 @@
             "Bajo": 25,
             "Medio": 6,
             "Alto": 31
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06202.json",
+            "bytes": 4423
           }
         },
         "06203": {
@@ -8565,6 +8827,10 @@
             "Medio": 23,
             "Alto": 26,
             "Muy Alto": 4
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06203.json",
+            "bytes": 4941
           }
         },
         "06204": {
@@ -8585,6 +8851,10 @@
             "Bajo": 31,
             "Medio": 9,
             "Alto": 41
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06204.json",
+            "bytes": 5390
           }
         },
         "06205": {
@@ -8606,6 +8876,10 @@
             "Medio": 33,
             "Alto": 5,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06205.json",
+            "bytes": 3969
           }
         },
         "06206": {
@@ -8627,6 +8901,10 @@
             "Medio": 13,
             "Alto": 48,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06206.json",
+            "bytes": 5037
           }
         },
         "06301": {
@@ -8648,6 +8926,10 @@
             "Medio": 36,
             "Alto": 47,
             "Muy Alto": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06301.json",
+            "bytes": 12576
           }
         },
         "06302": {
@@ -8667,6 +8949,10 @@
             "Bajo": 13,
             "Medio": 32,
             "Alto": 21
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06302.json",
+            "bytes": 4398
           }
         },
         "06303": {
@@ -8688,6 +8974,10 @@
             "Medio": 11,
             "Alto": 18,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06303.json",
+            "bytes": 4886
           }
         },
         "06304": {
@@ -8707,6 +8997,10 @@
             "Bajo": 14,
             "Medio": 20,
             "Alto": 32
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06304.json",
+            "bytes": 4393
           }
         },
         "06305": {
@@ -8727,6 +9021,10 @@
             "Bajo": 8,
             "Medio": 17,
             "Alto": 12
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06305.json",
+            "bytes": 2594
           }
         },
         "06306": {
@@ -8746,6 +9044,10 @@
             "Bajo": 15,
             "Medio": 17,
             "Alto": 7
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06306.json",
+            "bytes": 2653
           }
         },
         "06307": {
@@ -8765,6 +9067,10 @@
             "Bajo": 18,
             "Medio": 11,
             "Alto": 18
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06307.json",
+            "bytes": 3159
           }
         },
         "06308": {
@@ -8785,6 +9091,10 @@
             "Bajo": 6,
             "Medio": 13,
             "Alto": 11
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06308.json",
+            "bytes": 2217
           }
         },
         "06309": {
@@ -8804,6 +9114,10 @@
             "Bajo": 15,
             "Medio": 12,
             "Alto": 17
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06309.json",
+            "bytes": 2971
           }
         },
         "06310": {
@@ -8824,6 +9138,10 @@
             "Bajo": 25,
             "Medio": 20,
             "Alto": 17
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/06310.json",
+            "bytes": 4334
           }
         },
         "07101": {
@@ -8845,6 +9163,10 @@
             "Medio": 8,
             "Alto": 24,
             "Muy Alto": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07101.json",
+            "bytes": 4181
           }
         },
         "07102": {
@@ -8866,6 +9188,10 @@
             "Medio": 40,
             "Alto": 59,
             "Muy Alto": 5
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07102.json",
+            "bytes": 9964
           }
         },
         "07103": {
@@ -8886,6 +9212,10 @@
             "Bajo": 38,
             "Medio": 16,
             "Alto": 50
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07103.json",
+            "bytes": 7900
           }
         },
         "07104": {
@@ -8906,6 +9236,10 @@
             "Medio": 9,
             "Alto": 37,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07104.json",
+            "bytes": 3855
           }
         },
         "07105": {
@@ -8927,6 +9261,10 @@
             "Medio": 5,
             "Alto": 16,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07105.json",
+            "bytes": 3283
           }
         },
         "07106": {
@@ -8948,6 +9286,10 @@
             "Medio": 6,
             "Alto": 4,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07106.json",
+            "bytes": 3261
           }
         },
         "07107": {
@@ -8969,6 +9311,10 @@
             "Medio": 14,
             "Alto": 65,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07107.json",
+            "bytes": 7664
           }
         },
         "07108": {
@@ -8989,6 +9335,10 @@
             "Medio": 14,
             "Alto": 23,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07108.json",
+            "bytes": 4372
           }
         },
         "07109": {
@@ -9009,6 +9359,10 @@
             "Bajo": 161,
             "Medio": 93,
             "Alto": 71
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07109.json",
+            "bytes": 23416
           }
         },
         "07110": {
@@ -9029,6 +9383,10 @@
             "Bajo": 21,
             "Medio": 4,
             "Alto": 10
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07110.json",
+            "bytes": 2450
           }
         },
         "07201": {
@@ -9050,6 +9408,10 @@
             "Medio": 28,
             "Alto": 155,
             "Muy Alto": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07201.json",
+            "bytes": 16724
           }
         },
         "07202": {
@@ -9071,6 +9433,10 @@
             "Medio": 24,
             "Alto": 37,
             "Muy Alto": 9
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07202.json",
+            "bytes": 6142
           }
         },
         "07203": {
@@ -9092,6 +9458,10 @@
             "Medio": 41,
             "Alto": 13,
             "Muy Alto": 5
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07203.json",
+            "bytes": 5274
           }
         },
         "07301": {
@@ -9113,6 +9483,10 @@
             "Medio": 53,
             "Alto": 34,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07301.json",
+            "bytes": 11729
           }
         },
         "07302": {
@@ -9132,6 +9506,10 @@
             "Bajo": 18,
             "Medio": 10,
             "Alto": 46
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07302.json",
+            "bytes": 4883
           }
         },
         "07303": {
@@ -9153,6 +9531,10 @@
             "Medio": 13,
             "Alto": 18,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07303.json",
+            "bytes": 4693
           }
         },
         "07304": {
@@ -9174,6 +9556,10 @@
             "Medio": 47,
             "Alto": 32,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07304.json",
+            "bytes": 9783
           }
         },
         "07305": {
@@ -9194,6 +9580,10 @@
             "Medio": 4,
             "Alto": 24,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07305.json",
+            "bytes": 2785
           }
         },
         "07306": {
@@ -9215,6 +9605,10 @@
             "Medio": 44,
             "Alto": 38,
             "Muy Alto": 8
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07306.json",
+            "bytes": 13322
           }
         },
         "07307": {
@@ -9235,6 +9629,10 @@
             "Bajo": 13,
             "Medio": 18,
             "Alto": 30
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07307.json",
+            "bytes": 4152
           }
         },
         "07308": {
@@ -9256,6 +9654,10 @@
             "Medio": 25,
             "Alto": 24,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07308.json",
+            "bytes": 6371
           }
         },
         "07309": {
@@ -9277,6 +9679,10 @@
             "Medio": 29,
             "Alto": 26,
             "Muy Alto": 6
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07309.json",
+            "bytes": 5703
           }
         },
         "07401": {
@@ -9298,6 +9704,10 @@
             "Medio": 64,
             "Alto": 45,
             "Muy Alto": 5
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07401.json",
+            "bytes": 17376
           }
         },
         "07402": {
@@ -9318,6 +9728,10 @@
             "Bajo": 131,
             "Medio": 65,
             "Alto": 43
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07402.json",
+            "bytes": 20352
           }
         },
         "07403": {
@@ -9339,6 +9753,10 @@
             "Medio": 48,
             "Alto": 32,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07403.json",
+            "bytes": 12374
           }
         },
         "07404": {
@@ -9360,6 +9778,10 @@
             "Medio": 16,
             "Alto": 67,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07404.json",
+            "bytes": 12117
           }
         },
         "07405": {
@@ -9380,6 +9802,10 @@
             "Bajo": 53,
             "Medio": 7,
             "Alto": 18
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07405.json",
+            "bytes": 5351
           }
         },
         "07406": {
@@ -9401,6 +9827,10 @@
             "Medio": 12,
             "Alto": 77,
             "Muy Alto": 4
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07406.json",
+            "bytes": 12338
           }
         },
         "07407": {
@@ -9421,6 +9851,10 @@
             "Bajo": 19,
             "Medio": 6,
             "Alto": 6
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07407.json",
+            "bytes": 2269
           }
         },
         "07408": {
@@ -9440,6 +9874,10 @@
             "Bajo": 30,
             "Medio": 10,
             "Alto": 8
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/07408.json",
+            "bytes": 3211
           }
         },
         "08101": {
@@ -9461,6 +9899,10 @@
             "Medio": 14,
             "Alto": 18,
             "Muy Alto": 7
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08101.json",
+            "bytes": 3666
           }
         },
         "08102": {
@@ -9482,6 +9924,10 @@
             "Medio": 36,
             "Alto": 52,
             "Muy Alto": 4
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08102.json",
+            "bytes": 8378
           }
         },
         "08103": {
@@ -9503,6 +9949,10 @@
             "Medio": 5,
             "Alto": 3,
             "Muy Alto": 5
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08103.json",
+            "bytes": 1538
           }
         },
         "08104": {
@@ -9523,6 +9973,10 @@
             "Medio": 3,
             "Alto": 68,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08104.json",
+            "bytes": 5998
           }
         },
         "08105": {
@@ -9544,6 +9998,10 @@
             "Medio": 8,
             "Alto": 42,
             "Muy Alto": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08105.json",
+            "bytes": 6008
           }
         },
         "08106": {
@@ -9565,6 +10023,10 @@
             "Medio": 5,
             "Alto": 9,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08106.json",
+            "bytes": 1702
           }
         },
         "08107": {
@@ -9586,6 +10048,10 @@
             "Medio": 11,
             "Alto": 7,
             "Muy Alto": 6
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08107.json",
+            "bytes": 2618
           }
         },
         "08108": {
@@ -9607,6 +10073,10 @@
             "Medio": 15,
             "Alto": 6,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08108.json",
+            "bytes": 3102
           }
         },
         "08109": {
@@ -9627,6 +10097,10 @@
             "Bajo": 44,
             "Medio": 2,
             "Alto": 36
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08109.json",
+            "bytes": 6286
           }
         },
         "08110": {
@@ -9648,6 +10122,10 @@
             "Medio": 36,
             "Alto": 16,
             "Muy Alto": 6
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08110.json",
+            "bytes": 5560
           }
         },
         "08111": {
@@ -9669,6 +10147,10 @@
             "Medio": 26,
             "Alto": 48,
             "Muy Alto": 7
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08111.json",
+            "bytes": 5935
           }
         },
         "08112": {
@@ -9690,6 +10172,10 @@
             "Medio": 6,
             "Alto": 8,
             "Muy Alto": 24
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08112.json",
+            "bytes": 3410
           }
         },
         "08201": {
@@ -9711,6 +10197,10 @@
             "Medio": 59,
             "Alto": 26,
             "Muy Alto": 8
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08201.json",
+            "bytes": 9427
           }
         },
         "08202": {
@@ -9732,6 +10222,10 @@
             "Medio": 60,
             "Alto": 71,
             "Muy Alto": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08202.json",
+            "bytes": 12115
           }
         },
         "08203": {
@@ -9753,6 +10247,10 @@
             "Medio": 28,
             "Alto": 66,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08203.json",
+            "bytes": 12395
           }
         },
         "08204": {
@@ -9774,6 +10272,10 @@
             "Medio": 12,
             "Alto": 53,
             "Muy Alto": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08204.json",
+            "bytes": 7845
           }
         },
         "08205": {
@@ -9795,6 +10297,10 @@
             "Medio": 30,
             "Alto": 42,
             "Muy Alto": 4
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08205.json",
+            "bytes": 7150
           }
         },
         "08206": {
@@ -9816,6 +10322,10 @@
             "Medio": 29,
             "Alto": 35,
             "Muy Alto": 7
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08206.json",
+            "bytes": 7087
           }
         },
         "08207": {
@@ -9836,6 +10346,10 @@
             "Bajo": 44,
             "Medio": 16,
             "Alto": 43
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08207.json",
+            "bytes": 7304
           }
         },
         "08301": {
@@ -9857,6 +10371,10 @@
             "Medio": 39,
             "Alto": 107,
             "Muy Alto": 9
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08301.json",
+            "bytes": 16076
           }
         },
         "08302": {
@@ -9878,6 +10396,10 @@
             "Medio": 93,
             "Alto": 40,
             "Muy Alto": 7
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08302.json",
+            "bytes": 19810
           }
         },
         "08303": {
@@ -9899,6 +10421,10 @@
             "Medio": 32,
             "Alto": 22,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08303.json",
+            "bytes": 4975
           }
         },
         "08304": {
@@ -9920,6 +10446,10 @@
             "Medio": 14,
             "Alto": 19,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08304.json",
+            "bytes": 3964
           }
         },
         "08305": {
@@ -9941,6 +10471,10 @@
             "Medio": 40,
             "Alto": 95,
             "Muy Alto": 7
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08305.json",
+            "bytes": 13742
           },
           "alias": [
             "Mulchen"
@@ -9964,6 +10498,10 @@
             "Bajo": 66,
             "Medio": 11,
             "Alto": 30
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08306.json",
+            "bytes": 7971
           }
         },
         "08307": {
@@ -9984,6 +10522,10 @@
             "Bajo": 17,
             "Medio": 2,
             "Alto": 14
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08307.json",
+            "bytes": 2623
           }
         },
         "08308": {
@@ -10005,6 +10547,10 @@
             "Medio": 54,
             "Alto": 38,
             "Muy Alto": 12
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08308.json",
+            "bytes": 12062
           }
         },
         "08309": {
@@ -10025,6 +10571,10 @@
             "Bajo": 44,
             "Medio": 33,
             "Alto": 28
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08309.json",
+            "bytes": 6928
           }
         },
         "08310": {
@@ -10046,6 +10596,10 @@
             "Medio": 3,
             "Alto": 17,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08310.json",
+            "bytes": 2410
           }
         },
         "08311": {
@@ -10067,6 +10621,10 @@
             "Medio": 37,
             "Alto": 27,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08311.json",
+            "bytes": 7826
           }
         },
         "08312": {
@@ -10087,6 +10645,10 @@
             "Bajo": 54,
             "Medio": 10,
             "Alto": 25
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08312.json",
+            "bytes": 6059
           }
         },
         "08313": {
@@ -10107,6 +10669,10 @@
             "Bajo": 28,
             "Medio": 20,
             "Alto": 45
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08313.json",
+            "bytes": 6280
           }
         },
         "08314": {
@@ -10128,6 +10694,10 @@
             "Medio": 42,
             "Alto": 41,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/08314.json",
+            "bytes": 15408
           }
         },
         "09101": {
@@ -10149,6 +10719,10 @@
             "Medio": 18,
             "Alto": 32,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09101.json",
+            "bytes": 5419
           }
         },
         "09102": {
@@ -10169,6 +10743,10 @@
             "Bajo": 72,
             "Medio": 10,
             "Alto": 70
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09102.json",
+            "bytes": 10538
           }
         },
         "09103": {
@@ -10190,6 +10768,10 @@
             "Medio": 32,
             "Alto": 42,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09103.json",
+            "bytes": 12578
           }
         },
         "09104": {
@@ -10211,6 +10793,10 @@
             "Medio": 16,
             "Alto": 45,
             "Muy Alto": 4
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09104.json",
+            "bytes": 7392
           }
         },
         "09105": {
@@ -10231,6 +10817,10 @@
             "Bajo": 59,
             "Medio": 5,
             "Alto": 27
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09105.json",
+            "bytes": 6097
           }
         },
         "09106": {
@@ -10252,6 +10842,10 @@
             "Medio": 8,
             "Alto": 48,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09106.json",
+            "bytes": 4625
           }
         },
         "09107": {
@@ -10271,6 +10865,10 @@
             "Bajo": 23,
             "Medio": 3,
             "Alto": 44
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09107.json",
+            "bytes": 4604
           }
         },
         "09108": {
@@ -10291,6 +10889,10 @@
             "Bajo": 51,
             "Medio": 8,
             "Alto": 43
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09108.json",
+            "bytes": 6690
           }
         },
         "09109": {
@@ -10312,6 +10914,10 @@
             "Medio": 13,
             "Alto": 18,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09109.json",
+            "bytes": 7827
           }
         },
         "09110": {
@@ -10333,6 +10939,10 @@
             "Medio": 22,
             "Alto": 44,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09110.json",
+            "bytes": 9247
           }
         },
         "09111": {
@@ -10354,6 +10964,10 @@
             "Medio": 2,
             "Alto": 36,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09111.json",
+            "bytes": 4602
           }
         },
         "09112": {
@@ -10375,6 +10989,10 @@
             "Medio": 23,
             "Alto": 30,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09112.json",
+            "bytes": 5804
           }
         },
         "09113": {
@@ -10395,6 +11013,10 @@
             "Medio": 1,
             "Alto": 17,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09113.json",
+            "bytes": 2751
           }
         },
         "09114": {
@@ -10415,6 +11037,10 @@
             "Bajo": 37,
             "Medio": 4,
             "Alto": 42
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09114.json",
+            "bytes": 5731
           }
         },
         "09115": {
@@ -10436,6 +11062,10 @@
             "Medio": 20,
             "Alto": 55,
             "Muy Alto": 6
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09115.json",
+            "bytes": 8722
           }
         },
         "09116": {
@@ -10456,6 +11086,10 @@
             "Bajo": 36,
             "Medio": 5,
             "Alto": 25
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09116.json",
+            "bytes": 5587
           }
         },
         "09117": {
@@ -10476,6 +11110,10 @@
             "Bajo": 44,
             "Medio": 2,
             "Alto": 24
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09117.json",
+            "bytes": 5679
           }
         },
         "09118": {
@@ -10497,6 +11135,10 @@
             "Medio": 10,
             "Alto": 51,
             "Muy Alto": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09118.json",
+            "bytes": 8072
           }
         },
         "09119": {
@@ -10517,6 +11159,10 @@
             "Bajo": 77,
             "Medio": 22,
             "Alto": 37
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09119.json",
+            "bytes": 8911
           }
         },
         "09120": {
@@ -10538,6 +11184,10 @@
             "Medio": 26,
             "Alto": 35,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09120.json",
+            "bytes": 10278
           }
         },
         "09121": {
@@ -10559,6 +11209,10 @@
             "Medio": 2,
             "Alto": 36,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09121.json",
+            "bytes": 3464
           }
         },
         "09201": {
@@ -10580,6 +11234,10 @@
             "Medio": 14,
             "Alto": 73,
             "Muy Alto": 5
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09201.json",
+            "bytes": 9176
           }
         },
         "09202": {
@@ -10600,6 +11258,10 @@
             "Medio": 28,
             "Alto": 76,
             "Muy Alto": 7
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09202.json",
+            "bytes": 10474
           }
         },
         "09203": {
@@ -10621,6 +11283,10 @@
             "Medio": 29,
             "Alto": 53,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09203.json",
+            "bytes": 10979
           }
         },
         "09204": {
@@ -10641,6 +11307,10 @@
             "Medio": 3,
             "Alto": 40,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09204.json",
+            "bytes": 4862
           }
         },
         "09205": {
@@ -10662,6 +11332,10 @@
             "Medio": 109,
             "Alto": 89,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09205.json",
+            "bytes": 26643
           }
         },
         "09206": {
@@ -10681,6 +11355,10 @@
             "Bajo": 21,
             "Medio": 6,
             "Alto": 45
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09206.json",
+            "bytes": 4771
           }
         },
         "09207": {
@@ -10701,6 +11379,10 @@
             "Bajo": 40,
             "Medio": 7,
             "Alto": 83
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09207.json",
+            "bytes": 8507
           }
         },
         "09208": {
@@ -10721,6 +11403,10 @@
             "Medio": 12,
             "Alto": 28,
             "Muy Alto": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09208.json",
+            "bytes": 4748
           }
         },
         "09209": {
@@ -10742,6 +11428,10 @@
             "Medio": 2,
             "Alto": 19,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09209.json",
+            "bytes": 2780
           }
         },
         "09210": {
@@ -10762,6 +11452,10 @@
             "Bajo": 54,
             "Medio": 6,
             "Alto": 37
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09210.json",
+            "bytes": 6380
           }
         },
         "09211": {
@@ -10783,6 +11477,10 @@
             "Medio": 7,
             "Alto": 46,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/09211.json",
+            "bytes": 8655
           }
         },
         "10101": {
@@ -10804,6 +11502,10 @@
             "Medio": 84,
             "Alto": 82,
             "Muy Alto": 13
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10101.json",
+            "bytes": 18424
           }
         },
         "10102": {
@@ -10825,6 +11527,10 @@
             "Medio": 42,
             "Alto": 60,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10102.json",
+            "bytes": 10855
           }
         },
         "10103": {
@@ -10846,6 +11552,10 @@
             "Medio": 170,
             "Alto": 92,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10103.json",
+            "bytes": 32664
           }
         },
         "10104": {
@@ -10866,6 +11576,10 @@
             "Bajo": 107,
             "Medio": 26,
             "Alto": 23
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10104.json",
+            "bytes": 10115
           }
         },
         "10105": {
@@ -10887,6 +11601,10 @@
             "Medio": 2,
             "Alto": 12,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10105.json",
+            "bytes": 4326
           }
         },
         "10106": {
@@ -10907,6 +11625,10 @@
             "Bajo": 115,
             "Medio": 94,
             "Alto": 59
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10106.json",
+            "bytes": 17828
           }
         },
         "10107": {
@@ -10927,6 +11649,10 @@
             "Bajo": 32,
             "Medio": 5,
             "Alto": 5
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10107.json",
+            "bytes": 2895
           }
         },
         "10108": {
@@ -10947,6 +11673,10 @@
             "Bajo": 85,
             "Medio": 41,
             "Alto": 35
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10108.json",
+            "bytes": 12198
           }
         },
         "10109": {
@@ -10968,6 +11698,10 @@
             "Medio": 82,
             "Alto": 217,
             "Muy Alto": 29
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10109.json",
+            "bytes": 36774
           }
         },
         "10201": {
@@ -10989,6 +11723,10 @@
             "Medio": 21,
             "Alto": 37,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10201.json",
+            "bytes": 6130
           }
         },
         "10202": {
@@ -11010,6 +11748,10 @@
             "Medio": 278,
             "Alto": 147,
             "Muy Alto": 7
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10202.json",
+            "bytes": 36637
           }
         },
         "10203": {
@@ -11031,6 +11773,10 @@
             "Medio": 41,
             "Alto": 50,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10203.json",
+            "bytes": 11231
           }
         },
         "10204": {
@@ -11051,6 +11797,10 @@
             "Medio": 2,
             "Alto": 12,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10204.json",
+            "bytes": 1441
           }
         },
         "10205": {
@@ -11072,6 +11822,10 @@
             "Medio": 47,
             "Alto": 51,
             "Muy Alto": 4
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10205.json",
+            "bytes": 10398
           }
         },
         "10206": {
@@ -11092,6 +11846,10 @@
             "Bajo": 6,
             "Medio": 4,
             "Alto": 14
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10206.json",
+            "bytes": 2433
           }
         },
         "10207": {
@@ -11112,6 +11870,10 @@
             "Bajo": 27,
             "Medio": 9,
             "Alto": 15
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10207.json",
+            "bytes": 3925
           }
         },
         "10208": {
@@ -11132,6 +11894,10 @@
             "Bajo": 300,
             "Medio": 264,
             "Alto": 32
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10208.json",
+            "bytes": 40561
           }
         },
         "10209": {
@@ -11152,6 +11918,10 @@
             "Bajo": 37,
             "Medio": 35,
             "Alto": 48
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10209.json",
+            "bytes": 7917
           }
         },
         "10210": {
@@ -11173,6 +11943,10 @@
             "Medio": 17,
             "Alto": 23,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10210.json",
+            "bytes": 3183
           }
         },
         "10301": {
@@ -11194,6 +11968,10 @@
             "Medio": 3,
             "Alto": 29,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10301.json",
+            "bytes": 6671
           }
         },
         "10302": {
@@ -11214,6 +11992,10 @@
             "Bajo": 100,
             "Medio": 12,
             "Alto": 44
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10302.json",
+            "bytes": 10839
           }
         },
         "10303": {
@@ -11234,6 +12016,10 @@
             "Bajo": 108,
             "Medio": 57,
             "Alto": 13
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10303.json",
+            "bytes": 11488
           }
         },
         "10304": {
@@ -11255,6 +12041,10 @@
             "Medio": 12,
             "Alto": 26,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10304.json",
+            "bytes": 10367
           }
         },
         "10305": {
@@ -11275,6 +12065,10 @@
             "Bajo": 89,
             "Medio": 19,
             "Alto": 6
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10305.json",
+            "bytes": 7564
           }
         },
         "10306": {
@@ -11295,6 +12089,10 @@
             "Bajo": 96,
             "Medio": 33,
             "Alto": 28
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10306.json",
+            "bytes": 10769
           }
         },
         "10307": {
@@ -11315,6 +12113,10 @@
             "Bajo": 46,
             "Medio": 1,
             "Alto": 15
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10307.json",
+            "bytes": 4328
           }
         },
         "10401": {
@@ -11336,6 +12138,10 @@
             "Medio": 209,
             "Alto": 380,
             "Muy Alto": 12
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10401.json",
+            "bytes": 76417
           }
         },
         "10402": {
@@ -11357,6 +12163,10 @@
             "Medio": 49,
             "Alto": 19,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10402.json",
+            "bytes": 11728
           }
         },
         "10403": {
@@ -11378,6 +12188,10 @@
             "Medio": 142,
             "Alto": 119,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10403.json",
+            "bytes": 36192
           }
         },
         "10404": {
@@ -11399,6 +12213,10 @@
             "Medio": 57,
             "Alto": 41,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/10404.json",
+            "bytes": 17896
           }
         },
         "11101": {
@@ -11420,6 +12238,10 @@
             "Medio": 147,
             "Alto": 90,
             "Muy Alto": 16
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/11101.json",
+            "bytes": 43375
           },
           "alias": [
             "Coyhaique"
@@ -11443,6 +12265,10 @@
             "Bajo": 115,
             "Medio": 79,
             "Alto": 51
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/11102.json",
+            "bytes": 25141
           }
         },
         "11201": {
@@ -11464,6 +12290,10 @@
             "Medio": 3094,
             "Alto": 1386,
             "Muy Alto": 9
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/11201.json",
+            "bytes": 448198
           }
         },
         "11202": {
@@ -11485,6 +12315,10 @@
             "Medio": 2246,
             "Alto": 705,
             "Muy Alto": 15
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/11202.json",
+            "bytes": 331055
           }
         },
         "11203": {
@@ -11504,6 +12338,10 @@
             "Muy Bajo": 172,
             "Bajo": 520,
             "Medio": 32
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/11203.json",
+            "bytes": 46146
           }
         },
         "11301": {
@@ -11525,6 +12363,10 @@
             "Medio": 151,
             "Alto": 124,
             "Muy Alto": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/11301.json",
+            "bytes": 46424
           }
         },
         "11302": {
@@ -11546,6 +12388,10 @@
             "Medio": 117,
             "Alto": 10,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/11302.json",
+            "bytes": 19151
           }
         },
         "11303": {
@@ -11566,6 +12412,10 @@
             "Bajo": 1501,
             "Medio": 2329,
             "Alto": 1225
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/11303.json",
+            "bytes": 350578
           }
         },
         "11401": {
@@ -11587,6 +12437,10 @@
             "Medio": 91,
             "Alto": 86,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/11401.json",
+            "bytes": 36403
           }
         },
         "11402": {
@@ -11608,6 +12462,10 @@
             "Medio": 83,
             "Alto": 32,
             "Muy Alto": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/11402.json",
+            "bytes": 17593
           }
         },
         "12101": {
@@ -11629,6 +12487,10 @@
             "Medio": 6542,
             "Alto": 1987,
             "Muy Alto": 4
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/12101.json",
+            "bytes": 678629
           }
         },
         "12102": {
@@ -11649,6 +12511,10 @@
             "Bajo": 78,
             "Medio": 21,
             "Alto": 4
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/12102.json",
+            "bytes": 7199
           }
         },
         "12103": {
@@ -11670,6 +12536,10 @@
             "Medio": 1268,
             "Alto": 766,
             "Muy Alto": 7
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/12103.json",
+            "bytes": 188997
           }
         },
         "12104": {
@@ -11691,6 +12561,10 @@
             "Medio": 10,
             "Alto": 13,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/12104.json",
+            "bytes": 9161
           }
         },
         "12201": {
@@ -11712,6 +12586,10 @@
             "Medio": 4590,
             "Alto": 1526,
             "Muy Alto": 4
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/12201.json",
+            "bytes": 598201
           }
         },
         "12301": {
@@ -11732,6 +12610,10 @@
             "Bajo": 128,
             "Medio": 97,
             "Alto": 15
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/12301.json",
+            "bytes": 17322
           }
         },
         "12302": {
@@ -11752,6 +12634,10 @@
             "Bajo": 84,
             "Medio": 55,
             "Alto": 27
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/12302.json",
+            "bytes": 11440
           }
         },
         "12303": {
@@ -11772,6 +12658,10 @@
             "Bajo": 464,
             "Medio": 414,
             "Alto": 204
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/12303.json",
+            "bytes": 78710
           }
         },
         "12401": {
@@ -11793,6 +12683,10 @@
             "Medio": 13714,
             "Alto": 5642,
             "Muy Alto": 50
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/12401.json",
+            "bytes": 1618911
           }
         },
         "12402": {
@@ -11813,6 +12707,10 @@
             "Bajo": 226,
             "Medio": 97,
             "Alto": 47
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/12402.json",
+            "bytes": 29272
           }
         },
         "13101": {
@@ -11832,6 +12730,10 @@
             "Muy Bajo": 2,
             "Bajo": 4,
             "Medio": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13101.json",
+            "bytes": 672
           }
         },
         "13102": {
@@ -11850,6 +12752,10 @@
           "clases": {
             "Muy Bajo": 2,
             "Bajo": 7
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13102.json",
+            "bytes": 737
           }
         },
         "13103": {
@@ -11869,6 +12775,10 @@
             "Muy Bajo": 2,
             "Bajo": 2,
             "Medio": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13103.json",
+            "bytes": 483
           }
         },
         "13104": {
@@ -11887,6 +12797,10 @@
           "clases": {
             "Muy Bajo": 1,
             "Bajo": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13104.json",
+            "bytes": 357
           }
         },
         "13105": {
@@ -11906,6 +12820,10 @@
             "Muy Bajo": 2,
             "Bajo": 1,
             "Medio": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13105.json",
+            "bytes": 419
           }
         },
         "13106": {
@@ -11924,6 +12842,10 @@
           "clases": {
             "Muy Bajo": 2,
             "Bajo": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13106.json",
+            "bytes": 498
           }
         },
         "13107": {
@@ -11945,6 +12867,10 @@
             "Medio": 7,
             "Alto": 2,
             "Muy Alto": 4
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13107.json",
+            "bytes": 1594
           }
         },
         "13108": {
@@ -11962,6 +12888,10 @@
           ],
           "clases": {
             "Muy Bajo": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13108.json",
+            "bytes": 232
           }
         },
         "13109": {
@@ -11979,6 +12909,10 @@
           ],
           "clases": {
             "Muy Bajo": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13109.json",
+            "bytes": 231
           }
         },
         "13110": {
@@ -12000,6 +12934,10 @@
             "Medio": 7,
             "Alto": 2,
             "Muy Alto": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13110.json",
+            "bytes": 1918
           }
         },
         "13111": {
@@ -12018,6 +12956,10 @@
           "clases": {
             "Muy Bajo": 1,
             "Bajo": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13111.json",
+            "bytes": 292
           }
         },
         "13112": {
@@ -12038,6 +12980,10 @@
             "Bajo": 7,
             "Medio": 6,
             "Alto": 4
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13112.json",
+            "bytes": 1654
           }
         },
         "13113": {
@@ -12059,6 +13005,10 @@
             "Medio": 4,
             "Alto": 3,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13113.json",
+            "bytes": 1077
           }
         },
         "13114": {
@@ -12080,6 +13030,10 @@
             "Medio": 8,
             "Alto": 3,
             "Muy Alto": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13114.json",
+            "bytes": 2118
           }
         },
         "13115": {
@@ -12101,6 +13055,10 @@
             "Medio": 24,
             "Alto": 15,
             "Muy Alto": 13
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13115.json",
+            "bytes": 7098
           }
         },
         "13116": {
@@ -12119,6 +13077,10 @@
           "clases": {
             "Muy Bajo": 1,
             "Medio": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13116.json",
+            "bytes": 292
           }
         },
         "13117": {
@@ -12137,6 +13099,10 @@
           "clases": {
             "Muy Bajo": 1,
             "Bajo": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13117.json",
+            "bytes": 355
           }
         },
         "13118": {
@@ -12155,6 +13121,10 @@
           "clases": {
             "Muy Bajo": 1,
             "Bajo": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13118.json",
+            "bytes": 292
           }
         },
         "13119": {
@@ -12176,6 +13146,10 @@
             "Medio": 8,
             "Alto": 11,
             "Muy Alto": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13119.json",
+            "bytes": 2747
           }
         },
         "13120": {
@@ -12194,6 +13168,10 @@
           "clases": {
             "Muy Bajo": 1,
             "Bajo": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13120.json",
+            "bytes": 355
           }
         },
         "13121": {
@@ -12212,6 +13190,10 @@
           "clases": {
             "Muy Bajo": 2,
             "Bajo": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13121.json",
+            "bytes": 367
           }
         },
         "13122": {
@@ -12233,6 +13215,10 @@
             "Medio": 7,
             "Alto": 2,
             "Muy Alto": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13122.json",
+            "bytes": 1602
           }
         },
         "13123": {
@@ -12253,6 +13239,10 @@
             "Bajo": 1,
             "Medio": 2,
             "Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13123.json",
+            "bytes": 553
           }
         },
         "13124": {
@@ -12274,6 +13264,10 @@
             "Medio": 10,
             "Alto": 15,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13124.json",
+            "bytes": 3193
           }
         },
         "13125": {
@@ -12295,6 +13289,10 @@
             "Medio": 7,
             "Alto": 6,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13125.json",
+            "bytes": 1580
           }
         },
         "13126": {
@@ -12314,6 +13312,10 @@
             "Muy Bajo": 1,
             "Bajo": 3,
             "Medio": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13126.json",
+            "bytes": 487
           }
         },
         "13127": {
@@ -12334,6 +13336,10 @@
             "Bajo": 2,
             "Medio": 2,
             "Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13127.json",
+            "bytes": 745
           }
         },
         "13128": {
@@ -12354,6 +13360,10 @@
             "Bajo": 3,
             "Medio": 3,
             "Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13128.json",
+            "bytes": 868
           }
         },
         "13129": {
@@ -12371,6 +13381,10 @@
           ],
           "clases": {
             "Muy Bajo": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13129.json",
+            "bytes": 231
           }
         },
         "13130": {
@@ -12389,6 +13403,10 @@
           "clases": {
             "Muy Bajo": 1,
             "Bajo": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13130.json",
+            "bytes": 294
           }
         },
         "13131": {
@@ -12406,6 +13424,10 @@
           ],
           "clases": {
             "Muy Bajo": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13131.json",
+            "bytes": 230
           }
         },
         "13132": {
@@ -12427,6 +13449,10 @@
             "Medio": 6,
             "Alto": 4,
             "Muy Alto": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13132.json",
+            "bytes": 1266
           }
         },
         "13201": {
@@ -12448,6 +13474,10 @@
             "Medio": 10,
             "Alto": 7,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13201.json",
+            "bytes": 2226
           }
         },
         "13202": {
@@ -12469,6 +13499,10 @@
             "Medio": 35,
             "Alto": 14,
             "Muy Alto": 11
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13202.json",
+            "bytes": 6474
           }
         },
         "13203": {
@@ -12490,6 +13524,10 @@
             "Medio": 93,
             "Alto": 42,
             "Muy Alto": 6
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13203.json",
+            "bytes": 21178
           }
         },
         "13301": {
@@ -12511,6 +13549,10 @@
             "Medio": 26,
             "Alto": 26,
             "Muy Alto": 5
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13301.json",
+            "bytes": 7456
           }
         },
         "13302": {
@@ -12532,6 +13574,10 @@
             "Medio": 21,
             "Alto": 23,
             "Muy Alto": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13302.json",
+            "bytes": 5114
           }
         },
         "13303": {
@@ -12553,6 +13599,10 @@
             "Medio": 25,
             "Alto": 22,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13303.json",
+            "bytes": 5438
           }
         },
         "13401": {
@@ -12573,6 +13623,10 @@
             "Bajo": 16,
             "Medio": 17,
             "Alto": 10
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13401.json",
+            "bytes": 3922
           }
         },
         "13402": {
@@ -12593,6 +13647,10 @@
             "Bajo": 4,
             "Medio": 21,
             "Alto": 14
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13402.json",
+            "bytes": 3792
           }
         },
         "13403": {
@@ -12613,6 +13671,10 @@
             "Medio": 5,
             "Alto": 13,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13403.json",
+            "bytes": 1840
           }
         },
         "13404": {
@@ -12634,6 +13696,10 @@
             "Medio": 40,
             "Alto": 17,
             "Muy Alto": 10
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13404.json",
+            "bytes": 5947
           }
         },
         "13501": {
@@ -12655,6 +13721,10 @@
             "Medio": 67,
             "Alto": 38,
             "Muy Alto": 15
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13501.json",
+            "bytes": 11199
           }
         },
         "13502": {
@@ -12676,6 +13746,10 @@
             "Medio": 57,
             "Alto": 15,
             "Muy Alto": 4
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13502.json",
+            "bytes": 7164
           }
         },
         "13503": {
@@ -12697,6 +13771,10 @@
             "Medio": 32,
             "Alto": 21,
             "Muy Alto": 12
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13503.json",
+            "bytes": 5294
           }
         },
         "13504": {
@@ -12716,6 +13794,10 @@
             "Bajo": 19,
             "Medio": 12,
             "Alto": 31
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13504.json",
+            "bytes": 4129
           }
         },
         "13505": {
@@ -12737,6 +13819,10 @@
             "Medio": 29,
             "Alto": 34,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13505.json",
+            "bytes": 5874
           }
         },
         "13601": {
@@ -12758,6 +13844,10 @@
             "Medio": 19,
             "Alto": 13,
             "Muy Alto": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13601.json",
+            "bytes": 3208
           }
         },
         "13602": {
@@ -12778,6 +13868,10 @@
             "Medio": 7,
             "Alto": 6,
             "Muy Alto": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13602.json",
+            "bytes": 1586
           }
         },
         "13603": {
@@ -12799,6 +13893,10 @@
             "Medio": 22,
             "Alto": 9,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13603.json",
+            "bytes": 2931
           }
         },
         "13604": {
@@ -12820,6 +13918,10 @@
             "Medio": 7,
             "Alto": 11,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13604.json",
+            "bytes": 1965
           }
         },
         "13605": {
@@ -12841,6 +13943,10 @@
             "Medio": 9,
             "Alto": 3,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/13605.json",
+            "bytes": 1467
           }
         },
         "14101": {
@@ -12862,6 +13968,10 @@
             "Medio": 28,
             "Alto": 53,
             "Muy Alto": 13
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/14101.json",
+            "bytes": 11993
           }
         },
         "14102": {
@@ -12883,6 +13993,10 @@
             "Medio": 16,
             "Alto": 35,
             "Muy Alto": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/14102.json",
+            "bytes": 7250
           }
         },
         "14103": {
@@ -12902,6 +14016,10 @@
             "Bajo": 43,
             "Medio": 9,
             "Alto": 11
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/14103.json",
+            "bytes": 4160
           }
         },
         "14104": {
@@ -12923,6 +14041,10 @@
             "Medio": 21,
             "Alto": 49,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/14104.json",
+            "bytes": 11737
           }
         },
         "14105": {
@@ -12944,6 +14066,10 @@
             "Medio": 6,
             "Alto": 21,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/14105.json",
+            "bytes": 5288
           }
         },
         "14106": {
@@ -12965,6 +14091,10 @@
             "Medio": 19,
             "Alto": 67,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/14106.json",
+            "bytes": 12383
           }
         },
         "14107": {
@@ -12984,6 +14114,10 @@
             "Bajo": 78,
             "Medio": 6,
             "Alto": 24
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/14107.json",
+            "bytes": 6964
           }
         },
         "14108": {
@@ -13005,6 +14139,10 @@
             "Medio": 78,
             "Alto": 50,
             "Muy Alto": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/14108.json",
+            "bytes": 17287
           }
         },
         "14201": {
@@ -13026,6 +14164,10 @@
             "Medio": 23,
             "Alto": 50,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/14201.json",
+            "bytes": 14608
           }
         },
         "14202": {
@@ -13047,6 +14189,10 @@
             "Medio": 73,
             "Alto": 17,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/14202.json",
+            "bytes": 10827
           }
         },
         "14203": {
@@ -13067,6 +14213,10 @@
             "Bajo": 83,
             "Medio": 51,
             "Alto": 35
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/14203.json",
+            "bytes": 12389
           }
         },
         "14204": {
@@ -13088,6 +14238,10 @@
             "Medio": 21,
             "Alto": 32,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/14204.json",
+            "bytes": 11542
           }
         },
         "15101": {
@@ -13108,6 +14262,10 @@
             "Bajo": 58,
             "Medio": 14,
             "Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/15101.json",
+            "bytes": 5565
           }
         },
         "15102": {
@@ -13128,6 +14286,10 @@
             "Bajo": 58,
             "Medio": 40,
             "Alto": 8
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/15102.json",
+            "bytes": 9870
           }
         },
         "15201": {
@@ -13148,6 +14310,10 @@
             "Bajo": 234,
             "Medio": 166,
             "Alto": 52
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/15201.json",
+            "bytes": 35719
           }
         },
         "15202": {
@@ -13167,6 +14333,10 @@
             "Muy Bajo": 49,
             "Bajo": 67,
             "Medio": 58
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/15202.json",
+            "bytes": 11463
           }
         },
         "16101": {
@@ -13188,6 +14358,10 @@
             "Medio": 13,
             "Alto": 38,
             "Muy Alto": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/16101.json",
+            "bytes": 6249
           }
         },
         "16102": {
@@ -13209,6 +14383,10 @@
             "Medio": 4,
             "Alto": 28,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/16102.json",
+            "bytes": 4606
           }
         },
         "16103": {
@@ -13230,6 +14408,10 @@
             "Medio": 8,
             "Alto": 19,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/16103.json",
+            "bytes": 3048
           }
         },
         "16104": {
@@ -13249,6 +14431,10 @@
             "Bajo": 46,
             "Medio": 3,
             "Alto": 22
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/16104.json",
+            "bytes": 4641
           }
         },
         "16105": {
@@ -13268,6 +14454,10 @@
             "Bajo": 38,
             "Medio": 15,
             "Alto": 34
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/16105.json",
+            "bytes": 5631
           }
         },
         "16106": {
@@ -13288,6 +14478,10 @@
             "Bajo": 70,
             "Medio": 40,
             "Alto": 45
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/16106.json",
+            "bytes": 11430
           }
         },
         "16107": {
@@ -13309,6 +14503,10 @@
             "Medio": 3,
             "Alto": 30,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/16107.json",
+            "bytes": 3429
           }
         },
         "16108": {
@@ -13329,6 +14527,10 @@
             "Bajo": 19,
             "Medio": 1,
             "Alto": 27
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/16108.json",
+            "bytes": 3201
           }
         },
         "16109": {
@@ -13350,6 +14552,10 @@
             "Medio": 22,
             "Alto": 31,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/16109.json",
+            "bytes": 6498
           }
         },
         "16201": {
@@ -13370,6 +14576,10 @@
             "Bajo": 6,
             "Medio": 12,
             "Alto": 57
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/16201.json",
+            "bytes": 5033
           }
         },
         "16202": {
@@ -13391,6 +14601,10 @@
             "Medio": 9,
             "Alto": 55,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/16202.json",
+            "bytes": 5969
           }
         },
         "16203": {
@@ -13412,6 +14626,10 @@
             "Medio": 12,
             "Alto": 28,
             "Muy Alto": 3
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/16203.json",
+            "bytes": 4890
           }
         },
         "16204": {
@@ -13432,6 +14650,10 @@
             "Bajo": 4,
             "Medio": 5,
             "Alto": 29
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/16204.json",
+            "bytes": 2642
           }
         },
         "16205": {
@@ -13452,6 +14674,10 @@
             "Bajo": 17,
             "Medio": 4,
             "Alto": 23
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/16205.json",
+            "bytes": 3426
           }
         },
         "16206": {
@@ -13472,6 +14698,10 @@
             "Bajo": 15,
             "Medio": 3,
             "Alto": 29
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/16206.json",
+            "bytes": 3517
           }
         },
         "16207": {
@@ -13492,6 +14722,10 @@
             "Bajo": 15,
             "Medio": 16,
             "Alto": 21
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/16207.json",
+            "bytes": 4439
           }
         },
         "16301": {
@@ -13513,6 +14747,10 @@
             "Medio": 7,
             "Alto": 55,
             "Muy Alto": 1
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/16301.json",
+            "bytes": 6242
           }
         },
         "16302": {
@@ -13534,6 +14772,10 @@
             "Medio": 33,
             "Alto": 63,
             "Muy Alto": 2
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/16302.json",
+            "bytes": 13628
           }
         },
         "16303": {
@@ -13553,6 +14795,10 @@
             "Bajo": 26,
             "Medio": 2,
             "Alto": 24
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/16303.json",
+            "bytes": 3448
           }
         },
         "16304": {
@@ -13573,6 +14819,10 @@
             "Bajo": 86,
             "Medio": 44,
             "Alto": 25
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/16304.json",
+            "bytes": 12639
           }
         },
         "16305": {
@@ -13593,8 +14843,215 @@
             "Bajo": 25,
             "Medio": 6,
             "Alto": 42
+          },
+          "atributos": {
+            "archivo": "riesgo/atributos/16305.json",
+            "bytes": 4993
           }
         }
+      },
+      "teselas": {
+        "formato": "pmtiles",
+        "capa_mvt": "riesgo",
+        "minzoom": 4,
+        "maxzoom": 14,
+        "gdal": "GDAL 3.12.3 \"Chicoutimi\"",
+        "max_size": 500000,
+        "regiones": {
+          "01": {
+            "region": "Tarapacá",
+            "archivo": "riesgo/teselas/01.pmtiles",
+            "bytes": 2383923,
+            "manchas": 1348,
+            "bbox": [
+              -70.2863,
+              -21.62774,
+              -68.40487,
+              -18.93677
+            ]
+          },
+          "02": {
+            "region": "Antofagasta",
+            "archivo": "riesgo/teselas/02.pmtiles",
+            "bytes": 2690234,
+            "manchas": 1041,
+            "bbox": [
+              -70.73737,
+              -26.05952,
+              -66.99224,
+              -20.94527
+            ]
+          },
+          "03": {
+            "region": "Atacama",
+            "archivo": "riesgo/teselas/03.pmtiles",
+            "bytes": 5306024,
+            "manchas": 2797,
+            "bbox": [
+              -71.59191,
+              -29.535,
+              -68.26338,
+              -25.28614
+            ]
+          },
+          "04": {
+            "region": "Coquimbo",
+            "archivo": "riesgo/teselas/04.pmtiles",
+            "bytes": 6494210,
+            "manchas": 3923,
+            "bbox": [
+              -71.71782,
+              -32.28248,
+              -69.80908,
+              -29.0366
+            ]
+          },
+          "05": {
+            "region": "Valparaíso",
+            "archivo": "riesgo/teselas/05.pmtiles",
+            "bytes": 3650341,
+            "manchas": 2290,
+            "bbox": [
+              -71.84072,
+              -33.95623,
+              -69.98923,
+              -32.02054
+            ]
+          },
+          "06": {
+            "region": "O'Higgins",
+            "archivo": "riesgo/teselas/06.pmtiles",
+            "bytes": 3663359,
+            "manchas": 2125,
+            "bbox": [
+              -72.05755,
+              -35.0052,
+              -70.00933,
+              -33.85068
+            ]
+          },
+          "07": {
+            "region": "Maule",
+            "archivo": "riesgo/teselas/07.pmtiles",
+            "bytes": 6139534,
+            "manchas": 3785,
+            "bbox": [
+              -72.78573,
+              -36.54382,
+              -70.31258,
+              -34.68437
+            ]
+          },
+          "08": {
+            "region": "Biobío",
+            "archivo": "riesgo/teselas/08.pmtiles",
+            "bytes": 5608219,
+            "manchas": 3715,
+            "bbox": [
+              -73.96075,
+              -38.49245,
+              -70.98415,
+              -36.44324
+            ]
+          },
+          "09": {
+            "region": "La Araucanía",
+            "archivo": "riesgo/teselas/09.pmtiles",
+            "bytes": 6379296,
+            "manchas": 3720,
+            "bbox": [
+              -73.52026,
+              -39.63724,
+              -70.82645,
+              -37.58172
+            ]
+          },
+          "10": {
+            "region": "Los Lagos",
+            "archivo": "riesgo/teselas/10.pmtiles",
+            "bytes": 11514273,
+            "manchas": 7316,
+            "bbox": [
+              -74.83793,
+              -44.06712,
+              -71.581,
+              -40.23607
+            ]
+          },
+          "11": {
+            "region": "Aysén",
+            "archivo": "riesgo/teselas/11.pmtiles",
+            "bytes": 31126899,
+            "manchas": 21228,
+            "bbox": [
+              -75.67664,
+              -49.15878,
+              -71.09271,
+              -43.63799
+            ]
+          },
+          "12": {
+            "region": "Magallanes",
+            "archivo": "riesgo/teselas/12.pmtiles",
+            "bytes": 60869325,
+            "manchas": 50615,
+            "bbox": [
+              -75.71121,
+              -55.98297,
+              -66.41559,
+              -48.59599
+            ]
+          },
+          "13": {
+            "region": "Metropolitana",
+            "archivo": "riesgo/teselas/13.pmtiles",
+            "bytes": 3185830,
+            "manchas": 2079,
+            "bbox": [
+              -71.71534,
+              -34.29103,
+              -69.76993,
+              -32.9224
+            ]
+          },
+          "14": {
+            "region": "Los Ríos",
+            "archivo": "riesgo/teselas/14.pmtiles",
+            "bytes": 3426005,
+            "manchas": 1951,
+            "bbox": [
+              -73.72521,
+              -40.68094,
+              -71.59228,
+              -39.28747
+            ]
+          },
+          "15": {
+            "region": "Arica y Parinacota",
+            "archivo": "riesgo/teselas/15.pmtiles",
+            "bytes": 1626355,
+            "manchas": 954,
+            "bbox": [
+              -70.37762,
+              -19.22905,
+              -68.91131,
+              -17.50462
+            ]
+          },
+          "16": {
+            "region": "Ñuble",
+            "archivo": "riesgo/teselas/16.pmtiles",
+            "bytes": 3012291,
+            "manchas": 1821,
+            "bbox": [
+              -72.88471,
+              -37.19847,
+              -71.007,
+              -36.00538
+            ]
+          }
+        },
+        "avisos": {}
       },
       "regiones": [
         {
@@ -14173,7 +15630,7 @@
         -66.41559,
         -17.50462
       ],
-      "segundos": 31.7
+      "segundos": 210.3
     }
   },
   "derivados": {
