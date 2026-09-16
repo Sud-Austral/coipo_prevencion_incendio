@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import ModalVistaGoogle from './ModalVistaGoogle'
 
 /**
@@ -19,18 +19,42 @@ export default function ModalFicha({ ficha, onCerrar }) {
   // iframe se desmonta, sin un efecto que lo sincronice.
   const [vista, setVista] = useState(null)
   const pestana = vista?.de === ficha ? vista.pestana : null
+  // ¿Queda contenido por debajo de lo visible? Gobierna la pista del pie y la
+  // linea bajo la cabecera fija (F1, DECISIONES.md §U).
+  const [hayMas, setHayMas] = useState(false)
+  const [desplazada, setDesplazada] = useState(false)
+  const medir = useCallback(() => {
+    const d = ref.current
+    // 2 px de tolerancia: el zoom del navegador deja scrollTop fraccionario y la
+    // pista no se apagaba nunca en el ultimo pixel.
+    setHayMas(!!d && d.scrollTop + d.clientHeight < d.scrollHeight - 2)
+    setDesplazada(!!d && d.scrollTop > 0)
+  }, [])
 
   useEffect(() => {
     const d = ref.current
     if (!d) return
     if (ficha && !d.open) d.showModal()
     else if (!ficha && d.open) d.close()
-  }, [ficha])
+    // Cada ficha empieza arriba: el dialogo es el mismo nodo y conservaba el
+    // desplazamiento de la anterior.
+    if (ficha) d.scrollTop = 0
+    medir()
+  }, [ficha, medir])
+
+  // Un cambio de tamaño de la ventana cambia lo que cabe sin que haya scroll.
+  useEffect(() => {
+    const d = ref.current
+    if (!d || !ficha || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(medir)
+    ro.observe(d)
+    return () => ro.disconnect()
+  }, [ficha, medir])
 
   return (
     <>
       <dialog
-        className="ficha"
+        className={desplazada ? 'ficha desplazada' : 'ficha'}
         ref={ref}
         aria-labelledby="ficha-titulo"
         // 'close' cubre Escape y el boton de cerrar por igual.
@@ -38,6 +62,7 @@ export default function ModalFicha({ ficha, onCerrar }) {
         // Un clic en el ::backdrop tiene como target el propio <dialog>; en el
         // contenido, el hijo. Por eso el contenido va envuelto en un <div>.
         onClick={(e) => e.target === ref.current && onCerrar()}
+        onScroll={medir}
       >
         {ficha && (
           <div className="ficha-caja">
@@ -56,7 +81,7 @@ export default function ModalFicha({ ficha, onCerrar }) {
                 frontend/src/components/ModalFicha.jsx:48-63, que la tenia como
                 dos enlaces de ida a Google Maps y Earth.
 
-                Desde el 2026-09-15 (DECISIONES.md §T) no salen a otra pestana:
+                Desde el 2026-09-15 (DECISIONES.md §V) no salen a otra pestana:
                 abren el punto en satelite o Street View DENTRO del visor, en
                 ModalVistaGoogle. Google Maps y Earth no se dejan incrustar
                 (X-Frame-Options: SAMEORIGIN, medido); las formas que si, y por
@@ -101,6 +126,8 @@ export default function ModalFicha({ ficha, onCerrar }) {
             ) : (
               <p className="ficha-vacia">Esta figura no trae más atributos.</p>
             )}
+            {/* La pista de que hay mas: se apaga al llegar al final (§U). */}
+            <div className="ficha-pista" hidden={!hayMas} aria-hidden="true" />
           </div>
         )}
       </dialog>

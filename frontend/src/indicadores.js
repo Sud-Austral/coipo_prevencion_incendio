@@ -512,7 +512,12 @@ export function topConOtras(lista, k = 6, etiqueta = 'Otras') {
  */
 export function ambito(filtros) {
   const f = filtros ?? {}
-  const partes = [f.region || 'nacional', f.temporada ? `temporada ${f.temporada}` : 'todas las temporadas']
+  // El territorio, del nivel mas grande al mas chico y con el mismo separador
+  // que el boton de Territorio. Sin provincia ni comuna aqui, el panel decia
+  // «nacional» con una comuna filtrada: la cifra era de Mulchen y el rotulo
+  // afirmaba que era del pais (visto en captura el 2026-09-16).
+  const territorio = [f.region, f.provincia, f.comuna].filter(Boolean).join(' › ')
+  const partes = [territorio || 'nacional', f.temporada ? `temporada ${f.temporada}` : 'todas las temporadas']
   if (f.causa_grupo) partes.push(f.causa_grupo.toLowerCase())
   if (f.causa_general) partes.push(f.causa_general)
   return partes.join(' · ')

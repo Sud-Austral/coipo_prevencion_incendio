@@ -23,7 +23,8 @@ asercion que no se ha visto roja no esta probando nada.
     D12, D13  cruce espacial incendios <-> red vial (necesitan ETL/_build/)
     D14       riesgo: cada mancha dentro de la caja de SU comuna, con el CUT y el
               nombre que declara el manifest para ese archivo
-    D15       infra_puntos: cada punto dentro de la caja de riesgo de su CUT
+    D15       infra_puntos: CUT de una comuna del modelo, y los que no cuadran son los declarados
+    D15b      infra_puntos: los puntos sin comuna son los que declara el manifest
     D16       incendios: causa_general_codigo es el prefijo de causa_codigo
     D16b      incendios: cada codigo general lleva una sola etiqueta. Es la unica
               guarda de una fila 4.10.x con la etiqueta de 4.1: el prefijo cuadra
@@ -770,29 +771,69 @@ def verificar(data: Path, muestra: int = 500, res: Res | None = None, exigir_tes
     # Cruza las dos capas, asi que caza de una vez tres fallos distintos: un huso
     # UTM mal leido (el punto se va ~700 km), un CUT que no es el de la carpeta, y
     # una comuna con infraestructura y sin manchas.
-    # El margen es 0,01 grados (~1,1 km): las manchas se cortan en el limite
-    # comunal y un punto real puede quedar a unos metros fuera de ellas, y 0,01
-    # sigue siendo 70 veces menor que el error de huso que debe detectar.
+    #
+    # DESDE EL INSUMO NACIONAL (2026-09-16) NO PUEDE EXIGIR CERO, y no por
+    # precision: el CUT lo declara el .dbf de cada servicio, no la geometria, y
+    # 11 de 35.905 no cuadran --el peor, una antena con codigo del Maule y
+    # coordenada en Tarapaca, a 753 km--. Ese dato es de su servicio y este
+    # visor no lo reescribe. Lo que la asercion exige es que no haya NI UNO MAS
+    # de los que el ETL midio y publico, y que no pasen del 0,1 % de la capa:
+    # el tope es propio de este archivo, asi que un ETL que empezara a perder
+    # husos en masa no puede taparlo subiendo su propia cifra.
+    # El margen (0,01 grados, ~1,1 km) tampoco se copia: se cruza contra el que
+    # declara el manifest, y si divergen la asercion se pone roja.
     infra = data / "infra_puntos.geojson"
     if infra.exists() and meta_riesgo is not None:
         partes = meta_riesgo.get("partes") or {}
+        fuente_infra = (capas.get("infra_puntos") or {}).get("fuente") or {}
+        declarado = fuente_infra.get("cut_fuera_de_su_caja") or {}
         m = 0.01
         gj = json.loads(infra.read_text(encoding="utf-8"))
-        malos = []
+        huerfanos, lejos = [], []
         for f in gj["features"]:
             p = f["properties"]
-            caja = (partes.get(str(p.get("cut"))) or {}).get("bbox")
+            cut = p.get("cut")
+            if cut is None:
+                continue
+            caja = (partes.get(str(cut)) or {}).get("bbox")
             if caja is None:
-                malos.append(f"{p.get('nombre')}: CUT {p.get('cut')!r} ({p.get('comuna')}) no esta en riesgo")
+                huerfanos.append(f"{p.get('nombre')}: CUT {cut!r} no esta en riesgo")
                 continue
             lon, lat = f["geometry"]["coordinates"]
             if not (caja[0] - m <= lon <= caja[2] + m and caja[1] - m <= lat <= caja[3] + m):
-                malos.append(f"{p.get('familia')}/{p.get('nombre')} en {p.get('comuna')} ({p.get('cut')})")
+                lejos.append(f"{p.get('familia')}/{p.get('nombre')} ({cut})")
+        tope = max(1, round(len(gj["features"]) * 0.001))
         r.check(
-            bool(gj["features"]) and not malos,
+            bool(gj["features"]) and not huerfanos,
             "D15",
-            "infra_puntos: cada punto dentro de la caja de riesgo de su CUT",
-            f"{len(malos)} fuera: {malos[:3]}" if malos else "",
+            "infra_puntos: todo CUT publicado es una comuna del modelo de riesgo",
+            f"{len(huerfanos)} huerfanos: {huerfanos[:3]}" if huerfanos else "",
+        )
+        mismo_margen = declarado.get("margen_grados") == m
+        r.check(
+            mismo_margen,
+            "D15",
+            f"infra_puntos: el margen del ETL es el de esta asercion ({m} grados)",
+            "" if mismo_margen else f"el manifest declara {declarado.get('margen_grados')!r}",
+        )
+        cuadran = len(lejos) == declarado.get("total") and len(lejos) <= tope
+        r.check(
+            cuadran,
+            "D15",
+            f"infra_puntos: los {len(lejos)} puntos con el CUT lejos de su caja son los declarados"
+            f" (max {declarado.get('max_km')} km, tope {tope})",
+            "" if cuadran else f"declarados {declarado.get('total')!r}, contados {len(lejos)}: {lejos[:3]}",
+        )
+        # Sin CUT: el insumo no dice en que comuna estan y el modelo no lo
+        # adivina. Se toleran contados, igual que los de arriba.
+        sin_cut = sum(1 for f in gj["features"] if f["properties"].get("cut") is None)
+        dec_sin = sum((fuente_infra.get("sin_comuna") or {}).values())
+        ok_sin = sin_cut == dec_sin and sin_cut <= len(gj["features"]) * 0.005
+        r.check(
+            ok_sin,
+            "D15b",
+            f"infra_puntos: los {sin_cut} puntos sin comuna son los que declara el manifest",
+            "" if ok_sin else f"declarados {dec_sin}, contados {sin_cut}",
         )
 
     # --- D21: una etiqueta por comuna en incendios ---
@@ -1568,6 +1609,29 @@ def _mutaciones(data: Path) -> list[tuple[str, str, str, object]]:
 
         _mut_json(p, cambiar)
 
+    def punto_sin_cut(p: Path):
+        # Lo que dejaria un cruce comunal que empieza a fallar en silencio: un
+        # punto mas sin comuna del que el manifest declara. Se elige el primero
+        # que SI tiene CUT para que el conteo cambie siempre.
+        def borrar(d):
+            for f in d.get("features") or []:
+                if f["properties"].get("cut") is not None:
+                    f["properties"]["cut"] = None
+                    return
+
+        _mut_json(p, borrar)
+
+    def margen_de_caja_distinto(p: Path):
+        # El margen vive en el ETL (MARGEN_CAJA) y esta asercion lleva el suyo:
+        # si divergen, el numero de puntos «lejos» que declara el manifest deja
+        # de ser comparable con el que cuenta verify.
+        def cambiar(d):
+            fu = ((d.get("capas") or {}).get("infra_puntos") or {}).get("fuente") or {}
+            if fu.get("cut_fuera_de_su_caja"):
+                fu["cut_fuera_de_su_caja"]["margen_grados"] = 0.02
+
+        _mut_json(p, cambiar)
+
     teselas = (man["capas"].get("riesgo") or {}).get("teselas") or {}
     regiones_t = teselas.get("regiones") or {}
     nn_chica = min(regiones_t, key=lambda k: regiones_t[k].get("bytes") or 0) if regiones_t else None
@@ -1690,6 +1754,8 @@ def _mutaciones(data: Path) -> list[tuple[str, str, str, object]]:
         ("D14", "escribir «Coyhaique» en una mancha de otra comuna", arch_b, mancha_con_otra_grafia),
         ("D15", "leer un punto con el huso vecino: 6° al oeste", "infra_puntos.geojson", punto_con_huso_equivocado),
         ("D15", "dar a un punto el CUT de otra comuna", "infra_puntos.geojson", punto_con_cut_de_otra_comuna),
+        ("D15", "declarar en el manifest un margen de caja distinto", "manifest.json", margen_de_caja_distinto),
+        ("D15b", "dejar un punto mas sin comuna que los declarados", "infra_puntos.geojson", punto_sin_cut),
         ("D19", "subir dos clases una mancha sin cambiar su nivel", arch_a, clase_incoherente),
         ("D19", "pct_alto = 150 en una mancha", arch_b, pct_alto_fuera_de_rango),
         ("D20", "olvidar en el manifest las manchas sin geometría", "manifest.json", descuadrar_sin_geometria),

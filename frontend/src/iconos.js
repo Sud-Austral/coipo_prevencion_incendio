@@ -23,9 +23,12 @@ export const GLIFOS = {
   // Escuela: techo a dos aguas sobre un cuerpo con puerta.
   educacion:
     'M12 3 2 8v2h20V8L12 3zM4 11v8H2v2h20v-2h-2v-8h-2v8h-4v-5h-4v5H6v-8H4z',
-  // Escuela preparada: la misma escuela con un galon debajo.
-  escuelas_prep:
-    'M12 2 3 6.5v1.8h18V6.5L12 2zM5 10v6.5h2V10H5zm6 0v6.5h2V10h-2zm6 0v6.5h2V10h-2zM3 18.5v1.8h18v-1.8H3z',
+  // Comunidad preparada: tres figuras, la del centro delante. La familia
+  // `escuelas_prep` que habia aqui NO existe en el insumo nacional: una escuela
+  // preparada es un establecimiento educacional con `preparada` en true (97 de
+  // 11.122), no una familia aparte.
+  comunidades_prep:
+    'M12 3.2a2.4 2.4 0 1 1 0 4.8 2.4 2.4 0 0 1 0-4.8zM5.4 5.4a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM18.6 5.4a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM12 9.4c-2.4 0-4 1.3-4 3.1V17h8v-4.5c0-1.8-1.6-3.1-4-3.1zM5.4 10.6c-1.9 0-3.2 1-3.2 2.4V17h4.2v-4.5c0-.8.2-1.4.5-1.9zM18.6 10.6c1.9 0 3.2 1 3.2 2.4V17h-4.2v-4.5c0-.8-.2-1.4-.5-1.9z',
   // Salud: cruz griega.
   salud: 'M10 2h4v6h6v4h-6v10h-4V12H4V8h6V2z',
   // Servicios sanitarios rurales: gota de agua.

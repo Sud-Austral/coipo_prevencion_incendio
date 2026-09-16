@@ -270,31 +270,51 @@ export function csvRiesgo(features, { region, cut } = {}) {
   }
 }
 
-/** Infraestructura critica. `dependencia_cod` va SIN traducir, como en la
- *  ficha: el .dbf del MINEDUC no trae diccionario y rotularlo seria inventar. */
-export function csvInfraPuntos(features, pasa) {
+/**
+ * Infraestructura critica. `dependencia_cod` va SIN traducir, como en la
+ * ficha: el .dbf del MINEDUC no trae diccionario y rotularlo seria inventar.
+ *
+ * `decodificar` es LA MISMA funcion que abre la ficha (App.jsx), y se recibe en
+ * vez de resolverse aqui para no escribir dos veces la regla de decodificacion:
+ * desde el insumo nacional del 2026-09-16 trece campos viajan como INDICE
+ * contra `tablas` del manifest, asi que sin ella el CSV exportaria numeros
+ * --«familia 0»-- con pinta de dato bueno.
+ */
+export function csvInfraPuntos(features, pasa, decodificar) {
   const filas = []
   for (const f of features ?? []) {
-    const p = f.properties
-    if (pasa && !pasa(p)) continue
+    if (pasa && !pasa(f.properties)) continue
+    const p = decodificar ? decodificar(f.properties) : f.properties
     const [lon, lat] = coords(f.geometry)
     filas.push([
+      p.cut,
       p.comuna,
       p.familia,
       p.grupo,
       p.nombre,
       p.tipo,
       p.direccion,
+      p.ambito,
+      p.sector,
+      p.poblacion === '-' ? null : p.poblacion,
       num(p.matricula),
       num(p.dependencia_cod),
+      typeof p.preparada === 'boolean' ? (p.preparada ? 'Sí' : 'No') : null,
       p.complejidad,
       p.detalle,
-      p.ambito,
+      p.urgencia,
       num(p.beneficiarios),
+      num(p.arranques),
       p.tension_kv,
+      p.estado,
       p.propiedad,
       p.operador,
+      p.tecnologia,
+      num(p.altura_m),
       p.codigo_oaci,
+      p.uso,
+      p.riesgo,
+      num(p.anio),
       num(red6(lon)),
       num(red6(lat)),
     ])
@@ -302,9 +322,11 @@ export function csvInfraPuntos(features, pasa) {
   return {
     texto: armarCSV(
       [
-        'comuna', 'familia', 'grupo', 'nombre', 'tipo', 'direccion', 'matricula',
-        'dependencia_cod', 'complejidad', 'detalle', 'ambito', 'beneficiarios',
-        'tension_kv', 'propiedad', 'operador', 'codigo_oaci', 'lon', 'lat',
+        'cod_comuna', 'comuna', 'familia', 'grupo', 'nombre', 'tipo', 'direccion',
+        'ambito', 'sector', 'poblacion', 'matricula', 'dependencia_cod', 'preparada',
+        'complejidad', 'detalle', 'urgencia', 'beneficiarios', 'arranques', 'tension_kv',
+        'estado', 'propiedad', 'operador', 'tecnologia', 'altura_m', 'codigo_oaci',
+        'uso', 'riesgo', 'anio', 'lon', 'lat',
       ],
       filas,
     ),

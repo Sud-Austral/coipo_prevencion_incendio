@@ -1,211 +1,173 @@
-"""Infraestructura critica de las 3 comunas priorizadas -> infra_puntos.geojson
+"""Infraestructura critica y comunidades preparadas de TODO CHILE -> infra_puntos.geojson
 
-Los 707 elementos puntuales que alimentaban los subindices `sub_infra` y
-`sub_preparadas` del modelo de priorizacion de 3 comunas, en 8 familias y 23
-shapefiles. Ese modelo ya no se publica (lo reemplazo el riesgo nacional,
-DECISIONES.md §S), pero la infraestructura se conserva encima de las manchas de
-riesgo de sus tres comunas, cruzada por codigo CUT.
+El 2026-09-16 Luis reemplazo el paquete de 3 comunas por uno nacional: ocho
+fuentes en `INSUMO_PRIORIZACION/`, 35.921 elementos. Lo que habia antes eran 707
+puntos de Coyhaique, Los Angeles y Mulchen (DECISIONES.md §S); el visor los
+dibujaba uno a uno encima de las manchas de riesgo de esas tres comunas.
 
-Las capas se descubren por el nombre de la carpeta, no por una lista de 23
-rutas, porque los nombres de archivo del paquete son inconsistentes: hay dobles
-espacios ('ESTABLECIMIENTOS  EDUCACIONALES'), sufijos pegados ('_shp.shp') y
-guiones bajos finales que varian por comuna. Una carpeta que no encaje en
-ninguna familia conocida se AVISA y se descarta, nunca entra en silencio.
+QUE TRAE EL PAQUETE NUEVO, medido el 2026-09-16:
 
-Cuatro trampas del paquete, todas medidas el 2026-09-10:
+    INFRAESTRUCTURA_CRITICA/ANTENAS                        18.006
+    INFRAESTRUCTURA_CRITICA/CENTROS_DE_SALUD                2.752
+    INFRAESTRUCTURA_CRITICA/SERVICIOS_SANITARIOS_RURALES    1.829
+    INFRAESTRUCTURA_CRITICA/SUBESTACIONES                   1.215
+    INFRAESTRUCTURA_CRITICA/RED_AEROPORTUARIA                 314
+    INFRAESTRUCTURA_CRITICA/CENTROS_PENITENCIARIOS             80
+    COMUNIDADES_ESCUELAS_PREPARADAS/ESCUELAS_PREPARADAS    11.128
+    COMUNIDADES_ESCUELAS_PREPARADAS/COMUNIDADES_PREPARADAS    597
 
-- DOS HUSOS UTM MEZCLADOS SIN PATRON (32718 y 32719). No siguen a la comuna: en
-  Los Angeles las subestaciones estan en 19S y sus hermanas en 18S; en Mulchen
-  las escuelas preparadas estan en 19S y el resto en 18S. Se lee el .prj de cada
-  archivo. Asumir un huso unico desplaza los puntos ~700 km.
-- SERVICIOS DE SALUD MULCHEN llego SIN .shp ni .shx: solo .dbf. Sus 10 postas
-  rurales se reconstruyen desde LATITUD/LONGITUD, que ahi si son grados WGS84.
-- UP_LOS_ANGELES_.shp tiene 0 features (bbox [0,0,0,0]). No es un error: Los
-  Angeles no aporta unidades penitenciarias.
-- 10 puntos declaran una comuna vecina (Aisen, Yumbel, Villarrica, Quilaco...).
-  Se descartan comparando la comuna que declara el registro contra la de su
-  carpeta, y se cuentan en `fuera_de_comuna`.
+TRES COSAS DEL INSUMO QUE NO SE PUEDEN ADIVINAR LEYENDO LOS NOMBRES:
 
-Lo que NO se publica y es deliberado: la version PUNTUAL de comunidades
-preparadas de Mulchen (el modelo usa la poligonal; publicar la puntual dejaria 2
-comunidades en Mulchen y 0 en las otras dos comunas) y los 20 buffers, que son
-derivados de estos mismos puntos.
+1. LAS SEIS FAMILIAS CRITICAS SON BUFERES, no puntos: poligonos de 60 m (100 m
+   en penitenciarios) en EPSG 32719. Se publica el CENTRO de cada buffer, que es
+   el elemento: a cualquier escala del visor un circulo de 60 m es un punto, y
+   dibujar 24.196 poligonos de 33 vertices costaria 800.000 vertices para no
+   verse. La version puntual original no viene en el paquete.
+
+2. `ESCUELAS_PREPARADAS.shp` NO son las escuelas preparadas: es el directorio
+   nacional entero, 11.128 establecimientos, con una marca `E_PREP` que vale
+   'SI' en 97. Se publican los 11.128 como «Establecimientos educacionales» y
+   los 97 llevan ademas `preparada: true`, que es lo que separa las dos familias
+   que el visor mostraba antes. Publicar solo los 97 habria escondido el
+   directorio; publicarlos todos como «preparadas» habria sido falso.
+
+3. EL CODIGO DE COMUNA NO SIEMPRE ESTA. `cod_comuna` viene del cruce espacial que
+   trae el propio paquete y esta en cinco de las ocho fuentes; en ANTENAS esta
+   VACIO en las 18.006 filas y en comunidades no existe. Ahi se resuelve por
+   NOMBRE contra las comunas del modelo de riesgo (y sus alias), con la misma
+   clave sin tildes ni mayusculas que usa el resto del repo. Lo que no se resuelve
+   se cuenta en `sin_comuna` y no se inventa.
+
+TERRITORIO INSULAR: Isla de Pascua y Juan Fernandez quedan FUERA (decision de
+Luis, 2026-09-16), porque la caja de Chile del visor es continental y el modelo de
+riesgo no las cubre. Son 10 elementos --el hospital de Hanga Roa, los aerodromos
+Mataveri y Robinson Crusoe, antenas, el CP de Isla de Pascua-- y se publican
+CONTADOS por familia en `fuera_de_chile`, para que el panel pueda decirlo: un
+descarte silencioso se lee como que ahi no hay nada.
 """
 
 from __future__ import annotations
 
+import math
 import unicodedata
 
-from cfg import Cfg, log
+from cfg import RAIZ, Cfg, log
 from geo import en_chile, to_wgs84
-from gj_io import dominios, feature, humano, write_geojson
-from shp_reader import read_dbf, read_shapefile
+from gj_io import codificar, dominios, feature, humano, write_geojson
+from shp_reader import iter_shapes, read_shapefile
 
-# La carpeta de primer nivel manda sobre la comuna: (nombre, codigo CUT).
+# (ruta relativa, familia, etiqueta, campo de nombre, campo de tipo,
+#  campos de comuna por orden de preferencia (codigo primero), extras)
 #
-# El cruce con las manchas de riesgo es por CUT y NO por nombre: el insumo de
-# riesgo escribe «Coihaique» y «Mulchén» y este paquete «Coyhaique» y «Mulchen».
-# Cruzar por el literal dejaba 0 iconos al elegir esas dos comunas. Los codigos
-# son los que ya usan subestaciones y salud como texto (ALIAS_COMUNA, abajo), y
-# D15 comprueba que cada punto caiga dentro de la caja de su CUT: un codigo
-# equivocado manda los puntos a otra comuna y se pone rojo.
-COMUNAS = {
-    "INFRAESTRUCTURA CRITICA COYHAIQUE": ("Coyhaique", "11101"),
-    "INFRAESTRUCTURA CRITICA LOS ANGELES": ("Los Angeles", "08301"),
-    "INFRAESTRUCTURA CRITICA MULCHEN": ("Mulchen", "08305"),
-}
-
-# Alias de comuna vistos en los .dbf, ya normalizados (sin tildes, minusculas).
-# Incluye los codigos CUT porque subestaciones y salud los usan como texto en
-# vez del nombre, con y sin cero a la izquierda.
-ALIAS_COMUNA = {
-    "coyhaique": "Coyhaique",
-    "11101": "Coyhaique",
-    "los angeles": "Los Angeles",
-    "8301": "Los Angeles",
-    "08301": "Los Angeles",
-    "mulchen": "Mulchen",
-    "8305": "Mulchen",
-    "08305": "Mulchen",
-}
-
-# (patron en el nombre de la carpeta, familia, etiqueta, campo de comuna,
-#  campo de tipo, campo de nombre, extras {clave_salida: campo_dbf})
-#
-# El campo de tipo se eligio mirando los valores reales, no el nombre:
-#  - salud usa SIMBOLOGIA (7 clases limpias) y no TIPO (16, cola muy larga)
-#  - antenas usa TISO_DESCR (el soporte fisico); ALIAS es el operador y va aparte
-#  - educacion NO tiene campo de tipo utilizable: ver TIPO_DEPEN abajo
-FAMILIAS = [
+# El campo de tipo se elige mirando los VALORES, no el nombre: salud usa
+# SIMBOLOGIA (clases limpias) y no TIPO; antenas, el soporte fisico TISO_DESCR,
+# porque ALIAS es el operador y va aparte.
+FUENTES = [
     (
-        "ANTENAS",
-        "antenas",
-        "Antenas de telecomunicaciones",
-        "COMUNA",
-        "TISO_DESCR",
-        "ELM_NOMBRE",
+        "INFRAESTRUCTURA_CRITICA/ANTENAS/ANTENAS_buf60m.shp",
+        "antenas", "Antenas de telecomunicaciones", "ELM_NOMBRE", "TISO_DESCR",
+        ("cod_comuna", "Comuna_2", "COMUNA"),
         {"operador": "ALIAS", "tecnologia": "TECNOLOGIA", "altura_m": "SOPO_ALTUR"},
     ),
     (
-        "ESTABLECIMIENTOS",
-        "educacion",
-        "Establecimientos educacionales",
-        "NOM_COM_RB",
-        None,
-        "NOM_RBD",
-        # TIPO_DEPEN es un codigo numerico (1..4) y el .dbf no trae diccionario;
-        # el .qmd de QGIS tampoco (verificado: solo lleva el CRS). Se publica el
-        # codigo CRUDO y la ficha lo rotula como codigo. La lectura habitual
-        # (1=Municipal, 2=Part. Subvencionado...) NO esta confirmada en el dato,
-        # y una etiqueta plausible y falsa es el peor fallo posible aqui.
-        {"dependencia_cod": "TIPO_DEPEN", "matricula": "MAT_TOTAL", "direccion": "DIRECCION"},
+        "INFRAESTRUCTURA_CRITICA/CENTROS_DE_SALUD/CENTROS_DE_SALUD_buf60m.shp",
+        "salud", "Servicios de salud", "NOMBRE", "SIMBOLOGIA",
+        ("CUT_COMUNA", "cod_comuna", "Comuna", "NOM_COMUNA"),
+        {"detalle": "TIPO", "complejidad": "COMPLEJIDA", "urgencia": "URGENCIA", "direccion": "DIRECCION"},
     ),
     (
-        "SERVICIOS DE SALUD",
-        "salud",
-        "Servicios de salud",
-        "NOM_COM",
-        "SIMBOLOGIA",
-        "NOMBRE",
-        {"detalle": "TIPO", "complejidad": "COMPLEJIDA", "direccion": "DIRECCION"},
-    ),
-    (
-        "SSR",
-        "ssr",
-        "Servicios sanitarios rurales",
-        "COMUNA",
-        "CLAS_OP",
-        "NOMBRE_SSR",
+        "INFRAESTRUCTURA_CRITICA/SERVICIOS_SANITARIOS_RURALES/SERVICIOS_SANITARIOS_RURALES_buf60m.shp",
+        "ssr", "Servicios sanitarios rurales", "NOMBRE_SSR", "CLAS_OP",
+        ("cod_comuna", "Comuna_2", "COMUNA"),
         {"ambito": "URBAN_RURA", "beneficiarios": "BENEF_EST", "arranques": "CANT_ARR"},
     ),
     (
-        "SUBESTACIONES",
-        "subestaciones",
-        "Subestaciones eléctricas",
-        "COMUNA",
-        "TIPO",
-        "NOMBRE",
-        {"tension_kv": "TENSION_KV", "propiedad": "PROPIEDAD"},
+        "INFRAESTRUCTURA_CRITICA/SUBESTACIONES/SUBESTACIONES_buf60m.shp",
+        "subestaciones", "Subestaciones eléctricas", "NOMBRE", "TIPO",
+        ("cod_comuna", "Comuna_2"),
+        {"tension_kv": "TENSION_KV", "propiedad": "PROPIEDAD", "estado": "ESTADO"},
     ),
     (
-        "ESCUELAS PREPARADAS",
-        "escuelas_prep",
-        "Escuelas preparadas",
-        "COMUNA",
-        "RIESGO",
-        "NOMBRE_EP",
-        {"alumnos": "_N_alumnos", "comunidad_escolar": "_total_com"},
+        "INFRAESTRUCTURA_CRITICA/RED_AEROPORTUARIA/RED_AEROPORTUARIA_buf60m.shp",
+        "aeropuerto", "Red aeroportuaria", "NOMBRE", "RED",
+        ("cod_comuna", "Comuna_2"),
+        {"codigo_oaci": "COD_OACI", "uso": "USO", "propiedad": "PROPIEDAD"},
     ),
     (
-        "RED AEROPORTUARIA",
-        "aeropuerto",
-        "Red aeroportuaria",
-        "COMUNA",
-        "RED",
-        "NOMBRE",
-        {"codigo_oaci": "COD_OACI", "uso": "USO"},
-    ),
-    (
-        "UP",
-        "penitenciaria",
-        "Unidades penitenciarias",
-        # Es un KML convertido con el esquema de Google Earth: no trae comuna.
-        # La de la carpeta es la unica fuente, y por eso no se puede filtrar
-        # contaminacion en esta familia (son 2 puntos, ambos verificados).
-        None,
-        None,
-        "Name",
-        # `descriptio` trae un bloque HTML completo de Google Earth y `drawOrder`
-        # un '**********' por desbordamiento del dBase. Ninguno se publica.
+        "INFRAESTRUCTURA_CRITICA/CENTROS_PENITENCIARIOS/CENTROS_PENITENCIARIOS_buf100m.shp",
+        # El unico campo util es el nombre: el resto del .dbf son ids de un KML.
+        "penitenciaria", "Unidades penitenciarias", "Name", None,
+        ("cod_comuna", "Comuna"),
         {},
+    ),
+    (
+        "COMUNIDADES_ESCUELAS_PREPARADAS/ESCUELAS_PREPARADAS.shp",
+        "educacion", "Establecimientos educacionales", "NOM_RBD", None,
+        ("COD_COM_RB", "Comuna", "NOM_COM_RB"),
+        # TIPO_DEPEN es un codigo numerico (1..5) y el .dbf no trae diccionario;
+        # se publica CRUDO y la ficha lo rotula como codigo. Una etiqueta
+        # plausible y falsa seria el peor fallo posible aqui.
+        {"dependencia_cod": "TIPO_DEPEN", "matricula": "MAT_TOTAL", "direccion": "DIRECCION"},
+    ),
+    (
+        "COMUNIDADES_ESCUELAS_PREPARADAS/COMUNIDADES_PREPARADAS.shp",
+        "comunidades_prep", "Comunidades preparadas", "COMUNIDAD", "TIPO_COM",
+        # Sin codigo: solo el nombre de la comuna.
+        ("COMUNA",),
+        {"riesgo": "RIESGO", "poblacion": "POBLACION", "anio": "ANIO", "sector": "SECTOR"},
     ),
 ]
 
+# Marca de escuela preparada dentro del directorio nacional (ver la cabecera).
+CAMPO_PREPARADA = "E_PREP"
 
-def _sin_tildes(s: str) -> str:
-    return "".join(
-        c for c in unicodedata.normalize("NFD", s) if unicodedata.category(c) != "Mn"
-    )
+# Holgura al comparar un punto contra la caja de las manchas de su CUT, en
+# grados (~1,1 km). No es una tolerancia de precision: la caja son las manchas
+# del modelo, no el limite comunal, asi que un punto legitimo puede caer justo
+# fuera. Sigue siendo 500 veces menor que el error que hay que cazar --leer un
+# punto con el huso UTM vecino lo manda ~550 km-- y viaja al manifest.
+MARGEN_CAJA = 0.01
+
+# Campos que viajan como INDICE contra `tablas` del manifest, igual que en
+# incendios (DECISIONES.md §J). Medido el 2026-09-16 sobre las 35.905 features:
+# el archivo pasa de 10,80 a 6,04 MiB, y `familia` sola pesaba 0,71 MiB repetida
+# 35.905 veces. No entran `nombre` ni `direccion`, que son texto de verdad.
+CATEGORICOS = ["familia", "tipo", "operador", "tecnologia", "propiedad", "detalle",
+               "complejidad", "urgencia", "ambito", "uso", "estado", "riesgo", "sector"]
 
 
-def _canon_comuna(valor) -> str | None:
-    """Nombre canonico de comuna, o None si no se reconoce.
+def _clave(s) -> str:
+    """Sin tildes, sin mayusculas y sin espacios dobles. La misma del resto del repo."""
+    t = "".join(c for c in unicodedata.normalize("NFD", str(s or "")) if unicodedata.category(c) != "Mn")
+    return " ".join(t.casefold().split())
 
-    Hace falta porque las mismas tres comunas llegan en seis grafias distintas
-    entre familias: 'Los Ángeles', 'LOS ANGELES', 'Los angeles', 'MULCHÉN',
-    'Mulchen' y los codigos CUT '08301'/'11101'.
+
+def _cut(valor) -> str | None:
+    """Codigo comunal de 5 digitos, o None. El .dbf los trae como '6204', '6204.0' o 6204."""
+    s = str(valor or "").strip()
+    if s.endswith(".0"):
+        s = s[:-2]
+    return s.zfill(5) if s.isdigit() and 0 < len(s) <= 5 else None
+
+
+def _centro(geom: dict) -> tuple[float, float] | None:
+    """Punto representativo de una geometria en coordenadas nativas.
+
+    De un buffer, el promedio de los vertices de su anillo exterior: son
+    circulos regulares de 60 o 100 m, asi que el promedio ES el centro. De un
+    punto o multipunto, el punto.
     """
-    if valor in (None, ""):
+    t, c = geom.get("type"), geom.get("coordinates")
+    if not c:
         return None
-    return ALIAS_COMUNA.get(_sin_tildes(str(valor)).strip().lower().replace("  ", " "))
-
-
-def _familia_de(nombre_carpeta: str):
-    """Empareja una carpeta con su familia. La primera que encaja gana."""
-    up = nombre_carpeta.upper()
-    for patron, *resto in FAMILIAS:
-        # 'UP' se comprueba como palabra suelta: sin esto casaria dentro de
-        # cualquier carpeta que contenga esas dos letras seguidas.
-        if patron == "UP":
-            if up.split()[0] == "UP":
-                return resto
-        elif patron in up:
-            return resto
-    return None
-
-
-def _props(familia, etiqueta, comuna, cut, campo_tipo, campo_nombre, extras, raw) -> dict:
-    p = {
-        "familia": familia,
-        "grupo": etiqueta,
-        "comuna": comuna,
-        "cut": cut,
-        "nombre": raw.get(campo_nombre) if campo_nombre else None,
-        "tipo": raw.get(campo_tipo) if campo_tipo else None,
-    }
-    for salida, campo in extras.items():
-        p[salida] = raw.get(campo)
-    return p
+    if t == "Point":
+        return c[0], c[1]
+    if t == "MultiPoint":
+        return c[0][0], c[0][1]
+    anillo = c[0] if t == "Polygon" else c[0][0]
+    if not anillo:
+        return None
+    return sum(p[0] for p in anillo) / len(anillo), sum(p[1] for p in anillo) / len(anillo)
 
 
 def build(cfg: Cfg) -> dict:
@@ -213,130 +175,196 @@ def build(cfg: Cfg) -> dict:
     if not raiz.exists():
         raise FileNotFoundError(f"Falta {raiz}")
 
+    # Nombre de comuna -> CUT, del modelo de riesgo si ya se genero en esta
+    # corrida; si no, del manifest publicado. Es la MISMA tabla que usa el visor
+    # para cruzar, asi que un punto con comuna resuelta aqui es un punto que el
+    # visor puede encontrar.
+    por_nombre, por_cut, cajas = _comunas_del_riesgo(cfg)
+
     feats: list[dict] = []
     por_familia: dict[str, int] = {}
-    fuera_de_comuna = fuera_de_chile = 0
-    sin_familia: list[str] = []
+    fuera_de_chile: dict[str, int] = {}
+    sin_comuna: dict[str, int] = {}
+    sin_geometria: dict[str, int] = {}
+    preparadas = 0
+    faltan: list[str] = []
 
-    for carpeta_comuna in sorted(d for d in raiz.iterdir() if d.is_dir()):
-        if carpeta_comuna.name not in COMUNAS:
-            sin_familia.append(carpeta_comuna.name)
+    for rel, familia, etiqueta, campo_nombre, campo_tipo, campos_comuna, extras in FUENTES:
+        shp = raiz / rel
+        if not shp.exists():
+            faltan.append(rel)
             continue
-        comuna, cut = COMUNAS[carpeta_comuna.name]
-
-        for sub in sorted(d for d in carpeta_comuna.iterdir() if d.is_dir()):
-            emparejada = _familia_de(sub.name)
-            if emparejada is None:
-                sin_familia.append(f"{carpeta_comuna.name}/{sub.name}")
+        sf = read_shapefile(shp)
+        n = 0
+        # zip() propio y no `for ... in sf`: el iterador del lector SE SALTA las
+        # geometrias nulas, y aqui hay que contarlas. Un descarte que no se
+        # cuenta es un dato que desaparece sin que conste.
+        for geom, raw in zip(iter_shapes(shp), sf.records):
+            if geom is None:
+                sin_geometria[familia] = sin_geometria.get(familia, 0) + 1
                 continue
-            familia, etiqueta, campo_com, campo_tipo, campo_nombre, extras = emparejada
+            centro = _centro(geom)
+            if centro is None:
+                sin_geometria[familia] = sin_geometria.get(familia, 0) + 1
+                continue
+            lon, lat = to_wgs84({"type": "Point", "coordinates": list(centro)}, sf.epsg)["coordinates"]
+            if not en_chile(lon, lat):
+                # Isla de Pascua y Juan Fernandez. Se cuentan y se publican en el
+                # manifest: un descarte silencioso se lee como que ahi no hay nada.
+                fuera_de_chile[familia] = fuera_de_chile.get(familia, 0) + 1
+                continue
 
-            shps = sorted(sub.glob("*.shp"))
-            if shps:
-                origen = [(read_shapefile(shps[0]), None)]
-            else:
-                # Sin .shp: unica via es el .dbf con LATITUD/LONGITUD (salud de
-                # Mulchen). Si tampoco hay .dbf, se avisa y se sigue.
-                dbfs = sorted(sub.glob("*.dbf"))
-                if not dbfs:
-                    log(cfg, "infra", f"AVISO: {sub.name} no tiene .shp ni .dbf")
-                    continue
-                origen = [(None, read_dbf(dbfs[0], encoding="utf-8")[1])]
+            cut = nombre_comuna = None
+            for campo in campos_comuna:
+                valor = raw.get(campo)
+                cut = _cut(valor)
+                if cut and cut in por_cut:
+                    nombre_comuna = por_cut[cut]
+                    break
+                cut = None
+                eq = por_nombre.get(_clave(valor))
+                if eq:
+                    cut, nombre_comuna = eq
+                    break
+            if cut is None:
+                sin_comuna[familia] = sin_comuna.get(familia, 0) + 1
 
-            sf, regs = origen[0]
-            n = 0
+            # NI `grupo` NI `comuna` viajan en las features: la etiqueta de la
+            # familia esta UNA vez en el manifest (`familias`) y el nombre de la
+            # comuna sale del CUT contra las partes de riesgo, que el visor ya
+            # tiene. Repetidos en cada punto pesaban 2,05 MiB de los 10,80.
+            props = {
+                "familia": familia,
+                "nombre": raw.get(campo_nombre) if campo_nombre else None,
+                "tipo": raw.get(campo_tipo) if campo_tipo else None,
+                "cut": cut,
+            }
+            if familia == "educacion":
+                # La marca del insumo, tal cual: 'SI' en 97 de 11.128.
+                props["preparada"] = str(raw.get(CAMPO_PREPARADA) or "").strip().upper() == "SI"
+                preparadas += 1 if props["preparada"] else 0
+            for salida, campo in extras.items():
+                props[salida] = raw.get(campo)
 
-            if sf is not None:
-                pares = (
-                    (g, pr) for g, pr in sf if g is not None
+            feats.append(
+                feature(
+                    {"type": "Point", "coordinates": [round(lon, cfg.precision), round(lat, cfg.precision)]},
+                    props,
                 )
-                for geom, raw in pares:
-                    partes = (
-                        geom["coordinates"]
-                        if geom["type"] == "MultiPoint"
-                        else [geom["coordinates"]]
-                    )
-                    for c in partes:
-                        lon, lat = to_wgs84(
-                            {"type": "Point", "coordinates": c}, sf.epsg
-                        )["coordinates"]
-                        if not en_chile(lon, lat):
-                            fuera_de_chile += 1
-                            continue
-                        if campo_com and _canon_comuna(raw.get(campo_com)) != comuna:
-                            fuera_de_comuna += 1
-                            continue
-                        feats.append(
-                            feature(
-                                {
-                                    "type": "Point",
-                                    "coordinates": [
-                                        round(lon, cfg.precision),
-                                        round(lat, cfg.precision),
-                                    ],
-                                },
-                                _props(
-                                    familia, etiqueta, comuna, cut,
-                                    campo_tipo, campo_nombre, extras, raw,
-                                ),
-                            )
-                        )
-                        n += 1
-            else:
-                for raw in regs:
-                    lon, lat = float(raw["LONGITUD"]), float(raw["LATITUD"])
-                    if not en_chile(lon, lat):
-                        fuera_de_chile += 1
-                        continue
-                    if campo_com and _canon_comuna(raw.get(campo_com)) != comuna:
-                        fuera_de_comuna += 1
-                        continue
-                    feats.append(
-                        feature(
-                            {
-                                "type": "Point",
-                                "coordinates": [
-                                    round(lon, cfg.precision),
-                                    round(lat, cfg.precision),
-                                ],
-                            },
-                            _props(
-                                familia, etiqueta, comuna, cut,
-                                campo_tipo, campo_nombre, extras, raw,
-                            ),
-                        )
-                    )
-                    n += 1
+            )
+            n += 1
+        por_familia[familia] = n
 
-            por_familia[familia] = por_familia.get(familia, 0) + n
+    if faltan:
+        raise FileNotFoundError(
+            "Faltan fuentes de infraestructura en INSUMO_PRIORIZACION: " + ", ".join(faltan)
+        )
 
-    if sin_familia:
-        log(cfg, "infra", f"AVISO: {len(sin_familia)} carpetas sin familia: {sin_familia}")
+    # EL CUT LO DECLARA EL INSUMO, no la geometria, y a veces no cuadran: una
+    # antena con el codigo de otra comuna sale en el filtro de la comuna
+    # equivocada. No se corrige --el dato es de su servicio y este visor no lo
+    # reescribe-- pero tampoco se absorbe en silencio: se mide contra la caja de
+    # las manchas de ese CUT y se publica. Medido el 2026-09-16: 11 de 35.905,
+    # el peor a 756 km.
+    #
+    # MARGEN_CAJA no es cero porque la caja son las MANCHAS de la comuna, no su
+    # limite: el modelo no cubre todo el territorio y un punto legitimo puede
+    # quedar unos metros fuera. Viaja al manifest para que D15 lo cruce en vez
+    # de llevar su propia copia del numero.
+    lejos: dict[str, int] = {}
+    max_km = 0.0
+    for f in feats:
+        cut = f["properties"].get("cut")
+        caja = cajas.get(cut) if cut else None
+        if not caja:
+            continue
+        lon, lat = f["geometry"]["coordinates"]
+        dx = max(caja[0] - lon, lon - caja[2], 0.0)
+        dy = max(caja[1] - lat, lat - caja[3], 0.0)
+        if dx <= MARGEN_CAJA and dy <= MARGEN_CAJA:
+            continue
+        fam = f["properties"]["familia"]
+        lejos[fam] = lejos.get(fam, 0) + 1
+        max_km = max(max_km, dx * 111.32 * math.cos(math.radians(lat)), dy * 110.57)
 
-    st = write_geojson(cfg.out / "infra_puntos.geojson", feats)
-    detalle = ", ".join(f"{k} {v}" for k, v in sorted(por_familia.items()))
+    tablas, doms = codificar(feats, CATEGORICOS)
+
+    ruta = cfg.out / "infra_puntos.geojson"
+    st = write_geojson(ruta, feats)
+    resumen = " ".join(f"{k} {v}" for k, v in sorted(por_familia.items()))
     log(
         cfg,
         "infra",
-        f"{len(feats)} puntos en {len(por_familia)} familias ({detalle}) · "
-        f"{fuera_de_comuna} de comuna vecina · {fuera_de_chile} fuera de Chile · "
-        f"{humano(st['bytes'])}",
+        f"{len(feats)} elementos en {len(por_familia)} familias ({resumen})"
+        f" · {preparadas} escuelas preparadas"
+        f" · {sum(sin_comuna.values())} sin comuna del modelo"
+        f" · {sum(fuera_de_chile.values())} fuera de Chile continental"
+        f" · {sum(lejos.values())} con el CUT del insumo lejos de su coordenada"
+        f" · {humano(st['bytes'])}",
     )
 
     return {
-        "capa": "infra_puntos",
-        "titulo": "Infraestructura crítica",
+        "titulo": "Infraestructura crítica y comunidades preparadas",
+        "archivo": "infra_puntos.geojson",
         "formato": "geojson",
         "geometria": "Point",
-        "carga": "inmediata",
-        "por_familia": por_familia,
-        "fuera_de_comuna": fuera_de_comuna,
-        "descartados": fuera_de_chile,
-        "filtros": ["comuna", "cut", "familia"],
-        "dominios": dominios(feats, ["comuna", "cut", "familia", "grupo", "tipo"]),
-        **st,
+        "features": len(feats),
+        "bytes": st["bytes"],
+        "bbox": st["bbox"],
+        "filtros": ["familia", "cut"],
+        "codificados": CATEGORICOS,
+        "tablas": tablas,
+        "dominios": {**doms, **dominios(feats, ["cut"])},
+        # La etiqueta larga de cada familia, UNA vez y no en cada punto.
+        "familias": {f[1]: f[2] for f in FUENTES},
+        "cobertura": "nacional",
+        "fuente": {
+            "por_familia": por_familia,
+            "escuelas_preparadas": preparadas,
+            "sin_comuna": sin_comuna,
+            "sin_geometria": sin_geometria,
+            # Isla de Pascua y Juan Fernandez, por familia (ver la cabecera).
+            "fuera_de_chile": fuera_de_chile,
+            # Puntos cuyo CUT del insumo no cuadra con donde estan (ver arriba).
+            "cut_fuera_de_su_caja": {
+                "total": sum(lejos.values()),
+                "por_familia": lejos,
+                "max_km": round(max_km, 1),
+                "margen_grados": MARGEN_CAJA,
+            },
+        },
     }
 
 
-if __name__ == "__main__":
-    build(Cfg(verbose=True))
+def _comunas_del_riesgo(cfg: Cfg) -> tuple[dict, dict, dict]:
+    """(clave de nombre -> (cut, nombre), cut -> nombre, cut -> caja) del modelo de riesgo.
+
+    Se lee del manifest que la corrida ya escribio o, si esta capa va sola, del
+    publicado. Sin esa tabla no hay forma de resolver por nombre las 18.006
+    antenas, que traen `cod_comuna` vacio.
+    """
+    import json
+
+    partes = {}
+    for candidato in (cfg.out / "manifest.json", RAIZ / "frontend" / "public" / "data" / "manifest.json"):
+        if not candidato.exists():
+            continue
+        try:
+            man = json.loads(candidato.read_text(encoding="utf-8"))
+        except ValueError:
+            continue
+        partes = ((man.get("capas") or {}).get("riesgo") or {}).get("partes") or {}
+        if partes:
+            break
+
+    por_nombre: dict[str, tuple[str, str]] = {}
+    por_cut: dict[str, str] = {}
+    cajas: dict[str, list] = {}
+    for cut, p in partes.items():
+        por_cut[cut] = p.get("comuna")
+        if p.get("bbox"):
+            cajas[cut] = p["bbox"]
+        for nombre in [p.get("comuna"), *(p.get("alias") or [])]:
+            if nombre:
+                por_nombre.setdefault(_clave(nombre), (cut, p.get("comuna")))
+    return por_nombre, por_cut, cajas

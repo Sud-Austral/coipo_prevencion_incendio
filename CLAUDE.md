@@ -3,7 +3,7 @@
 Notas para quien vaya a **modificar** este repo. Lo que ya se deduce leyendo el código no
 está aquí; lo que costó una sesión averiguar, sí.
 
-Verificado ejecutando el **2026-09-15**. Los números llevan fecha porque caducan.
+Verificado ejecutando el **2026-09-16**. Los números llevan fecha porque caducan.
 
 ---
 
@@ -16,9 +16,9 @@ las obras OECV planificadas y verificadas, los puntos stand-by, las rutas de des
 la red vial MOP.
 
 La segunda pestaña, **Riesgo**, muestra el nivel de riesgo de incendio forestal del modelo
-nacional de `lab/priorizacion` (notebook 4): **110.708 manchas en 343 comunas**, publicadas
+nacional de `lab/priorizacion` (notebook 4): **110.708 áreas en 343 comunas**, publicadas
 en **un archivo por comuna** que sólo se descarga al elegirla, con la infraestructura
-crítica de 3 comunas encima. Reemplazó el 2026-09-15 a la pestaña «Priorización» de 3
+crítica **nacional** encima (35.905 elementos en 8 familias, en cúmulos numerados). Reemplazó el 2026-09-15 a la pestaña «Priorización» de 3
 comunas, y `?vista=priorizacion` sigue abriéndola. Es otro modelo, no una versión del
 anterior: mide la amenaza y no la exposición. `DECISIONES.md` §S.
 
@@ -33,11 +33,12 @@ deliberado — el sitio es estático, las capas se precomputan y **se commitean*
 
 ### Dos documentos mandan sobre este
 
-- **`DECISIONES.md`** manda sobre los DATOS, la simbología y la interfaz. Veintiuna
-  secciones (A–T, la Ñ incluida) con por qué cada decisión es como es, con las cifras
+- **`DECISIONES.md`** manda sobre los DATOS, la simbología y la interfaz. Veintitrés
+  secciones (A–W, la Ñ incluida) con por qué cada decisión es como es, con las cifras
   medidas. §R fija la alineación de la interfaz con `coipo_vista_catastro` (acento azul,
   Líneas eléctricas como vista, orden F0→F6); §S, el riesgo nacional partido por comuna;
-  §T, el punto de la ficha visto en Google dentro del visor.
+  §T, sus teselas por región; §U, la piel común (F1); §V, el punto de la ficha visto en
+  Google dentro del visor; §W, la botonera de filtros y la cascada (F2).
   **Léelo antes de
   tocar `ETL/` o `frontend/src/config.js`**: casi todo lo que parece un error ahí está
   explicado y medido.
@@ -63,11 +64,15 @@ ETL/                     produce las capas publicadas
   geo.py                 reproyeccion, simplificacion, husos, nombres de region
   tiles.py               tippecanoe -> .pmtiles, con modo degradado
   build_riesgo.py        valida INSUMO_RIESGO y lo parte en un GeoJSON por comuna
-  verify.py              D1-D20 y D16b sobre lo PUBLICADO (capas y derivados), con --negativas
+  teselas_riesgo.py      ogr2ogr (GDAL) -> un .pmtiles por region con las manchas
+  build_infra_puntos.py  infraestructura critica NACIONAL: 8 familias, 35.905 puntos
+  verify.py              D1-D26 sobre lo PUBLICADO (capas, derivados y teselas), con --negativas
   _build/                intermedio de tippecanoe. NO se versiona (ver §3)
 frontend/
   src/config.js          LAS DECISIONES de simbologia y mapas base, con sus mediciones
   src/App.jsx            unico dueño del estado
+  src/filtros.js         opciones de los filtros en cascada (F2)
+  src/cumulos.js         leaflet.markercluster, con el global `L` que el plugin exige
   src/hooks/useDatos.js  manifest + carga perezosa con cache
   scripts/verify-*.mjs   los cuatro arneses de navegador (CDP): banner, panel,
                          priorizacion (mide la vista Riesgo; conserva el nombre) y electrico
@@ -104,7 +109,11 @@ commit hecho desde un portátil cambia el formato publicado.
 # --- ETL -------------------------------------------------------------------
 python ETL/run.py -v                       # 6 capas en paralelo + manifest + verify
 python ETL/verify.py                       # comprobaciones sobre lo publicado (~22 s)
-python ETL/verify.py --negativas           # 31 mutaciones, cada una debe ponerse roja (~2 min)
+python ETL/verify.py --negativas           # 47 mutaciones, cada una debe ponerse roja (~9 min)
+
+# D24 y D26 leen las teselas de riesgo POR DENTRO y necesitan GDAL; sin el se
+# declaran NO VERIFICABLES, y en CI eso cuenta como fallo. En esta estacion:
+OGR2OGR="$LOCALAPPDATA/anaconda3/envs/mapa/Library/bin/ogr2ogr.exe" python ETL/verify.py
 
 # --- frontend --------------------------------------------------------------
 cd frontend
@@ -207,6 +216,12 @@ npm run verify:mutantes                    # ~16 min, 17 mutantes, PARCHEA 7 arc
 - **Los arneses no fijan `prefers-color-scheme`.** En este equipo Chrome headless pinta en
   oscuro, así que casi todas las capturas salen oscuras y el tema claro queda sin mirar
   salvo en las que lo emulan a propósito (banner, panel).
+
+- **Los arneses leen `frontend/dist/data`, salvo que `VERIFY_DATOS` diga otra cosa.** Esa
+  variable existe para no volver a componer datos de prueba dentro de
+  `frontend/public/data/`, que esta versionado y lo produce Actions: se genera a un
+  directorio desechable y se apunta ahi
+  (`VERIFY_DATOS=/tmp/data npm run verify:priorizacion`).
 
 - **`verify:panel` elige el modo de datos solo.** Con `frontend/public/data/manifest.json`
   presente afirma cifras de producción; sin él usa un fixture de 12 incendios. En CI el
@@ -316,9 +331,33 @@ con código de salida 0.
     `/web/search/lat,lon` y nunca con la URL de cámara `/web/@…`, que aterriza sin ninguna
     marca del punto.
 
-  Lo vigilan C12 y C16. `DECISIONES.md` §T.
+  Lo vigilan C12 y C16. `DECISIONES.md` §V.
 - **La fecha del manifest se arma con los componentes del ISO**, nunca con `new Date(iso)`:
   en Chile eso retrocede un día todo lo generado antes de las 03:00 UTC.
+- **En la interfaz se dice «área», nunca «mancha»** (decisión de Luis, 2026-09-16, tras la
+  revisión de un colega de CONAF). Lo que **no** cambia es el campo del dato `mancha_id` ni
+  su columna en el CSV: es contrato publicado y renombrarlo rompe los cruces de quien ya lo
+  descargó. Las funciones internas tampoco. `DECISIONES.md` §Y.
+
+- **El vocabulario de familias de infraestructura sale del manifest, no de `config.js`.** Al
+  pasar la capa a cobertura nacional cambiaron las familias del insumo y `COLOR_FAMILIA` se
+  quedó con la anterior: la nueva caía en el gris por omisión, **exactamente el color de
+  «Red aeroportuaria»**, sin un solo error en consola. Lo vigila **C19**, que compara los
+  chips PINTADOS con `capas.infra_puntos.familias` y cruza las claves de `GLIFOS`.
+  `DECISIONES.md` §X.
+
+- **El CUT de un punto de infraestructura lo declara su `.dbf`, no su geometría.** Once no
+  cuadran, el peor a 753 km. No se corrigen: se cuentan en `fuente.cut_fuera_de_su_caja` y
+  **D15 exige que no aparezca ni uno más**, con un tope propio del 0,1 % para que un ETL que
+  empiece a perder husos no pueda taparlo subiendo su propia cifra.
+
+- **`leaflet.markercluster` exige que el mapa tenga `maxZoom` finito**, y en este visor lo
+  aporta la capa base, que añade un efecto de `App.jsx`. Como los efectos de los hijos corren
+  ANTES que los del padre, añadir el grupo al montar lanzaba «Map has no maxZoom specified» y
+  **tumbaba la aplicación entera**: panel en blanco, cero KPIs, un error en consola.
+  `CapaIconos` espera al `layeradd`. No se arregla poniéndole `maxZoom` al mapa: cada capa
+  base declara el suyo (18 o 19).
+
 - **PMTiles exige HTTP Range.** Sin respuestas `206` el visor **no dibuja ninguna
   carretera** y falla con «Check that your storage backend supports HTTP Byte Serving». Si
   sirves `dist` con un servidor propio, tiene que soportarlo.
@@ -393,6 +432,13 @@ Comprobadas una a una el 2026-09-10:
    `DECISIONES.md` §Q.
 10. **`INSUMO_ELECTRICO/` duplica el Excel de `INSUMO_INCENDIO/`** (mismo blob) desde `18ff9db`.
     Qué hacer con esa carpeta lo decide Luis.
+11. **`COMUNAS_PRIORITARIAS` (345 polígonos comunales) no lo usa ningún paso del pipeline.**
+    Con ellos se podría asignar el CUT de la infraestructura por geometría en vez de por el
+    código del insumo. **Cambiaría el significado del filtro por comuna** —de «lo que declara
+    el servicio» a «dónde cae el punto»—, así que **lo decide Luis**.
+12. **Los 11 CUT que no cuadran y los 22 puntos sin comuna no se dicen en la interfaz.** Se
+    cuentan en el manifest y los vigilan D15 y D15b, pero quien filtre por esas comunas no
+    tiene forma de saberlo. `DECISIONES.md` §X.
 11. **Las 5 comunas de riesgo de más de 10 MB son lentas en un equipo modesto** (Natales:
     8,4 s de carga y 2,1 s por repintado con la CPU a ×4, medido el 2026-09-15).
     Simplificarlas cambia la geometría publicada y lo decide Luis (`mejoras.md`, Pendientes

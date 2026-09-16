@@ -6,8 +6,8 @@ aserción la vigila. Si una decisión no tiene vigilante, lo dice.
 
 Reproducir el estado: `python ETL/run.py -v` y después `python ETL/verify.py --negativas`.
 
-Estado a **2026-09-15** (§A–§P medidos el 2026-09-10; §Q y §R, el 2026-09-14; §S y §T, el
-2026-09-15). Las cifras llevan fecha porque caducan.
+Estado a **2026-09-16** (§A–§P medidos el 2026-09-10; §Q y §R, el 2026-09-14; §S a §V, el
+2026-09-15; §W, el 2026-09-16). Las cifras llevan fecha porque caducan.
 
 > Este documento manda sobre `ETL/` y sobre la simbología de `frontend/src/config.js`.
 > Léelo antes de tocar cualquiera de los dos: casi todo lo que parece un error ahí está
@@ -590,7 +590,7 @@ anotando su origen `coipo_vista_catastro@a1ee125`: `BotonControl`, `CajaModal`, 
 **La URL de Earth.** La de cámara (`/web/@lat,lon,0a,1200d,…`) aterriza a 1,2 km sobre el
 satélite **sin ninguna marca** del punto: visto en captura. La de búsqueda (`/web/search/lat,lon`) planta
 la chincheta. Catastro ya lo había aprendido; prevención seguía con la de cámara.
-Desde §T la ficha ya no enlaza a Maps: muestra satélite y Street View en un modal, y Earth,
+Desde §V la ficha ya no enlaza a Maps: muestra satélite y Street View en un modal, y Earth,
 en forma de búsqueda, es la única salida a otra pestaña.
 
 ---
@@ -883,7 +883,7 @@ El arnés de riesgo fija ahora el tema claro al empezar y captura la vista en lo
 
 ---
 
-## T. La ficha muestra el punto en Google dentro del visor, y Earth es la única salida (2026-09-15)
+## V. La ficha muestra el punto en Google dentro del visor, y Earth es la única salida (2026-09-15)
 
 **Lo que se pidió.** La ficha traía dos enlaces a otra pestaña, «Ver en Google Maps» y «Ver
 en Google Earth» (§R). Luis pidió verlos en un modal, sin salir del visor.
@@ -974,6 +974,89 @@ no está comprobado.
 
 ---
 
+## W. Los filtros pasan a botonera con modal, y el territorio va en cascada (2026-09-16)
+
+Segunda fase de la alineación con catastro (§R). Cambia CÓMO se elige, no qué se
+elige: la selección sigue siendo **de un valor por filtro**, que es como viaja en la
+URL desde el principio (decisión de Luis, 2026-09-16; con casillas, cada enlace
+compartido y cada cifra del panel cambiarían de significado).
+
+**Lo que había.** Siete `<select>` apilados, con las opciones y las cifras sacadas
+de `manifest.capas[capa].dominios`, o sea de la capa ENTERA. Dos consecuencias
+medidas: con Aysén elegida, «Temporada» seguía ofreciendo las nueve con sus cifras
+nacionales --y varias dejaban el mapa vacío sin avisar--, y el territorio no pasaba
+de la región, aunque el dato trae provincia y comuna.
+
+**La cascada.** Ahora cada filtro ofrece **sólo lo que existe con los demás filtros
+puestos**, y su cifra se recuenta sobre las features que el visor ya tiene
+cargadas: son las mismas que dibuja el mapa, así que la cuenta de la opción es
+exactamente lo que se verá al elegirla. Medido con Aysén: de 51 provincias a 4, de
+332 comunas a 8, de 9 temporadas a 8 y de 14 causas generales a 12.
+
+Dos reglas que no son de estilo:
+- **Las capas servidas por teselas no se estrechan.** Rutas y red vial no tienen
+  features en el navegador; ahí las cifras siguen saliendo del manifest y el modal
+  lo dice en vez de dejar creer que «Ripio (1.892 rutas)» ya cuenta la región.
+- **El valor elegido no desaparece nunca de su lista**, aunque quede en 0 con los
+  demás filtros: si desapareciera, el panel mostraría «Todas» con el mapa recortado.
+
+**El territorio: Región › Provincia › Comuna.** Un solo botón y un solo modal con
+los tres niveles encadenados; los inferiores no existen hasta que hay región, que es
+lo que hacían los desplegables. Provincia y comuna **sólo recortan incendios**: es la
+única capa que las trae.
+
+**`?comuna=` es compartido por las dos vistas, y eso obliga a traducir.** La vista de
+riesgo escribe el **CUT** (`?comuna=08305`) y la de incendios el **nombre**
+(`?comuna=Mulchén`). Cada vista acepta las dos formas: nombre exacto, nombre sin
+tildes ni mayúsculas, o CUT resuelto contra los nombres y alias del modelo de riesgo.
+**Sin tabla de equivalencias escrita a mano** (decisión de Luis): medido el
+2026-09-16, **10 de las 308 comunas de incendios se escriben distinto** en el modelo
+--«Aysén»/«Aisén», «Puerto Saavedra»/«Saavedra», «Llay-Llay»/«Llaillay»,
+«Marchigüe»/«Marchihue», «Trehuaco»/«Treguaco», «Paihuano»/«Paiguano», «La
+Calera»/«Calera», «San Vicente de Tagua Tagua», «Villa O'Higgins» y «Sin registro»,
+que no es una comuna--. Cuando no hay equivalencia, **el filtro no se aplica y se
+dice** en el panel y dentro del modal de Territorio: aplicarlo dejaría el mapa vacío
+y se leería como «en esa comuna no hubo incendios».
+
+**El ámbito nombra el territorio entero.** `ambito()` sólo decía la región: con la
+comuna filtrada, el panel rotulaba «Ámbito: nacional» sobre cifras de Mulchén (visto
+en captura). Ahora dice «Biobío › Biobío › Mulchén», y los paneles que rotulan y
+nombran descargas reciben la comuna ya traducida, no el CUT.
+
+**Qué se movió y qué no** (decisión de Luis: «mover lo accesorio»). Al modal de
+**Información** se fueron las fuentes, la procedencia y la nota de qué muestra el
+visor. **Siguen a la vista**: el aviso de que estos incendios no están activos
+(`DECISIONES.md` §O, vigilado por B28) y la **leyenda**, porque aquí el color es la
+única codificación de la causa y de la titularidad (§R). Las capas, el mapa base, las
+descargas y el enlace pasan a ser botones con su modal.
+
+**Copiado de catastro, con origen** (`coipo_vista_catastro@a1ee125`): `BotonControl`,
+`CajaModal`, el anclaje a la izquierda del `<dialog>` --con el `::backdrop`
+transparente, que es la mitad que de verdad destapa el mapa-- y las clases
+`.grupo-filtro`, `.gf-*`, `.mf-*`. **No se copiaron**: el blanco fijo sobre el acento
+lleno (§U), el «Quitar los 1 filtros» (aquí dice «Quitar el filtro») y el h2 duplicado
+dentro del modal de Descargar, que se oculta con una regla que lo explica.
+
+**Qué lo vigila.**
+- **B27**, reescrita: abre el modal de cada filtro y lee sus opciones. Sus tres
+  mutantes se mudaron a `src/filtros.js`, que es donde vive ahora la cuenta.
+- **B35**, nueva: con la región de MENOS incendios puesta --elegida por definición--,
+  cada filtro de incendios ofrece sólo lo que existe en ella y con la cuenta
+  recontada en el arnés. Su mutante deja de mirar los demás filtros.
+- **B34** apunta a los botones de la botonera; **B23** abre el modal de Descargar;
+  `pulsarPorTexto` lo abre solo cuando el botón no está a la vista.
+- El **mutante de B24** necesitó contexto: `.modal-filtro` usa el mismo `inset` que
+  el cajón del panel y el ancla dejó de ser única.
+
+**Qué NO está hecho.**
+- **Sin buscador dentro del modal**, que catastro sí tiene: la lista más larga aquí
+  son las 332 comunas y el nivel de Territorio ya está acotado por la región.
+- **El panel de la vista de Riesgo sigue con `<select>`**: es F3.
+- La botonera **no se mide en táctil**: el bloque `pointer: coarse` la sube a 44 px,
+  pero ningún arnés emula puntero grueso (`CLAUDE.md` §3).
+
+---
+
 ## Fallos propios cometidos al establecer todo esto
 
 Se dejan escritos porque el diagnóstico falso fue plausible y podría repetirse.
@@ -1050,3 +1133,135 @@ Se dejan escritos porque el diagnóstico falso fue plausible y podría repetirse
     `verify:mutantes`. B29 pasa a una espera propia que se pone roja en vez de reventar, y
     `mutaciones.mjs` imprime ahora las rojas ajenas y el final de la suite de todo
     superviviente: el primer informe sólo decía «la suite falló, pero no por esta aserción».
+
+---
+
+## X. La infraestructura crítica pasa a cobertura nacional y se dibuja en cúmulos (2026-09-16)
+
+El insumo cambió: `INSUMO_PRIORIZACION` traía la infraestructura de **tres comunas**
+y ahora la trae de **todo Chile** (Luis, 2026-09-16). No es «lo mismo pero más
+grande»: casi todas las decisiones de esta capa estaban dimensionadas para 696
+puntos y dejan de valer con 35.905.
+
+**Lo que hay, medido al generarlo:** 35.905 elementos en ocho familias — 18.002
+antenas de telecomunicaciones, 11.122 establecimientos educacionales, 2.749
+servicios de salud, 1.829 servicios sanitarios rurales, 1.215 subestaciones
+eléctricas, 597 comunidades preparadas, 312 aeródromos y 79 unidades
+penitenciarias. De los establecimientos educacionales, **97 están marcados como
+escuela preparada** en el propio insumo.
+
+**El archivo no podía viajar como venía: 10,80 MiB.** Baja a **7,60 MiB** con dos
+cambios, ninguno de los cuales pierde información:
+- Trece campos categóricos viajan como **índice contra `tablas`**, igual que
+  incendios (§J). `familia` sola pesaba 0,71 MiB repetida 35.905 veces.
+- **`grupo` y `comuna` dejan de viajar en cada punto.** La etiqueta larga de la
+  familia está **una vez** en `capas.infra_puntos.familias`, y el nombre de la
+  comuna sale del `cut` contra `capas.riesgo.partes`, que el visor ya tiene
+  cargado. Repetidos en cada punto pesaban 2,05 MiB.
+
+**Cúmulos numerados, no iconos sueltos** (decisión de Luis, 2026-09-16). Un icono
+por elemento es inviable a escala nacional, y el umbral de zoom que servía para 696
+puntos (`ZOOM_ICONOS = 9`, retirado) tampoco: **medido a z14 sobre Santiago, se
+dibujaban 6.767 iconos y no se veía NINGUNA mancha de riesgo**, que es lo que la
+vista viene a mostrar. Con `leaflet.markercluster` y radio de 50 px —no los 30 de la
+página eléctrica, que trabaja con 1.248 puntos— ese mismo encuadre queda en **804
+cúmulos y 165 iconos sueltos**, con las manchas visibles. A escala nacional son
+**9 cúmulos que suman exactamente 35.905**.
+
+**No se fija `disableClusteringAtZoom`.** Con el umbral puesto, por encima de él
+vuelven todos los iconos de golpe y reaparece la cortina; sin él manda el radio y
+dos elementos se separan cuando en pantalla distan más de 50 px, a la escala que
+sea.
+
+**markercluster exige que el mapa tenga `maxZoom` finito** (`onAdd` lanza «Map has
+no maxZoom specified»), y en este visor ese `maxZoom` lo aporta la **capa base**,
+que añade un efecto de `App.jsx`. Como los efectos de los hijos corren antes que los
+del padre, la capa se añadía cuando el mapa todavía respondía `Infinity`: la
+excepción subía hasta React y **tumbaba la aplicación entera** —panel en blanco,
+cero KPIs, un solo error en consola—. `CapaIconos` espera al `layeradd` que trae ese
+`maxZoom` en vez de fijarlo en las opciones del mapa, que lo congelaría para todas
+las capas base (18 o 19 según el proveedor, §N).
+
+### Lo que el insumo no dice, contado y publicado
+
+Tres cosas no cuadran en el dato. Ninguna se corrige —el dato es de su servicio y
+este visor no lo reescribe— y ninguna se absorbe en silencio:
+
+- **16 elementos fuera del área continental** (Isla de Pascua y Juan Fernández):
+  quedan fuera del mapa, con el recuento por familia en `fuente.fuera_de_chile` y
+  **dicho en el panel**. Decisión de Luis (2026-09-16): «dejarlos fuera, contados».
+- **22 puntos sin comuna del modelo** (20 antenas y 2 comunidades preparadas): el
+  insumo no trae código ni nombre que resuelva. Se publican igual —tienen
+  coordenada— y se cuentan en `fuente.sin_comuna`.
+- **11 puntos cuyo CUT del insumo no cuadra con su coordenada**, el peor a **753
+  km** (una antena con código de una comuna del Maule y coordenada en el norte).
+  El CUT lo declara el `.dbf` de cada servicio, no la geometría, así que el filtro
+  por comuna los pone donde dice el servicio. Se miden contra la caja de las manchas
+  de ese CUT y se publican en `fuente.cut_fuera_de_su_caja`.
+
+**D15 deja de exigir cero y pasa a exigir que no haya ni uno más.** Cuenta los
+puntos lejos de la caja de su CUT y los cruza con lo que declaró el ETL, con dos
+guardas para que el cruce no sea un espejo: un **tope propio del 0,1 %** de la capa
+(36 puntos), que un ETL que empezara a perder husos en masa no puede tapar subiendo
+su propia cifra, y un **cruce del margen** (0,01 grados) entre el que usa la
+aserción y el que publica el manifest. D15b hace lo mismo con los que no tienen
+comuna. Cuatro controles negativos: huso vecino, CUT de otra comuna, margen
+distinto en el manifest y un punto más sin comuna.
+
+**Ficha y descargas.** La ficha resuelve los índices con la misma función que usa el
+CSV (`decodeInfra` en `App.jsx`), así que no hay dos reglas de decodificación que
+puedan desincronizarse; el GeoJSON usa el camino de incendios (`tablas` +
+`codificados`, conservando el código en `<campo>_cod`) porque ese archivo circula
+suelto y ahí el código original vale tanto como la etiqueta. El CSV pasa de 18 a 30
+columnas: entran las que el insumo nacional trae y antes no existían —`urgencia`,
+`preparada`, `estado`, `sector`, `poblacion`, `riesgo`, `anio`, `tecnologia`,
+`altura_m`, `arranques`, `uso`— y sale `comunidad_escolar`, que ya no está en el
+dato.
+
+**La vista de riesgo deja de pisar el encuadre de la URL.** Encuadraba el país
+siempre que se entraba sin comuna, así que un enlace compartido con `?lat&lon&z`
+aterrizaba en el país entero: ahora respeta el encuadre de la URL, como ya hacía el
+encuadre inicial de incendios.
+
+---
+
+## Y. «Manchas» pasa a «Áreas», y la vista de Riesgo explica lo que muestra (2026-09-16)
+
+Las dos salen de la misma revisión: un colega de CONAF miró el visor el 2026-09-16 y trajo
+tres observaciones. La primera —que los filtros no van en cascada— estaba mirando el sitio
+**publicado**, y la cascada es F2, hecha y sin commitear (§W): con Antofagasta elegida, el
+árbol local ofrece 4 temporadas que suman sus 8 incendios, no las 9 nacionales. Las otras
+dos eran reales.
+
+**«Manchas» era vocabulario del laboratorio, no de la institución.** El modelo llama así a
+sus polígonos y el visor lo copió sin pensarlo. Se sustituye por **«áreas»** en todo lo que
+lee una persona: el encabezado, el KPI, la leyenda, la ficha («Área de riesgo»), los avisos,
+las pistas y los botones de descarga.
+
+**Lo que NO cambia es el campo `mancha_id`**, ni la columna del CSV que lo lleva. Es
+contrato publicado: quien haya descargado un CSV o esté cruzando el GeoJSON contra otra
+tabla lo tiene escrito así, y renombrarlo rompería ese cruce para ahorrar una palabra que
+nadie ve. Las funciones internas (`fichaMancha`, `colorDeMancha`) tampoco: renombrarlas es
+ruido en el diff sin efecto en pantalla.
+
+**La vista no explicaba nada, empezando por el número del selector.** «Coihaique (669)» no
+decía en ninguna parte que 669 fueran sus áreas de riesgo; se leía como un puntaje o un
+ranking. Ahora hay dos cosas:
+
+- **Una línea pegada al selector**, que es donde surge la duda: «El número entre paréntesis
+  es cuántas áreas de riesgo tiene la comuna».
+- **Un botón «Qué muestra esta vista»** en la cabecera del panel —no al final, porque la
+  pregunta se hace antes de tocar nada— que abre la explicación entera: qué mide el modelo
+  (amenaza, no exposición), qué es un área, qué significa el número, en qué se diferencian
+  la clase del modelo y el contraste interno, qué son los círculos numerados de
+  infraestructura, qué baja cada descarga y de dónde vienen los datos.
+
+**Todas las cifras del modal salen del manifest**, incluidas las tres advertencias de la
+capa de infraestructura (§X): los insulares que no se dibujan, los que no traen comuna y los
+que llevan un código de comuna que no cuadra. Escribirlas a mano habría sido publicar
+números que caducan en la siguiente corrida del ETL sin que nada se ponga rojo.
+
+**Lo vigila C20**, con tres controles negativos: quitar el botón, quitar la línea del
+selector, y dejar el modal sin la explicación del número. Y C8b, C3 y C11 pasaron a afirmar
+los textos nuevos: una aserción que sigue buscando «manchas» en la pantalla habría quedado
+verde sólo porque nadie la miró.

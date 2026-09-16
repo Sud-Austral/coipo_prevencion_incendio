@@ -188,7 +188,8 @@ const fmtPct1 = new Intl.NumberFormat('es-CL', { minimumFractionDigits: 1, maxim
 const num = (f, v) => (typeof v === 'number' ? f.format(v) : null)
 
 /**
- * Mancha de riesgo.
+ * Area de riesgo (hasta el 2026-09-16 se llamaba «mancha» en la interfaz; el
+ * campo del dato sigue siendo `mancha_id`, que es contrato publicado).
  *
  * `nivel_medio` VA SIEMPRE ACOMPANADO de su rango min-max y de `pct_alto`,
  * porque la clase es un PROMEDIO redondeado: una mancha «Medio» puede tener
@@ -204,7 +205,7 @@ const num = (f, v) => (typeof v === 'number' ? f.format(v) : null)
  */
 export function fichaMancha(p, rango, color, region) {
   return ficha(
-    'Mancha de riesgo',
+    'Área de riesgo',
     `${p.comuna} · ${p.clase}`,
     [
       fila('Comuna', p.comuna),
@@ -264,8 +265,23 @@ export function fichaPunto(p, color) {
       fila('Altura', typeof p.altura_m === 'number' ? `${fmt1.format(p.altura_m)} m` : null),
       fila('Código OACI', p.codigo_oaci),
       fila('Uso', p.uso),
-      fila('Alumnos', p.alumnos),
-      fila('Comunidad escolar', p.comunidad_escolar),
+      fila('Estado', p.estado),
+      // Solo las 8 familias del insumo nacional (2026-09-16) tienen estos
+      // campos, y cada uno lo trae UNA sola familia: `urgencia` viene de salud,
+      // `preparada` de educacion, y `anio`/`poblacion`/`sector`/`riesgo` de
+      // comunidades preparadas. `fila` descarta los nulos, asi que no hay que
+      // ramificar por familia.
+      fila('Atención de urgencia', p.urgencia),
+      // `preparada` es booleano: sin esto saldria «false», que no es un texto
+      // que nadie quiera leer en una ficha. Las 97 escuelas preparadas del
+      // insumo estan marcadas asi.
+      fila('Escuela preparada', typeof p.preparada === 'boolean' ? (p.preparada ? 'Sí' : 'No') : null),
+      fila('Sector', p.sector),
+      // El dato viene como texto y a veces es «-»: se muestra tal cual salvo
+      // ese marcador, que no dice nada.
+      fila('Población', p.poblacion === '-' ? null : p.poblacion),
+      fila('Clasificación de riesgo', p.riesgo),
+      fila('Año', p.anio),
     ],
     color,
   )

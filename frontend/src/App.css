@@ -661,6 +661,37 @@ select {
   margin-top: 3px;
 }
 
+/* ---------- cumulos de infraestructura ----------
+   Origen: src/electrico/electrico.css (la pagina de lineas electricas), que los
+   usa para 1.248 incendios. Aqui son 35.905 elementos de ocho familias.
+
+   CUMULOS NEUTROS, grafito con anillo blanco: cualquier tono se leeria como una
+   familia mas, y un cumulo mezcla familias por definicion. El color lo llevan
+   los iconos, que es cuando ya se distingue uno a uno. */
+.marker-cluster {
+  border-radius: 50%;
+  background: rgba(17, 17, 17, 0.25);
+}
+
+.marker-cluster div {
+  box-sizing: border-box;
+  width: calc(100% - 8px);
+  height: calc(100% - 8px);
+  margin: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1.5px solid #fff;
+  background: rgba(17, 17, 17, 0.88);
+  color: #fff;
+  font: 700 12px/1 var(--sans);
+}
+
+.cumulo-grande div {
+  font-size: 13px;
+}
+
 /* ---------- iconos de infraestructura ---------- */
 
 /* El divIcon trae fondo y borde propios de Leaflet; se quitan para que solo se
@@ -1156,6 +1187,346 @@ select {
 
 .cartel-ok {
   margin-left: auto;
+}
+
+/* ---------- botonera de controles y sus modales (F2) ----------
+
+   Origen: coipo_vista_catastro@a1ee125 frontend/src/App.css, con los tokens de
+   este visor (--border, --panel, --text-h, --accent, --sobre-acento, --shadow) y
+   sin lo que alli se decidio NO traer: el blanco sobre el acento lleno --2,09:1
+   en oscuro alla, 2,53:1 aqui antes de F1-- y el ancho de panel de 560 px.
+   DECISIONES.md §R y §V. */
+
+/* DOS COLUMNAS. Los seis filtros caben en tres filas de ~40 px; como <select>
+   apilados ocupaban el doble y las 332 comunas no caben en un desplegable. */
+.filtro-botonera {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+/* UNA SOLA COLUMNA para Territorio: su valor es texto libre --«Biobío › Biobío
+   › Mulchén»-- y en media columna de 320 px se parte en tres lineas. */
+.filtro-botonera.una {
+  grid-template-columns: 1fr;
+}
+
+/* TRES EN FILA para Información, Descargar y Compartir: no llevan cifra ni
+   valor, y se leen como lo que son, las tres salidas agrupadas al fondo. */
+.filtro-botonera.tres {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.filtro-botonera.tres .grupo-filtro {
+  justify-content: center;
+}
+
+.filtro-botonera.tres .gf-titulo {
+  flex: 0 1 auto;
+  text-align: center;
+}
+
+/* FLEX Y NO REJILLA: los botones no llevan las mismas piezas --Territorio y
+   Mapa base suman una linea de valor-- y una rejilla de columnas fijas mandaba
+   la ultima pieza a otra fila partiendo el boton por la mitad. */
+.grupo-filtro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: var(--alto-control);
+  padding: 8px 10px;
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  border-radius: var(--radio-control);
+  background: var(--bg);
+  color: var(--text-h);
+  font: inherit;
+  font-size: 12.5px;
+}
+
+.grupo-filtro:hover {
+  border-color: var(--accent);
+}
+
+/* CON FILTRO ACTIVO se tiene que ver sin abrir nada: un filtro que no se ve
+   hace que el mapa muestre menos de lo que deberia sin nada en pantalla que lo
+   explique, y esa es la forma mas facil de citar una cifra equivocada.
+   color-mix y no un token nuevo: el tinte sale del propio acento, asi que sigue
+   al tema sin duplicar la paleta. */
+.grupo-filtro.con-filtro {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg));
+}
+
+/* SIN OPCIONES se atenua, pero NO se deshabilita: deshabilitarlo esconderia el
+   motivo, y abriendolo se lee por que esta vacio. */
+.grupo-filtro.vacio {
+  opacity: 0.55;
+}
+
+.grupo-filtro.vacio .gf-total {
+  text-decoration: line-through;
+}
+
+.gf-titulo {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* El total de opciones, apagado: informa del tamaño de la lista sin competir
+   con el valor elegido, que es el que cambia el mapa. */
+.gf-total {
+  font-size: 11px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* LO ELEGIDO, en el propio boton y en su linea. */
+.gf-valor {
+  flex: 1 0 100%;
+  margin-top: 2px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--accent);
+  overflow-wrap: anywhere;
+}
+
+/* La cuenta de filtros puestos, junto al titulo de la seccion. */
+.cuenta-filtros {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--accent);
+  color: var(--sobre-acento);
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.gf-lista {
+  list-style: none;
+  margin: 2px 0 4px;
+  padding: 0;
+}
+
+.gf-opcion {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: baseline;
+  gap: 8px;
+  padding: 4px 2px;
+  border-radius: 4px;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.gf-opcion:hover {
+  background: var(--panel);
+}
+
+.gf-opcion input {
+  margin: 0;
+  accent-color: var(--accent);
+  align-self: center;
+}
+
+/* Una opcion que los demas filtros dejaron en cero se atenua pero NO se quita
+   si es la elegida: si desapareciera, el panel diria «Todas» con el mapa
+   recortado (ver src/filtros.js). */
+.gf-opcion.vacia {
+  color: var(--text-2);
+}
+
+.gf-etq {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.gf-sub {
+  display: block;
+  font-size: 11px;
+  font-style: italic;
+  color: var(--text-2);
+}
+
+.gf-cifra {
+  font-variant-numeric: tabular-nums;
+  font-size: 11.5px;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+/* ---------- los niveles del modal de Territorio ----------
+   Region, provincia y comuna a la vez y encadenados. Cada nivel con su lista:
+   las comunas no pueden empujar a las regiones fuera de la pantalla. */
+.mf-nivel {
+  margin-top: 10px;
+}
+
+.mf-nivel h3 {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-2);
+}
+
+.mf-nivel + .mf-nivel {
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.mf-cuerpo .mf-nivel .gf-lista {
+  max-height: 240px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* ---------- el modal de un control ----------
+   Comparte la piel de .ficha --mismo radio, misma sombra-- porque es el mismo
+   objeto para quien lo usa: algo que se abre encima, se lee y se cierra con
+   Escape. */
+.modal-filtro {
+  /* CON BORDE, al reves que .ficha: esta es grande y se dibuja sobre el panel,
+     que es del mismo color; sin una linea que la recorte, el dialogo y el panel
+     se leen como un solo plano. */
+  border: 1px solid var(--border);
+  border-radius: var(--radio-caja);
+  padding: 0;
+  /* EL ANCHO DEL PANEL, no uno fijo: asi abrir un control no mueve el borde. Si
+     el tirador estrecha el panel, el modal lo sigue. El suelo de 320 px es por
+     el caso raro: con el panel plegado, --pista-panel vale 0. */
+  width: min(max(var(--pista-panel, 320px), 320px), calc(100vw - 32px));
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  overflow: hidden; /* el scroll lo lleva .mf-cuerpo, no el dialogo */
+  /* ANCLADO A LA IZQUIERDA, no centrado: el navegador clava `dialog:modal` en
+     el centro de la pantalla, o sea encima del mapa, que es justo lo que no se
+     quiere -- el mapa cambia al elegir y hay que poder verlo. El anclaje es el
+     mismo del cajon del panel: bajo el banner y pegado al borde. `height: auto`
+     no sobra: la hoja del navegador le da `height: fit-content`, que no resuelve
+     el par top/bottom del inset. */
+  position: fixed;
+  inset: var(--alto-banner) auto 0 0;
+  margin: 0;
+  height: auto;
+}
+
+/* EL VELO SE QUITA, y esta es la mitad que de verdad destapa el mapa: el
+   ::backdrop cubre TODA la pantalla, asi que anclar el dialogo sin tocarlo
+   dejaba el mapa igual de tapado. Sigue siendo showModal(): el fondo continua
+   inerte y Escape, el foco atrapado y la top layer salen gratis. */
+.modal-filtro::backdrop {
+  background: transparent;
+}
+
+/* El <dialog> vive dentro de <aside class="panel">, asi que heredaria su `h2`:
+   12 px, versalitas y apagado. Eso es el rotulo de una seccion del panel, no el
+   titulo de un dialogo. */
+.modal-filtro h2 {
+  font-size: 17px;
+  text-transform: none;
+  letter-spacing: normal;
+  opacity: 1;
+  color: var(--text-h);
+  margin-bottom: 0;
+}
+
+/* Rejilla de tres filas: cabecera y pie FIJOS, cuerpo con el scroll. Con 332
+   comunas, un pie que se va con el scroll deja «Listo» fuera de alcance. */
+.mf-caja {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100%;
+}
+
+.mf-cabecera {
+  position: relative;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.mf-cabecera h2 {
+  padding-right: 32px;
+}
+
+.mf-cuenta {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.mf-cabecera .ficha-cerrar {
+  top: 10px;
+  right: 10px;
+}
+
+.mf-cuerpo {
+  overflow-y: auto;
+  padding: 12px 16px;
+}
+
+/* El <h2> de la seccion que entra en el modal SOBRA: el modal ya se titula
+   «Descargar» en su cabecera. Es el «h2 duplicado en Descargar» que se vio en
+   catastro y que DECISIONES.md §R dice explicitamente que no se trae. Se oculta
+   aqui y no se borra del componente porque la misma seccion tiene que seguir
+   rotulandose cuando se lee fuera de un modal (el informe la recorre). */
+.mf-cuerpo > section > h2:first-child {
+  display: none;
+}
+
+.mf-pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+
+/* Que no se estire: `.limpiar` es de ancho completo en el panel, y aqui comparte
+   fila con «Listo». Estirado ocupaba el pie entero y competia con la accion
+   principal. */
+.mf-pie .limpiar {
+  margin: 0;
+  width: auto;
+  flex: 0 1 auto;
+}
+
+.mf-listo {
+  min-height: var(--alto-control);
+  padding: 6px 16px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radio-control);
+  background: var(--accent);
+  /* El texto sobre el acento lleno sale del token: blanco sobre el acento
+     oscuro daba 2,53:1 (DECISIONES.md §U). */
+  color: var(--sobre-acento);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* La lista de fuentes del modal de Informacion. */
+.lista-simple {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  color: var(--text-2);
 }
 
 /* ---------- ficha de la figura seleccionada ---------- */
@@ -1907,6 +2278,15 @@ a:focus-visible {
   outline: none;
 }
 
+/* El tirador es un <div role=separator> de 9 px: sin esto se quedaba con el
+   anillo por omision del navegador (1 px auto), el unico distinto del visor
+   --lo caso B33 al reducirse las paradas de Tab del panel--. Hacia DENTRO,
+   porque 3 px hacia fuera se comen el borde del panel vecino. */
+.tirador:focus-visible {
+  outline: var(--anillo-foco);
+  outline-offset: -3px;
+}
+
 /* Offset hacia DENTRO: con el offset positivo por defecto, el anillo del mapa
    se dibujaria fuera del viewport. No se toca el outline-offset:1px que Leaflet
    declara para .leaflet-container. */
@@ -2068,6 +2448,18 @@ a:focus-visible {
   .centrar,
   .normalizar {
     min-height: 44px;
+  }
+
+  /* Los botones de la botonera y el «Listo» del modal: 12,5 px de texto en un
+     boton de 34 px son un objetivo de dedo por debajo del minimo. */
+  .grupo-filtro,
+  .mf-listo {
+    min-height: 44px;
+  }
+
+  .gf-opcion {
+    padding-top: 8px;
+    padding-bottom: 8px;
   }
 
   .cartel-botones button {

@@ -34,7 +34,7 @@ commitear y publicar cada una.
 |---|---|---|
 | **F0** | Defectos y vigilantes, sin rediseño | **HECHA, sin commitear** (detalle abajo) |
 | F1 | Piel común: token de control, radios, sombra por tema, un solo anillo de foco, ficha con cabecera sticky y pista de scroll, botón de acento con contraste en oscuro | **HECHA el 2026-09-15, sin commitear** (`DECISIONES.md` §U) |
-| F2 | Incendios: filtros en botonera con modal anclado (copiado de catastro con origen), Territorio región › provincia › comuna, Capas, Mapa base, Información · Descargar · Compartir | pendiente |
+| F2 | Incendios: filtros en botonera con modal anclado (copiado de catastro con origen), Territorio región › provincia › comuna, Capas, Mapa base, Información · Descargar · Compartir | **HECHA el 2026-09-16, sin commitear** (`DECISIONES.md` §W) |
 | F3 | Riesgo (antes Priorización) con la misma botonera. Su leyenda ya está en es-CL desde el 2026-09-15, al cambiar el insumo (`DECISIONES.md` §S) | pendiente |
 | F4 | Indicadores en secciones plegables (`<details>` con el h2 dentro del `summary`) | pendiente |
 | F5 | Líneas eléctricas como tercera vista `?vista=electrico` | pendiente |
@@ -56,7 +56,7 @@ commitear y publicar cada una.
   - la ficha abre el punto en satélite y Street View dentro de un modal del visor, y el iframe sólo existe mientras está abierto;
   - Street View sólo tiene imágenes pegado a una calle recorrida por Google, y ninguna URL sin clave salta al panorama más cercano: el aviso va encima del recuadro y ofrece «buscar alrededor en Google Maps»;
   - Earth, que no se deja incrustar, sale a otra pestaña con `/web/search/lat,lon` y planta la chincheta (la URL de cámara aterrizaba sin ninguna marca);
-  - lo vigilan C12 y C16 (`DECISIONES.md` §T).
+  - lo vigilan C12 y C16 (`DECISIONES.md` §V).
 - **Fichas en es-CL:** además corrigió 46 porcentajes de 2.288 que `toFixed(1)` redondeaba mal. Lo vigilan C13 y C14.
 - **Guardas de parcheo** de `verify:mutantes` y `verify:priorizacion -- --negativas`:
   - instantánea con sha256 y respaldo en disco con `pendiente.json`, que la corrida siguiente detecta;
@@ -140,6 +140,19 @@ commitear y publicar cada una.
   simplificó, o produce el `.json` de forma reproducible, se puede verificar; hoy no.
 
 - ~~**Canonizar la grafía de las comunas en el ETL.**~~ **HECHO el 2026-09-15** (D21).
+
+- **11 elementos de infraestructura llevan un CUT que no cuadra con su coordenada**, el peor
+  a 753 km (`DECISIONES.md` §X). El código comunal lo declara el `.dbf` de cada servicio y
+  este visor no lo reescribe: se cuentan en `fuente.cut_fuera_de_su_caja` y D15 exige que no
+  aparezca ni uno más. **Lo que sigue abierto es decirlo hacia fuera**: hoy el panel no lo
+  menciona, y quien filtre por esas comunas verá un elemento de más o de menos sin saberlo.
+  Si CONAF quiere corregirlos, es una consulta a los servicios de origen, no un cambio aquí.
+- **22 elementos no tienen comuna del modelo** (20 antenas y 2 comunidades preparadas): se
+  publican y se cuentan (`fuente.sin_comuna`, D15b), pero desaparecen al filtrar por comuna.
+- **`COMUNAS_PRIORITARIAS` (345 polígonos comunales) sigue sin usarse.** Con ellos se podría
+  asignar el CUT por geometría en vez de por el código del insumo, y medir cuántos discrepan
+  de verdad. **Lo decide Luis**: cambiaría el significado del filtro por comuna, que hoy es
+  «lo que dice el servicio» y pasaría a ser «dónde cae el punto».
 
 ### Para F5 (salió de la revisión adversarial de la página de Líneas eléctricas)
 

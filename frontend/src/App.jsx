@@ -52,6 +52,7 @@ import PanelIndicadores from './components/PanelIndicadores'
 import Tirador from './components/Tirador'
 import SeccionDescargas from './components/SeccionDescargas'
 import { IconoIndicadores } from './components/graficos'
+import { comunaEnIncendios, opcionesFiltros } from './filtros'
 import { escribirURL, leerURL } from './urlState'
 import { guardarDisposicion, leerDisposicion } from './preferencias'
 import './App.css'
@@ -490,13 +491,30 @@ export default function App() {
   )
 
   // ---------- filtros ----------
+  // La comuna del filtro puede venir como nombre (elegida en esta vista) o como
+  // codigo CUT (elegida en la de riesgo, que comparte ?comuna=). Se traduce al
+  // vocabulario de incendios; sin equivalencia, null, y el filtro no se aplica.
+  const comunaIncendios = useMemo(
+    () => comunaEnIncendios(filtros.comuna, tablas, metaRiesgo),
+    [filtros.comuna, tablas, metaRiesgo],
+  )
+
+  // Los paneles que ROTULAN el ambito y nombran las descargas reciben la comuna
+  // ya traducida al vocabulario de incendios: con el CUT en crudo, el titulo del
+  // informe habria dicho «08305» y, si la comuna no tiene equivalencia, el
+  // ambito habria nombrado un recorte que no se esta aplicando.
+  const filtrosIncendios = useMemo(
+    () => ({ ...filtros, comuna: comunaIncendios ?? '' }),
+    [filtros, comunaIncendios],
+  )
+
   const pasaIncendio = useMemo(() => {
-    const f = filtros
+    const f = { ...filtros, comuna: comunaIncendios ?? '' }
     if (!tablas) return null
     // Se traducen las etiquetas del filtro a codigos UNA vez, y luego cada
     // marker se compara con enteros en vez de strings.
     const cod = {}
-    for (const campo of ['region', 'temporada', 'causa_grupo', 'causa_general']) {
+    for (const campo of ['region', 'provincia', 'comuna', 'temporada', 'causa_grupo', 'causa_general']) {
       if (!f[campo]) continue
       const i = tablas[campo]?.indexOf(f[campo])
       cod[campo] = i == null || i < 0 ? -1 : i
@@ -506,7 +524,7 @@ export default function App() {
       for (const campo in cod) if (p[campo] !== cod[campo]) return false
       return true
     }
-  }, [filtros, tablas])
+  }, [filtros, comunaIncendios, tablas])
 
   const pasaPorCampos = useCallback(
     (campos) => {
@@ -521,6 +539,31 @@ export default function App() {
   const pasaVerificado = useMemo(() => pasaPorCampos(['region']), [pasaPorCampos])
   const pasaVial = useMemo(() => pasaPorCampos(['region', 'carpeta']), [pasaPorCampos])
 
+  // ---------- opciones de los filtros, en cascada ----------
+  // Se calculan aqui y no en el panel porque las features cargadas viven aqui.
+  // Ver src/filtros.js: cada filtro ofrece solo lo que existe con los demas
+  // puestos, con la cuenta de la capa que le toca contar.
+  const opciones = useMemo(
+    () =>
+      opcionesFiltros({
+        capasMan: manifest?.capas ?? {},
+        capasActivas,
+        filtros,
+        datos: {
+          incendios: incendios.data?.features ?? null,
+          oecv: oecv.data?.features ?? null,
+          oecv_verificado: verificado.data?.features ?? null,
+          puntos_standby: standby.data?.features ?? null,
+          rutas: rutas.data?.features ?? null,
+          redvial: redvial.data?.features ?? null,
+        },
+        tablas,
+        comunaIncendios,
+      }),
+    [manifest, capasActivas, filtros, comunaIncendios, tablas,
+     incendios.data, oecv.data, verificado.data, standby.data, rutas.data, redvial.data],
+  )
+
   // ---------- riesgo ----------
   const comunaRiesgo = parteRiesgo?.comuna ?? ''
   const [modoEscala, setModoEscala] = useState('absoluta')
@@ -530,24 +573,39 @@ export default function App() {
   // los rios del mapa base sin perder la clase de cada mancha. El control lo
   // baja para inspeccionar el territorio de debajo y lo sube para presentar.
   const [opacidad, setOpacidad] = useState(0.65)
-  // Los iconos estan filtrados por zoom, no ausentes: el panel tiene que
-  // decirlo o parecera que la capa no cargo.
-  const [iconosLejos, setIconosLejos] = useState(false)
 
   // Las familias salen del manifest, no de una lista escrita a mano. `null`
   // significa "aun no llego el manifest"; en cuanto llega, todas encendidas.
+  // La etiqueta larga viaja UNA vez en `capas.infra_puntos.familias` y no
+  // repetida en cada uno de los 35.905 puntos (pesaba 1,34 MiB).
+  const metaInfra = capaMeta('infra_puntos')
+  const tablaFamilia = metaInfra?.tablas?.familia ?? []
   const familias = useMemo(() => {
-    const doms = capaMeta('infra_puntos')?.dominios
+    const doms = metaInfra?.dominios
     if (!doms?.familia) return []
-    const etiquetas = new Map((doms.grupo ?? []).map((g) => [g.v, g.v]))
-    return doms.familia.map((f) => ({
-      v: f.v,
-      n: f.n,
-      // El nombre legible sale del propio dato (`grupo`), emparejado por orden
-      // de frecuencia con `familia`: las dos listas las emite el mismo ETL.
-      etiqueta: etiquetas.get(f.v) ?? (doms.grupo ?? [])[doms.familia.indexOf(f)]?.v ?? f.v,
-    }))
-  }, [capaMeta])
+    const etiquetas = metaInfra?.familias ?? {}
+    return doms.familia.map((f) => ({ v: f.v, n: f.n, etiqueta: etiquetas[f.v] ?? f.v }))
+  }, [metaInfra])
+
+  // Las propiedades categoricas de infraestructura viajan como indices contra
+  // `tablas`, igual que las de incendios: se resuelven al abrir la ficha o al
+  // exportar, no en cada punto dibujado.
+  const decodeInfra = useCallback(
+    (p) => {
+      const t = metaInfra?.tablas ?? {}
+      const salida = { ...p }
+      for (const campo of metaInfra?.codificados ?? []) {
+        const i = p[campo]
+        salida[campo] = typeof i === 'number' ? (t[campo]?.[i] ?? null) : (i ?? null)
+      }
+      salida.grupo = metaInfra?.familias?.[salida.familia] ?? salida.familia
+      // El nombre de la comuna sale del CUT contra las partes de riesgo, que el
+      // visor ya tiene cargadas del manifest.
+      salida.comuna = p.cut ? (metaRiesgo?.partes?.[p.cut]?.comuna ?? null) : null
+      return salida
+    },
+    [metaInfra, metaRiesgo],
+  )
 
   useEffect(() => {
     if (familiasActivas === null && familias.length) {
@@ -618,7 +676,13 @@ export default function App() {
   // infraestructura escribe «Coyhaique» y «Mulchen», y el modelo de riesgo
   // «Coihaique» y «Mulchén». Por nombre, elegir esas dos comunas dejaba 0 iconos.
   // Sin comuna no se dibuja ninguno: no hay manchas que acompañar.
-  const pasaPunto = useMemo(() => (p) => p.cut === cutRiesgo, [cutRiesgo])
+  // SIN comuna elegida no hay filtro: la capa es nacional desde el 2026-09-16 y
+  // los cumulos muestran el pais entero. Con comuna, solo la suya, que es de lo
+  // que habla el panel.
+  const pasaPunto = useCallback(
+    (p) => !cutRiesgo || p.cut === cutRiesgo,
+    [cutRiesgo],
+  )
 
   /**
    * Encuadra el mapa en una region (o en el pais entero con region vacia).
@@ -786,8 +850,11 @@ export default function App() {
     }
   }, [fichaPendiente, porIdRiesgo, abrirFichaMancha])
   const selPunto = useCallback(
-    (p, ll) => abrirFicha(conCoord(fichaPunto(p, COLOR_FAMILIA[p.familia] ?? '#4B5563'), ll)),
-    [abrirFicha],
+    (p, ll) => {
+      const d = decodeInfra(p)
+      return abrirFicha(conCoord(fichaPunto(d, COLOR_FAMILIA[d.familia] ?? '#4B5563'), ll))
+    },
+    [abrirFicha, decodeInfra],
   )
 
   /** Encuadra el mapa en el bbox que el ETL calculo para esa comuna (por CUT). */
@@ -821,8 +888,12 @@ export default function App() {
       return
     }
     // Solo la PRIMERA vez que se entra sin comuna: si se reencuadrara en cada
-    // render, el usuario no podria alejar ni desplazar el mapa.
-    if (encuadradoRiesgo.current || !map) return
+    // render, el usuario no podria alejar ni desplazar el mapa. Y NUNCA si la
+    // URL trae encuadre, igual que el encuadre inicial de incendios: un enlace
+    // compartido con ?lat&lon&z aterrizaba en el pais entero y el encuadre que
+    // alguien quiso compartir se perdia (visto al intentar fotografiar una
+    // comuna con la URL).
+    if (encuadradoRiesgo.current || !map || inicial.center) return
     const b = capaMeta('riesgo')?.bbox
     if (!b) return
     map.fitBounds(
@@ -1140,7 +1211,7 @@ export default function App() {
     kpis,
     incendios: incendios.data,
     oecv: oecv.data,
-    filtros,
+    filtros: filtrosIncendios,
     capasActivas,
     pasaIncendio,
     onToggleCapa: toggleCapa,
@@ -1209,8 +1280,8 @@ export default function App() {
             )
           }
           cuentaAreas={cutRiesgo ? parteRiesgo?.features : metaRiesgo?.features}
-          cuentaPuntos={cutRiesgo ? cuentas.infra_puntos : 0}
-          iconosLejos={iconosLejos}
+          cuentaPuntos={cuentas.infra_puntos}
+          fuenteInfra={metaInfra?.fuente}
           cargando={cargando.riesgo}
           error={errores.riesgo}
           onReintentar={() => reintentos.riesgo?.()}
@@ -1219,6 +1290,7 @@ export default function App() {
           urlGeojson={parteRiesgo ? `${DATA}/${parteRiesgo.archivo}` : null}
           datosPuntos={infraPuntos.data}
           pasaPuntos={pasaPunto}
+          decodificarPunto={decodeInfra}
           map={map}
           base={base}
           onBase={setBase}
@@ -1233,6 +1305,8 @@ export default function App() {
         capasActivas={capasActivas}
         onToggleCapa={toggleCapa}
         filtros={filtros}
+        opciones={opciones}
+        comunaIncendios={comunaIncendios}
         onFiltro={setFiltro}
         onLimpiar={() => setFiltros({})}
         cuentas={cuentas}
@@ -1249,7 +1323,7 @@ export default function App() {
       >
         <SeccionDescargas
           manifest={manifest}
-          filtros={filtros}
+          filtros={filtrosIncendios}
           capasActivas={capasActivas}
           datos={{
             incendios: incendios.data,
@@ -1398,11 +1472,12 @@ export default function App() {
           <CapaIconos
             map={map}
             data={infraPuntos.data}
+            familias={metaInfra?.familias}
+            tablaFamilia={tablaFamilia}
             familiasActivas={familiasActivas ?? []}
             pasa={pasaPunto}
             onSeleccion={selPunto}
             onCuenta={setCuenta('infra_puntos')}
-            onLejos={setIconosLejos}
           />
         </>
       )}

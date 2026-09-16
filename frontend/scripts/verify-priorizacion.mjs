@@ -68,6 +68,15 @@ const DIST = join(FRONT, 'dist')
 // versionado y un commit se los lleva (DECISIONES.md, fallos 8 y 10). Vale tambien
 // en --negativas, que reconstruye dist/ en cada mutante.
 const DATOS = process.env.VERIFY_DATOS ? resolve(process.env.VERIFY_DATOS) : join(DIST, 'data')
+
+// Cuantos elementos de infraestructura hay DIBUJADOS, contando lo que se ve: la
+// cuenta escrita en cada cumulo mas los iconos sueltos. Desde que la capa es
+// nacional y se agrupa (DECISIONES.md §X), contar nodos `.leaflet-marker-icon`
+// mide cuantos discos hay, que no es cuantos elementos hay. Expresion, no
+// bloque: se interpola dentro de las plantillas que evalua el navegador.
+const DIBUJADOS =
+  "([...document.querySelectorAll('.marker-cluster')].reduce((a, e) => a + Number(e.textContent.trim() || 0), 0)" +
+  " + document.querySelectorAll('.icono-infra').length)"
 const CAPA_PUNTOS = join(FRONT, 'src', 'components', 'CapaPuntos.jsx')
 const PANEL_RIESGO = join(FRONT, 'src', 'components', 'PanelRiesgo.jsx')
 const CONFIG_JS = join(FRONT, 'src', 'config.js')
@@ -77,6 +86,7 @@ const ESCALAS = join(FRONT, 'src', 'escalas.js')
 const APP_JSX = join(FRONT, 'src', 'App.jsx')
 const MODAL_FICHA = join(FRONT, 'src', 'components', 'ModalFicha.jsx')
 const MODAL_VISTA = join(FRONT, 'src', 'components', 'ModalVistaGoogle.jsx')
+const CAPA_ICONOS = join(FRONT, 'src', 'components', 'CapaIconos.jsx')
 const ENLACES_GOOGLE = join(FRONT, 'src', 'enlacesGoogle.js')
 const FICHAS = join(FRONT, 'src', 'fichas.js')
 const BASE = '/coipo_prevencion_incendio/'
@@ -166,9 +176,11 @@ const sinTildes = (x) => String(x).normalize('NFD').replace(/[\u0300-\u036f]/g, 
  *     puede casar normalizando. Medido el 2026-09-15: probarlo con Mulchén no
  *     prueba nada, porque su alias «Mulchen» ya casa con «MULCHEN» y el mutante
  *     que quita la normalización SOBREVIVIÓ.
- * B · otra con infraestructura y con un máximo de nivel_medio DISTINTO del de A
- *     a 3 decimales: el mínimo es 0 en las comunas medidas, así que sólo el
- *     máximo puede delatar una escala heredada.
+ * B · otra con infraestructura, con CONTRASTE INTERNO (mínimo distinto del
+ *     máximo) y con un máximo de nivel_medio DISTINTO del de A a 3 decimales:
+ *     el mínimo es 0 en las comunas medidas, así que sólo el máximo puede
+ *     delatar una escala heredada. Sin el contraste interno cae en una comuna de
+ *     una sola mancha, que no rotula extremos (medido el 2026-09-16).
  *
  * Lee el manifest y los GeoJSON, que son datos; nada de src/.
  */
@@ -178,15 +190,30 @@ function comunasDeRiesgo() {
   const riesgo = manifest.capas?.riesgo
   if (!riesgo?.partes) throw new Error('el manifest no declara capas.riesgo.partes')
   const infra = JSON.parse(readFileSync(join(data, manifest.capas.infra_puntos.archivo), 'utf8'))
+  // Los puntos se cuentan DENTRO de la caja de su comuna, que es el encuadre que
+  // usa el visor: desde el insumo nacional (2026-09-16) hay 11 cuyo CUT no cuadra
+  // con su coordenada --DECISIONES.md §X--, y esos no se dibujan al encuadrar su
+  // comuna. Contarlos daria una expectativa que ninguna version correcta cumple.
+  // El nombre alternativo ya no viaja en el punto: sale de `partes[cut].alias`.
   const nombreInfra = new Map()
   const puntos = new Map()
+  const coords = new Map()
   for (const f of infra.features) {
     const cut = f.properties.cut
-    nombreInfra.set(cut, f.properties.comuna)
+    if (!cut) continue
+    const caja = riesgo.partes[cut]?.bbox
+    const [lon, lat] = f.geometry.coordinates
+    if (!caja || lon < caja[0] - 0.01 || lon > caja[2] + 0.01 || lat < caja[1] - 0.01 || lat > caja[3] + 0.01) continue
     puntos.set(cut, (puntos.get(cut) ?? 0) + 1)
+    if (!coords.has(cut)) coords.set(cut, [])
+    coords.get(cut).push([lon, lat])
+  }
+  for (const [cut, p] of Object.entries(riesgo.partes)) {
+    const alias = (p.alias ?? []).find((x) => sinTildes(x).toLowerCase() !== sinTildes(p.comuna).toLowerCase())
+    if (alias && puntos.get(cut)) nombreInfra.set(cut, alias)
   }
   const d3 = { min: 3, max: 3 }
-  const conInfra = [...nombreInfra.keys()]
+  const conInfra = [...puntos.keys()]
     .filter((cut) => riesgo.partes[cut])
     .map((cut) => {
       const gj = JSON.parse(readFileSync(join(data, riesgo.partes[cut].archivo), 'utf8'))
@@ -196,14 +223,27 @@ function comunasDeRiesgo() {
         min = Math.min(min, f.properties.nivel_medio)
         max = Math.max(max, f.properties.nivel_medio)
       }
-      return { cut, gj, parte: riesgo.partes[cut], min, max, nombreInfra: nombreInfra.get(cut), puntos: puntos.get(cut) }
+      return { cut, gj, parte: riesgo.partes[cut], min, max, nombreInfra: nombreInfra.get(cut), puntos: puntos.get(cut), coords: coords.get(cut) ?? [] }
     })
     .sort((x, y) => x.parte.features - y.parte.features || x.cut.localeCompare(y.cut))
   const clave = (x) => sinTildes(x).toLowerCase().trim()
-  const a = conInfra.find((x) => clave(x.nombreInfra) !== clave(x.parte.comuna))
-  const b = a && conInfra.find((x) => x !== a && esCL(x.max, d3) !== esCL(a.max, d3))
+  const a = conInfra.find((x) => x.nombreInfra && clave(x.nombreInfra) !== clave(x.parte.comuna))
+  // B necesita CONTRASTE INTERNO, no solo un maximo distinto: con la capa
+  // nacional el universo pasa de 3 comunas a 343 y la primera que cumplia la
+  // definicion anterior era Alto Hospicio, con UNA mancha. Ahi la leyenda
+  // relativa dice «no hay contraste interno que mostrar» y no rotula extremos,
+  // asi que C6 esperaba un «máx.» que ninguna version correcta escribe.
+  const b =
+    a &&
+    conInfra.find(
+      (x) =>
+        x !== a &&
+        x.parte.features >= 2 &&
+        esCL(x.min, d3) !== esCL(x.max, d3) &&
+        esCL(x.max, d3) !== esCL(a.max, d3),
+    )
   const t = Object.entries(riesgo.partes)
-    .filter(([cut, p]) => !nombreInfra.has(cut) && sinTildes(p.comuna) !== p.comuna)
+    .filter(([, p]) => !(p.alias ?? []).length && sinTildes(p.comuna) !== p.comuna)
     .sort(([c1, p1], [c2, p2]) => p1.features - p2.features || c1.localeCompare(c2))
     .map(([cut, parte]) => ({ cut, parte }))[0]
   if (!a || !b || !t) throw new Error(`no hay comunas que cumplan la definición (A=${a?.cut} B=${b?.cut} T=${t?.cut})`)
@@ -569,7 +609,7 @@ async function correr({ bloque } = {}) {
     // ---- C12 · satélite, Street View y Earth marcan la coordenada ---------
     // Desde el 2026-09-15 la ficha no enlaza a Google: abre el punto en un
     // segundo <dialog> con satélite y Street View incrustados, y Earth queda
-    // como enlace dentro de él (Earth no se deja incrustar; DECISIONES.md §T).
+    // como enlace dentro de él (Earth no se deja incrustar; DECISIONES.md §V).
     // Se afirma la FORMA de cada dirección y que su coordenada sea la de la
     // figura, leída por el arnés de su propia geometría. Las direcciones se
     // desarman con URL y no con una expresión sobre la cadena entera: el orden
@@ -1187,7 +1227,9 @@ async function correr({ bloque } = {}) {
         kpi: document.querySelector('.kpi')?.textContent ?? '',
         pintados, deLeyenda, nTeselas,
       }`)
-    const kpiPais = `${esCL(R.riesgo.features)} manchas de riesgo en el país`
+    // «areas» y no «manchas» desde el 2026-09-16: lo pidio Luis tras revisarlo
+    // un colega de CONAF. El campo del dato sigue siendo `mancha_id`.
+    const kpiPais = `${esCL(R.riesgo.features)} áreas de riesgo en el país`
     const fr2 = c2?.pintados ? c2.deLeyenda / c2.pintados : 0
     comprobar(
       c2 && c2.h1.includes('Riesgo') && c2.valor === '' && c2.opciones === nPartes && c2.grupos === nRegiones
@@ -1204,23 +1246,23 @@ async function correr({ bloque } = {}) {
     // saldrían 0. Después, T escrita sin tildes y en mayúsculas: el otro camino
     // por el que un enlace tiene que casar (ver T en comunasDeRiesgo).
     await ir(`?vista=riesgo&comuna=${encodeURIComponent(R.a.nombreInfra)}`)
-    await esperar(`document.querySelectorAll('.leaflet-marker-icon').length >= ${R.a.puntos}`, `iconos de ${R.a.parte.comuna}`)
+    await esperar(`${DIBUJADOS} === ${R.a.puntos}`, `elementos de ${R.a.parte.comuna}`)
     await esperar(`/[1-9]/.test(document.querySelector('.kpi')?.textContent ?? '')`, 'manchas contadas')
     await espera(1500)
     await esperarTeselas()
     const c3 = await evaluar(`
       const t = [...document.querySelectorAll('.kpi')].map(e => e.textContent).join(' ')
-      const m = t.match(/([\\d.]+) manchas de riesgo/)
+      const m = t.match(/([\\d.]+) áreas de riesgo/)
       return {
         sel: document.querySelector('.panel select')?.value ?? '',
         manchas: m ? m[1] : null,
-        iconos: document.querySelectorAll('.leaflet-marker-icon').length,
+        iconos: ${DIBUJADOS},
       }`)
     const pintado = await evaluar(coloresDeAreas)
     comprobar(
       c3 && c3.sel === R.a.cut && c3.manchas === esCL(R.a.parte.features) && c3.iconos === R.a.puntos && pintado?.distintos >= 2,
       'C3 ?comuna= con la grafía antigua elige la comuna y cruza iconos por CUT',
-      `?comuna=${R.a.nombreInfra} · select=${c3?.sel} · ${c3?.manchas} manchas (esperadas ${esCL(R.a.parte.features)}) · ${c3?.iconos}/${R.a.puntos} iconos · ${pintado?.distintos} colores`,
+      `?comuna=${R.a.nombreInfra} · select=${c3?.sel} · ${c3?.manchas} áreas (esperadas ${esCL(R.a.parte.features)}) · ${c3?.iconos}/${R.a.puntos} iconos · ${pintado?.distintos} colores`,
     )
     const gritado = sinTildes(R.t.parte.comuna).toUpperCase()
     await ir(`?vista=riesgo&comuna=${encodeURIComponent(gritado)}`)
@@ -1231,9 +1273,93 @@ async function correr({ bloque } = {}) {
       'C3 ?comuna= sin tildes ni mayúsculas elige la comuna',
       `?comuna=${gritado} · select=${selT} (esperado ${R.t.cut}, ${R.t.parte.comuna})`,
     )
+    // ---- C20 · la vista explica lo que muestra --------------------------
+    // UN COLEGA DE CONAF LA REVISO EL 2026-09-16 y no encontro explicado nada,
+    // empezando por el numero que va al lado de cada comuna en el selector. Se
+    // comprueban las tres cosas que esa revision pedia: que el boton exista,
+    // que lo que abre explique el numero Y las dos escalas de color, y que la
+    // explicacion del numero este ademas pegada al selector, donde surge la
+    // duda. Se mide el TEXTO que lee una persona, no que el componente exista.
+    const ayuda = await evaluar(`
+      const pegada = document.querySelector('.panel')?.textContent ?? ''
+      const b = [...document.querySelectorAll('.panel button')].find((x) =>
+        x.textContent.trim() === 'Qué muestra esta vista')
+      if (!b) return { boton: false, pegada }
+      b.click()
+      for (let i = 0; i < 40 && !document.querySelector('dialog[open]'); i++)
+        await new Promise((r) => setTimeout(r, 50))
+      const d = document.querySelector('dialog[open]')
+      const t = d?.textContent ?? ''
+      const cerrar = [...(d?.querySelectorAll('button') ?? [])].find((x) => x.textContent.trim() === 'Listo')
+      cerrar?.click()
+      await new Promise((r) => setTimeout(r, 300))
+      return {
+        boton: true,
+        pegada,
+        texto: t,
+        numero: /áreas de riesgo/.test(t) && /selector/.test(t),
+        clase: /clase del modelo/.test(t),
+        relativo: /contraste interno/.test(t),
+        cumulos: /cúmulos/.test(t),
+        cerrado: !document.querySelector('dialog[open]'),
+      }`)
+    comprobar(
+      ayuda?.boton && ayuda.numero && ayuda.clase && ayuda.relativo && ayuda.cumulos && ayuda.cerrado,
+      'C20 «Qué muestra esta vista» explica el número, las dos escalas y los cúmulos',
+      ayuda?.boton
+        ? `número=${ayuda.numero} clase=${ayuda.clase} relativo=${ayuda.relativo} cúmulos=${ayuda.cumulos} cierra=${ayuda.cerrado} · ${ayuda.texto?.length} caracteres`
+        : 'no existe el botón en el panel',
+    )
+    comprobar(
+      /El número entre paréntesis es cuántas áreas de riesgo tiene la comuna/.test(ayuda?.pegada ?? ''),
+      'C20 el número del selector se explica junto al selector',
+      `pista ${/El número entre paréntesis/.test(ayuda?.pegada ?? '') ? 'presente' : 'AUSENTE'}`,
+    )
+
+    // ---- C19 · cada familia del DATO tiene su color y su icono ----------
+    // EL VOCABULARIO SALE DEL MANIFEST, no de la lista escrita a mano: al pasar
+    // a cobertura nacional el insumo cambió de familias --se fue `escuelas_prep`
+    // y llegó `comunidades_prep`-- y `COLOR_FAMILIA` se quedó como estaba. La
+    // familia nueva caía en el gris por omisión, o sea EXACTAMENTE el color de
+    // «Red aeroportuaria»: dos símbolos distintos con la misma tinta y ni un
+    // error en consola. Se miden los chips pintados, no la constante.
+    const familiasManifest = Object.keys(R.manifest.capas.infra_puntos.familias ?? {})
+    const chips = await evaluar(`
+      const filas = [...document.querySelectorAll('.panel .fila-capa')].filter((l) => l.querySelector('.chip'))
+      const infra = filas.slice(-${familiasManifest.length})
+      return infra.map((l) => ({
+        etq: l.querySelector('.etq')?.textContent ?? '',
+        color: getComputedStyle(l.querySelector('.chip')).backgroundColor,
+      }))`)
+    const tintasFamilia = new Set((chips ?? []).map((c) => c.color))
+    comprobar(
+      chips?.length === familiasManifest.length && tintasFamilia.size === familiasManifest.length,
+      'C19 cada familia de infraestructura se dibuja con un color propio',
+      `${chips?.length}/${familiasManifest.length} familias · ${tintasFamilia.size} colores distintos` +
+        (tintasFamilia.size === chips?.length ? '' : ` · repetidos: ${JSON.stringify(chips)}`),
+    )
+    // El glifo es la otra mitad del símbolo, y NO se puede medir en pantalla:
+    // sólo salen los iconos de las familias que haya en el encuadre --en la
+    // comuna medida, 4 de 8--. Se cruzan las claves declaradas en `GLIFOS`
+    // contra las familias del manifest, que son dos fuentes distintas: el
+    // insumo y el código. Se lee el fuente como texto, no se importa; importarlo
+    // comprobaría que una lista es igual a sí misma.
+    const fuenteIconos = readFileSync(join(FRONT, 'src', 'iconos.js'), 'utf8')
+    const bloqueGlifos = fuenteIconos.slice(fuenteIconos.indexOf('export const GLIFOS'))
+    const claves = [...bloqueGlifos.slice(0, bloqueGlifos.indexOf('\n}')).matchAll(/^\s{2}([a-z_]+):/gm)].map((m) => m[1])
+    const faltan = familiasManifest.filter((f) => !claves.includes(f))
+    const sobran = claves.filter((f) => !familiasManifest.includes(f))
+    comprobar(
+      claves.length > 0 && !faltan.length && !sobran.length,
+      'C19 GLIFOS declara exactamente las familias que trae el insumo',
+      `${claves.length} glifos para ${familiasManifest.length} familias` +
+        (faltan.length ? ` · sin glifo: ${faltan}` : '') +
+        (sobran.length ? ` · sobra: ${sobran}` : ''),
+    )
+
     // C15 y C4 miden sobre A: se vuelve a ella.
     await ir(`?vista=riesgo&comuna=${R.a.cut}`)
-    await esperar(`document.querySelectorAll('.leaflet-marker-icon').length >= ${R.a.puntos}`, `iconos de ${R.a.parte.comuna}`)
+    await esperar(`${DIBUJADOS} === ${R.a.puntos}`, `elementos de ${R.a.parte.comuna}`)
     await espera(1500)
     await esperarTeselas()
 
@@ -1383,29 +1509,46 @@ async function correr({ bloque } = {}) {
       `«${maxA}» de ${R.a.parte.comuna}=${tras?.a} · «${maxB}» de ${R.b.parte.comuna}=${tras?.b}`,
     )
 
-    // ---- C7 · el umbral de zoom oculta y devuelve los iconos -------------
-    // Se vuelve a A: C6 dejó B, y los iconos se miden donde se contaron en C3.
-    // Se usan los botones de zoom de Leaflet, que es por donde pasa el usuario.
+    // ---- C7 · los cúmulos agrupan al alejar y se separan al acercar ------
+    // LO QUE VIGILABA ANTES YA NO EXISTE: hasta el 2026-09-16 los iconos se
+    // ocultaban bajo un zoom umbral (ZOOM_ICONOS) y C7 medía justo eso. Con la
+    // capa nacional no hay umbral, hay cúmulos (DECISIONES.md §X), y la
+    // propiedad que sí importa es que **nada se pierda por el camino**: la suma
+    // de las cuentas de los cúmulos es el total de la comuna, y al acercar esa
+    // misma suma se conserva mientras aparecen iconos sueltos.
+    //
+    // Sin esta aserción, un `iconCreateFunction` que contara mal --o un filtro
+    // que se comiera puntos al reagrupar-- no rompería nada visible: el mapa
+    // seguiría lleno de discos con números plausibles.
     await ir(`?vista=riesgo&comuna=${R.a.cut}`)
-    await esperar(`document.querySelectorAll('.leaflet-marker-icon').length >= ${R.a.puntos}`, 'iconos para el zoom')
+    await esperar(`${DIBUJADOS} === ${R.a.puntos}`, 'elementos para el zoom')
     await espera(1500)
     const zoom = await evaluar(`
-      const menos = document.querySelector('.leaflet-control-zoom-out')
       const mas = document.querySelector('.leaflet-control-zoom-in')
-      if (!menos || !mas) return null
-      const pulsar = async (b, n) => {
-        for (let i = 0; i < n; i++) { b.click(); await new Promise(r => setTimeout(r, 420)) }
-        await new Promise(r => setTimeout(r, 700))
-      }
-      await pulsar(menos, 5)
-      const lejos = document.querySelectorAll('.leaflet-marker-icon').length
-      await pulsar(mas, 5)
-      const cerca = document.querySelectorAll('.leaflet-marker-icon').length
-      return { lejos, cerca }`)
+      if (!mas) return null
+      const suma = () => ${DIBUJADOS}
+      const cumulos = () => document.querySelectorAll('.marker-cluster').length
+      const sueltos = () => document.querySelectorAll('.icono-infra').length
+      const mayor = () =>
+        [...document.querySelectorAll('.marker-cluster')].reduce((m, e) => Math.max(m, Number(e.textContent.trim() || 0)), 0)
+      const lejos = { suma: suma(), cumulos: cumulos(), sueltos: sueltos(), mayor: mayor() }
+      for (let i = 0; i < 4; i++) { mas.click(); await new Promise(r => setTimeout(r, 420)) }
+      // Espera ACOTADA y no un reloj: con las teselas de riesgo cada zoom tarda
+      // mas en asentarse, y los 700 ms fijos medían el mapa a medio camino.
+      for (let i = 0; i < 80 && sueltos() === 0; i++) await new Promise(r => setTimeout(r, 100))
+      return { lejos, cerca: { suma: suma(), cumulos: cumulos(), sueltos: sueltos(), mayor: mayor() } }`)
     comprobar(
-      zoom && zoom.lejos === 0 && zoom.cerca > 0,
-      'C7 los iconos se ocultan al alejar y vuelven al acercar',
-      `alejado: ${zoom?.lejos} · acercado: ${zoom?.cerca}`,
+      zoom && zoom.lejos.suma === R.a.puntos && zoom.lejos.cumulos > 0 && zoom.lejos.sueltos < R.a.puntos,
+      'C7 al encuadrar la comuna los cúmulos suman todos sus elementos',
+      `${zoom?.lejos.suma}/${R.a.puntos} en ${zoom?.lejos.cumulos} cúmulos y ${zoom?.lejos.sueltos} sueltos`,
+    )
+    // Al acercar, un cúmulo grande se parte en VARIOS pequeños: el número de
+    // discos sube, no baja --medido: 8 → 19--. Lo que decrece es el mayor de
+    // ellos, y eso es lo que significa «se separan».
+    comprobar(
+      zoom && zoom.cerca.sueltos > zoom.lejos.sueltos && zoom.cerca.mayor < zoom.lejos.mayor,
+      'C7 al acercar, los cúmulos se separan en iconos',
+      `mayor cúmulo ${zoom?.lejos.mayor} → ${zoom?.cerca.mayor} · sueltos ${zoom?.lejos.sueltos} → ${zoom?.cerca.sueltos}`,
     )
 
     // ---- C8 · el PNG exportado lleva los iconos --------------------------
@@ -1417,7 +1560,7 @@ async function correr({ bloque } = {}) {
     // marcadores siguen en el DOM aunque queden fuera de la vista, así que
     // contar nodos NO basta -- hay que contar los que caen dentro del mapa.
     await ir(`?vista=riesgo&comuna=${R.a.cut}`)
-    await esperar(`document.querySelectorAll('.leaflet-marker-icon').length > 10`, 'iconos para exportar')
+    await esperar(`${DIBUJADOS} === ${R.a.puntos}`, 'elementos para exportar')
     await espera(2000)
     await esperarTeselas()
 
@@ -1426,10 +1569,14 @@ async function correr({ bloque } = {}) {
       const orig = URL.createObjectURL
       URL.createObjectURL = (b) => { window.__blob = b; return orig(b) }
       const caja = document.querySelector('.leaflet-container').getBoundingClientRect()
-      const enPantalla = [...document.querySelectorAll('.leaflet-marker-icon')].filter((e) => {
+      const dentro = (e) => {
         const r = e.getBoundingClientRect()
         return r.right > caja.left && r.left < caja.right && r.bottom > caja.top && r.top < caja.bottom
-      }).length
+      }
+      const enPantalla = [...document.querySelectorAll('.leaflet-marker-icon')].filter(dentro).length
+      // Los cúmulos FUERA del encuadre siguen en el DOM y no pintan un píxel:
+      // el umbral se mide contra los que de verdad caen dentro.
+      const cumulosDentro = [...document.querySelectorAll('.marker-cluster')].filter(dentro).length
       if (!enPantalla) return { error: 'ningún icono dentro del encuadre' }
       const b = [...document.querySelectorAll('button')].find(x => x.textContent.includes('Imagen del mapa'))
       if (!b) return { error: 'sin botón' }
@@ -1444,31 +1591,38 @@ async function correr({ bloque } = {}) {
       const g = c.getContext('2d')
       g.drawImage(bm, 0, 0)
       const d = g.getImageData(0, 0, bm.width, bm.height).data
-      // #DC2626 (salud) y #1F6FEB (educación): dos familias que siempre están.
+      // Los cúmulos son discos grafito (rgba(17,17,17,0.88) en App.css): sobre
+      // cualquier fondo del visor quedan casi negros, y ni la rampa de riesgo
+      // --su extremo, #650101, tiene r = 101-- ni el mapa base claro llegan ahí.
+      // Es lo que hay que contar desde que la capa es nacional: en una comuna
+      // encuadrada casi todo son cúmulos, y los pocos iconos sueltos de una
+      // familia concreta pueden no aparecer.
       // Y las manchas: con el mapa base «Claro» (grises, r = g = b) un píxel
       // CÁLIDO --rojo sobre verde y verde sobre azul por 12 o más-- sólo puede
       // venir de la rampa de riesgo mezclada con el fondo. La rampa entera cumple
       // eso por definición (#F9A129 a #650101); los iconos de salud no (g = b).
-      let salud = 0, educacion = 0, calidos = 0
+      let grafito = 0, calidos = 0
       for (let i = 0; i < d.length; i += 4) {
-        if (Math.abs(d[i] - 220) < 12 && Math.abs(d[i+1] - 38) < 12 && Math.abs(d[i+2] - 38) < 12) salud++
-        if (Math.abs(d[i] - 31) < 12 && Math.abs(d[i+1] - 111) < 12 && Math.abs(d[i+2] - 235) < 12) educacion++
+        if (d[i] < 70 && d[i+1] < 70 && d[i+2] < 70) grafito++
         if (d[i] - d[i+1] >= 12 && d[i+1] - d[i+2] >= 12) calidos++
       }
-      return { w: bm.width, h: bm.height, salud, educacion, calidos, enPantalla }`)
+      return { w: bm.width, h: bm.height, grafito, calidos, enPantalla, cumulos: cumulosDentro }`)
+    // 200 px por cúmulo es la mitad de lo que ocupa el más pequeño (disco de 30
+    // px de lado, ~530 px dentro del aro), así que el umbral no se cumple con
+    // uno o dos discos sueltos ni exige que salgan todos.
     comprobar(
-      png && !png.error && png.salud > 50 && png.educacion > 50,
-      'C8 el PNG exportado contiene los iconos',
+      png && !png.error && png.cumulos > 0 && png.grafito > 200 * png.cumulos,
+      'C8 el PNG exportado contiene los cúmulos de infraestructura',
       png?.error
         ? png.error
-        : `${png?.w}×${png?.h} · ${png?.enPantalla} iconos en pantalla · salud ${png?.salud} px · educación ${png?.educacion} px`,
+        : `${png?.w}×${png?.h} · ${png?.enPantalla} marcadores en pantalla · ${png?.cumulos} cúmulos · ${png?.grafito} px grafito`,
     )
     // La mitad del PNG, por definición de «el mapa muestra las manchas»: la
     // comuna encuadrada y sus vecinas cubren casi todo el territorio (Mulchén:
     // 192.005 ha de manchas en una comuna de ~192.500).
     comprobar(
       png && !png.error && png.calidos > (png.w * png.h) / 2,
-      'C8b el PNG exportado contiene las manchas de riesgo',
+      'C8b el PNG exportado contiene las áreas de riesgo',
       png?.error ? png.error : `${png?.calidos} px cálidos de ${png?.w * png?.h} (${((100 * png?.calidos) / (png?.w * png?.h)).toFixed(1)} %)`,
     )
     // ---- C9 · el mapa base se puede cambiar en esta vista ----------------
@@ -1505,7 +1659,7 @@ async function correr({ bloque } = {}) {
       window.__d = null
       if (!window.__origCOU) window.__origCOU = URL.createObjectURL
       URL.createObjectURL = (b) => { window.__d = b; return window.__origCOU(b) }
-      const b = [...document.querySelectorAll('button')].find(x => x.textContent.trim() === 'Manchas (CSV)')
+      const b = [...document.querySelectorAll('button')].find(x => x.textContent.trim() === 'Áreas (CSV)')
       if (!b) return { error: 'sin botón de descarga' }
       b.click()
       for (let i = 0; i < 40 && !window.__d; i++) await new Promise(z => setTimeout(z, 100))
@@ -1676,10 +1830,12 @@ const MUTACIONES = [
   {
     id: 'C3',
     archivo: APP_JSX,
-    titulo: 'cruzar los iconos con la comuna por NOMBRE y no por CUT',
-    // El defecto real que dejó el cambio de insumo: «Mulchen» contra «Mulchén».
-    ancla: '(p) => p.cut === cutRiesgo',
-    mutar: (t, a) => t.replace(a, "(p) => p.comuna === (parteRiesgo?.comuna ?? '')"),
+    titulo: 'no filtrar la infraestructura por la comuna elegida',
+    // Con la capa nacional (DECISIONES.md §X) el defecto ya no es cruzar por
+    // nombre --el punto no lleva nombre de comuna-- sino olvidar el filtro: el
+    // panel habla de una comuna y el mapa dibuja también las vecinas.
+    ancla: '(p) => !cutRiesgo || p.cut === cutRiesgo,',
+    mutar: (t, a) => t.replace(a, '() => true,'),
     bloque: 'vista',
   },
   {
@@ -1743,6 +1899,71 @@ const MUTACIONES = [
     bloque: 'vista',
   },
   {
+    id: 'C20',
+    archivo: PANEL_RIESGO,
+    titulo: 'quitar el botón que explica la vista',
+    ancla: "          Qué muestra esta vista",
+    mutar: (t, a) => t.replace(a, '          Ver'),
+    bloque: 'vista',
+  },
+  {
+    id: 'C20',
+    archivo: join(FRONT, 'src', 'components', 'ModalesPanel.jsx'),
+    titulo: 'dejar de explicar qué es el número de la comuna',
+    // El estado real hasta el 2026-09-16: la cifra del selector sin una sola
+    // linea que dijera de que es.
+    ancla: '      <h3>El número al lado de cada comuna</h3>',
+    mutar: (t, a) => t.replace(a, '      <h3>Comunas</h3>'),
+    bloque: 'vista',
+  },
+  {
+    id: 'C20',
+    archivo: PANEL_RIESGO,
+    titulo: 'quitar la pista del número que va junto al selector',
+    ancla: '          El número entre paréntesis es cuántas áreas de riesgo tiene la comuna.',
+    mutar: (t, a) => t.replace(a, '          Elige una comuna.'),
+    bloque: 'vista',
+  },
+  {
+    id: 'C19',
+    archivo: CONFIG_JS,
+    titulo: 'dejar la familia nueva sin color propio (el estado real del 2026-09-16)',
+    // Literalmente lo que había: la familia del insumo viejo en la tabla y la
+    // nueva sin entrada, cayendo en el gris por omisión de «Red aeroportuaria».
+    ancla: "  comunidades_prep: '#15803D',",
+    mutar: (t, a) => t.replace(a, "  escuelas_prep: '#0E7490',"),
+    bloque: 'vista',
+  },
+  {
+    id: 'C19',
+    archivo: join(FRONT, 'src', 'iconos.js'),
+    titulo: 'dejar la familia nueva sin glifo',
+    ancla: '  comunidades_prep:',
+    mutar: (t, a) => t.replace(a, '  escuelas_prep:'),
+    bloque: 'vista',
+  },
+  {
+    id: 'C7',
+    archivo: CAPA_ICONOS,
+    titulo: 'que los cúmulos cuenten uno de menos',
+    // Un disco con una cifra plausible y falsa: en pantalla no se nota, y es
+    // justo lo que C7 existe para cazar.
+    ancla: 'const n = cumulo.getChildCount()',
+    mutar: (t, a) => t.replace(a, 'const n = Math.max(1, cumulo.getChildCount() - 1)'),
+    bloque: 'vista',
+  },
+  {
+    id: 'C8',
+    archivo: MAPA_PNG,
+    titulo: 'exportar el PNG sin los cúmulos',
+    // El estado en el que estaba el exportador antes del insumo nacional: sólo
+    // dibujaba marcadores con `.pin`, así que el PNG salía con las manchas y sin
+    // un solo elemento de infraestructura.
+    ancla: "if (el.classList.contains('marker-cluster')) {",
+    mutar: (t, a) => t.replace(a, 'if (false) {'),
+    bloque: 'vista',
+  },
+  {
     id: 'C8b',
     archivo: MAPA_PNG,
     titulo: 'exportar sólo el canvas del renderer y no las teselas',
@@ -1756,8 +1977,13 @@ const MUTACIONES = [
     id: 'C18',
     archivo: join(FRONT, 'src', 'App.css'),
     titulo: 'volver al texto blanco fijo sobre el acento',
-    ancla: '  color: var(--sobre-acento);',
-    mutar: (t, a) => t.replace(a, '  color: #fff;'),
+    // El ancla lleva el selector porque `color: var(--sobre-acento)` ya aparece
+    // tres veces en App.css: con la botonera de F2 el token se usa también en la
+    // insignia de filtros y en el botón primario del modal. Un ancla repetida no
+    // muta nada y el arnés se niega a arrancar, que es lo correcto.
+    ancla:
+      '.normalizar.activo {\n  background: var(--accent);\n  border-color: var(--accent);\n  color: var(--sobre-acento);',
+    mutar: (t, a) => t.replace(a, a.replace('color: var(--sobre-acento);', 'color: #fff;')),
     bloque: 'vista',
   },
   {

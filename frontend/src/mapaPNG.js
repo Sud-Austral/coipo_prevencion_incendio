@@ -137,10 +137,37 @@ export async function capturarMapa(map, base = 'Claro') {
   // rasterizar el nodo: serializar HTML a imagen exige foreignObject, que
   // contamina el lienzo en varios navegadores y tumbaria toda la exportacion.
   for (const el of cont.querySelectorAll('.leaflet-marker-icon')) {
-    const pin = el.matches('.pin') ? el : el.querySelector('.pin')
-    if (!pin) continue
     const r = el.getBoundingClientRect()
     if (!r.width || !r.height) continue
+
+    // Los cumulos tampoco tienen `.pin`, y desde la capa nacional (2026-09-16)
+    // son la mayor parte de lo dibujado: sin esto, un PNG exportado a escala
+    // comunal salia con las manchas y SIN un solo elemento de infraestructura,
+    // en silencio. Se repite el aro y el grafito de `.marker-cluster` en
+    // App.css; el numero sale del propio nodo, que es lo que se ve.
+    if (el.classList.contains('marker-cluster')) {
+      const n = el.textContent.trim()
+      const cx = r.left - caja.left + r.width / 2
+      const cy = r.top - caja.top + r.height / 2
+      ctx.save()
+      ctx.beginPath()
+      ctx.arc(cx, cy, r.width / 2 - 4, 0, Math.PI * 2)
+      ctx.fillStyle = 'rgba(17, 17, 17, 0.88)'
+      ctx.fill()
+      ctx.lineWidth = 1.5
+      ctx.strokeStyle = '#fff'
+      ctx.stroke()
+      ctx.fillStyle = '#fff'
+      ctx.font = `700 ${r.width >= 46 ? 13 : 12}px system-ui, sans-serif`
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(n, cx, cy)
+      ctx.restore()
+      continue
+    }
+
+    const pin = el.matches('.pin') ? el : el.querySelector('.pin')
+    if (!pin) continue
     const cx = r.left - caja.left + r.width / 2
     const cy = r.top - caja.top + r.height / 2
     const radio = r.width / 2

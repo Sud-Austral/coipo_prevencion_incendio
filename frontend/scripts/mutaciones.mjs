@@ -124,8 +124,11 @@ const MUTANTES = [
     id: 'B24',
     suite: 'verify-panel.mjs',
     archivo: 'src/App.css',
-    de: 'inset: var(--alto-banner) auto 0 0;',
-    a: 'inset: var(--alto-minimo-banner) auto 0 0;',
+    // Con los CUATRO espacios de sangria de la media query: desde F2 el mismo
+    // `inset` lo usa .modal-filtro, con dos, y el ancla sin sangria aparecia
+    // dos veces.
+    de: '    inset: var(--alto-banner) auto 0 0;',
+    a: '    inset: var(--alto-minimo-banner) auto 0 0;',
     porque: 'la cadena antigua: el cajon izquierdo arranca en 68 px y tapa las pestañas',
   },
   {
@@ -155,9 +158,12 @@ const MUTANTES = [
   {
     id: 'B27',
     suite: 'verify-panel.mjs',
-    archivo: 'src/components/PanelLateral.jsx',
-    de: 'for (const { v, n } of capasMan[capa].dominios[f.campo]) {',
-    a: 'for (const { v, n } of Object.values(capasMan).flatMap((m) => m?.dominios?.[f.campo] ?? [])) {',
+    archivo: 'src/filtros.js',
+    de: '        const bruto = codificada ? tablas?.[f.campo]?.[p[f.campo]] : p[f.campo]',
+    a: `        const bruto = codificada ? tablas?.[f.campo]?.[p[f.campo]] : p[f.campo]
+        for (const c of f.capas) {
+          for (const d of capasMan?.[c]?.dominios?.[f.campo] ?? []) cuenta.set(d.v, (cuenta.get(d.v) ?? 0) + d.n)
+        }`,
     porque: 'volver a sumar las cuentas de todas las capas del manifest',
   },
   {
@@ -166,9 +172,9 @@ const MUTANTES = [
     // de despliegue, y con ?capas=oecv la region vuelve a contar incendios.
     id: 'B27',
     suite: 'verify-panel.mjs',
-    archivo: 'src/components/PanelLateral.jsx',
-    de: 'f.capas.find((c) => capasActivas.includes(c) && capasMan[c]?.dominios?.[f.campo])',
-    a: 'f.capas.find((c) => capasMan[c]?.dominios?.[f.campo])',
+    archivo: 'src/filtros.js',
+    de: 'const capa = f.capas.find((c) => capasActivas.includes(c) && capasMan?.[c]?.dominios?.[f.campo])',
+    a: 'const capa = f.capas.find((c) => capasMan?.[c]?.dominios?.[f.campo])',
     porque: 'contar en la capa duena fija aunque este apagada',
     nombra: 'capas=redvial)',
   },
@@ -178,9 +184,9 @@ const MUTANTES = [
     // sigan en pantalla y la roja tenga que nombrar a este.
     id: 'B27',
     suite: 'verify-panel.mjs',
-    archivo: 'src/components/PanelLateral.jsx',
-    de: 'if (!capa) return null',
-    a: "if (!capa || f.campo === 'inst') return null",
+    archivo: 'src/filtros.js',
+    de: '    if (!capa) continue',
+    a: "    if (!capa || f.campo === 'inst') continue",
     porque: 'dejar de pintar el filtro «Institución (OECV)» con OECV encendida',
     nombra: '«inst»',
   },
@@ -261,6 +267,14 @@ const MUTANTES = [
     de: 'fechaInforme: fechaLarga(hoy()),',
     a: 'fechaInforme: fechaLarga(new Date().toISOString().slice(0, 10)),',
     porque: 'volver a fechar el informe con el día UTC',
+  },
+  {
+    id: 'B35',
+    suite: 'verify-panel.mjs',
+    archivo: 'src/filtros.js',
+    de: '      const otros = filtrosDe(capa, f.campo)',
+    a: '      const otros = [].concat(filtrosDe(capa, f.campo)).slice(0, 0)',
+    porque: 'contar cada filtro sobre la capa entera: vuelven las cifras nacionales con la región puesta',
   },
   {
     id: 'B32',

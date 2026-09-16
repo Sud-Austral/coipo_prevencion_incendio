@@ -380,18 +380,11 @@ export const COLOR_NIVEL = ['#F9A129', '#DC7709', '#BB4F04', '#912902', '#650101
 // comuna y no la clase del modelo.
 export const RAMPA_NORMALIZADA = ['#F2F0F7', '#DADAEB', '#BCBDDC', '#9E9AC8', '#807DBA', '#6A51A3', '#4A1486']
 
-// Por debajo de este zoom los iconos de infraestructura no se dibujan.
-// MEDIDO mirando la captura con el modelo anterior: con las tres comunas
-// encuadradas --Biobio y Aysen estan a ~1.000 km-- los 696 iconos colapsaban en
-// dos cumulos que no dejaban ver NINGUNA mancha. A 9 cabe una comuna entera en
-// pantalla y los iconos ya se separan.
-export const ZOOM_ICONOS = 9
-
 // Un color por familia de infraestructura. Se evitan a proposito los tres de
 // COLOR_OECV y los cinco de COLOR_CAUSA.
 export const COLOR_FAMILIA = {
   educacion: '#1F6FEB',
-  escuelas_prep: '#0E7490',
+  comunidades_prep: '#15803D',
   salud: '#DC2626',
   ssr: '#0891B2',
   antenas: '#7C3AED',
@@ -536,6 +529,16 @@ export const FILTROS = [
     etiqueta: 'Región · ver solo mi región',
     capas: ['incendios', 'oecv', 'oecv_verificado', 'puntos_standby', 'rutas', 'redvial'],
   },
+  // Provincia y comuna SOLO recortan incendios: es la unica capa que las trae
+  // (OECV y stand-by publican region y nada mas). Van juntas y despues de
+  // region porque son el mismo control: Territorio, en cascada.
+  //
+  // `comuna` es ADEMAS el parametro con el que la vista de riesgo elige su
+  // comuna, con el codigo CUT. Las dos vistas comparten ?comuna= a proposito
+  // (decision de Luis, 2026-09-16) y cada una traduce lo que le llega:
+  // src/filtros.js comunaEnIncendios() y App.jsx cutDeComuna().
+  { campo: 'provincia', etiqueta: 'Provincia', capas: ['incendios'] },
+  { campo: 'comuna', etiqueta: 'Comuna', capas: ['incendios'] },
   // Una sola capa: incendios es la unica con temporada y causa, y oecv la unica
   // a la que recortan tipo e inst (App.jsx: pasaOECV).
   { campo: 'temporada', etiqueta: 'Temporada', capas: ['incendios'] },

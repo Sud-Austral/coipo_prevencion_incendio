@@ -3,6 +3,7 @@ import { csvInfraPuntos, csvRiesgo, geojsonDe, guardar, nombreArchivo } from '..
 import { capturarMapa, lienzoAPng } from '../mapaPNG'
 import FechaImagen from './FechaImagen'
 import { COLOR_FAMILIA, COLOR_NIVEL, RAMPA_NORMALIZADA, fmt } from '../config'
+import { ModalInfoRiesgo } from './ModalesPanel'
 
 /**
  * Panel izquierdo de la vista de riesgo.
@@ -49,7 +50,7 @@ export default function PanelRiesgo({
   onFamilia,
   cuentaAreas,
   cuentaPuntos,
-  iconosLejos,
+  fuenteInfra,
   cargando,
   error,
   onReintentar,
@@ -62,6 +63,9 @@ export default function PanelRiesgo({
   urlGeojson,
   datosPuntos,
   pasaPuntos,
+  // La misma decodificacion que abre la ficha: el CSV la necesita para escribir
+  // «Antenas de telecomunicaciones» donde el dato trae un indice.
+  decodificarPunto,
   map,
   base,
   onBase,
@@ -70,6 +74,8 @@ export default function PanelRiesgo({
 }) {
   const cabecera = useRef(null)
   const [estadoPng, setEstadoPng] = useState('')
+  // Un solo modal, y por eso un booleano y no el id del abierto.
+  const [info, setInfo] = useState(false)
 
   const meta = manifest?.capas?.riesgo
   const metaPuntos = manifest?.capas?.infra_puntos
@@ -115,21 +121,27 @@ export default function PanelRiesgo({
   const bajarPuntos = (formato) => {
     const r =
       formato === 'csv'
-        ? csvInfraPuntos(datosPuntos?.features, pasaPuntos)
-        : geojsonDe('infraestructura', datosPuntos?.features, pasaPuntos, { meta: procedencia })
+        ? csvInfraPuntos(datosPuntos?.features, pasaPuntos, decodificarPunto)
+        : geojsonDe('infraestructura', datosPuntos?.features, pasaPuntos, {
+            // El GeoJSON decodifica por el mismo camino que la capa de
+            // incendios --tablas + codificados, conservando el codigo en
+            // `<campo>_cod`-- en vez de por `decodificarPunto`: ahi el archivo
+            // circula suelto y el codigo original vale tanto como la etiqueta.
+            tablas: metaPuntos?.tablas,
+            codificados: metaPuntos?.codificados,
+            meta: procedencia,
+          })
     const nombre = nombreArchivo('infraestructura', { comuna }, formato)
     guardar(nombre, r.texto, formato === 'csv' ? 'text/csv;charset=utf-8' : 'application/geo+json')
     avisar(nombre, r.n)
   }
 
-  // Comunas con infraestructura, por su nombre en la capa de riesgo: el paquete
-  // de infraestructura escribe «Coyhaique» y el modelo «Coihaique», y el panel
-  // tiene que nombrar la comuna igual que el selector de arriba.
-  const comunasInfra = (metaPuntos?.dominios?.cut ?? [])
-    .map((d) => meta?.partes?.[d.v]?.comuna)
-    .filter(Boolean)
-    .sort((a, b) => a.localeCompare(b, 'es'))
-  const hayInfra = !!cut && comunasInfra.includes(comuna)
+  // La capa es NACIONAL desde el 2026-09-16: siempre hay algo que descargar, y
+  // con comuna elegida se descarga la suya.
+  const hayInfra = (cuentaPuntos ?? 0) > 0
+  // Lo que el ETL dejó fuera por caer fuera del área continental, sumado por
+  // familia: Isla de Pascua y Juan Fernández (DECISIONES.md §X).
+  const insulares = Object.values(fuenteInfra?.fuera_de_chile ?? {}).reduce((a, b) => a + b, 0)
   const sinGeom = meta?.fuente?.sin_geometria
 
   return (
@@ -139,8 +151,13 @@ export default function PanelRiesgo({
           Riesgo de incendio forestal
         </h1>
         <p className="sub">
-          Nivel de riesgo del territorio, de 0 a 4, en manchas dentro de cada comuna
+          Nivel de riesgo del territorio, de 0 a 4, en áreas dentro de cada comuna
         </p>
+        {/* En la cabecera y no al final: la pregunta «¿qué es este número?» se
+            hace ANTES de tocar nada, y un botón al fondo del panel no se ve. */}
+        <button type="button" className="centrar info-vista" onClick={() => setInfo(true)}>
+          Ver
+        </button>
         <button className="cerrar" onClick={onCerrar} aria-label="Cerrar panel">
           ×
         </button>
@@ -151,7 +168,7 @@ export default function PanelRiesgo({
       {error && (
         <section>
           <p className="aviso">
-            No se pudieron cargar las manchas de {comuna || 'la comuna'}.{' '}
+            No se pudieron cargar las áreas de {comuna || 'la comuna'}.{' '}
             <button className="centrar" onClick={onReintentar}>
               Reintentar
             </button>
@@ -177,11 +194,18 @@ export default function PanelRiesgo({
           </select>
         </label>
 
+        {/* La duda concreta que reportó el colega de CONAF: el número del
+            selector no se explicaba en ningún sitio. Va aquí, pegado al
+            control, y desarrollado en «Qué muestra esta vista». */}
+        <p className="pista">
+          El número entre paréntesis es cuántas áreas de riesgo tiene la comuna.
+        </p>
+
         {!cut && (
           <p className="pista">
             El mapa muestra las {fmt.format(meta?.regiones?.length ?? 0)} regiones y{' '}
             {fmt.format(Object.keys(meta?.partes ?? {}).length)} comunas del modelo. Elige una comuna,
-            o toca una mancha, para normalizar, ver su ficha o descargarla.
+            o toca un área, para normalizar, ver su ficha o descargarla.
           </p>
         )}
 
@@ -189,7 +213,7 @@ export default function PanelRiesgo({
             Se dice, en vez de mostrar un mapa vacío que se lee como «sin riesgo». */}
         {meta && !meta.teselas && (
           <p className="aviso">
-            Esta publicación no trae las teselas de riesgo, así que las manchas no se pueden dibujar.
+            Esta publicación no trae las teselas de riesgo, así que las áreas no se pueden dibujar.
           </p>
         )}
 
@@ -212,14 +236,14 @@ export default function PanelRiesgo({
 
       {/* Va en la sección de la leyenda, pegado a los colores que regula, y no
           en una sección propia: es un ajuste de UNA capa, no un modo del
-          visor. La etiqueta nombra la capa —«manchas de riesgo»— porque
+          visor. La etiqueta nombra la capa —«áreas de riesgo»— porque
           en esta vista hay dos capas encima del mapa y un rótulo genérico
           dejaría dudando de si también afecta a los iconos. */}
       <section>
         <h2>Leyenda</h2>
 
         <label className="fila-opacidad" htmlFor="opacidad-manchas">
-          <span>Opacidad de las manchas</span>
+          <span>Opacidad de las áreas</span>
           <output htmlFor="opacidad-manchas">{Math.round(opacidad * 100)} %</output>
         </label>
         <input
@@ -234,7 +258,7 @@ export default function PanelRiesgo({
           // movimiento del pulgar para un input range, así que el mapa se
           // repinta mientras se arrastra, sin soltar.
           onChange={(e) => onOpacidad(Number(e.target.value) / 100)}
-          aria-label="Opacidad de las manchas de riesgo"
+          aria-label="Opacidad de las áreas de riesgo"
           aria-valuetext={`${Math.round(opacidad * 100)} por ciento`}
         />
 
@@ -253,7 +277,7 @@ export default function PanelRiesgo({
                 </div>
               ))}
             <p className="pista">
-              La clase es el promedio del nivel en la mancha. Comparable entre comunas.
+              La clase es el promedio del nivel en el área. Comparable entre comunas.
             </p>
           </>
         ) : (
@@ -265,8 +289,8 @@ export default function PanelRiesgo({
             {ctx.uniforme ? (
               <p className="pista">
                 {ctx.m === 1
-                  ? 'Esta comuna tiene una sola mancha: no hay contraste interno que mostrar.'
-                  : 'Todas las manchas de esta comuna tienen el mismo nivel.'}
+                  ? 'Esta comuna tiene una sola área: no hay contraste interno que mostrar.'
+                  : 'Todas las áreas de esta comuna tienen el mismo nivel.'}
               </p>
             ) : (
               <>
@@ -285,7 +309,7 @@ export default function PanelRiesgo({
               </>
             )}
             <p className="pista">
-              Los colores comparan sólo dentro de {comuna} ({fmt.format(ctx.m)} manchas).
+              Los colores comparan sólo dentro de {comuna} ({fmt.format(ctx.m)} áreas).
             </p>
             <p className="pista">
               Escala por rango: el color indica posición relativa, no magnitud. El
@@ -297,13 +321,22 @@ export default function PanelRiesgo({
 
       <section>
         <h2>Infraestructura crítica</h2>
+        {/* Cobertura NACIONAL desde el 2026-09-16. Los elementos se agrupan en
+            cúmulos numerados y se separan al acercar: ya no hay un umbral por
+            debajo del cual desaparecen. */}
         <p className="pista">
-          Disponible sólo para {comunasInfra.join(', ') || 'ninguna comuna'}.
+          {cut
+            ? `Elementos en ${comuna}; el resto del país sigue en el mapa al quitar la comuna.`
+            : 'Cobertura nacional. Los elementos se agrupan en círculos con su cuenta; al acercar se separan.'}
         </p>
-        {/* Sin este aviso, un mapa alejado sin iconos se lee como «la capa no
-            cargó» en vez de «están, pero a esta escala se amontonan». */}
-        {iconosLejos && hayInfra && (
-          <p className="pista aviso-zoom">Acerca el mapa para ver los elementos.</p>
+        {/* Lo descartado se DICE. Isla de Pascua y Juan Fernández quedan fuera
+            de la caja continental del visor (DECISIONES.md §X): sin esta línea,
+            un hospital que no está se lee como que no existe. */}
+        {insulares > 0 && (
+          <p className="pista">
+            {fmt.format(insulares)} elementos de Isla de Pascua y Juan Fernández no se dibujan:
+            quedan fuera del área continental que cubre este visor.
+          </p>
         )}
         {familias.map((f) => (
           <label key={f.v} className="fila-capa">
@@ -340,15 +373,15 @@ export default function PanelRiesgo({
       <section>
         <h2>Descargar</h2>
         <p className="pista">
-          {comuna ? `Sólo ${comuna}, como en el mapa.` : 'Elige una comuna para descargar sus manchas.'}
+          {comuna ? `Sólo ${comuna}, como en el mapa.` : 'Elige una comuna para descargar sus áreas.'}
         </p>
 
         <div className="botones-descarga">
           <button className="centrar" disabled={!datosAreas} onClick={() => bajarManchas('csv')}>
-            Manchas (CSV)
+            Áreas (CSV)
           </button>
           <button className="centrar" disabled={!urlGeojson} onClick={() => bajarManchas('geojson')}>
-            Manchas (GeoJSON)
+            Áreas (GeoJSON)
           </button>
           <button className="centrar" disabled={!hayInfra} onClick={() => bajarPuntos('csv')}>
             Infraestructura (CSV)
@@ -384,29 +417,36 @@ export default function PanelRiesgo({
         <p className="kpi">
           {cargando
             ? 'Cargando…'
-            : `${fmt.format(cuentaAreas ?? 0)} manchas de riesgo${cut ? '' : ' en el país'}`}
+            : `${fmt.format(cuentaAreas ?? 0)} áreas de riesgo${cut ? '' : ' en el país'}`}
         </p>
         <p className="kpi">
-          {fmt.format(cuentaPuntos ?? 0)} elementos de infraestructura
-          {iconosLejos && cuentaPuntos > 0 && ' (ocultos a esta escala)'}
+          {fmt.format(cuentaPuntos ?? 0)} elementos de infraestructura{cut ? '' : ' en el país'}
         </p>
         {meta && (
           <p className="pista">
-            {meta.titulo}: {fmt.format(meta.features)} manchas en{' '}
+            {meta.titulo}: {fmt.format(meta.features)} áreas en{' '}
             {fmt.format(Object.keys(meta.partes ?? {}).length)} comunas
             {metaPuntos && ` · ${metaPuntos.titulo}: ${fmt.format(metaPuntos.features)} puntos`}
           </p>
         )}
         {/* Un dato que el pipeline descarta en silencio no se percibe como
-            ausente sino como inexistente: se dice cuántas manchas no se dibujan. */}
+            ausente sino como inexistente: se dice cuántas áreas no se dibujan. */}
         {sinGeom?.n > 0 && (
           <p className="pista">
-            {fmt.format(sinGeom.n)} manchas del modelo no traen geometría y no se dibujan (
+            {fmt.format(sinGeom.n)} áreas del modelo no traen geometría y no se dibujan (
             {Object.keys(sinGeom.por_region ?? {}).join(', ')}; {fmtCorte.format(sinGeom.area_ha)} ha
             en total).
           </p>
         )}
       </section>
+      {info && (
+        <ModalInfoRiesgo
+          meta={meta}
+          metaPuntos={metaPuntos}
+          generado={manifest?.generado}
+          onCerrar={() => setInfo(false)}
+        />
+      )}
     </aside>
   )
 }

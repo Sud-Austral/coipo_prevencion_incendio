@@ -47,6 +47,9 @@
  *   B33  un solo anillo de foco: todo lo que se alcanza con Tab en la vista
  *        de incendios lo dibuja con el mismo grosor, estilo y color.
  *   B34  los controles del panel y del cartel comparten radio y alto minimo.
+ *   B35  los filtros van EN CASCADA: con una region puesta, cada filtro de
+ *        incendios ofrece solo los valores que existen en esa region, con la
+ *        cuenta recontada aqui sobre esas features (F2, DECISIONES.md §W).
  *
  * DOS MODOS DE DATOS. Con datos reales se afirman las cifras de produccion;
  * con el fixture, cifras calculadas a mano sobre 12 features.
@@ -111,6 +114,8 @@ const LITERAL_NO_ACTIVOS = 'Este visor no muestra incendios activos'
 // verde. Si se añade un filtro alla y no aqui, B27 lo dice.
 const FILTROS_ESPERADOS = {
   region: { capas: ['incendios', 'oecv', 'oecv_verificado', 'puntos_standby', 'rutas', 'redvial'] },
+  provincia: { capas: ['incendios'] },
+  comuna: { capas: ['incendios'] },
   temporada: { capas: ['incendios'] },
   causa_grupo: { capas: ['incendios'] },
   causa_general: { capas: ['incendios'] },
@@ -781,10 +786,16 @@ const GANCHOS_DESCARGA = `
 
 /** Pulsa el boton del panel cuyo texto coincide. */
 async function pulsarPorTexto(cdp, sesion, texto) {
+  const buscar = `[...document.querySelectorAll('.panel button, dialog.modal-filtro button')]
+                    .find(x => x.textContent.trim() === ${JSON.stringify(texto)})`
+  // Desde F2 las descargas estan dentro del modal de Descargar: si el boton no
+  // esta a la vista, se abre y se reintenta. Asi los diez sitios que llaman a
+  // esta funcion siguen escribiendo solo el texto del boton.
+  if (!(await evaluar(cdp, sesion, `!!(${buscar})`))) await abrirControl(cdp, sesion, 'descargas')
   await evaluar(
     cdp,
     sesion,
-    `(() => { const b = [...document.querySelectorAll('.panel button')].find(x => x.textContent.trim() === ${JSON.stringify(texto)})
+    `(() => { const b = ${buscar}
               if (!b) throw new Error('no existe el botón ' + ${JSON.stringify(texto)})
               b.click() })()`,
   )
@@ -810,6 +821,50 @@ async function aPDF(cdp, sesion, html) {
   } catch {
     return null
   }
+}
+
+/**
+ * Abre un control de la botonera y espera a su <dialog>. Desde F2 los filtros no
+ * son <select>: son botones que abren un modal anclado (DECISIONES.md §W).
+ */
+async function abrirControl(cdp, sesion, col) {
+  await evaluar(cdp, sesion, `document.querySelector('.grupo-filtro[data-col="${col}"]')?.click()`)
+  // sondear() no devuelve nada: resuelve o lanza. Devolver su resultado dejaba
+  // `false` siempre y todos los filtros salian como «no está en el panel».
+  try {
+    await sondear(cdp, sesion, `!!document.querySelector('dialog.modal-filtro[open]')`, `el modal de ${col}`)
+    return true
+  } catch {
+    return false
+  }
+}
+
+async function cerrarControl(cdp, sesion) {
+  await evaluar(cdp, sesion, `document.querySelector('dialog.modal-filtro .mf-listo')?.click()`)
+  await espera(120)
+}
+
+/**
+ * Las opciones de un filtro, abriendo su modal. El territorio vive en un solo
+ * modal con los tres niveles, y los niveles inferiores solo existen con region
+ * puesta: ahi `nivel` dice cual leer.
+ */
+async function leerFiltro(cdp, sesion, campo) {
+  const territorio = ['region', 'provincia', 'comuna'].includes(campo)
+  if (!(await abrirControl(cdp, sesion, territorio ? 'territorio' : campo))) return null
+  const nombre = territorio ? `territorio-${campo}` : `filtro-${campo}`
+  const ops = await evaluar(
+    cdp,
+    sesion,
+    `[...document.querySelectorAll('dialog.modal-filtro input[type=radio][name="${nombre}"]')]
+       .map((i) => i.closest('.gf-opcion'))
+       .map((l) => ({ v: l.querySelector('.gf-etq').textContent.trim(),
+                      cifra: l.querySelector('.gf-cifra').textContent.trim(),
+                      marcada: l.querySelector('input').checked }))`,
+  )
+  await cerrarControl(cdp, sesion)
+  // La primera opcion es «Todas»/«Todo Chile», que no es un valor del dominio.
+  return ops ? ops.slice(1).map((o) => ({ v: o.v, texto: `${o.v} (${o.cifra})`, marcada: o.marcada })) : null
 }
 
 /** Clic y espera a que React haya pintado el resultado. */
@@ -1028,15 +1083,24 @@ function esperado() {
     }
     return geojson.get(archivo)
   }
-  const oraculoCuenta = (capa, campo) => {
+  // `extra` son los OTROS filtros puestos: {campo: valor}. Sin el, el oraculo
+  // cuenta la capa entera, que es lo que vale para B27 (que mide sin filtros);
+  // con el, lo que tiene que ofrecer la cascada de B35.
+  const oraculoCuenta = (capa, campo, extra = {}) => {
     const meta = man.capas[capa]
     if (!meta) return null
     if (meta.archivo?.endsWith('.geojson')) {
       const gj = leerGeo(meta.archivo)
       if (!gj) return null
       const tabla = meta.codificados?.includes(campo) ? meta.tablas?.[campo] : null
+      const pares = Object.entries(extra).map(([c, v]) => [
+        c,
+        v,
+        meta.codificados?.includes(c) ? meta.tablas?.[c] : null,
+      ])
       const cuenta = new Map()
       for (const f of gj.features) {
+        if (pares.some(([c, v, t]) => (t ? t[f.properties?.[c]] : f.properties?.[c]) !== v)) continue
         const crudo = f.properties?.[campo]
         const v = tabla ? tabla[crudo] : crudo
         if (v == null || v === '') continue
@@ -1778,22 +1842,33 @@ async function main() {
       // Sin incendios el panel de indicadores dice «Enciende la capa» para
       // siempre: se espera al panel degradado, que ya tiene el manifest.
       await ir(cdp, pagina, { ancho: 1920, puerto, query, degradado: !encendidas.includes('incendios') })
-      // Los filtros y las filas de capas salen del mismo manifest. Se espera a
-      // las filas y NO a un select: un select que falta es justo lo que se mide.
-      await sondear(cdp, pagina, `document.querySelectorAll('.panel .fila-capa').length > 0`, 'las filas de capas del panel')
-      const selects = await evaluar(
+      // Los filtros y el boton de capas salen del mismo manifest. Se espera al
+      // BOTON de capas y no a un filtro: un filtro que falta es justo lo que se
+      // mide.
+      await sondear(cdp, pagina, `!!document.querySelector('.grupo-filtro[data-col=capas]')`, 'la botonera del panel')
+      const botones = await evaluar(
         cdp,
         pagina,
-        `[...document.querySelectorAll('.panel select[name]')].map((s) => ({
-           campo: s.name,
-           ops: [...s.options].filter((o) => o.value !== '').map((o) => ({ v: o.value, texto: o.textContent })) }))`,
+        `[...document.querySelectorAll('.panel .grupo-filtro')].map((b) => b.dataset.col)`,
       )
+      // Provincia y comuna viven DENTRO del modal de Territorio y solo aparecen
+      // con una region puesta (no tienen sentido sin ella): las mide B35, que es
+      // quien pone una. Aqui se miran los demas.
+      const enPanel = (campo) =>
+        campo === 'region' ? botones.includes('territorio') : botones.includes(campo)
+      const selects = []
+      for (const campo of Object.keys(FILTROS_ESPERADOS)) {
+        if (['provincia', 'comuna'].includes(campo) || !enPanel(campo)) continue
+        const ops = await leerFiltro(cdp, pagina, campo)
+        if (ops) selects.push({ campo, ops })
+      }
       const deMas = []
       for (const [campo, def] of Object.entries(FILTROS_ESPERADOS)) {
+        if (['provincia', 'comuna'].includes(campo)) continue
         const s = selects.find((x) => x.campo === campo)
         const capa = def.capas.find((c) => encendidas.includes(c))
         if (!capa) {
-          if (s) deMas.push(campo)
+          if (enPanel(campo) && campo !== 'region') deMas.push(campo)
           continue
         }
         const etiqueta = `B27 «${campo}» cuenta en ${capa} (${query})`
@@ -1822,7 +1897,10 @@ async function main() {
             malas.push(`«${o.texto}» ≠ «${o.v} (${n0.format(n)} ${unidad})»`)
           }
         }
-        const valores = E.valoresFiltro[campo]
+        // Desde F2 las opciones salen de las features de la capa que cuenta y no
+        // de la union de los dominios de todas sus capas: un valor que solo
+        // existe en una capa apagada ya no se ofrece con «(0 …)».
+        const valores = new Set([...orac.cuenta].filter(([, n]) => n > 0).map(([v]) => v))
         const valoresPanel = new Set(s.ops.map((o) => o.v))
         const sobran = [...valoresPanel].filter((v) => !valores.has(v))
         const faltan = [...valores].filter((v) => !valoresPanel.has(v))
@@ -1841,8 +1919,11 @@ async function main() {
         `B27 sin filtros de capas apagadas (${query})`,
         deMas.length ? `aparecen con todas sus capas apagadas: ${deMas.join(', ')}` : 'ninguno',
       )
-      // Un filtro del panel que el arnes no conoce no esta vigilado: se dice.
-      const ajenos = selects.map((s) => s.campo).filter((c) => !FILTROS_ESPERADOS[c])
+      // Un control del panel que el arnes no conoce no esta vigilado: se dice.
+      // Los seis que no son filtros se nombran aqui a proposito: si aparece uno
+      // nuevo, esta linea lo dice en vez de dejarlo sin mirar.
+      const NO_FILTRAN = ['territorio', 'capas', 'base', 'info', 'descargas', 'compartir']
+      const ajenos = botones.filter((c) => !FILTROS_ESPERADOS[c] && !NO_FILTRAN.includes(c))
       comprobar(
         ajenos.length === 0,
         `B27 todos los filtros del panel están vigilados (${query})`,
@@ -1851,6 +1932,56 @@ async function main() {
       await capturar(
         pedidas.join(',') === 'incendios,oecv,rutas' ? 'captura-panel-filtros.png' : `captura-panel-filtros-${pedidas.join('-')}.png`,
         { x: 0, y: 0, width: 360, height: ALTO_VENTANA, scale: 1 },
+      )
+    }
+
+    // ---- B35 · los filtros van en cascada ---------------------------------
+    // La region se elige POR DEFINICION y no a mano: la que MENOS incendios
+    // tiene con al menos uno, que es donde la diferencia con las cifras
+    // nacionales es mayor y donde mas opciones deben desaparecer.
+    const porRegion = E.oraculoCuenta('incendios', 'region')
+    const regionChica = [...porRegion.cuenta].filter(([, n]) => n > 0).sort((a, b) => a[1] - b[1])[0]
+    if (!regionChica) {
+      comprobar(false, 'B35 los filtros se estrechan con la región puesta', 'ninguna región con incendios')
+    } else {
+      const [rg, nRg] = regionChica
+      console.log(`\n▶ cascada en ${rg} (${nRg} incendios)`)
+      await ir(cdp, pagina, { ancho: 1920, puerto, query: `?capas=incendios&region=${encodeURIComponent(rg)}` })
+      await sondear(cdp, pagina, `!!document.querySelector('.grupo-filtro[data-col=temporada]')`, 'los filtros del panel')
+      const enCascada = []
+      for (const campo of ['provincia', 'comuna', 'temporada', 'causa_grupo', 'causa_general']) {
+        const ops = await leerFiltro(cdp, pagina, campo)
+        if (ops) enCascada.push({ campo, ops })
+      }
+      const malas = []
+      let estrechados = 0
+      for (const campo of ['provincia', 'comuna', 'temporada', 'causa_grupo', 'causa_general']) {
+        const s = enCascada.find((x) => x.campo === campo)
+        const orac = E.oraculoCuenta('incendios', campo, { region: rg })
+        const nacional = E.oraculoCuenta('incendios', campo)
+        if (!s || !orac) {
+          malas.push(`${campo}: ${s ? 'sin oráculo' : 'no está en el panel'}`)
+          continue
+        }
+        const esperadas = [...orac.cuenta].filter(([, n]) => n > 0)
+        const nNacional = [...nacional.cuenta].filter(([, n]) => n > 0).length
+        if (esperadas.length < nNacional) estrechados++
+        const panel = new Map(s.ops.map((o) => [o.v, o.texto]))
+        for (const [v, n] of esperadas) {
+          const texto = panel.get(v)
+          const quiero = `${v} (${n0.format(n)} ${n === 1 ? 'incendio' : 'incendios'})`
+          if (texto !== quiero) malas.push(`${campo}: «${texto ?? 'falta'}» ≠ «${quiero}»`)
+        }
+        for (const v of panel.keys()) {
+          if (!orac.cuenta.get(v)) malas.push(`${campo}: «${v}» sobra, no existe en ${rg}`)
+        }
+      }
+      comprobar(
+        malas.length === 0 && estrechados >= 2,
+        'B35 los filtros se estrechan con la región puesta',
+        malas.length
+          ? `${malas.length} diferencias: ${malas.slice(0, 3).join(' · ')}`
+          : `${estrechados} filtros con menos opciones que en el país, y todas las cuentas = features de ${rg}`,
       )
     }
 
@@ -2140,10 +2271,13 @@ async function main() {
 
     // -- B23 · las capas por teselas no se ofrecen --
     await ir(cdp, pagina, { ancho: 1600, puerto })
+    // El modal de Descargar, que es donde viven las filas desde F2.
+    await abrirControl(cdp, pagina, 'descargas')
     const filas = await evaluar(
       cdp,
       pagina,
-      `[...document.querySelectorAll('.fila-descarga')].map(f => ({
+      // Las filas de descarga viven dentro de su modal desde F2.
+      `[...document.querySelectorAll('dialog.modal-filtro .fila-descarga, .panel .fila-descarga')].map(f => ({
          etq: f.querySelector('.etq').textContent.trim(),
          motivo: f.querySelector('.meta')?.textContent.trim() ?? null,
          botones: f.querySelectorAll('button').length }))`,
@@ -2279,7 +2413,7 @@ async function main() {
     const controles = await evaluar(
       cdp,
       pagina,
-      `[...document.querySelectorAll('.panel select, .panel .limpiar, .panel .compartir, .cartel-botones button')]
+      `[...document.querySelectorAll('.panel .grupo-filtro, .panel .limpiar, .cartel-botones button')]
          .filter((e) => e.getClientRects().length)
          .map((e) => { const c = getComputedStyle(e)
                        return { que: (e.textContent || e.tagName).trim().slice(0, 20), radio: c.borderRadius,
