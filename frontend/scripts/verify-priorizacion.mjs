@@ -1911,9 +1911,11 @@ const MUTACIONES = [
     archivo: join(FRONT, 'src', 'components', 'ModalesPanel.jsx'),
     titulo: 'dejar de explicar qué es el número de la comuna',
     // El estado real hasta el 2026-09-16: la cifra del selector sin una sola
-    // linea que dijera de que es.
-    ancla: '      <h3>El número al lado de cada comuna</h3>',
-    mutar: (t, a) => t.replace(a, '      <h3>Comunas</h3>'),
+    // linea que dijera de que es. El ancla es el PARRAFO y no su titulo: con el
+    // titulo solo, la explicacion seguia ahi y el mutante SOBREVIVIO --medido el
+    // 2026-09-16-- porque C20 buscaba las palabras, que seguian en la pagina.
+    ancla: '        En el selector, «Coihaique (669)» significa que esa comuna tiene',
+    mutar: (t, a) => t.replace(a, '        Las comunas del modelo son'),
     bloque: 'vista',
   },
   {

@@ -277,6 +277,15 @@ const MUTANTES = [
     porque: 'contar cada filtro sobre la capa entera: vuelven las cifras nacionales con la región puesta',
   },
   {
+    id: 'B36',
+    suite: 'verify-panel.mjs',
+    archivo: 'src/filtros.js',
+    de: '      const cruce = otros.length === 1 ? capasMan[capa].cruces?.[otros[0][0]]?.[otros[0][1]] : null',
+    a: '      const cruce = null',
+    porque:
+      'ignorar el conteo cruzado del manifest: las capas por teselas vuelven a mostrar las cifras de todo el país con una región puesta',
+  },
+  {
     id: 'B32',
     suite: 'verify-panel.mjs',
     archivo: 'src/components/Pestanas.jsx',

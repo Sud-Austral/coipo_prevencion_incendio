@@ -1265,3 +1265,29 @@ números que caducan en la siguiente corrida del ETL sin que nada se ponga rojo.
 selector, y dejar el modal sin la explicación del número. Y C8b, C3 y C11 pasaron a afirmar
 los textos nuevos: una aserción que sigue buscando «manchas» en la pantalla habría quedado
 verde sólo porque nadie la miró.
+
+### Y las capas por teselas también estrechan sus cifras
+
+La primera observación traía además un caso que sí seguía roto en el árbol nuevo. §W dejó
+fuera de la cascada a **rutas y red vial**: viajan como teselas, el visor no tiene sus
+features, y sus filtros mostraban las cifras de la capa ENTERA con una nota que lo decía.
+Leerlo no ayuda: con Aysén elegida, «Ripio (1.892 rutas)» al lado de «Aysén (51 rutas)» se
+lee como un error del visor, y la nota sólo explica por qué el número está mal.
+
+Ahora el ETL publica **`cruces`**: el conteo cruzado de los campos filtrables de esas capas
+(`ETL/gj_io.cruces`). Con Aysén elegida, «Tipo de carpeta» cuenta **44 de Ripio**, que es lo
+que hay en la región. Cuesta **69 KB** en un manifest de 489 KB, medido el 2026-09-16, y se
+descarga una sola vez.
+
+Dos detalles que no son de estilo:
+- **Sin ningún filtro puesto ya no se avisa de nada.** El `dominios` del manifest es en ese
+  caso la cifra exacta, y advertir «no se estrecha» sobre una lista que no tiene nada que
+  estrechar confunde igual que la cifra equivocada.
+- **La nota sigue existiendo para el caso que el cruce no cubre**: una publicación antigua
+  sin `cruces`, o dos filtros de la misma capa a la vez, que un cruce por pares no resuelve.
+
+**Lo vigila D27**, que no necesita las features: comprueba que el cruce sea **simétrico**
+—`cruces[a][va][b][vb]` tiene que valer lo mismo leído al revés, y un recuento hecho sobre
+dos subconjuntos distintos rompe eso de inmediato—, que todo valor cruzado esté en
+`dominios`, y que ninguna fila sume más que su total. Dos controles negativos: descuadrar
+una dirección e inventar un valor que los dominios no nombran.

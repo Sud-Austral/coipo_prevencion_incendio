@@ -22,7 +22,7 @@ import re
 
 from cfg import Cfg, log
 from geo import canon_region, count_vertices
-from gj_io import dominios, humano
+from gj_io import cruces, dominios, humano
 from shp_reader import read_shapefile  # noqa: F401  (se mantiene la API homogenea)
 from tiles import construir_capa_vial
 
@@ -109,6 +109,11 @@ def build(cfg: Cfg) -> dict:
         "vertices_origen": v_orig,
         "filtros": ["region", "clasificacion", "carpeta"],
         "dominios": doms,
+        # Conteo cruzado de los campos filtrables. Esta capa viaja como teselas,
+        # asi que el visor NO tiene sus features para contar las opciones de un
+        # filtro: sin esto, con una region elegida seguia ofreciendo las cifras
+        # de todo el pais.
+        "cruces": cruces(feats, ["region", "clasificacion", "carpeta"]),
         **st,
     }
 

@@ -169,8 +169,8 @@ export function ModalFiltro({ campo, etiqueta, opciones, unidad, valor, cascada,
     >
       {!cascada && (
         <p className="nota">
-          Esta capa se sirve por tramos, así que sus cifras son de la capa entera y no se
-          estrechan con los demás filtros.
+          Esta capa se sirve por tramos y esta publicación no trae el cruce con los demás
+          filtros: sus cifras son de la capa entera y no se estrechan.
         </p>
       )}
       <ul className="gf-lista">

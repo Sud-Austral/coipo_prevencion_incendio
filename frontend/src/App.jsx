@@ -680,7 +680,7 @@ export default function App() {
   // los cumulos muestran el pais entero. Con comuna, solo la suya, que es de lo
   // que habla el panel.
   const pasaPunto = useCallback(
-    (p) => !cutRiesgo || p.cut === cutRiesgo,
+    () => true,
     [cutRiesgo],
   )
 

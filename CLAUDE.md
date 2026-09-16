@@ -334,6 +334,12 @@ con código de salida 0.
   Lo vigilan C12 y C16. `DECISIONES.md` §V.
 - **La fecha del manifest se arma con los componentes del ISO**, nunca con `new Date(iso)`:
   en Chile eso retrocede un día todo lo generado antes de las 03:00 UTC.
+- **Las capas por teselas cuentan sus filtros con `cruces`, no con `dominios`.** Rutas y red
+  vial no tienen features en el navegador: sin el conteo cruzado que publica el ETL
+  (`ETL/gj_io.cruces`), con Aysén elegida el filtro ofrecía «Ripio (1.892 rutas)» —la cifra
+  nacional— al lado de «Aysén (51 rutas)». Lo vigila **D27** (simetría del cruce, vocabulario
+  contra `dominios` y cota por fila), que no necesita las features. `DECISIONES.md` §Y.
+
 - **En la interfaz se dice «área», nunca «mancha»** (decisión de Luis, 2026-09-16, tras la
   revisión de un colega de CONAF). Lo que **no** cambia es el campo del dato `mancha_id` ni
   su columna en el CSV: es contrato publicado y renombrarlo rompe los cruces de quien ya lo
@@ -427,9 +433,11 @@ Comprobadas una a una el 2026-09-10:
    cadena de build. No afecta a lo publicado, pero está anotada.
 8. **Tres identidades git para la misma persona** y convención de mensajes mixta: conviven
    `docs:`/`ci:`/`datos:` con mensajes sueltos.
-9. **La grafía de las comunas no se canoniza.** CABRERO y Cabrero salen como comunas distintas
-   en las tablas del visor (226 etiquetas para 220 comunas en el subconjunto eléctrico).
-   `DECISIONES.md` §Q.
+9. ~~**La grafía de las comunas no se canoniza.**~~ **CERRADA**: el ETL la canoniza desde el
+   2026-09-15 (D21). Deja una brecha nueva: **la agrupación de grafías de la página de
+   Líneas eléctricas se quedó sin cobertura**. Sigue en el código, pero el dato publicado ya
+   no trae variantes —medido el 2026-09-16: 219 comunas, ninguna con dos grafías—, así que
+   E5 no la puede ejercitar y lo dice en su salida en vez de fallar.
 10. **`INSUMO_ELECTRICO/` duplica el Excel de `INSUMO_INCENDIO/`** (mismo blob) desde `18ff9db`.
     Qué hacer con esa carpeta lo decide Luis.
 11. **`COMUNAS_PRIORITARIAS` (345 polígonos comunales) no lo usa ningún paso del pipeline.**

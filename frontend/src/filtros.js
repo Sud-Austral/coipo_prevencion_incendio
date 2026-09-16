@@ -9,10 +9,20 @@
  *
  * DE DÓNDE SALEN LAS CIFRAS. De las features que el visor ya tiene cargadas, no
  * del manifest: son las mismas que dibuja el mapa, así que la cuenta de la
- * opción es exactamente lo que se verá al elegirla. Las capas servidas por
- * teselas (rutas y red vial) NO tienen features en el navegador: ahí se cae al
- * `dominios` del manifest y la opción se marca `cascada: false`, para que el
- * panel pueda decir que esa lista no se estrecha.
+ * opción es exactamente lo que se verá al elegirla.
+ *
+ * LAS CAPAS SERVIDAS POR TESELAS (rutas y red vial) NO tienen features en el
+ * navegador, y aun así estrechan: el ETL publica `cruces`, el conteo cruzado de
+ * sus campos filtrables (`ETL/gj_io.cruces`). Con una región elegida, «Tipo de
+ * carpeta» cuenta las rutas DE ESA REGIÓN. Sólo se cae al `dominios` de la capa
+ * entera --y se marca `cascada: false` para que el panel lo diga-- cuando esa
+ * publicación no trae `cruces` o cuando hay puestos dos filtros de la misma capa
+ * a la vez, que un cruce por pares no puede resolver.
+ *
+ * Sin filtros puestos NO se marca nada: ahí el `dominios` del manifest es la
+ * cifra exacta, y decir «no se estrecha» sobre una lista que no tiene nada que
+ * estrechar confunde igual que la cifra equivocada (reportado por un colega de
+ * CONAF el 2026-09-16).
  *
  * QUÉ CAPA CUENTA. La misma regla de siempre (`DECISIONES.md` §Q y B27): la
  * PRIMERA capa encendida de `f.capas` que publique ese campo en sus dominios.
@@ -136,10 +146,21 @@ export function opcionesFiltros({ capasMan, capasActivas, filtros, datos, tablas
       if (elegido && !cuenta.has(elegido)) cuenta.set(elegido, 0)
       opciones = [...cuenta].map(([v, n]) => ({ v, n }))
     } else {
-      // Capa por teselas (o que aún no ha llegado): el manifest es lo único que
-      // hay, y sus cifras son de la capa entera.
-      cascada = false
-      opciones = (capasMan[capa].dominios[f.campo] ?? []).map((d) => ({ v: d.v, n: d.n }))
+      // Capa por teselas (o que aún no ha llegado): sin features, se cuenta con
+      // lo que publica el manifest.
+      const otros = filtrosDe(capa, f.campo)
+        .map((o) => [o.campo, valorDe(o.campo)])
+        .filter(([, v]) => v)
+      const cruce = otros.length === 1 ? capasMan[capa].cruces?.[otros[0][0]]?.[otros[0][1]] : null
+      if (!otros.length) {
+        // Nada que estrechar: el dominio de la capa entera ES la cuenta exacta.
+        opciones = (capasMan[capa].dominios[f.campo] ?? []).map((d) => ({ v: d.v, n: d.n }))
+      } else if (cruce?.[f.campo]) {
+        opciones = Object.entries(cruce[f.campo]).map(([v, n]) => ({ v, n }))
+      } else {
+        cascada = false
+        opciones = (capasMan[capa].dominios[f.campo] ?? []).map((d) => ({ v: d.v, n: d.n }))
+      }
       if (elegido && !opciones.some((o) => o.v === elegido)) opciones.push({ v: elegido, n: 0 })
     }
 

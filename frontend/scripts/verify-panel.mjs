@@ -71,7 +71,10 @@ import { fileURLToPath } from 'node:url'
 
 const RAIZ = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const DIST = join(RAIZ, 'dist')
-const DATOS = join(RAIZ, 'public', 'data')
+// VERIFY_DATOS apunta el arnes a otro juego de capas, igual que en
+// verify-priorizacion.mjs. Existe para NO volver a componer datos de prueba
+// dentro de public/data, que esta versionado y lo produce Actions.
+const DATOS = process.env.VERIFY_DATOS ? resolve(process.env.VERIFY_DATOS) : join(RAIZ, 'public', 'data')
 const BASE = '/coipo_prevencion_incendio/'
 
 const args = process.argv.slice(2)
@@ -402,8 +405,12 @@ function servidor() {
       return void createReadStream(archivo).pipe(res)
     }
 
-    const archivo = join(DIST, normalize(ruta).replace(/^(\.\.[/\\])+/, ''))
-    if (!archivo.startsWith(DIST) || !existsSync(archivo)) return void res.writeHead(404).end('no encontrado')
+    const rel = normalize(ruta).replace(/^(\.\.[/\\])+/, '')
+    // Con VERIFY_DATOS, lo de /data/ sale del directorio elegido y no de dist/.
+    const enDatos = process.env.VERIFY_DATOS && /^data[/\\]/.test(rel)
+    const archivo = enDatos ? join(DATOS, rel.slice(5)) : join(DIST, rel)
+    if (!(archivo.startsWith(DIST) || archivo.startsWith(DATOS)) || !existsSync(archivo))
+      return void res.writeHead(404).end('no encontrado')
     res.writeHead(200, { 'content-type': MIME[extname(archivo)] ?? 'application/octet-stream' })
     createReadStream(archivo).pipe(res)
   })
@@ -1163,6 +1170,9 @@ function esperado() {
     oraculoCuenta,
     valoresFiltro,
     capasManifest: Object.keys(man.capas),
+    // El bloque crudo de una capa por teselas: B36 necesita sus dominios y
+    // saber si esta publicacion trae `cruces`.
+    capaMan: (c) => man.capas[c],
     filtro,
     nacionalN: N.n,
     filtroAmbito: 'nacional',
@@ -1982,6 +1992,71 @@ async function main() {
         malas.length
           ? `${malas.length} diferencias: ${malas.slice(0, 3).join(' · ')}`
           : `${estrechados} filtros con menos opciones que en el país, y todas las cuentas = features de ${rg}`,
+      )
+    }
+
+    // ---- B36 · las capas por teselas también estrechan --------------------
+    // EL CASO QUE REPORTÓ UN COLEGA DE CONAF (2026-09-16): rutas y red vial
+    // viajan como teselas y el visor no tiene sus features, así que sus filtros
+    // mostraban las cifras de TODO CHILE junto a una región con cuarenta. Ahora
+    // el ETL publica `cruces` y el panel las estrecha (DECISIONES.md §Y).
+    //
+    // QUÉ CUBRE ESTA ASERCIÓN Y QUÉ NO: aquí se comprueba el COMPORTAMIENTO --que
+    // las cifras dejen de ser las nacionales y que no aparezca el aviso de «capa
+    // entera»--, con los totales del manifest como referencia. Que el cruce en sí
+    // sea correcto lo comprueba D27 en `verify.py`, que es donde están los datos.
+    const metaRutas = E.capaMan('rutas')
+    const domRegion = metaRutas?.dominios?.region ?? []
+    const regionRutas = [...domRegion].sort((a, b) => a.n - b.n)[0]
+    if (!metaRutas || !regionRutas) {
+      comprobar(false, 'B36 los filtros de una capa por teselas se estrechan', 'sin capa rutas en el manifest')
+    } else {
+      // `sinEspera` a proposito: con SOLO rutas encendida el panel dice
+      // «Enciende la capa» --es lo correcto, no hay incendios-- y la espera
+      // normal de ir() se agota. Aqui se espera al filtro, que es lo que se mide.
+      await ir(cdp, pagina, {
+        ancho: 1920,
+        puerto,
+        query: `?capas=rutas&region=${encodeURIComponent(regionRutas.v)}`,
+        sinEspera: true,
+      })
+      await sondear(cdp, pagina, `!!document.querySelector('.grupo-filtro[data-col=carpeta]')`, 'el filtro de carpeta')
+      const ops = await leerFiltro(cdp, pagina, 'carpeta')
+      await abrirControl(cdp, pagina, 'carpeta')
+      const aviso = await evaluar(
+        cdp,
+        pagina,
+        `document.querySelector('dialog.modal-filtro .nota')?.textContent ?? ''`,
+      )
+      await cerrarControl(cdp, pagina)
+      const nacional = new Map((metaRutas.dominios?.carpeta ?? []).map((d) => [d.v, d.n]))
+      const cifras = (ops ?? []).map((o) => Number(String(o.texto).replace(/[^0-9]/g, '')) || 0)
+      const suma = cifras.reduce((a, b) => a + b, 0)
+      const conCruces = !!metaRutas.cruces
+      const malas = []
+      if (conCruces) {
+        // Con el cruce publicado: nada de cifras nacionales, nada de aviso, y la
+        // suma no puede pasar del total de rutas de la región.
+        if (suma > regionRutas.n) malas.push(`suman ${suma} > ${regionRutas.n} de ${regionRutas.v}`)
+        if (/capa entera/.test(aviso)) malas.push('sigue avisando de que no se estrecha')
+        const iguales = (ops ?? []).filter((o) => nacional.get(o.v) === Number(String(o.texto).replace(/[^0-9]/g, '')))
+        if (iguales.length === (ops ?? []).length) malas.push('todas las cifras son las nacionales')
+      } else if (!/capa entera/.test(aviso)) {
+        // Publicación sin `cruces`: la cifra es nacional y el modal DEBE decirlo.
+        malas.push('sin cruces en el manifest y sin aviso de que la cifra es de la capa entera')
+      }
+      // Se vuelve al estado que espera el bloque siguiente: B36 deja el visor
+      // con UNA capa y sin incendios, y `ir()` exige que el panel no diga
+      // «Enciende la capa» --la espera se agotaba justo despues, sin que nada
+      // estuviera roto--.
+      await ir(cdp, pagina, { ancho: 1920, puerto })
+      comprobar(
+        malas.length === 0 && (ops?.length ?? 0) > 0,
+        'B36 los filtros de una capa por teselas se estrechan con la región',
+        malas.length
+          ? malas.join(' · ')
+          : `${regionRutas.v}: ${ops.length} carpetas suman ${suma} de ${regionRutas.n} rutas` +
+            (conCruces ? ' (con cruces, sin aviso)' : ' (sin cruces, con aviso)'),
       )
     }
 

@@ -34,7 +34,7 @@ commitear y publicar cada una.
 |---|---|---|
 | **F0** | Defectos y vigilantes, sin rediseño | **HECHA, sin commitear** (detalle abajo) |
 | F1 | Piel común: token de control, radios, sombra por tema, un solo anillo de foco, ficha con cabecera sticky y pista de scroll, botón de acento con contraste en oscuro | **HECHA el 2026-09-15, sin commitear** (`DECISIONES.md` §U) |
-| F2 | Incendios: filtros en botonera con modal anclado (copiado de catastro con origen), Territorio región › provincia › comuna, Capas, Mapa base, Información · Descargar · Compartir | **HECHA el 2026-09-16, sin commitear** (`DECISIONES.md` §W) |
+| F2 | Incendios: filtros en botonera con modal anclado (copiado de catastro con origen), Territorio región › provincia › comuna, Capas, Mapa base, Información · Descargar · Compartir | **HECHA el 2026-09-16, sin commitear** (`DECISIONES.md` §W y §Y). **Lo que se ve publicado es el panel anterior**: la revisión del 2026-09-16 («los filtros no están en cascada») miraba el sitio, no el árbol |
 | F3 | Riesgo (antes Priorización) con la misma botonera. Su leyenda ya está en es-CL desde el 2026-09-15, al cambiar el insumo (`DECISIONES.md` §S) | pendiente |
 | F4 | Indicadores en secciones plegables (`<details>` con el h2 dentro del `summary`) | pendiente |
 | F5 | Líneas eléctricas como tercera vista `?vista=electrico` | pendiente |
@@ -139,7 +139,11 @@ commitear y publicar cada una.
   manchas sin geometría (9,24 ha, contadas en el manifest). Si el lab registra cómo se
   simplificó, o produce el `.json` de forma reproducible, se puede verificar; hoy no.
 
-- ~~**Canonizar la grafía de las comunas en el ETL.**~~ **HECHO el 2026-09-15** (D21).
+- ~~**Canonizar la grafía de las comunas en el ETL.**~~ **HECHO el 2026-09-15** (D21). Al
+  cerrarse, **E5 de la página eléctrica se quedó sin nada que ejercitar**: su agrupación de
+  grafías sigue en el código y el dato ya no trae variantes (219 comunas, 0 con dos grafías,
+  medido el 2026-09-16). El arnés lo dice en su salida en vez de fallar; si algún día se
+  quiere cobertura real, hay que ejercitarla con un caso construido en el propio arnés.
 
 - **11 elementos de infraestructura llevan un CUT que no cuadra con su coordenada**, el peor
   a 753 km (`DECISIONES.md` §X). El código comunal lo declara el `.dbf` de cada servicio y

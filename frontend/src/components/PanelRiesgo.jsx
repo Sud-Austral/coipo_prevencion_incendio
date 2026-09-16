@@ -156,7 +156,7 @@ export default function PanelRiesgo({
         {/* En la cabecera y no al final: la pregunta «¿qué es este número?» se
             hace ANTES de tocar nada, y un botón al fondo del panel no se ve. */}
         <button type="button" className="centrar info-vista" onClick={() => setInfo(true)}>
-          Ver
+          Qué muestra esta vista
         </button>
         <button className="cerrar" onClick={onCerrar} aria-label="Cerrar panel">
           ×

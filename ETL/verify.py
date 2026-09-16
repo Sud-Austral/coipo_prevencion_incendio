@@ -25,6 +25,7 @@ asercion que no se ha visto roja no esta probando nada.
               nombre que declara el manifest para ese archivo
     D15       infra_puntos: CUT de una comuna del modelo, y los que no cuadran son los declarados
     D15b      infra_puntos: los puntos sin comuna son los que declara el manifest
+    D27       capas por teselas: `cruces` simetrico y dentro de sus dominios
     D16       incendios: causa_general_codigo es el prefijo de causa_codigo
     D16b      incendios: cada codigo general lleva una sola etiqueta. Es la unica
               guarda de una fila 4.10.x con la etiqueta de 4.1: el prefijo cuadra
@@ -836,6 +837,50 @@ def verificar(data: Path, muestra: int = 500, res: Res | None = None, exigir_tes
             "" if ok_sin else f"declarados {dec_sin}, contados {sin_cut}",
         )
 
+    # --- D27: el conteo cruzado de las capas por teselas cuadra ---
+    # POR QUE EXISTE. Rutas y red vial viajan como teselas, asi que el visor no
+    # tiene sus features para contar las opciones de un filtro: usa `cruces`
+    # (ETL/gj_io.cruces). Si esa matriz se desincroniza de la capa --porque
+    # alguien filtre features DESPUES de calcularla, o cambie el orden de los
+    # pasos-- el panel sigue mostrando cifras plausibles y falsas, que es el peor
+    # fallo posible aqui (la misma razon que D16b).
+    #
+    # Se comprueban tres cosas, ninguna de las cuales necesita las features:
+    #   1. simetria: cruces[a][va][b][vb] == cruces[b][vb][a][va]. Un recuento
+    #      hecho sobre dos subconjuntos distintos rompe esto de inmediato.
+    #   2. vocabulario: todo valor del cruce esta en `dominios` de su campo.
+    #   3. cota: la suma de una fila no puede pasar del total de ese valor en
+    #      `dominios` (es igual solo si ninguna feature tiene el otro campo nulo).
+    for nombre, meta in capas.items():
+        cr = meta.get("cruces")
+        if not cr:
+            continue
+        doms = meta.get("dominios") or {}
+        totales = {c: {d["v"]: d["n"] for d in (doms.get(c) or [])} for c in cr}
+        malos = []
+        for a, por_valor in cr.items():
+            if a not in totales:
+                malos.append(f"{a}: cruzado pero sin dominios")
+                continue
+            for va, otros in por_valor.items():
+                if va not in totales[a]:
+                    malos.append(f"{a}={va!r} no esta en dominios.{a}")
+                for b, cuentas in otros.items():
+                    suma = sum(cuentas.values())
+                    if suma > totales[a].get(va, 0):
+                        malos.append(f"{a}={va!r} x {b}: suma {suma} > {totales[a].get(va)}")
+                    for vb, n in cuentas.items():
+                        espejo = ((cr.get(b) or {}).get(vb) or {}).get(a, {}).get(va)
+                        if espejo != n:
+                            malos.append(f"{a}={va!r} x {b}={vb!r}: {n} vs {espejo} al reves")
+        r.check(
+            not malos,
+            "D27",
+            f"{nombre}: el conteo cruzado es simetrico y cuadra con los dominios"
+            f" ({len(cr)} campos cruzados)",
+            f"{len(malos)}: {malos[:3]}" if malos else "",
+        )
+
     # --- D21: una etiqueta por comuna en incendios ---
     # La clave va DUPLICADA a proposito de build_incendios.clave_comuna: importarla
     # comprobaria que la funcion es igual a si misma.
@@ -1609,6 +1654,38 @@ def _mutaciones(data: Path) -> list[tuple[str, str, str, object]]:
 
         _mut_json(p, cambiar)
 
+    def cruce_asimetrico(p: Path):
+        # Lo que dejaria un recuento hecho sobre features ya filtradas: una
+        # direccion del cruce dice una cosa y la contraria, otra.
+        def cambiar(d):
+            for meta in (d.get("capas") or {}).values():
+                cr = meta.get("cruces")
+                if not cr:
+                    continue
+                a = next(iter(cr))
+                va = next(iter(cr[a]))
+                b = next(iter(cr[a][va]))
+                vb = next(iter(cr[a][va][b]))
+                cr[a][va][b][vb] += 1
+                return
+
+        _mut_json(p, cambiar)
+
+    def cruce_con_valor_inventado(p: Path):
+        # Un valor que `dominios` no nombra: el filtro ofreceria una opcion que
+        # no existe en la capa.
+        def cambiar(d):
+            for meta in (d.get("capas") or {}).values():
+                cr = meta.get("cruces")
+                if not cr:
+                    continue
+                a = next(iter(cr))
+                va = next(iter(cr[a]))
+                cr[a]["Region de Nunca Jamas"] = cr[a][va]
+                return
+
+        _mut_json(p, cambiar)
+
     def punto_sin_cut(p: Path):
         # Lo que dejaria un cruce comunal que empieza a fallar en silencio: un
         # punto mas sin comuna del que el manifest declara. Se elige el primero
@@ -1756,6 +1833,8 @@ def _mutaciones(data: Path) -> list[tuple[str, str, str, object]]:
         ("D15", "dar a un punto el CUT de otra comuna", "infra_puntos.geojson", punto_con_cut_de_otra_comuna),
         ("D15", "declarar en el manifest un margen de caja distinto", "manifest.json", margen_de_caja_distinto),
         ("D15b", "dejar un punto mas sin comuna que los declarados", "infra_puntos.geojson", punto_sin_cut),
+        ("D27", "descuadrar una direccion del conteo cruzado", "manifest.json", cruce_asimetrico),
+        ("D27", "cruzar un valor que los dominios no nombran", "manifest.json", cruce_con_valor_inventado),
         ("D19", "subir dos clases una mancha sin cambiar su nivel", arch_a, clase_incoherente),
         ("D19", "pct_alto = 150 en una mancha", arch_b, pct_alto_fuera_de_rango),
         ("D20", "olvidar en el manifest las manchas sin geometría", "manifest.json", descuadrar_sin_geometria),

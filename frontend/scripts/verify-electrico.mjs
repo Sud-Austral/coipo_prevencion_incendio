@@ -780,7 +780,14 @@ async function correr({ capturas = true } = {}) {
     // ?region= se lee AL CARGAR: es el camino de un enlace compartido, que el
     // barrido con el <select> no ejercita.
     if (!elegida) {
-      discrepancias.E5.push('ninguna región tiene grafías de comuna que cambien su top-12: la agrupación no se ejercita')
+      // NO ES UN FALLO DESDE EL 2026-09-15: el ETL canoniza la grafia de las
+      // comunas (D21), asi que el dato publicado ya no trae «CABRERO» junto a
+      // «Cabrero» --medido el 2026-09-16 sobre lineas_electricas.geojson: 219
+      // comunas, NINGUNA con dos grafias--. Exigir que las haya seria exigir un
+      // defecto aguas arriba. Se dice en la salida, y queda anotado en
+      // mejoras.md que la agrupacion de la pagina se quedo SIN COBERTURA: sigue
+      // en el codigo y ya no hay dato que la ejercite.
+      console.log('  · E5 sin variantes de grafía en el dato (D21 las canoniza): la agrupación no se puede ejercitar')
     } else {
       console.log(`\n▶ ?region=${elegida.region} · ${elegida.variantes} comunas con varias grafías que cambian el top-12`)
       fase = `url-${elegida.region}`

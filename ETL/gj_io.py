@@ -84,6 +84,39 @@ def dominios(features: list[dict], campos: list[str]) -> dict:
     return out
 
 
+def cruces(features: list[dict], campos: list[str]) -> dict:
+    """Conteo CRUZADO de cada par de campos: cruces[a][valor_a][b][valor_b] = n.
+
+    Existe por las capas que viajan como teselas. El visor cuenta las opciones
+    de un filtro sobre las features que tiene cargadas, pero de rutas y red vial
+    no tiene ninguna: solo el manifest. Con `dominios` a secas, elegir una region
+    dejaba «Ripio (1.892 rutas)» --la cifra de todo Chile-- al lado de una region
+    con 40, y quien lo leia no entendia nada (reportado por un colega de CONAF el
+    2026-09-16). Con esto, el visor puede estrechar esas listas sin descargar la
+    capa.
+
+    Pesa poco porque son campos de pocos valores: en rutas, 4 campos con 16, 3, 7
+    y 2 valores distintos dan ~470 entradas.
+    """
+    from collections import Counter
+
+    out: dict[str, dict] = {}
+    for a in campos:
+        por_valor: dict[str, dict] = {}
+        for b in campos:
+            if a == b:
+                continue
+            c = Counter(
+                (f["properties"][a], f["properties"][b])
+                for f in features
+                if f["properties"].get(a) not in (None, "") and f["properties"].get(b) not in (None, "")
+            )
+            for (va, vb), n in c.items():
+                por_valor.setdefault(va, {}).setdefault(b, {})[vb] = n
+        out[a] = por_valor
+    return out
+
+
 def codificar(features: list[dict], campos: list[str]) -> tuple[dict, dict]:
     """Sustituye valores categoricos repetidos por indices enteros.
 
