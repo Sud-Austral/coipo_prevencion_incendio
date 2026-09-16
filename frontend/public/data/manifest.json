@@ -1,5 +1,5 @@
 {
-  "generado": "2026-09-15T23:04:03+0000",
+  "generado": "2026-09-16T02:14:50+0000",
   "simplify_m": 25.0,
   "precision": 5,
   "tippecanoe": "tippecanoe v2.78.0",
@@ -5684,7 +5684,7 @@
         -68.01064,
         -17.92029
       ],
-      "segundos": 11.1
+      "segundos": 14.2
     },
     "oecv": {
       "titulo": "OECV — Obras de Eliminación de Combustible Vegetal",
@@ -5830,7 +5830,7 @@
         -67.59344,
         -19.31068
       ],
-      "segundos": 1.1
+      "segundos": 1.7
     },
     "oecv_verificado": {
       "titulo": "OECV verificado en terreno",
@@ -5911,7 +5911,7 @@
         -70.51471,
         -29.91048
       ],
-      "segundos": 0.6
+      "segundos": 0.9
     },
     "puntos_standby": {
       "titulo": "Puntos stand-by",
@@ -6176,7 +6176,7 @@
       "maxzoom": 13,
       "bytes": 7051850,
       "features": 5278,
-      "segundos": 33.4
+      "segundos": 43.4
     },
     "infra_puntos": {
       "titulo": "Infraestructura crítica",
@@ -6621,7 +6621,7 @@
       "maxzoom": 13,
       "bytes": 18801957,
       "features": 13964,
-      "segundos": 34.5
+      "segundos": 45.2
     },
     "riesgo": {
       "titulo": "Riesgo de incendio forestal",
@@ -14173,7 +14173,7 @@
         -66.41559,
         -17.50462
       ],
-      "segundos": 23.7
+      "segundos": 31.7
     }
   },
   "derivados": {
