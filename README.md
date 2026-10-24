@@ -1,8 +1,14 @@
 # Visor de Prevención de Incendios Forestales — CONAF
 
 App de React solo-frontend que muestra en un mapa Leaflet los insumos de
-`INSUMO_INCENDIO/`, más un ETL en Python que los convierte a formatos web.
+`INSUMO_INCENDIO/` (incendios, obras OECV, stand-by, rutas, red vial), una vista **Riesgo**
+(modelo de `INSUMO_RIESGO/` por comuna, con infraestructura crítica) y una página aparte de
+líneas eléctricas, más un ETL en Python que los convierte a formatos web.
 Sin backend: todo se sirve como archivos estáticos.
+
+Documentos: [CLAUDE.md](CLAUDE.md) (cómo se toca el repo, la fuente más detallada),
+[DECISIONES.md](DECISIONES.md) (por qué los datos son como son), [mejoras.md](mejoras.md),
+[insumos/00-PROBLEMA.md](insumos/00-PROBLEMA.md) e [insumos/01-SOLUCION.md](insumos/01-SOLUCION.md).
 
 **https://sud-austral.github.io/coipo_prevencion_incendio/**
 
@@ -19,10 +25,10 @@ npm run dev
 Para regenerar las capas desde los insumos:
 
 ```bash
-python ETL/run.py          # 6 capas en paralelo + validación  (~20 s)
+python ETL/run.py          # 9 tareas en paralelo + validación (lista TAREAS en ETL/run.py)
 ```
 
-`ETL/run.py` es el único punto de entrada: corre las 6 capas en paralelo,
+`ETL/run.py` es el único punto de entrada: corre las tareas (redvial, rutas, incendios, oecv, verificado, puntos, riesgo, infra_puntos, kpis) en paralelo,
 escribe `manifest.json` y ejecuta `verify.py` al terminar.
 
 `npm run datos` lee la lista de archivos del propio `manifest.json` publicado,
@@ -57,6 +63,13 @@ trabajar con ellos fuera del visor.
 | Rutas de despliegue | 15 shapefiles de `Despliegue territorial` | 5.278 | `rutas.pmtiles` |
 | Red vial MOP 2024 | `Red-vial_MOP_2024.json` (87 MB) | 13.964 | `redvial.pmtiles` |
 | Indicadores | `OECV 2025-2026.xlsx` | 4.898,6 km plan / 78,8 % avance | `kpis.json` |
+| OECV verificado | carpetas `OECV 2025 - 2026/<región>/Verificado/` | ver `manifest.json` | `oecv_verificado.geojson` |
+| Riesgo | `INSUMO_RIESGO/` (salida del notebook 4 de `lab/priorizacion`) | 110.708 áreas en 343 comunas, según `CLAUDE.md` (2026-09-16) | un archivo por comuna en `frontend/public/data/riesgo/` + teselas |
+| Infraestructura crítica | ocho fuentes en `INSUMO_PRIORIZACION/` (según `ETL/build_infra_puntos.py`) | 35.905 elementos en 8 familias, según `CLAUDE.md` (2026-09-16) | `infra_puntos.geojson` |
+| Derivados del Excel UAD | `BBDD INVESTIGACIÓN UAD…xlsx` | no lo comprobé | `bbdd_uad_completa.geojson`, `lineas_electricas.geojson` |
+
+Las cifras de la tabla original son de la redacción del 2026-08-27; las de Riesgo e
+infraestructura vienen de `CLAUDE.md` y no las volví a medir. Para cifras vigentes, `frontend/public/data/manifest.json`.
 
 Las dos capas viales suman 19.000 líneas y 5,7 M de vértices. Como GeoJSON
 obligarían a descargar el país entero a detalle completo solo para ver el mapa
@@ -121,13 +134,17 @@ frontend/
     App.jsx           único dueño del estado
     config.js         capas, filtros, paletas, basemaps
     fichas.js         qué muestra la ficha de cada capa, como datos
-    components/       Banner · CapaPuntos · CapaLineas · CapaTiles ·
-                      PanelLateral · ModalFicha
+    components/       Banner · CapaPuntos · CapaLineas · CapaTiles · CapaIconos ·
+                      CapaRiesgoTeselas · PanelLateral · PanelRiesgo ·
+                      PanelIndicadores · ModalFicha · Pestanas · SeccionDescargas
+    electrico/        página aparte `lineas-electricas.html`
     hooks/useDatos.js manifest + carga perezosa con caché
     assets/           el banner institucional (ver INSUMO_GRAFICO/)
   scripts/
     descargar-datos.mjs  npm run datos
     verify-banner.mjs    npm run verify:banner
+    verify-panel.mjs · verify-priorizacion.mjs · verify-electrico.mjs
+    mutaciones.mjs       npm run verify:mutantes (parchea src/, ver CLAUDE.md §3)
 ```
 
 `manifest.json` es el contrato entre ambos: el frontend no hardcodea ninguna
@@ -165,6 +182,9 @@ capas encendidas, que es como se usa siempre.
 
 Python 3.13 con `pyproj`, `shapely`, `pandas`, `openpyxl` (`ETL/requirements.txt`).
 No hace falta GDAL ni geopandas.
+
+Para que `ETL/verify.py` compruebe las teselas de riesgo hace falta GDAL (`ogr2ogr`, variable
+`OGR2OGR`); CI lo instala con micromamba. Los scripts `verify:*` del frontend necesitan Chrome.
 
 `tippecanoe` no corre nativo en Windows. Si falta, el ETL emite GeoJSON
 simplificado a 25 m en vez de teselas y lo marca en el manifest; el frontend
@@ -210,3 +230,10 @@ backend supports HTTP Byte Serving».
 
 El estado va en la URL (`?lat=&lon=&z=&capas=&region=&causa_grupo=`), así que
 las capturas son reproducibles sin simular clics y las vistas son compartibles.
+
+## Despliegue
+
+`.github/workflows/deploy.yml` (push a `main` en `INSUMO_*`, `ETL/` o `frontend/`, o
+manual): instala Python 3.13, tippecanoe 2.78.0 y GDAL 3.12.3, corre `ETL/run.py -v`,
+construye el frontend y publica en GitHub Pages. Vite usa `base: '/coipo_prevencion_incendio/'`;
+sin eso el sitio sale en blanco. No hay variables de entorno de aplicación.
