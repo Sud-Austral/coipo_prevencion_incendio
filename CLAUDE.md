@@ -44,10 +44,11 @@ deliberado — el sitio es estático, las capas se precomputan y **se commitean*
   explicado y medido.
 - **`mejoras.md`** es el catálogo de mejoras pendientes y de hallazgos aún abiertos.
 
-El **`README.md` no manda y no se edita a mano**: lo genera un bot
-(`.github/workflows/readme.yml` llama a `Sud-Austral/coipo_aireadme@v1`, el generador
-centralizado de la flota COIPO) y **`README_CANDIDATE.md` es su borrador**. Si el README
-dice algo que no cuadra, se arregla el generador o se ignora; lo que vale está aquí y en
+El **`README.md`** lo generaba un bot (`readme.yml` → `Sud-Austral/coipo_aireadme@v1`), pero
+ese workflow se **quitó el 2026-09-26** (commit `bf0b49f`, VERIFICADO: ya no existe en
+`.github/workflows/`). Desde la actualización de documentación del 2026-10-24 el README se
+mantiene a mano; `README_CANDIDATE.md` es un borrador histórico del bot y no manda. Si el
+README dice algo que no cuadra con el código, corrígelo; lo que vale está aquí y en
 `DECISIONES.md`.
 
 ---
@@ -90,7 +91,7 @@ INSUMO_RIESGO/           salida del notebook 4 de lab/priorizacion: 16 GeoJSON r
                          simplificada, .json), el CSV y parametros.json. 188 MB
 INSUMO_PRIORIZACION/     la infraestructura critica de 3 comunas (y un PDF que no lee nadie)
 INSUMO_GRAFICO/          banners institucionales y sus capturas de verificacion
-insumos/, readme_context/  GENERADOS por el bot del README. No se editan a mano
+insumos/, readme_context/  los generaba el bot del README (ya retirado); `insumos/` se actualizó a mano el 2026-10-24
 ```
 
 **`frontend/public/data/` es salida del ETL y está commiteada.** Es lo que despliega el
@@ -107,7 +108,7 @@ commit hecho desde un portátil cambia el formato publicado.
 
 ```bash
 # --- ETL -------------------------------------------------------------------
-python ETL/run.py -v                       # 6 capas en paralelo + manifest + verify
+python ETL/run.py -v                       # 9 tareas (TAREAS en run.py) en paralelo + manifest + verify
 python ETL/verify.py                       # comprobaciones sobre lo publicado (~22 s)
 python ETL/verify.py --negativas           # 47 mutaciones, cada una debe ponerse roja (~9 min)
 
