@@ -189,3 +189,14 @@ corrida cuyo resultado se conservo.
 
 [PENDIENTE] No hay CHANGELOG ni migraciones numeradas en la evidencia, asi que
 la historia de versiones no se puede reconstruir desde aca.
+
+## Actualización 2026-10-24 (posterior a la reconstrucción automática del 2026-09-07)
+
+VERIFICADO leyendo `ETL/run.py`, `frontend/src/` y `frontend/vite.config.js`; no ejecuté el ETL ni el visor.
+
+- El ETL tiene hoy 9 tareas, no las siete nombradas arriba: se suman `riesgo` ([ETL/build_riesgo.py], [ETL/teselas_riesgo.py]) e `infra_puntos` ([ETL/build_infra_puntos.py]).
+- El visor tiene una pestaña **Riesgo** ([frontend/src/components/PanelRiesgo.jsx], [frontend/src/components/CapaRiesgoTeselas.jsx]) que carga un archivo por comuna, con infraestructura crítica encima; reemplazó la antigua pestaña «Priorización» (según `CLAUDE.md`).
+- Hay una segunda página de entrada, `lineas-electricas.html` ([frontend/src/electrico/]), configurada como build multipágina en `vite.config.js`.
+- Se publican además `bbdd_uad_completa.geojson` y `lineas_electricas.geojson` (derivados del Excel de la UAD).
+- El workflow `readme.yml` ya no existe (commit `bf0b49f`); `deploy.yml` instala también GDAL y lee `INSUMO_RIESGO/` e `INSUMO_PRIORIZACION/`.
+- Detalle de decisiones y brechas: `CLAUDE.md` y `DECISIONES.md`.

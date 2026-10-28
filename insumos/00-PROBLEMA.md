@@ -141,3 +141,7 @@ revision pendiente y no una conclusion de este documento.
 [frontend/public/data/incendios.geojson]. Si alguno de esos puntos permite
 identificar un predio o una persona, la publicacion abierta requiere una
 decision que no consta en ninguna parte de la evidencia.
+
+## Actualización 2026-10-24
+
+El alcance creció después de esta reconstrucción: además de consolidar incendios, OECV, stand-by, rutas y red vial, el visor muestra hoy riesgo de incendio por comuna con infraestructura crítica y una página de líneas eléctricas (VERIFICADO en `CLAUDE.md` y `ETL/run.py`). Los `[PENDIENTE]` de arriba (quién usa el visor, dueños de cada fuente, criterios de aceptación) siguen sin respuesta en el repositorio: los confirma el equipo.
