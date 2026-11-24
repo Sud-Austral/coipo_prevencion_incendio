@@ -5,6 +5,14 @@ está aquí; lo que costó una sesión averiguar, sí.
 
 Verificado ejecutando el **2026-09-16**. Los números llevan fecha porque caducan.
 
+**Revisión del 2026-11-24 (ejecutado en un worktree limpio):** `npm ci` + `npm run lint` (exit 0, sin avisos) +
+`npm run build` (exit 0, ~3 s) y `npm audit` (0 vulnerabilidades) en `frontend/`. `python ETL/verify.py` contra los
+datos versionados **sale con código 1: 84 comprobaciones en verde y 2 rojas, las dos de D15** (`infra_puntos`: el
+manifest no declara el margen de 0,01° ni los puntos lejos de su caja, `None`). El `manifest.json` versionado es del
+2026-09-16 (`c9c8960`) y su capa `infra_puntos` declara 696 features. **La causa no la comprobé** (hipótesis: capas
+publicadas por una versión del ETL anterior a la aserción); no corrí `ETL/run.py`, las `--negativas`, los arneses
+`verify:*` (necesitan Chrome) ni el workflow. D26 quedó «no verificable» por falta de GDAL, como se espera.
+
 ---
 
 ## 1. Qué es y en qué estado está
@@ -427,11 +435,12 @@ Comprobadas una a una el 2026-09-10:
    falte un campo, no que su valor esté desplazado (`DECISIONES.md` §D).
 4. **El cruce contra `KM_OFICIAL_NACIONAL` sólo corre en `analisis/leer_capas.py`**, no en
    `verify.py` (`DECISIONES.md` §G).
-5. **`analisis/README.md` da mal la ruta del intérprete** (ver §3).
-6. **`INSUMO_GRAFICO/README.md` dice que el asset es `banner-conaf-uia.jpg`**; el real es
-   `frontend/src/assets/banner-conaf-incendios.jpg`.
-7. **`npm audit` reporta 1 vulnerabilidad alta** en `nanoid`, dependencia transitiva de la
-   cadena de build. No afecta a lo publicado, pero está anotada.
+5. ~~`analisis/README.md` da mal la ruta del intérprete~~ **CERRADA**: comprobado el 2026-11-24, ya da
+   la ruta correcta (la de `AppData`) y explica que la de `ProgramData` no existe.
+6. ~~`INSUMO_GRAFICO/README.md` nombra `banner-conaf-uia.jpg`~~ **CERRADA**: comprobado el 2026-11-24, ya
+   cita `frontend/src/assets/banner-conaf-incendios.jpg` y deja constancia del nombre viejo.
+7. ~~`npm audit` reporta 1 vulnerabilidad alta en `nanoid`~~ **CERRADA**: tras `f254be2` (npm audit fix,
+   2026-11-10), `npm audit` en `frontend/` da **0 vulnerabilidades** (ejecutado el 2026-11-24).
 8. **Tres identidades git para la misma persona** y convención de mensajes mixta: conviven
    `docs:`/`ci:`/`datos:` con mensajes sueltos.
 9. ~~**La grafía de las comunas no se canoniza.**~~ **CERRADA**: el ETL la canoniza desde el
@@ -448,11 +457,11 @@ Comprobadas una a una el 2026-09-10:
 12. **Los 11 CUT que no cuadran y los 22 puntos sin comuna no se dicen en la interfaz.** Se
     cuentan en el manifest y los vigilan D15 y D15b, pero quien filtre por esas comunas no
     tiene forma de saberlo. `DECISIONES.md` §X.
-11. **Las 5 comunas de riesgo de más de 10 MB son lentas en un equipo modesto** (Natales:
+13. **Las 5 comunas de riesgo de más de 10 MB son lentas en un equipo modesto** (Natales:
     8,4 s de carga y 2,1 s por repintado con la CPU a ×4, medido el 2026-09-15).
     Simplificarlas cambia la geometría publicada y lo decide Luis (`mejoras.md`, Pendientes
     de datos).
-12. **La región 12 de riesgo se publica simplificada**, con 5 geometrías inválidas y 1.231
+14. **La región 12 de riesgo se publica simplificada**, con 5 geometrías inválidas y 1.231
     manchas sin geometría que el ETL cuenta y no dibuja. Cómo se simplificó no quedó
     registrado en el lab.
 

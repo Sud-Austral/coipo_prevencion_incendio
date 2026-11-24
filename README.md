@@ -233,7 +233,7 @@ las capturas son reproducibles sin simular clics y las vistas son compartibles.
 
 ## Despliegue
 
-`.github/workflows/deploy.yml` (push a `main` en `INSUMO_*`, `ETL/` o `frontend/`, o
-manual): instala Python 3.13, tippecanoe 2.78.0 y GDAL 3.12.3, corre `ETL/run.py -v`,
+`.github/workflows/deploy.yml` (push a `main` que toque `INSUMO_INCENDIO/`, `INSUMO_RIESGO/`,
+`INSUMO_PRIORIZACION/`, `ETL/`, `frontend/` o el propio workflow, o manual; `INSUMO_ELECTRICO/` e `INSUMO_GRAFICO/` no lo disparan): instala Python 3.13, tippecanoe 2.78.0 y GDAL 3.12.3, corre `ETL/run.py -v`,
 construye el frontend y publica en GitHub Pages. Vite usa `base: '/coipo_prevencion_incendio/'`;
 sin eso el sitio sale en blanco. No hay variables de entorno de aplicación.
