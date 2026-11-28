@@ -1,0 +1,10 @@
+01_inicio.png
+03_territorio.png
+05_filtro_region.png
+06_filtro_temporada.png
+07_capas.png
+09_ficha_incendio.png
+11_indicadores.png
+17_riesgo_comuna.png
+13_descargas.png
+14_compartir.png
